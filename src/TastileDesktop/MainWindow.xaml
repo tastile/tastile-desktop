@@ -5,11 +5,122 @@
     xmlns:local="using:TastileDesktop"
     Title="Tastile">
 
-    <Grid Padding="32" VerticalAlignment="Center" HorizontalAlignment="Center">
-        <StackPanel Spacing="16">
-            <TextBlock Text="Tastile" Style="{StaticResource TitleTextBlockStyle}" />
-            <TextBlock x:Name="StatusText" Text="Connecting..." />
-            <Button x:Name="CheckHealthButton" Content="Check API Health" Click="OnCheckHealth" />
-        </StackPanel>
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <ScrollViewer VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="24" Spacing="20">
+
+                <!-- Header Bar -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Tastile" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                        <Ellipse x:Name="ConnectionDot" Width="10" Height="10" Fill="Gray" VerticalAlignment="Center" />
+                        <TextBlock x:Name="ConnectionText" Text="Connecting..." Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                                   VerticalAlignment="Center" FontSize="12" />
+                    </StackPanel>
+                </Grid>
+
+                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                <!-- Execution Status Panel -->
+                <Border x:Name="ExecutionPanel" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+                        CornerRadius="8" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                        <!-- Idle state -->
+                        <StackPanel x:Name="IdlePanel" Spacing="4">
+                            <TextBlock Text="Idle" Style="{StaticResource SubtitleTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            <TextBlock Text="No active tile" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
+                        </StackPanel>
+
+                        <!-- Working state -->
+                        <StackPanel x:Name="WorkPanel" Visibility="Collapsed" Spacing="8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="WORK" FontWeight="Bold" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                                <TextBlock x:Name="WorkElapsed" Grid.Column="1" FontFamily="Consolas" FontSize="13"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                            </Grid>
+                            <TextBlock x:Name="ActiveTileTitle" Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
+                            <TextBlock x:Name="ActiveTileNextAction" TextWrapping="Wrap" FontSize="14"
+                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
+                        </StackPanel>
+
+                        <!-- Break state -->
+                        <StackPanel x:Name="BreakPanel" Visibility="Collapsed" Spacing="8">
+                            <TextBlock Text="BREAK" FontWeight="Bold" FontSize="18" Foreground="{ThemeResource SystemFillColorCautionBrush}" />
+                            <TextBlock x:Name="BreakCountdown" Style="{StaticResource SubtitleTextBlockStyle}" FontFamily="Consolas" />
+                        </StackPanel>
+
+                        <!-- Action Buttons -->
+                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
+                            <Button x:Name="CompleteButton" Content="Complete" Style="{StaticResource AccentButtonStyle}"
+                                    Click="OnComplete" Visibility="Collapsed" />
+                            <Button x:Name="EndBreakButton" Content="End Break" Style="{StaticResource AccentButtonStyle}"
+                                    Click="OnEndBreak" Visibility="Collapsed" />
+                            <Button x:Name="BreakButton" Content="Break (5 min)" Click="OnStartBreak" />
+                        </StackPanel>
+                    </StackPanel>
+                </Border>
+
+                <!-- New Tile -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="NewTileTitle" PlaceholderText="New tile title..." Margin="0,0,8,0" />
+                    <Button Grid.Column="1" Content="Create" Click="OnCreateTile" />
+                </Grid>
+
+                <!-- Tile List -->
+                <TextBlock Text="Tiles" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <ListView x:Name="TileListView" SelectionMode="None" IsItemClickEnabled="True"
+                          ItemClick="OnTileClick" MaxHeight="300">
+                    <ListView.ItemTemplate>
+                        <DataTemplate x:DataType="local:TileListItem">
+                            <Grid Padding="4,8" ColumnSpacing="12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Text="{x:Bind Title}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                <Border Grid.Column="1" Background="{x:Bind BadgeBackground}" CornerRadius="4" Padding="8,2"
+                                        VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind Lifecycle}" FontSize="11" FontWeight="SemiBold"
+                                               Foreground="{x:Bind BadgeForeground}" />
+                                </Border>
+                                <TextBlock Grid.Column="2" Text="{x:Bind WorkedText}" FontSize="12"
+                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+
+                <!-- Quick Memo -->
+                <TextBlock Text="Quick Memo" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="MemoText" PlaceholderText="Attach memo to active tile..." Margin="0,0,8,0" />
+                    <Button Grid.Column="1" Content="Send" Click="OnSendMemo" />
+                </Grid>
+
+                <!-- Status -->
+                <TextBlock x:Name="StatusText" Foreground="{ThemeResource TextFillColorTertiaryBrush}" FontSize="12"
+                           TextWrapping="Wrap" />
+
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>
