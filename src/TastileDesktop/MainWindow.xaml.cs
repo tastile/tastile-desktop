@@ -33,6 +33,7 @@ public sealed partial class MainWindow : Window
 {
     private readonly CoreApiClient _api = new();
     private readonly DispatcherTimer _pollTimer;
+    private readonly DaemonManager _daemonManager = new();
     private string? _activeTileId;
 
     public MainWindow()
@@ -45,12 +46,18 @@ public sealed partial class MainWindow : Window
         var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
         appWindow.Resize(new Windows.Graphics.SizeInt32(520, 780));
 
+        // Ensure daemon is running before polling
+        _ = _daemonManager.EnsureRunningAsync();
+
         _pollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _pollTimer.Tick += async (_, _) => await PollAsync();
         _pollTimer.Start();
 
         // Fire initial poll immediately
         _ = PollAsync();
+        
+        // Cleanup on window close
+        Closed += (_, _) => _daemonManager.Dispose();
     }
 
     // ── Polling ──────────────────────────────────────────────────────
