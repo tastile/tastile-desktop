@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TastileDesktop (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "TastileDesktop (Unpackaged)": {
+      "commandName": "Project"
+    }
+  }
+}
