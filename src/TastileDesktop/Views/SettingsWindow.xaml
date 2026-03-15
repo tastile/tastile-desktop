@@ -1,0 +1,144 @@
+<Window
+    x:Class="TastileDesktop.Views.SettingsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TastileDesktop.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Settings">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <ScrollViewer>
+            <StackPanel Padding="32" Spacing="24" MaxWidth="500">
+                
+                <!-- Header -->
+                <TextBlock Text="Settings" Style="{StaticResource TitleLargeTextBlockStyle}" />
+                
+                <!-- Notifications Section -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Notifications" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Toast reminder" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" 
+                                   Value="{x:Bind ViewModel.ToastNotifyMinutes, Mode=TwoWay}" 
+                                   Minimum="1" Maximum="60"
+                                   SpinButtonPlacementMode="Inline"
+                                   Width="120" />
+                    </Grid>
+                    <TextBlock Text="minutes after work starts" 
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               FontSize="12"
+                               Margin="0,-8,0,0" />
+
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Force intervention" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" 
+                                   Value="{x:Bind ViewModel.InterventionMinutes, Mode=TwoWay}" 
+                                   Minimum="1" Maximum="120"
+                                   SpinButtonPlacementMode="Inline"
+                                   Width="120" />
+                    </Grid>
+                    <TextBlock Text="minutes after work starts" 
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               FontSize="12"
+                               Margin="0,-8,0,0" />
+
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Repeat intervention" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" 
+                                   Value="{x:Bind ViewModel.InterventionRepeatMinutes, Mode=TwoWay}" 
+                                   Minimum="1" Maximum="60"
+                                   SpinButtonPlacementMode="Inline"
+                                   Width="120" />
+                    </Grid>
+                    <TextBlock Text="minutes after dismissed" 
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               FontSize="12"
+                               Margin="0,-8,0,0" />
+                </StackPanel>
+
+                <!-- Breaks Section -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Breaks" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Default break time" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" 
+                                   Value="{x:Bind ViewModel.DefaultBreakMinutes, Mode=TwoWay}" 
+                                   Minimum="1" Maximum="60"
+                                   SpinButtonPlacementMode="Inline"
+                                   Width="120" />
+                    </Grid>
+                    <TextBlock Text="minutes" 
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               FontSize="12"
+                               Margin="0,-8,0,0" />
+
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Idle prompt after" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" 
+                                   Value="{x:Bind ViewModel.IdlePromptMinutes, Mode=TwoWay}" 
+                                   Minimum="1" Maximum="60"
+                                   SpinButtonPlacementMode="Inline"
+                                   Width="120" />
+                    </Grid>
+                    <TextBlock Text="minutes" 
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               FontSize="12"
+                               Margin="0,-8,0,0" />
+                </StackPanel>
+
+                <!-- System Section -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="System" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Launch at startup" VerticalAlignment="Center" />
+                        <ToggleSwitch Grid.Column="1" 
+                                      IsOn="{x:Bind ViewModel.LaunchAtStartup, Mode=TwoWay}" />
+                    </Grid>
+                    <TextBlock Text="Start Tastile when Windows starts" 
+                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               FontSize="12"
+                               Margin="0,-8,0,0" />
+                </StackPanel>
+
+                <!-- Buttons -->
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                    <Button Content="Cancel" Command="{x:Bind ViewModel.CancelCommand}" />
+                    <Button Content="Save" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.SaveCommand}" Click="OnSaveClick" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

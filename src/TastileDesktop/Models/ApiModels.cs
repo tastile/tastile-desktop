@@ -1,6 +1,8 @@
 namespace TastileDesktop.Models;
 
 using System.Text.Json.Serialization;
+using Microsoft.UI.Xaml.Media;
+using Microsoft.UI;
 
 public record TileView(
     [property: JsonPropertyName("id")] string Id,
@@ -37,3 +39,41 @@ public record CommandResponse(
     [property: JsonPropertyName("events")] List<string> Events,
     [property: JsonPropertyName("error")] string? Error
 );
+
+// Timeline segment (computed client-side from daemon events)
+public record TimelineSegment
+{
+    public required string Kind { get; init; }       // "work" | "break" | "idle"
+    public required string? TileTitle { get; init; }
+    public required DateTime StartedAt { get; init; }
+    public DateTime? EndedAt { get; init; }          // null = ongoing
+    public bool IsActive => EndedAt == null;
+
+    public string TimeText => StartedAt.ToLocalTime().ToString("HH:mm");
+    public string DurationText
+    {
+        get
+        {
+            var end = EndedAt ?? DateTime.UtcNow;
+            var min = (int)(end - StartedAt).TotalMinutes;
+            return min < 1 ? "<1m" : $"{min}m";
+        }
+    }
+    public string StatusText => IsActive ? "▸ now" : DurationText;
+    public string DisplayTitle => Kind switch
+    {
+        "work" => TileTitle ?? "Working",
+        "break" => "Break",
+        _ => "Idle"
+    };
+
+    public Windows.UI.Color BadgeColor => Kind switch
+    {
+        "work" => Windows.UI.Color.FromArgb(255, 0, 120, 212),
+        "break" => Windows.UI.Color.FromArgb(255, 16, 124, 16),
+        _ => Windows.UI.Color.FromArgb(255, 128, 128, 128),
+    };
+    public SolidColorBrush StatusForeground => IsActive
+        ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 124, 16))
+        : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 128, 128, 128));
+}

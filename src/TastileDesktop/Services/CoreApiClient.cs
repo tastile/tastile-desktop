@@ -2,6 +2,7 @@ namespace TastileDesktop.Services;
 
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Text.Json;
 using TastileDesktop.Models;
 
 public class CoreApiClient
@@ -34,6 +35,17 @@ public class CoreApiClient
     public async Task<ExecutionResponse?> GetExecutionAsync()
         => await _httpClient.GetFromJsonAsync<ExecutionResponse>("/read/execution");
 
+    // Returns raw JSON because Event uses serde tagged enum
+    public async Task<JsonElement?> GetEventsRawAsync()
+    {
+        try
+        {
+            var json = await _httpClient.GetStringAsync("/debug/events");
+            return JsonDocument.Parse(json).RootElement;
+        }
+        catch { return null; }
+    }
+
     // Command endpoints
     public async Task<CommandResponse?> CreateTileAsync(string title, string? nextAction = null, string? doneDefinition = null)
         => await PostCommandAsync("/commands/tile/create", new { title, next_action = nextAction, done_definition = doneDefinition });
@@ -55,6 +67,12 @@ public class CoreApiClient
 
     public async Task<CommandResponse?> AttachMemoAsync(string? tileId, string text)
         => await PostCommandAsync("/commands/memo/attach", new { tile_id = tileId, text });
+
+    public async Task<CommandResponse?> ExtendTileAsync(int extendMin)
+        => await PostCommandAsync("/commands/tile/extend", new { extend_min = extendMin });
+
+    public async Task<CommandResponse?> DeleteTileAsync(string tileId)
+        => await PostCommandAsync("/commands/tile/delete", new { tile_id = tileId });
 
     private async Task<CommandResponse?> PostCommandAsync<T>(string path, T body)
     {
