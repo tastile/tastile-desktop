@@ -1,0 +1,238 @@
+<Window
+    x:Class="TastileDesktop.Views.CreateTileWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TastileDesktop.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Title="Create Tile">
+
+    <Grid Background="{StaticResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="TitleBarArea" Margin="12,12,12,0" Padding="14,10" CornerRadius="20" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
+            <TextBlock Text="Create Tile" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Padding="24" Spacing="16" MaxWidth="480" HorizontalAlignment="Center">
+                
+                <!-- Header -->
+                <TextBlock Text="Create Tile" Style="{StaticResource TitleLargeTextBlockStyle}" />
+                
+                <!-- Title -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="TitleTextBox" 
+                             PlaceholderText="Enter tile title..."
+                             TextChanged="OnTitleChanged" />
+                </StackPanel>
+
+                <!-- Kind (Work / Label) -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Kind" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="KindWorkButton" 
+                                Content="Task" 
+                                Click="OnKindWorkClick"
+                                HorizontalAlignment="Stretch" />
+                        <Button x:Name="KindLabelButton" 
+                                Content="Label" 
+                                Click="OnKindLabelClick"
+                                HorizontalAlignment="Stretch"
+                                Grid.Column="1" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Objective Mode -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Objective" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="ModeFinishButton" 
+                                Content="Finish Once" 
+                                Click="OnModeFinishClick"
+                                HorizontalAlignment="Stretch" />
+                        <Button x:Name="ModeRecurringButton" 
+                                Content="Recurring" 
+                                Click="OnModeRecurringClick"
+                                HorizontalAlignment="Stretch"
+                                Grid.Column="1" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Recurrence Settings (visible when Recurring) -->
+                <StackPanel x:Name="RecurrencePanel" Spacing="8" Visibility="Collapsed">
+                    <TextBlock Text="Recurrence" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="FreqDailyButton" 
+                                Content="Daily" 
+                                Click="OnFreqDailyClick"
+                                HorizontalAlignment="Stretch" />
+                        <Button x:Name="FreqWeeklyButton" 
+                                Content="Weekly" 
+                                Click="OnFreqWeeklyClick"
+                                HorizontalAlignment="Stretch"
+                                Grid.Column="1" />
+                        <Button x:Name="FreqMonthlyButton" 
+                                Content="Monthly" 
+                                Click="OnFreqMonthlyClick"
+                                HorizontalAlignment="Stretch"
+                                Grid.Column="2" />
+                    </Grid>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Every" VerticalAlignment="Center" />
+                        <NumberBox x:Name="RecurrenceIntervalBox"
+                                   Value="1"
+                                   Minimum="1"
+                                   SpinButtonPlacementMode="Inline"
+                                   Grid.Column="1" />
+                        <TextBlock x:Name="RecurrenceSuffixText" Text="days" VerticalAlignment="Center" Grid.Column="2" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Schedule -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Schedule" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ToggleButton x:Name="UseStartAtToggle" 
+                                      Content="Start At"
+                                      Click="OnUseStartAtClick"
+                                      HorizontalAlignment="Stretch" />
+                        <ToggleButton x:Name="UseEndAtToggle" 
+                                      Content="End At"
+                                      Click="OnUseEndAtClick"
+                                      HorizontalAlignment="Stretch"
+                                      Grid.Column="1" />
+                    </Grid>
+                    
+                    <!-- Start Date/Time -->
+                    <Grid x:Name="StartDatePanel" ColumnSpacing="8" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <DatePicker x:Name="StartDatePicker" Header="Date" />
+                        <TimePicker x:Name="StartTimePicker" Header="Time" Grid.Column="1" />
+                    </Grid>
+                    
+                    <!-- End Date/Time -->
+                    <Grid x:Name="EndDatePanel" ColumnSpacing="8" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <DatePicker x:Name="EndDatePicker" Header="Date" />
+                        <TimePicker x:Name="EndTimePicker" Header="Time" Grid.Column="1" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Work Target (visible when Work kind) -->
+                <StackPanel x:Name="WorkTargetPanel" Spacing="8">
+                    <TextBlock Text="Work Target" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <NumberBox x:Name="WorkHoursBox"
+                                   Header="Hours"
+                                   Value="0"
+                                   Minimum="0"
+                                   Maximum="99"
+                                   SpinButtonPlacementMode="Inline" />
+                        <NumberBox x:Name="WorkMinutesBox"
+                                   Header="Minutes"
+                                   Value="25"
+                                   Minimum="0"
+                                   Maximum="59"
+                                   SpinButtonPlacementMode="Inline"
+                                   Grid.Column="1" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Split Setting (visible when Work kind) -->
+                <StackPanel x:Name="SplitPanel" Spacing="8">
+                    <TextBlock Text="Break Handling" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button x:Name="SplitAllowButton" 
+                                Content="Split Work" 
+                                Click="OnSplitAllowClick"
+                                HorizontalAlignment="Stretch" />
+                        <Button x:Name="SplitKeepButton" 
+                                Content="Keep Continuous" 
+                                Click="OnSplitKeepClick"
+                                HorizontalAlignment="Stretch"
+                                Grid.Column="1" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- Project -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Project" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="ProjectTextBox" PlaceholderText="Enter or select project..." />
+                </StackPanel>
+
+                <!-- Tags -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Tags" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="TagsTextBox" PlaceholderText="Add tags (comma separated)..." />
+                </StackPanel>
+
+                <!-- Memo -->
+                <StackPanel Spacing="8">
+                    <TextBlock Text="Memo" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBox x:Name="MemoTextBox" 
+                             PlaceholderText="Enter notes..."
+                             AcceptsReturn="True"
+                             TextWrapping="Wrap"
+                             MinHeight="80" />
+                </StackPanel>
+
+                <!-- Error Message -->
+                <TextBlock x:Name="ErrorTextBlock" 
+                           Foreground="#FFDC2626"
+                           TextWrapping="Wrap"
+                           Visibility="Collapsed" />
+
+                <!-- Buttons -->
+                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                    <Button Content="Cancel" Click="OnCancelClick" />
+                    <Button Content="Create" 
+                            Style="{StaticResource AccentButtonStyle}" 
+                            Click="OnCreateClick" />
+                </StackPanel>
+
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

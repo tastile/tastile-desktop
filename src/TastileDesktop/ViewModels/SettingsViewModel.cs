@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using TastileDesktop.Services;
+using System.Collections.Generic;
 
 namespace TastileDesktop.ViewModels;
 
@@ -10,6 +11,10 @@ namespace TastileDesktop.ViewModels;
 public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsService _settingsService;
+    public IReadOnlyList<string> ThemeModes { get; } = ThemeManager.Modes;
+
+    [ObservableProperty]
+    private string _themeMode = ThemeManager.Light;
 
     [ObservableProperty]
     private int _toastNotifyMinutes;
@@ -44,6 +49,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private void LoadSettings()
     {
         var current = _settingsService.Current;
+        ThemeMode = current.ThemeMode;
         ToastNotifyMinutes = current.ToastNotifyMinutes;
         InterventionMinutes = current.InterventionMinutes;
         DefaultBreakMinutes = current.DefaultBreakMinutes;
@@ -57,6 +63,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         var settings = new TastileSettings
         {
+            ThemeMode = ThemeMode,
             ToastNotifyMinutes = ToastNotifyMinutes,
             InterventionMinutes = InterventionMinutes,
             DefaultBreakMinutes = DefaultBreakMinutes,

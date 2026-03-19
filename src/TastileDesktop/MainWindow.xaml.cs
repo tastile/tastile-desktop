@@ -1,7 +1,7 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
+using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
+using TastileDesktop.Views;
 
 namespace TastileDesktop;
 
@@ -11,75 +11,74 @@ public sealed partial class MainWindow : Window
 
     public MainWindow()
     {
-        this.InitializeComponent();
-
-        // Set window size via AppWindow API
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
-        var appWindow = Microsoft.UI.Windowing.AppWindow.GetFromWindowId(windowId);
-        appWindow.Resize(new Windows.Graphics.SizeInt32(520, 780));
-
-        // Initialize ViewModel
-        _ = InitializeAsync();
+        InitializeComponent();
+        FloatingWindowHelper.Configure(this, TitleBarArea, 560, 460);
+        _ = ViewModel.InitializeAsync();
+        AuthService.Instance.AuthStateChanged += (_, _) => DispatcherQueue.TryEnqueue(UpdateAccountUI);
+        UpdateAccountUI();
     }
 
-    private async Task InitializeAsync()
+    private void UpdateAccountUI()
     {
-        await ViewModel.InitializeAsync();
+        AccountTextBlock.Text = AuthService.Instance.IsAuthenticated
+            ? AuthService.Instance.UserEmail ?? "Account"
+            : "Sign In";
     }
 
-    private void OnTileClick(object sender, ItemClickEventArgs e)
+    private async void OnAccountClick(object sender, RoutedEventArgs e)
     {
-        if (e.ClickedItem is not TileListItem item) return;
-
-        // Only start tiles that are Ready
-        if (!string.Equals(item.Lifecycle, "Ready", StringComparison.OrdinalIgnoreCase)) return;
-
-        ViewModel.StartTileCommand.Execute(item.Id);
-    }
-
-    private void OnSettingsClick(object sender, RoutedEventArgs e)
-    {
-        var settingsWindow = new Views.SettingsWindow();
-        settingsWindow.Activate();
-    }
-
-    private void OnTileRightTapped(object sender, RightTappedRoutedEventArgs e)
-    {
-        // Show context flyout
-        if (sender is FrameworkElement element && element.ContextFlyout is MenuFlyout flyout)
+        if (!AuthService.Instance.IsAuthenticated)
         {
-            flyout.ShowAt(element, e.GetPosition(element));
+            var authWindow = new AuthWindow(ViewModel.ApiClient);
+            authWindow.Activate();
+            var result = await authWindow.AuthResultTask;
+            if (result.Success)
+            {
+                await AuthService.Instance.RefreshSessionFromDaemonAsync(ViewModel.ApiClient);
+                await ViewModel.RefreshAsync();
+                ViewModel.StatusMessage = "Signed in";
+                UpdateAccountUI();
+            }
+            else if (!string.IsNullOrWhiteSpace(result.Error) &&
+                     !string.Equals(result.Error, "Authentication window closed", StringComparison.Ordinal))
+            {
+                ViewModel.StatusMessage = result.Error;
+            }
+            return;
         }
+
+        await AuthService.Instance.SignOutAsync(ViewModel.ApiClient);
+        ViewModel.StatusMessage = "Signed out";
+        UpdateAccountUI();
     }
 
-    private void OnStartTileMenuClick(object sender, RoutedEventArgs e)
+    private void OnOpenExecuteWindowClick(object sender, RoutedEventArgs e)
     {
-        if (sender is MenuFlyoutItem item && item.Tag is string tileId)
-        {
-            ViewModel.StartTileCommand.Execute(tileId);
-        }
+        var window = new ExecuteWindow();
+        window.Activate();
     }
 
-    private void OnCompleteTileMenuClick(object sender, RoutedEventArgs e)
+    private void OnOpenTilesWindowClick(object sender, RoutedEventArgs e)
     {
-        // Complete the currently active tile
-        ViewModel.CompleteTileCommand.Execute(null);
+        var window = new TilesWindow();
+        window.Activate();
     }
 
-    private void OnDeferTileMenuClick(object sender, RoutedEventArgs e)
+    private void OnOpenTimelineWindowClick(object sender, RoutedEventArgs e)
     {
-        if (sender is MenuFlyoutItem item && item.Tag is string tileId)
-        {
-            _ = ViewModel.DeferTileCommand.ExecuteAsync(tileId);
-        }
+        var window = new TimelineWindow();
+        window.Activate();
     }
 
-    private void OnDeleteTileMenuClick(object sender, RoutedEventArgs e)
+    private void OnOpenCreateTileWindowClick(object sender, RoutedEventArgs e)
     {
-        if (sender is MenuFlyoutItem item && item.Tag is string tileId)
-        {
-            _ = ViewModel.DeleteTileCommand.ExecuteAsync(tileId);
-        }
+        var window = new CreateTileWindow();
+        window.Activate();
+    }
+
+    private void OnOpenSettingsWindowClick(object sender, RoutedEventArgs e)
+    {
+        var window = new SettingsWindow();
+        window.Activate();
     }
 }

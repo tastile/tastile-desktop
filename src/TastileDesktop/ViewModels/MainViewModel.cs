@@ -9,8 +9,26 @@ using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TastileDesktop.ViewModels;
+
+/// <summary>
+/// ViewModel for timeline segment display.
+/// </summary>
+public sealed class TimelineSegmentViewModel : ObservableObject
+{
+    public string TimeText { get; set; } = string.Empty;
+    public string Title { get; set; } = string.Empty;
+    public string DurationText { get; set; } = string.Empty;
+    public SolidColorBrush BadgeColor { get; set; } = new(Microsoft.UI.Colors.Gray);
+}
+
+public sealed class PromptActionButtonViewModel : ObservableObject
+{
+    public string Id { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+}
 
 /// <summary>
 /// Bindable item for tile list display.
@@ -59,11 +77,12 @@ public sealed class TileListItem : ObservableObject
     public bool IsCompleteEnabled => string.Equals(Lifecycle, "Started", StringComparison.OrdinalIgnoreCase);
     public bool IsDeferEnabled => !string.Equals(Lifecycle, "Done", StringComparison.OrdinalIgnoreCase);
 
-    public SolidColorBrush BadgeBackground => Lifecycle switch
+    public SolidColorBrush BadgeBackground => Lifecycle.Trim().ToLowerInvariant() switch
     {
-        "Ready" => new SolidColorBrush(ColorHelper.FromArgb(255, 0, 120, 212)),
-        "Started" => new SolidColorBrush(ColorHelper.FromArgb(255, 16, 124, 16)),
-        "Done" => new SolidColorBrush(ColorHelper.FromArgb(255, 96, 96, 96)),
+        "ready" => new SolidColorBrush(ColorHelper.FromArgb(255, 0, 120, 212)),
+        "started" => new SolidColorBrush(ColorHelper.FromArgb(255, 16, 124, 16)),
+        "done" => new SolidColorBrush(ColorHelper.FromArgb(255, 96, 96, 96)),
+        "closed" => new SolidColorBrush(ColorHelper.FromArgb(255, 96, 96, 96)),
         _ => new SolidColorBrush(ColorHelper.FromArgb(255, 128, 128, 128)),
     };
 
@@ -81,6 +100,8 @@ public sealed class TileListItem : ObservableObject
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly CoreApiClient _api;
+    
+    public CoreApiClient ApiClient => _api;
     private readonly PollingService _pollingService;
     private List<TileListItem> _allTiles = new();
 
@@ -136,6 +157,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private ActiveTileResponse? _activeTile;
 
     [ObservableProperty]
+    private PendingPromptResponse? _pendingPrompt;
+
+    [ObservableProperty]
     private bool _isConnected;
 
     public Visibility ConnectedIndicatorVisibility => IsConnected ? Visibility.Visible : Visibility.Collapsed;
@@ -152,15 +176,52 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private string _newTileNextAction = string.Empty;
 
     [ObservableProperty]
+    private string _newTileDoneDefinition = string.Empty;
+
+    [ObservableProperty]
     private string _memoText = string.Empty;
 
     // Timeline
-    public ObservableCollection<TimelineSegment> TimelineSegments { get; } = new();
-    public bool IsTimelineEmpty => TimelineSegments.Count == 0;
+    [ObservableProperty]
+    private ObservableCollection<TimelineSegmentViewModel> _timelineSegments = new();
+
+    [ObservableProperty]
+    private ObservableCollection<PromptActionButtonViewModel> _promptActions = new();
+
+    public bool HasNoTimelineSegments => TimelineSegments.Count == 0;
     public bool IsTilesEmpty => Tiles.Count == 0;
+    public Visibility TilesEmptyVisibility => IsTilesEmpty ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility TilesListVisibility => IsTilesEmpty ? Visibility.Collapsed : Visibility.Visible;
+    public int TotalCount => _allTiles.Count;
+    public int ReadyCount => _allTiles.Count(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase));
+    public int StartedCount => _allTiles.Count(t => t.Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase));
+    public int DoneCount => _allTiles.Count(t => t.Lifecycle.Equals("Done", StringComparison.OrdinalIgnoreCase));
+    public Visibility IdleVisibility => IsIdle ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility WorkingVisibility => IsWorking ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility BreakVisibility => IsOnBreak ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility PromptVisibility => PendingPrompt?.Prompt != null ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility PromptEmptyVisibility => PendingPrompt?.Prompt != null ? Visibility.Collapsed : Visibility.Visible;
 
     public Visibility HasNextAction =>
         !string.IsNullOrEmpty(ActiveTileNextAction) ? Visibility.Visible : Visibility.Collapsed;
+
+    public string PendingPromptTitle => PendingPrompt?.Prompt?.Title ?? "No pending prompt";
+    public string PendingPromptBody => PendingPrompt?.Prompt?.Body ?? "Core has not requested a response.";
+    public string PendingPromptWhy => PendingPrompt?.Prompt?.Why ?? string.Empty;
+    public string MemoPlaceholder => ActiveTile?.Tile != null
+        ? "Attach memo to active tile..."
+        : "Send a free memo to core...";
+
+    public TileListItem? NextUpTile =>
+        _allTiles.FirstOrDefault(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase))
+        ?? _allTiles.FirstOrDefault(t => t.Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase));
+
+    public string NextUpTitle => NextUpTile?.Title ?? "No suggested tile";
+    public string NextUpAction => NextUpTile?.NextAction ?? "Create a tile or adjust its schedule to surface the next actionable tile.";
+    public string NextUpWorkedText => string.IsNullOrWhiteSpace(NextUpTile?.WorkedText) ? "Ready" : NextUpTile!.WorkedText;
+    public string? NextUpTileId => NextUpTile?.Id;
+    public Visibility NextUpVisibility => NextUpTile is null ? Visibility.Collapsed : Visibility.Visible;
+    public Visibility NextUpEmptyVisibility => NextUpTile is null ? Visibility.Visible : Visibility.Collapsed;
 
     public string IdleGuidanceText
     {
@@ -226,6 +287,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // Subscribe to polling events
         _pollingService.ActiveTileChanged += OnActiveTileChanged;
         _pollingService.TilesChanged += OnTilesChanged;
+        _pollingService.PendingPromptChanged += OnPendingPromptChanged;
+        _pollingService.TimelineChanged += OnTimelineChanged;
         _pollingService.ConnectionStatusChanged += OnConnectionStatusChanged;
 
         // Initialize intervention engine
@@ -245,10 +308,56 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsIdle));
         OnPropertyChanged(nameof(IsWorking));
         OnPropertyChanged(nameof(IsOnBreak));
+        OnPropertyChanged(nameof(IdleVisibility));
+        OnPropertyChanged(nameof(WorkingVisibility));
+        OnPropertyChanged(nameof(BreakVisibility));
         OnPropertyChanged(nameof(ActiveTileTitle));
         OnPropertyChanged(nameof(ActiveTileNextAction));
         OnPropertyChanged(nameof(WorkElapsedText));
         OnPropertyChanged(nameof(BreakRemainingText));
+        OnPropertyChanged(nameof(MemoPlaceholder));
+    }
+
+    private void OnPendingPromptChanged(object? sender, PendingPromptResponse? prompt)
+    {
+        PendingPrompt = prompt;
+        PromptActions = new ObservableCollection<PromptActionButtonViewModel>(
+            prompt?.Prompt?.Actions.Select(action => new PromptActionButtonViewModel
+            {
+                Id = action.Id,
+                Label = action.Label,
+            }) ?? Enumerable.Empty<PromptActionButtonViewModel>());
+
+        OnPropertyChanged(nameof(PromptVisibility));
+        OnPropertyChanged(nameof(PromptEmptyVisibility));
+        OnPropertyChanged(nameof(PendingPromptTitle));
+        OnPropertyChanged(nameof(PendingPromptBody));
+        OnPropertyChanged(nameof(PendingPromptWhy));
+    }
+
+    private void OnTimelineChanged(object? sender, TimelineTodayResponse? timeline)
+    {
+        var segments = new ObservableCollection<TimelineSegmentViewModel>(
+            timeline?.Items.Select(item =>
+            {
+                var startedAt = DateTimeOffset.TryParse(item.StartedAt, out var parsed)
+                    ? parsed.ToLocalTime()
+                    : DateTimeOffset.Now;
+
+                return new TimelineSegmentViewModel
+                {
+                    TimeText = startedAt.ToString("HH:mm"),
+                    Title = item.Title,
+                    DurationText = item.IsActive ? $"{Math.Max(item.DurationMin, 0)}m ongoing" : $"{Math.Max(item.DurationMin, 0)}m",
+                    BadgeColor = item.Kind.Equals("break", StringComparison.OrdinalIgnoreCase)
+                        ? new SolidColorBrush(ColorHelper.FromArgb(255, 16, 124, 16))
+                        : new SolidColorBrush(ColorHelper.FromArgb(255, 0, 120, 212)),
+                };
+            }) ?? Enumerable.Empty<TimelineSegmentViewModel>());
+
+        TimelineSegments = segments;
+        OnPropertyChanged(nameof(TimelineSegments));
+        OnPropertyChanged(nameof(HasNoTimelineSegments));
     }
 
     private void OnTilesChanged(object? sender, TilesResponse? tiles)
@@ -259,12 +368,30 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             Id = t.Id,
             Title = t.Title,
-            Lifecycle = t.Lifecycle,
+            Lifecycle = NormalizeLifecycle(t.Lifecycle),
             WorkedMinutes = t.WorkedMinutes,
             NextAction = t.NextAction,
-        }).ToList();
+        })
+        .OrderBy(t => LifecycleSortKey(t.Lifecycle))
+        .ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase)
+        .ToList();
 
         ApplyFilter();
+        OnPropertyChanged(nameof(IsTilesEmpty));
+        OnPropertyChanged(nameof(TilesEmptyVisibility));
+        OnPropertyChanged(nameof(TilesListVisibility));
+        OnPropertyChanged(nameof(IdleGuidanceText));
+        OnPropertyChanged(nameof(TotalCount));
+        OnPropertyChanged(nameof(ReadyCount));
+        OnPropertyChanged(nameof(StartedCount));
+        OnPropertyChanged(nameof(DoneCount));
+        OnPropertyChanged(nameof(NextUpTile));
+        OnPropertyChanged(nameof(NextUpTitle));
+        OnPropertyChanged(nameof(NextUpAction));
+        OnPropertyChanged(nameof(NextUpWorkedText));
+        OnPropertyChanged(nameof(NextUpTileId));
+        OnPropertyChanged(nameof(NextUpVisibility));
+        OnPropertyChanged(nameof(NextUpEmptyVisibility));
     }
 
     private void OnConnectionStatusChanged(object? sender, bool connected)
@@ -283,13 +410,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _api.CreateTileAsync(title);
+            var nextAction = string.IsNullOrWhiteSpace(NewTileNextAction) ? null : NewTileNextAction.Trim();
+            var doneDef = string.IsNullOrWhiteSpace(NewTileDoneDefinition) ? null : NewTileDoneDefinition.Trim();
+            
+            var result = await _api.CreateTileAsync(title, nextAction, doneDef);
             if (result != null && !result.Ok)
                 StatusMessage = $"Error: {result.Error}";
             else
             {
                 StatusMessage = $"Created: {title}";
                 NewTileTitle = string.Empty;
+                NewTileNextAction = string.Empty;
+                NewTileDoneDefinition = string.Empty;
             }
             await _pollingService.PollAsync();
         }
@@ -298,6 +430,31 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = $"Error: {ex.Message}";
         }
     }
+
+    public async Task<bool> SubmitTileAsync(string title, string? nextAction, string? doneDefinition)
+    {
+        NewTileTitle = title;
+        NewTileNextAction = nextAction ?? string.Empty;
+        NewTileDoneDefinition = doneDefinition ?? string.Empty;
+
+        try
+        {
+            await CreateTileAsync();
+            return !StatusMessage.StartsWith("Error:", StringComparison.OrdinalIgnoreCase);
+        }
+        finally
+        {
+            OnPropertyChanged(nameof(NextUpTile));
+            OnPropertyChanged(nameof(NextUpTitle));
+            OnPropertyChanged(nameof(NextUpAction));
+            OnPropertyChanged(nameof(NextUpWorkedText));
+            OnPropertyChanged(nameof(NextUpTileId));
+            OnPropertyChanged(nameof(NextUpVisibility));
+            OnPropertyChanged(nameof(NextUpEmptyVisibility));
+        }
+    }
+
+    public Task RefreshAsync() => _pollingService.PollAsync();
 
     [RelayCommand]
     private async Task CompleteTileAsync()
@@ -389,9 +546,45 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = $"Error: {result.Error}";
             else
             {
-                StatusMessage = "Memo sent";
+                StatusMessage = ActiveTile?.Tile != null ? "Memo attached to active tile" : "Global memo sent";
                 MemoText = string.Empty;
             }
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    public async Task RespondToPromptAsync(string? actionId)
+    {
+        if (string.IsNullOrWhiteSpace(actionId) || PendingPrompt?.Prompt == null)
+            return;
+
+        try
+        {
+            CommandResponse? result = actionId switch
+            {
+                "START" when !string.IsNullOrWhiteSpace(PendingPrompt.Prompt.TileId)
+                    => await _api.StartTileAsync(PendingPrompt.Prompt.TileId),
+                "DEFER" when !string.IsNullOrWhiteSpace(PendingPrompt.Prompt.TileId)
+                    => await _api.DeferTileAsync(PendingPrompt.Prompt.TileId),
+                "COMPLETE_AND_START_NEXT" => await _api.CompleteTileAsync(),
+                "EXTEND" => await _api.ExtendTileAsync(10),
+                "END_BREAK" => await _api.EndBreakAsync(),
+                _ => null,
+            };
+
+            if (result != null && !result.Ok)
+            {
+                StatusMessage = $"Error: {result.Error}";
+            }
+            else
+            {
+                StatusMessage = $"Prompt action: {actionId}";
+            }
+
+            await _pollingService.PollAsync();
         }
         catch (Exception ex)
         {
@@ -407,10 +600,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // Defer is not available in API, use defer as "snooze" behavior
-            // For now, we'll just show status (daemon handles defer via lifecycle changes)
-            var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
-            StatusMessage = $"Deferred: {tile?.Title ?? tileId}";
+            var result = await _api.DeferTileAsync(tileId);
+            if (result != null && !result.Ok)
+                StatusMessage = $"Error: {result.Error}";
+            else
+            {
+                var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
+                StatusMessage = $"Deferred: {tile?.Title ?? tileId}";
+            }
             await _pollingService.PollAsync();
         }
         catch (Exception ex)
@@ -445,4 +642,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _interventionEngine?.Dispose();
         _pollingService.Dispose();
     }
+
+    private static string NormalizeLifecycle(string lifecycle) =>
+        lifecycle.Trim().ToLowerInvariant() switch
+        {
+            "ready" => "Ready",
+            "started" => "Started",
+            "done" => "Done",
+            "closed" => "Done",
+            _ => lifecycle,
+        };
+
+    private static int LifecycleSortKey(string lifecycle) =>
+        NormalizeLifecycle(lifecycle) switch
+        {
+            "Started" => 0,
+            "Ready" => 1,
+            "Done" => 2,
+            _ => 3,
+        };
 }

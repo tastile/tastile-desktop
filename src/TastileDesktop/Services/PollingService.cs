@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using TastileDesktop.Models;
+using System.Linq;
 
 namespace TastileDesktop.Services;
 
@@ -14,6 +15,8 @@ public class PollingService : IDisposable
     
     private ActiveTileResponse? _lastActiveTile;
     private TilesResponse? _lastTiles;
+    private PendingPromptResponse? _lastPrompt;
+    private TimelineTodayResponse? _lastTimeline;
     private bool _lastConnectionState;
 
     /// <summary>
@@ -25,6 +28,16 @@ public class PollingService : IDisposable
     /// Raised when the tiles list changes.
     /// </summary>
     public event EventHandler<TilesResponse?>? TilesChanged;
+
+    /// <summary>
+    /// Raised when the current pending prompt view changes.
+    /// </summary>
+    public event EventHandler<PendingPromptResponse?>? PendingPromptChanged;
+
+    /// <summary>
+    /// Raised when the today timeline view changes.
+    /// </summary>
+    public event EventHandler<TimelineTodayResponse?>? TimelineChanged;
     
     /// <summary>
     /// Raised when connection status changes.
@@ -40,6 +53,10 @@ public class PollingService : IDisposable
     /// Current cached tiles.
     /// </summary>
     public TilesResponse? CurrentTiles => _lastTiles;
+
+    public PendingPromptResponse? CurrentPrompt => _lastPrompt;
+
+    public TimelineTodayResponse? CurrentTimeline => _lastTimeline;
     
     /// <summary>
     /// Whether the daemon is currently connected.
@@ -93,10 +110,14 @@ public class PollingService : IDisposable
             // Fetch data in parallel
             var activeTask = _api.GetActiveTileAsync();
             var tilesTask = _api.GetTilesAsync();
-            await Task.WhenAll(activeTask, tilesTask);
+            var promptTask = _api.GetPendingPromptAsync();
+            var timelineTask = _api.GetTodayTimelineAsync();
+            await Task.WhenAll(activeTask, tilesTask, promptTask, timelineTask);
 
             var active = activeTask.Result;
             var tiles = tilesTask.Result;
+            var prompt = promptTask.Result;
+            var timeline = timelineTask.Result;
 
             // Check for changes and raise events
             if (HasActiveTileChanged(_lastActiveTile, active))
@@ -109,6 +130,18 @@ public class PollingService : IDisposable
             {
                 _lastTiles = tiles;
                 TilesChanged?.Invoke(this, tiles);
+            }
+
+            if (HasPromptChanged(_lastPrompt, prompt))
+            {
+                _lastPrompt = prompt;
+                PendingPromptChanged?.Invoke(this, prompt);
+            }
+
+            if (HasTimelineChanged(_lastTimeline, timeline))
+            {
+                _lastTimeline = timeline;
+                TimelineChanged?.Invoke(this, timeline);
             }
         }
         catch
@@ -139,10 +172,38 @@ public class PollingService : IDisposable
     private bool HasTilesChanged(TilesResponse? old, TilesResponse? current)
     {
         if (current?.Tiles == null) return _lastTilesHash != null;
-        var hash = string.Join(",", current.Tiles.Select(t => $"{t.Id}:{t.Lifecycle}"));
+        var hash = string.Join(",", current.Tiles.Select(t => $"{t.Id}:{t.Lifecycle}:{t.ResumeNote}:{t.WorkedMinutes}:{t.BreakMinutes}"));
         if (hash == _lastTilesHash) return false;
         _lastTilesHash = hash;
         return true;
+    }
+
+    private static bool HasPromptChanged(PendingPromptResponse? old, PendingPromptResponse? current)
+    {
+        if (old?.Prompt == null && current?.Prompt == null) return false;
+        if (old?.Prompt == null || current?.Prompt == null) return true;
+
+        var oldActions = string.Join(",", old.Prompt.Actions.Select(a => a.Id));
+        var currentActions = string.Join(",", current.Prompt.Actions.Select(a => a.Id));
+        return old.Prompt.PromptId != current.Prompt.PromptId
+            || old.Prompt.Kind != current.Prompt.Kind
+            || old.Prompt.Title != current.Prompt.Title
+            || old.Prompt.Body != current.Prompt.Body
+            || old.Prompt.Why != current.Prompt.Why
+            || oldActions != currentActions
+            || old.Prompt.ExpiresAt != current.Prompt.ExpiresAt
+            || old.Prompt.Stale != current.Prompt.Stale;
+    }
+
+    private static bool HasTimelineChanged(TimelineTodayResponse? old, TimelineTodayResponse? current)
+    {
+        var oldHash = old == null
+            ? null
+            : string.Join(",", old.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"));
+        var currentHash = current == null
+            ? null
+            : string.Join(",", current.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"));
+        return oldHash != currentHash;
     }
 
     public void Dispose()

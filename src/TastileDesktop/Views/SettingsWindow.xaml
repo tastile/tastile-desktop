@@ -8,17 +8,35 @@
     mc:Ignorable="d"
     Title="Settings">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <ScrollViewer>
+    <Grid Background="{StaticResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border x:Name="TitleBarArea" Margin="12,12,12,0" Padding="14,10" CornerRadius="20" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
+            <TextBlock Text="Settings" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
+        </Border>
+
+        <ScrollViewer Grid.Row="1">
             <StackPanel Padding="32" Spacing="24" MaxWidth="500">
                 
                 <!-- Header -->
-                <TextBlock Text="Settings" Style="{StaticResource TitleLargeTextBlockStyle}" />
+                <TextBlock Text="Settings" Style="{StaticResource TitleLargeTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+
+                <!-- Theme Section -->
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Theme" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+                    <ComboBox ItemsSource="{x:Bind ViewModel.ThemeModes, Mode=OneWay}"
+                              SelectedItem="{x:Bind ViewModel.ThemeMode, Mode=TwoWay}"
+                              PlaceholderText="Select theme" />
+                </StackPanel>
                 
                 <!-- Notifications Section -->
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Notifications" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    <TextBlock Text="Notifications" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                     
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -33,7 +51,7 @@
                                    Width="120" />
                     </Grid>
                     <TextBlock Text="minutes after work starts" 
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               Foreground="{StaticResource AppForegroundSubtleBrush}" 
                                FontSize="12"
                                Margin="0,-8,0,0" />
 
@@ -50,7 +68,7 @@
                                    Width="120" />
                     </Grid>
                     <TextBlock Text="minutes after work starts" 
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               Foreground="{StaticResource AppForegroundSubtleBrush}" 
                                FontSize="12"
                                Margin="0,-8,0,0" />
 
@@ -67,15 +85,15 @@
                                    Width="120" />
                     </Grid>
                     <TextBlock Text="minutes after dismissed" 
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               Foreground="{StaticResource AppForegroundSubtleBrush}" 
                                FontSize="12"
                                Margin="0,-8,0,0" />
                 </StackPanel>
 
                 <!-- Breaks Section -->
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Breaks" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    <TextBlock Text="Breaks" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                     
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -90,7 +108,7 @@
                                    Width="120" />
                     </Grid>
                     <TextBlock Text="minutes" 
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               Foreground="{StaticResource AppForegroundSubtleBrush}" 
                                FontSize="12"
                                Margin="0,-8,0,0" />
 
@@ -107,15 +125,15 @@
                                    Width="120" />
                     </Grid>
                     <TextBlock Text="minutes" 
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               Foreground="{StaticResource AppForegroundSubtleBrush}" 
                                FontSize="12"
                                Margin="0,-8,0,0" />
                 </StackPanel>
 
                 <!-- System Section -->
                 <StackPanel Spacing="12">
-                    <TextBlock Text="System" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
+                    <TextBlock Text="System" Style="{StaticResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                     
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
@@ -127,7 +145,7 @@
                                       IsOn="{x:Bind ViewModel.LaunchAtStartup, Mode=TwoWay}" />
                     </Grid>
                     <TextBlock Text="Start Tastile when Windows starts" 
-                               Foreground="{ThemeResource TextFillColorTertiaryBrush}" 
+                               Foreground="{StaticResource AppForegroundSubtleBrush}" 
                                FontSize="12"
                                Margin="0,-8,0,0" />
                 </StackPanel>

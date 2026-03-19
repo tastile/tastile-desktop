@@ -1,8 +1,6 @@
 namespace TastileDesktop.Models;
 
 using System.Text.Json.Serialization;
-using Microsoft.UI.Xaml.Media;
-using Microsoft.UI;
 
 public record TileView(
     [property: JsonPropertyName("id")] string Id,
@@ -11,7 +9,9 @@ public record TileView(
     [property: JsonPropertyName("next_action")] string? NextAction,
     [property: JsonPropertyName("done_definition")] string? DoneDefinition,
     [property: JsonPropertyName("worked_minutes")] long WorkedMinutes,
-    [property: JsonPropertyName("semantic_role")] string SemanticRole
+    [property: JsonPropertyName("break_minutes")] long BreakMinutes,
+    [property: JsonPropertyName("semantic_role")] string SemanticRole,
+    [property: JsonPropertyName("resume_note")] string? ResumeNote
 );
 
 public record TilesResponse(
@@ -22,7 +22,9 @@ public record ActiveTileResponse(
     [property: JsonPropertyName("tile")] TileView? Tile,
     [property: JsonPropertyName("phase")] string Phase,
     [property: JsonPropertyName("phase_started_at")] string? PhaseStartedAt,
-    [property: JsonPropertyName("phase_ends_at")] string? PhaseEndsAt
+    [property: JsonPropertyName("phase_ends_at")] string? PhaseEndsAt,
+    [property: JsonPropertyName("resume_note")] string? ResumeNote,
+    [property: JsonPropertyName("next_visible_action")] string? NextVisibleAction
 );
 
 public record ExecutionResponse(
@@ -30,6 +32,7 @@ public record ExecutionResponse(
     [property: JsonPropertyName("phase_kind")] string PhaseKind,
     [property: JsonPropertyName("phase_started_at")] string? PhaseStartedAt,
     [property: JsonPropertyName("phase_ends_at")] string? PhaseEndsAt,
+    [property: JsonPropertyName("pending_prompt_id")] string? PendingPromptId,
     [property: JsonPropertyName("tile_count")] int TileCount,
     [property: JsonPropertyName("event_count")] int EventCount
 );
@@ -37,43 +40,41 @@ public record ExecutionResponse(
 public record CommandResponse(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("events")] List<string> Events,
+    [property: JsonPropertyName("tile_id")] string? TileId,
     [property: JsonPropertyName("error")] string? Error
 );
 
-// Timeline segment (computed client-side from daemon events)
-public record TimelineSegment
-{
-    public required string Kind { get; init; }       // "work" | "break" | "idle"
-    public required string? TileTitle { get; init; }
-    public required DateTime StartedAt { get; init; }
-    public DateTime? EndedAt { get; init; }          // null = ongoing
-    public bool IsActive => EndedAt == null;
+public record PendingPromptResponse(
+    [property: JsonPropertyName("prompt")] PromptView? Prompt
+);
 
-    public string TimeText => StartedAt.ToLocalTime().ToString("HH:mm");
-    public string DurationText
-    {
-        get
-        {
-            var end = EndedAt ?? DateTime.UtcNow;
-            var min = (int)(end - StartedAt).TotalMinutes;
-            return min < 1 ? "<1m" : $"{min}m";
-        }
-    }
-    public string StatusText => IsActive ? "▸ now" : DurationText;
-    public string DisplayTitle => Kind switch
-    {
-        "work" => TileTitle ?? "Working",
-        "break" => "Break",
-        _ => "Idle"
-    };
+public record PromptView(
+    [property: JsonPropertyName("prompt_id")] string PromptId,
+    [property: JsonPropertyName("kind")] string Kind,
+    [property: JsonPropertyName("tile_id")] string? TileId,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("body")] string Body,
+    [property: JsonPropertyName("why")] string Why,
+    [property: JsonPropertyName("actions")] List<PromptActionView> Actions,
+    [property: JsonPropertyName("expires_at")] string? ExpiresAt,
+    [property: JsonPropertyName("stale")] bool Stale
+);
 
-    public Windows.UI.Color BadgeColor => Kind switch
-    {
-        "work" => Windows.UI.Color.FromArgb(255, 0, 120, 212),
-        "break" => Windows.UI.Color.FromArgb(255, 16, 124, 16),
-        _ => Windows.UI.Color.FromArgb(255, 128, 128, 128),
-    };
-    public SolidColorBrush StatusForeground => IsActive
-        ? new SolidColorBrush(Windows.UI.Color.FromArgb(255, 16, 124, 16))
-        : new SolidColorBrush(Windows.UI.Color.FromArgb(255, 128, 128, 128));
-}
+public record PromptActionView(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("label")] string Label
+);
+
+public record TimelineTodayResponse(
+    [property: JsonPropertyName("items")] List<TimelineItemView> Items
+);
+
+public record TimelineItemView(
+    [property: JsonPropertyName("kind")] string Kind,
+    [property: JsonPropertyName("tile_id")] string? TileId,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("started_at")] string StartedAt,
+    [property: JsonPropertyName("ended_at")] string? EndedAt,
+    [property: JsonPropertyName("duration_min")] long DurationMin,
+    [property: JsonPropertyName("is_active")] bool IsActive
+);

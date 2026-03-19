@@ -2,186 +2,38 @@
     x:Class="TastileDesktop.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TastileDesktop"
-    xmlns:vm="using:TastileDesktop.ViewModels"
     Title="Tastile">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-        <ScrollViewer VerticalScrollBarVisibility="Auto">
-            <StackPanel Padding="24" Spacing="20">
+    <Grid Background="{StaticResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-                <!-- Header Bar -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Tastile" Style="{StaticResource TitleTextBlockStyle}" VerticalAlignment="Center" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" Margin="0,0,16,0">
-                        <!-- Connection indicator - Green when connected, Red when not -->
-                        <Ellipse Width="10" Height="10" VerticalAlignment="Center" Fill="#10c410" 
-                                 Visibility="{x:Bind ViewModel.ConnectedIndicatorVisibility, Mode=OneWay}" />
-                        <Ellipse Width="10" Height="10" VerticalAlignment="Center" Fill="#c42b1c" 
-                                 Visibility="{x:Bind ViewModel.DisconnectedIndicatorVisibility, Mode=OneWay}" />
-                        <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}"
-                                   Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                   VerticalAlignment="Center" FontSize="12" />
-                    </StackPanel>
-                    <!-- Settings button -->
-                    <Button Grid.Column="2" Click="OnSettingsClick" Padding="8,4">
-                        <FontIcon Glyph="&#xE713;" FontSize="16" />
-                    </Button>
-                </Grid>
+        <Border x:Name="TitleBarArea" Margin="12,12,12,0" Padding="14,10" CornerRadius="20" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Spacing="2">
+                    <TextBlock Text="Tastile" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock Text="{x:Bind ViewModel.StatusMessage, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                </StackPanel>
+                <Button Grid.Column="1" x:Name="AccountButton" Click="OnAccountClick" Padding="12,8" Background="{StaticResource AppSurface2Brush}" Foreground="{StaticResource AppForegroundBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
+                    <TextBlock x:Name="AccountTextBlock" Text="Sign In" />
+                </Button>
+            </Grid>
+        </Border>
 
-                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                <!-- Execution Status Panel -->
-                <Border Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
-                        CornerRadius="8" Padding="20" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" BorderThickness="1">
-                    <StackPanel Spacing="12">
-                        <!-- Idle state -->
-                        <StackPanel Spacing="4" Visibility="{x:Bind ViewModel.IsIdle, Mode=OneWay}">
-                            <TextBlock Text="Idle" Style="{StaticResource SubtitleTextBlockStyle}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            <TextBlock Text="No active tile" Foreground="{ThemeResource TextFillColorTertiaryBrush}" />
-                        </StackPanel>
-
-                        <!-- Working state -->
-                        <StackPanel Visibility="{x:Bind ViewModel.IsWorking, Mode=OneWay}" Spacing="8">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="WORK" FontWeight="Bold" FontSize="13" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
-                                <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.WorkElapsedText, Mode=OneWay}" 
-                                           FontFamily="Consolas" FontSize="13"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                            </Grid>
-                            <TextBlock Text="{x:Bind ViewModel.ActiveTileTitle, Mode=OneWay}" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}" TextWrapping="Wrap" />
-                            <TextBlock Text="{x:Bind ViewModel.ActiveTileNextAction, Mode=OneWay}" 
-                                       TextWrapping="Wrap" FontSize="14"
-                                       Foreground="{ThemeResource TextFillColorSecondaryBrush}" />
-                        </StackPanel>
-
-                        <!-- Break state -->
-                        <StackPanel Visibility="{x:Bind ViewModel.IsOnBreak, Mode=OneWay}" Spacing="8">
-                            <TextBlock Text="BREAK" FontWeight="Bold" FontSize="18" Foreground="{ThemeResource SystemFillColorCautionBrush}" />
-                            <TextBlock Text="{x:Bind ViewModel.BreakRemainingText, Mode=OneWay}" 
-                                       Style="{StaticResource SubtitleTextBlockStyle}" FontFamily="Consolas" />
-                        </StackPanel>
-
-                        <!-- Action Buttons -->
-                        <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,4,0,0">
-                            <Button Content="Complete" Style="{StaticResource AccentButtonStyle}"
-                                    Command="{x:Bind ViewModel.CompleteTileCommand}"
-                                    Visibility="{x:Bind ViewModel.IsWorking, Mode=OneWay}" />
-                            <Button Content="End Break" Style="{StaticResource AccentButtonStyle}"
-                                    Command="{x:Bind ViewModel.EndBreakCommand}"
-                                    Visibility="{x:Bind ViewModel.IsOnBreak, Mode=OneWay}" />
-                            <Button Content="Break (5 min)" 
-                                    Command="{x:Bind ViewModel.StartBreakCommand}"
-                                    Visibility="{x:Bind ViewModel.IsWorking, Mode=OneWay}" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-
-                <!-- New Tile -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox PlaceholderText="New tile title..." Margin="0,0,8,0"
-                             Text="{x:Bind ViewModel.NewTileTitle, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <Button Grid.Column="1" Content="Create" Command="{x:Bind ViewModel.CreateTileCommand}" />
-                </Grid>
-
-                <!-- Tile List with Filter -->
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <TextBlock Text="Tiles" Style="{StaticResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" />
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="4"
-                                HorizontalAlignment="Right">
-                        <RadioButton Content="All" GroupName="Filter"
-                                     IsChecked="{x:Bind ViewModel.IsFilterAll, Mode=TwoWay}" MinWidth="0" Padding="8,4" />
-                        <RadioButton Content="Ready" GroupName="Filter"
-                                     IsChecked="{x:Bind ViewModel.IsFilterReady, Mode=TwoWay}" MinWidth="0" Padding="8,4" />
-                        <RadioButton Content="Started" GroupName="Filter"
-                                     IsChecked="{x:Bind ViewModel.IsFilterStarted, Mode=TwoWay}" MinWidth="0" Padding="8,4" />
-                        <RadioButton Content="Done" GroupName="Filter"
-                                     IsChecked="{x:Bind ViewModel.IsFilterDone, Mode=TwoWay}" MinWidth="0" Padding="8,4" />
-                    </StackPanel>
-                </Grid>
-                <ListView ItemsSource="{x:Bind ViewModel.Tiles, Mode=OneWay}" 
-                          SelectionMode="None" IsItemClickEnabled="True"
-                          ItemClick="OnTileClick" MaxHeight="300">
-                    <ListView.ItemTemplate>
-                        <DataTemplate x:DataType="vm:TileListItem">
-                            <Grid Padding="4,8" ColumnSpacing="12" 
-                                  Tag="{x:Bind}" 
-                                  RightTapped="OnTileRightTapped">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                    <TextBlock Text="{x:Bind Title}" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{x:Bind NextActionText}" FontSize="12"
-                                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
-                                               Visibility="{x:Bind HasNextAction}" />
-                                </StackPanel>
-                                <Border Grid.Column="1" Background="{x:Bind BadgeBackground}" CornerRadius="4" Padding="8,2"
-                                        VerticalAlignment="Center">
-                                    <TextBlock Text="{x:Bind Lifecycle}" FontSize="11" FontWeight="SemiBold"
-                                               Foreground="{x:Bind BadgeForeground}" />
-                                </Border>
-                                <TextBlock Grid.Column="2" Text="{x:Bind WorkedText}" FontSize="12"
-                                           Foreground="{ThemeResource TextFillColorSecondaryBrush}" VerticalAlignment="Center" />
-                                <Grid.ContextFlyout>
-                                    <MenuFlyout>
-                                        <MenuFlyoutItem Text="Start" Icon="Play" 
-                                                        Tag="{x:Bind Id}"
-                                                        Click="OnStartTileMenuClick"
-                                                        IsEnabled="{x:Bind IsStartEnabled}" />
-                                        <MenuFlyoutItem Text="Complete" Icon="Accept" 
-                                                        Tag="{x:Bind Id}"
-                                                        Click="OnCompleteTileMenuClick"
-                                                        IsEnabled="{x:Bind IsCompleteEnabled}" />
-                                        <MenuFlyoutItem Text="Defer" Icon="Clock" 
-                                                        Tag="{x:Bind Id}"
-                                                        Click="OnDeferTileMenuClick"
-                                                        IsEnabled="{x:Bind IsDeferEnabled}" />
-                                        <MenuFlyoutSeparator />
-                                        <MenuFlyoutItem Text="Delete" Icon="Delete" 
-                                                        Tag="{x:Bind Id}"
-                                                        Click="OnDeleteTileMenuClick" />
-                                    </MenuFlyout>
-                                </Grid.ContextFlyout>
-                            </Grid>
-                        </DataTemplate>
-                    </ListView.ItemTemplate>
-                </ListView>
-
-                <Rectangle Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" />
-
-                <!-- Quick Memo -->
-                <TextBlock Text="Quick Memo" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <TextBox PlaceholderText="Attach memo to active tile..." Margin="0,0,8,0"
-                             Text="{x:Bind ViewModel.MemoText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-                    <Button Grid.Column="1" Content="Send" Command="{x:Bind ViewModel.SendMemoCommand}" />
-                </Grid>
-
+        <ScrollViewer Grid.Row="1">
+            <StackPanel Padding="24" Spacing="12">
+                <TextBlock Text="Open panels" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
+                <Button Content="Open Execute Window" Click="OnOpenExecuteWindowClick" />
+                <Button Content="Open Tiles Window" Click="OnOpenTilesWindowClick" />
+                <Button Content="Open Timeline Window" Click="OnOpenTimelineWindowClick" />
+                <Button Content="Open Create Tile Window" Click="OnOpenCreateTileWindowClick" />
+                <Button Content="Open Settings Window" Click="OnOpenSettingsWindowClick" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

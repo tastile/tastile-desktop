@@ -39,6 +39,7 @@ public sealed partial class InterventionWindow : Window
     public InterventionWindow(InterventionType type, string? tileTitle, string? phaseStartedAt, TilesResponse? tilesResponse = null)
     {
         this.InitializeComponent();
+        FloatingWindowHelper.ApplyWindowTheme(this);
         _type = type;
         _tileTitle = tileTitle;
         _phaseStartedAt = phaseStartedAt;

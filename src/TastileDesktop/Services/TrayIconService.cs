@@ -31,10 +31,28 @@ public class TrayIconService : IDisposable
         // Create the tray icon with a default icon
         _trayIcon = new TaskbarIcon
         {
-            ToolTipText = "Tastile",
+            ToolTipText = "Tastile - Initializing...",
             ContextMenuMode = ContextMenuMode.PopupMenu,
             NoLeftClickDelay = true,
         };
+        
+        // Set icon from ICO file
+        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "tastile-icon.ico");
+        if (System.IO.File.Exists(iconPath))
+        {
+            _trayIcon.Icon = new System.Drawing.Icon(iconPath);
+        }
+        else
+        {
+            // Fallback to generated icon
+            _trayIcon.IconSource = new GeneratedIconSource
+            {
+                Text = "T",
+                FontSize = 32,
+                Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White),
+                Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.ForestGreen),
+            };
+        }
 
         // Create the context flyout
         _trayIcon.ContextFlyout = CreateContextMenu();
@@ -42,32 +60,47 @@ public class TrayIconService : IDisposable
         // Handle left click to show window
         _trayIcon.LeftClickCommand = new RelayCommand(ShowMainWindow);
 
-        // Set icon source (try ICO file first, fallback to generated icon)
+        // Subscribe to VM changes to update menu and icon
+        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        
+        // Set initial connection status
+        UpdateTrayIconStatus();
+        
+        // Force create the tray icon
         try
         {
-            var iconPath = Path.Combine(AppContext.BaseDirectory, "Assets", "tastile-tray.ico");
-            if (File.Exists(iconPath))
+            _trayIcon.ForceCreate();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to create tray icon: {ex.Message}");
+        }
+    }
+    
+    /// <summary>
+    /// Update tray icon and tooltip based on connection status
+    /// </summary>
+    private void UpdateTrayIconStatus()
+    {
+        if (_trayIcon == null) return;
+        
+        try
+        {
+            if (_viewModel.IsConnected)
             {
-                _trayIcon.IconSource = new Microsoft.UI.Xaml.Media.Imaging.BitmapImage(new Uri(iconPath));
+                _trayIcon.ToolTipText = $"Tastile - Connected ({_viewModel.Tiles.Count} tiles)";
             }
             else
             {
-                _trayIcon.IconSource = new GeneratedIconSource
-                {
-                    Text = "T",
-                    FontSize = 32,
-                    Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.White),
-                    Background = new Microsoft.UI.Xaml.Media.SolidColorBrush(Microsoft.UI.Colors.DodgerBlue),
-                };
+                _trayIcon.ToolTipText = "Tastile - Disconnected";
             }
+            
+            // Icon stays the same (tastile-icon.ico), only tooltip changes
         }
-        catch
+        catch (Exception ex)
         {
-            // If icon loading fails, the tray icon will use a default icon
+            System.Diagnostics.Debug.WriteLine($"Failed to update tray icon: {ex.Message}");
         }
-
-        // Subscribe to VM changes to update menu
-        _viewModel.PropertyChanged += OnViewModelPropertyChanged;
     }
 
     private MenuFlyout CreateContextMenu()
@@ -132,6 +165,16 @@ public class TrayIconService : IDisposable
 
         menu.Items.Add(new MenuFlyoutSeparator());
 
+        // Sign in with Google
+        System.Diagnostics.Debug.WriteLine("Adding Google Sign In menu item...");
+        var googleSignInItem = new MenuFlyoutItem
+        {
+            Text = "Sign in with Google",
+        };
+        googleSignInItem.Click += async (_, _) => await SignInWithGoogleAsync();
+        menu.Items.Add(googleSignInItem);
+        System.Diagnostics.Debug.WriteLine($"Menu items count: {menu.Items.Count}");
+
         // Settings
         var settingsItem = new MenuFlyoutItem
         {
@@ -163,6 +206,13 @@ public class TrayIconService : IDisposable
                 _trayIcon.ContextFlyout = CreateContextMenu();
             }
         }
+        
+        // Update icon when connection status changes
+        if (e.PropertyName == nameof(MainViewModel.IsConnected) ||
+            e.PropertyName == nameof(MainViewModel.Tiles))
+        {
+            UpdateTrayIconStatus();
+        }
     }
 
     private void ShowMainWindow()
@@ -183,6 +233,94 @@ public class TrayIconService : IDisposable
             var settingsWindow = new Views.SettingsWindow();
             settingsWindow.Activate();
         });
+    }
+
+    private async Task SignInWithGoogleAsync()
+    {
+        var logPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tastile-tray-signin.log");
+        void Log(string msg)
+        {
+            try
+            {
+                System.IO.File.AppendAllText(logPath, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
+                System.Diagnostics.Debug.WriteLine(msg);
+            }
+            catch { }
+        }
+
+        try
+        {
+            Log("[SignInWithGoogleAsync] === START ===");
+
+            // Start OAuth flow via daemon - get auth URL from daemon
+            Log("[SignInWithGoogleAsync] Calling StartBrowserAuthAsync...");
+            var authUrl = await _api.StartBrowserAuthAsync("google");
+            Log($"[SignInWithGoogleAsync] Got auth URL: {authUrl}");
+
+            if (string.IsNullOrEmpty(authUrl))
+            {
+                Log("[SignInWithGoogleAsync] ERROR: No auth URL returned");
+                return;
+            }
+
+            // Open browser with auth URL (Desktop App opens browser, not daemon)
+            try
+            {
+                Log($"[SignInWithGoogleAsync] Opening browser...");
+                var psi = new System.Diagnostics.ProcessStartInfo
+                {
+                    FileName = authUrl,
+                    UseShellExecute = true
+                };
+                System.Diagnostics.Process.Start(psi);
+                Log("[SignInWithGoogleAsync] Browser opened successfully");
+            }
+            catch (Exception ex)
+            {
+                Log($"[SignInWithGoogleAsync] ERROR opening browser: {ex.Message}");
+                return;
+            }
+
+            Log("[SignInWithGoogleAsync] Starting polling...");
+
+            // Poll for session completion (daemon receives callback on localhost:3140)
+            _ = Task.Run(async () =>
+            {
+                var maxAttempts = 60; // 2 minutes
+                for (int i = 0; i < maxAttempts; i++)
+                {
+                    await Task.Delay(2000);
+
+                    Log($"[Poll] Attempt {i + 1}/{maxAttempts}...");
+                    var session = await _api.GetSessionAsync();
+                    Log($"[Poll] GetSessionAsync returned: {(session != null ? $"UserId={session.UserId}, Email={session.Email}" : "null")}");
+
+                    if (session != null)
+                    {
+                        Log("[Poll] Session found! Calling AuthService.InitializeAsync...");
+                        try
+                        {
+                            await AuthService.Instance.InitializeAsync(_api);
+                            Log("[Poll] AuthService.InitializeAsync completed successfully");
+                        }
+                        catch (Exception ex)
+                        {
+                            Log($"[Poll] ERROR in InitializeAsync: {ex.GetType().Name}: {ex.Message}");
+                            Log($"[Poll] StackTrace: {ex.StackTrace}");
+                        }
+                        break;
+                    }
+                }
+                Log("[Poll] Polling finished");
+            });
+
+            Log("[SignInWithGoogleAsync] === END ===");
+        }
+        catch (Exception ex)
+        {
+            Log($"[SignInWithGoogleAsync] EXCEPTION: {ex.GetType().Name}: {ex.Message}");
+            Log($"[SignInWithGoogleAsync] StackTrace: {ex.StackTrace}");
+        }
     }
 
     private async void ShowQuickCreateDialog()

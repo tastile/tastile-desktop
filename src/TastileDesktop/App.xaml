@@ -8,6 +8,22 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
+            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FFF5F5F5" />
+            <SolidColorBrush x:Key="AppSurface0Brush" Color="#FFFAFAFA" />
+            <SolidColorBrush x:Key="AppSurface1Brush" Color="#FFEFEFEF" />
+            <SolidColorBrush x:Key="AppSurface2Brush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AppSurfaceElevatedBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AppForegroundBrush" Color="#FF0A0A0A" />
+            <SolidColorBrush x:Key="AppForegroundMutedBrush" Color="#FF525252" />
+            <SolidColorBrush x:Key="AppForegroundSubtleBrush" Color="#FFA3A3A3" />
+            <SolidColorBrush x:Key="AppBorderBrush" Color="#FFD4D4D4" />
+            <SolidColorBrush x:Key="AppBorderStrongBrush" Color="#FFA3A3A3" />
+            <SolidColorBrush x:Key="AppInteractiveBrush" Color="#FF0A0A0A" />
+            <SolidColorBrush x:Key="AppInteractiveHoverBrush" Color="#FF262626" />
+            <SolidColorBrush x:Key="AppInteractiveActiveBrush" Color="#FF404040" />
+            <SolidColorBrush x:Key="AppPrimaryBrush" Color="#FF0A0A0A" />
+            <SolidColorBrush x:Key="AppPrimaryForegroundBrush" Color="#FFFFFFFF" />
+            <SolidColorBrush x:Key="AppPrimaryHoverBrush" Color="#FF262626" />
         </ResourceDictionary>
     </Application.Resources>
 </Application>

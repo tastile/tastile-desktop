@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Windowing;
+using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 
 namespace TastileDesktop.Views;
@@ -14,12 +15,7 @@ public sealed partial class SettingsWindow : Window
     public SettingsWindow()
     {
         this.InitializeComponent();
-
-        // Set window size
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        var windowId = Microsoft.UI.Win32Interop.GetWindowIdFromWindow(hwnd);
-        var appWindow = AppWindow.GetFromWindowId(windowId);
-        appWindow.Resize(new Windows.Graphics.SizeInt32(520, 700));
+        FloatingWindowHelper.Configure(this, TitleBarArea, 520, 700);
     }
 
     private void OnSaveClick(object sender, RoutedEventArgs e)

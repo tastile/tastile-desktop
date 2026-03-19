@@ -15,21 +15,22 @@
 
         <!-- Center content -->
         <Border Grid.Row="1" 
-                Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"
+            Background="{StaticResource AppSurfaceElevatedBrush}"
                 CornerRadius="12"
                 Padding="48"
                 MaxWidth="600"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
-                BorderBrush="{ThemeResource AccentTextFillColorPrimaryBrush}"
+                BorderBrush="{StaticResource AppPrimaryBrush}"
                 BorderThickness="2">
 
             <StackPanel Spacing="24">
                 <!-- Icon/Header -->
                 <StackPanel HorizontalAlignment="Center" Spacing="12">
-                    <FontIcon Glyph="&#xE7BA;" FontSize="48" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />
+                    <FontIcon Glyph="&#xE7BA;" FontSize="48" Foreground="{StaticResource AppPrimaryBrush}" />
                     <TextBlock Text="Time to Decide" 
                                Style="{StaticResource TitleLargeTextBlockStyle}"
+                               Foreground="{StaticResource AppForegroundBrush}"
                                HorizontalAlignment="Center" />
                 </StackPanel>
 
@@ -37,6 +38,7 @@
                 <TextBlock x:Name="MessageText"
                            Text="You've been working for 25 minutes."
                            Style="{StaticResource SubtitleTextBlockStyle}"
+                           Foreground="{StaticResource AppForegroundMutedBrush}"
                            TextWrapping="Wrap"
                            HorizontalAlignment="Center"
                            TextAlignment="Center" />
@@ -45,9 +47,10 @@
                 <StackPanel x:Name="TileInfoPanel" Spacing="8">
                     <TextBlock x:Name="TileTitleText"
                                Style="{StaticResource BodyStrongTextBlockStyle}"
+                               Foreground="{StaticResource AppForegroundBrush}"
                                HorizontalAlignment="Center" />
                     <TextBlock x:Name="ElapsedTimeText"
-                               Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                               Foreground="{StaticResource AppForegroundMutedBrush}"
                                HorizontalAlignment="Center" />
                 </StackPanel>
 
@@ -107,7 +110,7 @@
 
                 <!-- Hint -->
                 <TextBlock Text="This dialog cannot be dismissed. You must take an action."
-                           Foreground="{ThemeResource TextFillColorTertiaryBrush}"
+                           Foreground="{StaticResource AppForegroundSubtleBrush}"
                            FontSize="12"
                            HorizontalAlignment="Center"
                            FontStyle="Italic" />

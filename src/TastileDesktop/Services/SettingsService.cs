@@ -15,6 +15,7 @@ public class SettingsService
     public TastileSettings Current { get; private set; } = new();
 
     public event EventHandler? SettingsChanged;
+    public static event EventHandler<TastileSettings>? GlobalSettingsChanged;
 
     public SettingsService()
     {
@@ -46,6 +47,7 @@ public class SettingsService
         var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(SettingsFile, json);
         SettingsChanged?.Invoke(this, EventArgs.Empty);
+        GlobalSettingsChanged?.Invoke(this, Current);
     }
 
     public void Update(Action<TastileSettings> update)
@@ -61,6 +63,7 @@ public class SettingsService
 /// </summary>
 public record TastileSettings
 {
+    public string ThemeMode { get; set; } = ThemeManager.Light;
     public int ToastNotifyMinutes { get; set; } = 15;
     public int InterventionMinutes { get; set; } = 25;
     public int DefaultBreakMinutes { get; set; } = 5;
