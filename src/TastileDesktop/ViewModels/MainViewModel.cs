@@ -104,13 +104,37 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public CoreApiClient ApiClient => _api;
     private readonly PollingService _pollingService;
     private List<TileListItem> _allTiles = new();
-
-    [ObservableProperty]
     private ObservableCollection<TileListItem> _tiles = new();
+    private string _selectedFilter = "All";
+    private ActiveTileResponse? _activeTile;
+    private PendingPromptResponse? _pendingPrompt;
+    private bool _isConnected;
+    private string _statusMessage = string.Empty;
+    private string _newTileTitle = string.Empty;
+    private string _newTileNextAction = string.Empty;
+    private string _newTileDoneDefinition = string.Empty;
+    private string _memoText = string.Empty;
+    private ObservableCollection<TimelineSegmentViewModel> _timelineSegments = new();
+    private ObservableCollection<PromptActionButtonViewModel> _promptActions = new();
+
+    public ObservableCollection<TileListItem> Tiles
+    {
+        get => _tiles;
+        set => SetProperty(ref _tiles, value);
+    }
 
     // Fix 2: Filter
-    [ObservableProperty]
-    private string _selectedFilter = "All";
+    public string SelectedFilter
+    {
+        get => _selectedFilter;
+        set
+        {
+            if (SetProperty(ref _selectedFilter, value))
+            {
+                OnSelectedFilterChanged(value);
+            }
+        }
+    }
 
     public bool IsFilterAll
     {
@@ -133,7 +157,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         set { if (value) SelectedFilter = "Done"; }
     }
 
-    partial void OnSelectedFilterChanged(string value)
+    private void OnSelectedFilterChanged(string value)
     {
         OnPropertyChanged(nameof(IsFilterAll));
         OnPropertyChanged(nameof(IsFilterReady));
@@ -153,40 +177,70 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             Tiles.Add(tile);
     }
 
-    [ObservableProperty]
-    private ActiveTileResponse? _activeTile;
+    public ActiveTileResponse? ActiveTile
+    {
+        get => _activeTile;
+        set => SetProperty(ref _activeTile, value);
+    }
 
-    [ObservableProperty]
-    private PendingPromptResponse? _pendingPrompt;
+    public PendingPromptResponse? PendingPrompt
+    {
+        get => _pendingPrompt;
+        set => SetProperty(ref _pendingPrompt, value);
+    }
 
-    [ObservableProperty]
-    private bool _isConnected;
+    public bool IsConnected
+    {
+        get => _isConnected;
+        set => SetProperty(ref _isConnected, value);
+    }
 
     public Visibility ConnectedIndicatorVisibility => IsConnected ? Visibility.Visible : Visibility.Collapsed;
     
     public Visibility DisconnectedIndicatorVisibility => IsConnected ? Visibility.Collapsed : Visibility.Visible;
 
-    [ObservableProperty]
-    private string _statusMessage = string.Empty;
+    public string StatusMessage
+    {
+        get => _statusMessage;
+        set => SetProperty(ref _statusMessage, value);
+    }
 
-    [ObservableProperty]
-    private string _newTileTitle = string.Empty;
+    public string NewTileTitle
+    {
+        get => _newTileTitle;
+        set => SetProperty(ref _newTileTitle, value);
+    }
 
-    [ObservableProperty]
-    private string _newTileNextAction = string.Empty;
+    public string NewTileNextAction
+    {
+        get => _newTileNextAction;
+        set => SetProperty(ref _newTileNextAction, value);
+    }
 
-    [ObservableProperty]
-    private string _newTileDoneDefinition = string.Empty;
+    public string NewTileDoneDefinition
+    {
+        get => _newTileDoneDefinition;
+        set => SetProperty(ref _newTileDoneDefinition, value);
+    }
 
-    [ObservableProperty]
-    private string _memoText = string.Empty;
+    public string MemoText
+    {
+        get => _memoText;
+        set => SetProperty(ref _memoText, value);
+    }
 
     // Timeline
-    [ObservableProperty]
-    private ObservableCollection<TimelineSegmentViewModel> _timelineSegments = new();
+    public ObservableCollection<TimelineSegmentViewModel> TimelineSegments
+    {
+        get => _timelineSegments;
+        set => SetProperty(ref _timelineSegments, value);
+    }
 
-    [ObservableProperty]
-    private ObservableCollection<PromptActionButtonViewModel> _promptActions = new();
+    public ObservableCollection<PromptActionButtonViewModel> PromptActions
+    {
+        get => _promptActions;
+        set => SetProperty(ref _promptActions, value);
+    }
 
     public bool HasNoTimelineSegments => TimelineSegments.Count == 0;
     public bool IsTilesEmpty => Tiles.Count == 0;

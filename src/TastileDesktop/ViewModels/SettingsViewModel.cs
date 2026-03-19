@@ -11,28 +11,57 @@ namespace TastileDesktop.ViewModels;
 public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsService _settingsService;
+    private string _themeMode = ThemeManager.Light;
+    private int _toastNotifyMinutes;
+    private int _interventionMinutes;
+    private int _defaultBreakMinutes;
+    private int _idlePromptMinutes;
+    private int _interventionRepeatMinutes;
+    private bool _launchAtStartup;
+
     public IReadOnlyList<string> ThemeModes { get; } = ThemeManager.Modes;
 
-    [ObservableProperty]
-    private string _themeMode = ThemeManager.Light;
+    public string ThemeMode
+    {
+        get => _themeMode;
+        set => SetProperty(ref _themeMode, value);
+    }
 
-    [ObservableProperty]
-    private int _toastNotifyMinutes;
+    public int ToastNotifyMinutes
+    {
+        get => _toastNotifyMinutes;
+        set => SetProperty(ref _toastNotifyMinutes, value);
+    }
 
-    [ObservableProperty]
-    private int _interventionMinutes;
+    public int InterventionMinutes
+    {
+        get => _interventionMinutes;
+        set => SetProperty(ref _interventionMinutes, value);
+    }
 
-    [ObservableProperty]
-    private int _defaultBreakMinutes;
+    public int DefaultBreakMinutes
+    {
+        get => _defaultBreakMinutes;
+        set => SetProperty(ref _defaultBreakMinutes, value);
+    }
 
-    [ObservableProperty]
-    private int _idlePromptMinutes;
+    public int IdlePromptMinutes
+    {
+        get => _idlePromptMinutes;
+        set => SetProperty(ref _idlePromptMinutes, value);
+    }
 
-    [ObservableProperty]
-    private int _interventionRepeatMinutes;
+    public int InterventionRepeatMinutes
+    {
+        get => _interventionRepeatMinutes;
+        set => SetProperty(ref _interventionRepeatMinutes, value);
+    }
 
-    [ObservableProperty]
-    private bool _launchAtStartup;
+    public bool LaunchAtStartup
+    {
+        get => _launchAtStartup;
+        set => SetProperty(ref _launchAtStartup, value);
+    }
 
     public SettingsViewModel()
     {

@@ -32,8 +32,6 @@ public class InterventionEngine : IDisposable
     private DateTimeOffset _lastCompletionTime = DateTimeOffset.UtcNow;
     private string _lastPhase = "Idle";
 
-    public event EventHandler<InterventionType>? InterventionRequired;
-
     public InterventionEngine(PollingService pollingService, CoreApiClient api, SettingsService? settingsService = null)
     {
         _pollingService = pollingService;

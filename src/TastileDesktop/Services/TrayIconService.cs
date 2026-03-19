@@ -383,5 +383,9 @@ public class RelayCommand : System.Windows.Input.ICommand
 
     public void Execute(object? parameter) => _execute();
 
-    public event EventHandler? CanExecuteChanged;
+    public event EventHandler? CanExecuteChanged
+    {
+        add { }
+        remove { }
+    }
 }
