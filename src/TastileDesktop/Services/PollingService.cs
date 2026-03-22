@@ -89,6 +89,14 @@ public class PollingService : IDisposable
     public void Stop() => _timer.Stop();
 
     /// <summary>
+    /// Reset the tiles hash so the next PollAsync always fires TilesChanged.
+    /// </summary>
+    public void InvalidateTilesCache()
+    {
+        _lastTilesHash = null;
+    }
+
+    /// <summary>
     /// Force an immediate poll.
     /// </summary>
     public async Task PollAsync()

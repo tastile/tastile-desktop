@@ -36,10 +36,6 @@ internal static class FloatingWindowHelper
     {
         Register(window);
         ApplyWindowTheme(window);
-        // SystemBackdrop=null + WS_EX_NOREDIRECTIONBITMAP で透過を実現
-        // AcrylicBackdropはSetBorderAndTitleBar(false,false)と競合するため使用しない
-        window.SystemBackdrop = null;
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
 
         var appWindow = GetAppWindow(window);
         if (appWindow is null)
@@ -53,12 +49,26 @@ internal static class FloatingWindowHelper
             presenter.IsResizable = false;
             presenter.IsMaximizable = false;
             presenter.IsMinimizable = false;
-            presenter.SetBorderAndTitleBar(false, false);
+            // SetBorderAndTitleBar(false,false) は WinUI3 の描画パイプラインを壊すため使用しない
+            // 代わりに Win32 スタイルのみで制御する
         }
 
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
         StripPanelWindowStyles(hwnd);
-        EnablePanelTransparency(hwnd);
         ApplyPanelChrome(hwnd);
+
+        // ExtendsContentIntoTitleBar で XAML コンテンツをウィンドウ全体に広げる
+        window.ExtendsContentIntoTitleBar = true;
+
+        // MicaBackdrop を使用（SetBorderAndTitleBar を呼ばないので競合しない）
+        try
+        {
+            window.SystemBackdrop = new MicaBackdrop();
+        }
+        catch
+        {
+            window.SystemBackdrop = null;
+        }
     }
 
     public static void PlaceQuickPanel(Window window, TastileSettings settings)
@@ -294,8 +304,8 @@ internal static class FloatingWindowHelper
             return;
         }
 
-        // DWM角丸は無効化（XAML側のBorder CornerRadius="8"で制御）
-        var cornerPreference = DwmWindowCornerPreferenceDoNotRound;
+        // DWM角丸を有効化（Round = 8px）
+        var cornerPreference = DwmWindowCornerPreferenceRound;
         _ = DwmSetWindowAttribute(hwnd, DwmWindowCornerPreferenceAttribute, ref cornerPreference, sizeof(uint));
 
         // DWMボーダーを完全に無効化

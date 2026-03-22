@@ -13,7 +13,7 @@
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <!-- Quick Panel chrome -->
-                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#FF242424"/>
+                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#E0242424"/>
                     <SolidColorBrush x:Key="QuickPanelBorderBrush"     Color="#FF373737"/>
                     <!-- Foreground -->
                     <SolidColorBrush x:Key="PrimaryForegroundBrush"    Color="#FFFFFFFF"/>
@@ -45,7 +45,7 @@
 
                 <ResourceDictionary x:Key="Light">
                     <!-- Quick Panel chrome -->
-                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#FFF9F9F9"/>
+                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#E0F9F9F9"/>
                     <SolidColorBrush x:Key="QuickPanelBorderBrush"     Color="#FFE5E5E5"/>
                     <!-- Foreground -->
                     <SolidColorBrush x:Key="PrimaryForegroundBrush"    Color="#FF111111"/>

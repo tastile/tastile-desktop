@@ -10,7 +10,7 @@
             Background="{ThemeResource QuickPanelBackgroundBrush}"
             BorderBrush="{ThemeResource QuickPanelBorderBrush}"
             BorderThickness="1"
-            CornerRadius="8">
+            CornerRadius="0">
 
             <!-- [clock 110] [running *] [next 240] [buttons 152] -->
             <Grid>

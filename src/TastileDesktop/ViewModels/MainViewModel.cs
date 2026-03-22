@@ -1290,6 +1290,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
+            // 実行中タスクがあれば先に中断（先送り対象と異なる場合も含む）
+            var running = MainRunningTask;
+            if (running != null && string.Equals(running.Id, tileId, StringComparison.OrdinalIgnoreCase))
+            {
+                // 実行中タスク自体を先送り → そのまま defer
+            }
+            else if (running != null)
+            {
+                // 別のタスクが実行中 → 先に中断
+                await _api.DeferTileAsync(running.Id);
+            }
+
             var result = await _api.DeferTileAsync(tileId);
             if (result != null && !result.Ok)
                 StatusMessage = $"Error: {result.Error}";
@@ -1298,6 +1310,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
                 StatusMessage = $"Deferred: {tile?.Title ?? tileId}";
             }
+            // ハッシュをリセットして強制的にTilesChangedを発火させる
+            _pollingService.InvalidateTilesCache();
             await _pollingService.PollAsync();
         }
         catch (Exception ex)
