@@ -208,22 +208,32 @@ public sealed partial class MainWindow : Window
             return;
         }
         ViewModel.FocusRunningTile(tileId);
-        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
+        // 実行中タイルをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
+        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
-    private void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
+    private async void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
     {
-        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
+        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
+            return;
+        // Next タイルをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
+        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
-    private void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
+    private async void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
     {
-        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
+        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
+            return;
+        // Candidate タイルをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
+        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
-    private void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
+    private async void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
     {
-        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
+        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
+            return;
+        // ステータスアイコンをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
+        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
     private async void OnPendingPromptActionClick(object sender, RoutedEventArgs e)

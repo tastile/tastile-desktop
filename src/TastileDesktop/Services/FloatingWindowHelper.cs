@@ -37,6 +37,8 @@ internal static class FloatingWindowHelper
         Register(window);
         ApplyWindowTheme(window);
 
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        
         var appWindow = GetAppWindow(window);
         if (appWindow is null)
         {
@@ -53,9 +55,9 @@ internal static class FloatingWindowHelper
             // 代わりに Win32 スタイルのみで制御する
         }
 
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
         StripPanelWindowStyles(hwnd);
         ApplyPanelChrome(hwnd);
+        HideFromTaskbar(hwnd); // タスクバーから隠す
 
         // ExtendsContentIntoTitleBar で XAML コンテンツをウィンドウ全体に広げる
         window.ExtendsContentIntoTitleBar = true;
@@ -313,6 +315,20 @@ internal static class FloatingWindowHelper
         _ = DwmSetWindowAttribute(hwnd, DwmBorderColorAttribute, ref borderColor, sizeof(uint));
     }
 
+    private static void HideFromTaskbar(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        // WS_EX_TOOLWINDOW を追加してタスクバーから隠す
+        var exStyle = GetWindowLongPtrCompat(hwnd, GwlExStyle).ToInt64();
+        exStyle |= WsExToolWindow;
+        exStyle &= ~WsExAppWindow; // WS_EX_APPWINDOW を削除
+        _ = SetWindowLongPtrCompat(hwnd, GwlExStyle, new IntPtr(exStyle));
+    }
+
     private static void StripPanelWindowStyles(IntPtr hwnd)
     {
         if (hwnd == IntPtr.Zero)
@@ -390,6 +406,8 @@ internal static class FloatingWindowHelper
     private const long WsExWindowEdge = 0x00000100L;
     private const long WsExClientEdge = 0x00000200L;
     private const long WsExNoRedirectionBitmap = 0x00200000L;
+    private const long WsExToolWindow = 0x00000080L;
+    private const long WsExAppWindow = 0x00040000L;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
     private const uint SwpNoZOrder = 0x0004;
