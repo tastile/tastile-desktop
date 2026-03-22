@@ -20,6 +20,20 @@ public class PollingService : IDisposable
     private TimelineTodayResponse? _lastTimeline;
     private bool _lastConnectionState;
     private readonly PollingHealthCoordinator _coordinator = new();
+    
+    // UI更新のthrottle用
+    private readonly object _pendingChangesLock = new();
+    private bool _hasActiveTileChange;
+    private bool _hasTilesChange;
+    private bool _hasPromptChange;
+    private bool _hasTimelineChange;
+    private bool _hasConnectionChange;
+    private ActiveTileResponse? _pendingActiveTile;
+    private TilesResponse? _pendingTiles;
+    private PendingPromptResponse? _pendingPrompt;
+    private TimelineTodayResponse? _pendingTimeline;
+    private bool _pendingConnectionState;
+    private readonly DispatcherTimer _uiUpdateTimer;
 
     /// <summary>
 /// Raised when the active tile changes (new tile, phase change, etc.)
@@ -69,8 +83,14 @@ public class PollingService : IDisposable
     {
         _api = api;
         _daemonManager = daemonManager;
-        _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) }; // 2秒 → 5秒に延長
+        // ポーリングは2秒間隔で状態検出のみ
+        _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
         _timer.Tick += async (_, _) => await PollAsync();
+        
+        // UI更新は200ms間隔でthrottle（変更があった場合のみ発火）
+        _uiUpdateTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
+        _uiUpdateTimer.Tick += OnUIUpdateTick;
+        _uiUpdateTimer.Start();
     }
 
     /// <summary>
@@ -86,7 +106,63 @@ public class PollingService : IDisposable
     /// <summary>
     /// Stop polling.
     /// </summary>
-    public void Stop() => _timer.Stop();
+    public void Stop()
+    {
+        _timer.Stop();
+        _uiUpdateTimer.Stop();
+    }
+
+    private void OnUIUpdateTick(object? sender, object e)
+    {
+        lock (_pendingChangesLock)
+        {
+            if (_hasConnectionChange)
+            {
+                _hasConnectionChange = false;
+                _lastConnectionState = _pendingConnectionState;
+                ConnectionStatusChanged?.Invoke(this, _pendingConnectionState);
+            }
+
+            if (_hasActiveTileChange)
+            {
+                _hasActiveTileChange = false;
+                _lastActiveTile = _pendingActiveTile;
+                ActiveTileChanged?.Invoke(this, _pendingActiveTile);
+            }
+
+            if (_hasTilesChange)
+            {
+                _hasTilesChange = false;
+                _lastTiles = _pendingTiles;
+                TilesChanged?.Invoke(this, _pendingTiles);
+            }
+
+            if (_hasPromptChange)
+            {
+                _hasPromptChange = false;
+                _lastPrompt = _pendingPrompt;
+                if (_pendingPrompt?.Prompt != null)
+                {
+                    var msg = $"[UI Update] PendingPrompt: id={_pendingPrompt.Prompt.PromptId}, kind={_pendingPrompt.Prompt.Kind}, title={_pendingPrompt.Prompt.Title}";
+                    System.Diagnostics.Debug.WriteLine(msg);
+                    App.DebugLog(msg);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[UI Update] PendingPrompt: null");
+                    App.DebugLog("[UI Update] PendingPrompt: null");
+                }
+                PendingPromptChanged?.Invoke(this, _pendingPrompt);
+            }
+
+            if (_hasTimelineChange)
+            {
+                _hasTimelineChange = false;
+                _lastTimeline = _pendingTimeline;
+                TimelineChanged?.Invoke(this, _pendingTimeline);
+            }
+        }
+    }
 
     /// <summary>
     /// Force an immediate poll.
@@ -117,8 +193,11 @@ public class PollingService : IDisposable
             // Connection status changed
             if (healthy != _lastConnectionState)
             {
-                _lastConnectionState = healthy;
-                ConnectionStatusChanged?.Invoke(this, healthy);
+                lock (_pendingChangesLock)
+                {
+                    _hasConnectionChange = true;
+                    _pendingConnectionState = healthy;
+                }
             }
 
             if (!healthy)
@@ -147,40 +226,41 @@ public class PollingService : IDisposable
             var prompt = promptTask.Result;
             var timeline = timelineTask.Result;
 
-            // Check for changes and raise events
+            // Check for changes and mark pending (UI更新は別スレッドで throttle)
             if (HasActiveTileChanged(_lastActiveTile, active))
             {
-                _lastActiveTile = active;
-                ActiveTileChanged?.Invoke(this, active);
+                lock (_pendingChangesLock)
+                {
+                    _hasActiveTileChange = true;
+                    _pendingActiveTile = active;
+                }
             }
 
             if (HasTilesChanged(_lastTiles, tiles))
             {
-                _lastTiles = tiles;
-                TilesChanged?.Invoke(this, tiles);
+                lock (_pendingChangesLock)
+                {
+                    _hasTilesChange = true;
+                    _pendingTiles = tiles;
+                }
             }
 
             if (HasPromptChanged(_lastPrompt, prompt))
             {
-                _lastPrompt = prompt;
-                if (prompt?.Prompt != null)
+                lock (_pendingChangesLock)
                 {
-                    var msg = $"[Polling] PendingPrompt: id={prompt.Prompt.PromptId}, kind={prompt.Prompt.Kind}, title={prompt.Prompt.Title}, actions={string.Join("|", prompt.Prompt.Actions.Select(a => $"{a.Id}({a.Label})"))}";
-                    System.Diagnostics.Debug.WriteLine(msg);
-                    App.DebugLog(msg);
+                    _hasPromptChange = true;
+                    _pendingPrompt = prompt;
                 }
-                else
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Polling] PendingPrompt: null");
-                    App.DebugLog("[Polling] PendingPrompt: null");
-                }
-                PendingPromptChanged?.Invoke(this, prompt);
             }
 
             if (HasTimelineChanged(_lastTimeline, timeline))
             {
-                _lastTimeline = timeline;
-                TimelineChanged?.Invoke(this, timeline);
+                lock (_pendingChangesLock)
+                {
+                    _hasTimelineChange = true;
+                    _pendingTimeline = timeline;
+                }
             }
         }
         catch
@@ -188,8 +268,11 @@ public class PollingService : IDisposable
             // On error, mark as disconnected
             if (_lastConnectionState)
             {
-                _lastConnectionState = false;
-                ConnectionStatusChanged?.Invoke(this, false);
+                lock (_pendingChangesLock)
+                {
+                    _hasConnectionChange = true;
+                    _pendingConnectionState = false;
+                }
             }
         }
         finally
@@ -244,6 +327,7 @@ public class PollingService : IDisposable
     public void Dispose()
     {
         _timer.Stop();
+        _uiUpdateTimer.Stop();
         _daemonManager.Dispose();
     }
 }

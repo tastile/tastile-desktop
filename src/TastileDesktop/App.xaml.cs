@@ -12,6 +12,9 @@ public partial class App : Application
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
         "Tastile", "debug.log");
 
+    private static Mutex? _singleInstanceMutex;
+    private const string MutexName = "Global\\TastileDesktopSingleInstance";
+
     public static void DebugLog(string msg)
     {
         try
@@ -115,6 +118,18 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        // シングルインスタンスチェック
+        bool createdNew;
+        _singleInstanceMutex = new Mutex(true, MutexName, out createdNew);
+        
+        if (!createdNew)
+        {
+            Log("Another instance is already running. Exiting.");
+            // 既存インスタンスにフォーカスを送る（将来実装）
+            Exit();
+            return;
+        }
+
         try
         {
             Log("OnLaunched starting...");
@@ -230,6 +245,8 @@ public partial class App : Application
         _appearanceService.AppearanceChanged -= OnAppearanceChanged;
         _trayIconService?.Dispose();
         _daemonManager?.Dispose();
+        _singleInstanceMutex?.ReleaseMutex();
+        _singleInstanceMutex?.Dispose();
         _mainWindow?.Close();
     }
 }
