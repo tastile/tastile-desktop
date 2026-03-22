@@ -23,14 +23,22 @@ public class CoreApiClient
         catch { }
     }
 
-    public CoreApiClient(string baseUrl = "http://localhost:3140")
+    public CoreApiClient(string baseUrl = "http://127.0.0.1:3140")
     {
-        _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
+        _httpClient = new HttpClient
+        {
+            BaseAddress = new Uri(baseUrl),
+            Timeout = TimeSpan.FromSeconds(4),
+        };
     }
 
     internal CoreApiClient(HttpClient httpClient)
     {
         _httpClient = httpClient;
+        if (_httpClient.Timeout == TimeSpan.FromSeconds(100))
+        {
+            _httpClient.Timeout = TimeSpan.FromSeconds(4);
+        }
     }
     
     // OAuth flow for browser-based authentication
@@ -58,6 +66,12 @@ public class CoreApiClient
             return response.IsSuccessStatusCode;
         }
         catch { return false; }
+    }
+
+    public async Task TriggerSyncAsync()
+    {
+        var response = await _httpClient.PostAsync("/sync/trigger", null);
+        response.EnsureSuccessStatusCode();
     }
 
     // Read endpoints
@@ -89,7 +103,10 @@ public class CoreApiClient
 
     // Command endpoints
     public async Task<CommandResponse?> CreateTileAsync(string title, string? nextAction = null, string? doneDefinition = null)
-        => await PostCommandAsync("/commands/tile/create", new { title, next_action = nextAction, done_definition = doneDefinition });
+        => await CreateTileAsync(new CreateTileRequest(title, nextAction, doneDefinition, null, null, null, null, null));
+
+    public async Task<CommandResponse?> CreateTileAsync(CreateTileRequest request)
+        => await PostCommandAsync("/commands/tile/create", request);
 
     public async Task<CommandResponse?> StartTileAsync(string tileId)
         => await PostCommandAsync("/commands/tile/start", new { tile_id = tileId });
@@ -97,8 +114,8 @@ public class CoreApiClient
     public async Task<CommandResponse?> CompleteTileAsync(string? nextTileId = null)
         => await PostCommandAsync("/commands/tile/complete", new { next_tile_id = nextTileId });
 
-    public async Task<CommandResponse?> DeferTileAsync(string tileId, string? reason = null)
-        => await PostCommandAsync("/commands/tile/defer", new { tile_id = tileId, reason });
+    public async Task<CommandResponse?> DeferTileAsync(string tileId, string? reason = null, int? minutes = null)
+        => await PostCommandAsync("/commands/tile/defer", new { tile_id = tileId, reason, minutes });
 
     public async Task<CommandResponse?> StartBreakAsync(int breakMin)
         => await PostCommandAsync("/commands/break/start", new { break_min = breakMin });
@@ -146,10 +163,6 @@ public class CoreApiClient
     {
         try
         {
-            // Force write to file to test if this code is even executed
-            File.WriteAllText(Path.Combine(Path.GetTempPath(), "tastile-getsession-called.txt"),
-                $"GetSessionAsync called at {DateTime.Now}");
-
             Log("[GetSessionAsync] Requesting /auth/session...");
             var response = await _httpClient.GetAsync("/auth/session");
             Log($"[GetSessionAsync] Status: {response.StatusCode}");
@@ -173,6 +186,21 @@ public class CoreApiClient
             Log($"[GetSessionAsync] StackTrace: {ex.StackTrace}");
             return null;
         }
+    }
+
+    public async Task<AuthSession?> RestoreSessionAsync(AuthSession session)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/auth/session/restore", new
+        {
+            user_id = session.UserId,
+            email = session.Email,
+            access_token = session.AccessToken,
+            refresh_token = session.RefreshToken,
+            expires_at = session.ExpiresAt,
+        });
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<AuthSession>();
     }
 
     /// <summary>

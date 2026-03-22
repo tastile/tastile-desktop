@@ -88,11 +88,16 @@ public class TrayIconService : IDisposable
         {
             if (_viewModel.IsConnected)
             {
-                _trayIcon.ToolTipText = $"Tastile - Connected ({_viewModel.Tiles.Count} tiles)";
+                var focusTitle = _viewModel.IsWorking
+                    ? _viewModel.ActiveTileTitle ?? "Working"
+                    : _viewModel.IsOnBreak
+                        ? "Break in progress"
+                        : _viewModel.NextUpTitle;
+                _trayIcon.ToolTipText = $"Tastile - {_viewModel.QuickBarStatus}: {focusTitle}";
             }
             else
             {
-                _trayIcon.ToolTipText = "Tastile - Disconnected";
+                _trayIcon.ToolTipText = "Tastile - Offline";
             }
             
             // Icon stays the same (tastile-icon.ico), only tooltip changes
@@ -110,7 +115,7 @@ public class TrayIconService : IDisposable
         // Show Tastile
         var showItem = new MenuFlyoutItem
         {
-            Text = "Show Tastile",
+            Text = "Show panel",
         };
         showItem.Click += (_, _) => ShowMainWindow();
         menu.Items.Add(showItem);
@@ -221,6 +226,12 @@ public class TrayIconService : IDisposable
 
         _mainWindow.DispatcherQueue.TryEnqueue(() =>
         {
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.ShowPanel();
+                return;
+            }
+
             _mainWindow.Show();
             _mainWindow.Activate();
         });

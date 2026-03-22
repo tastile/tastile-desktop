@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using TastileDesktop.Models;
 using System.Linq;
+using System.Threading;
 
 namespace TastileDesktop.Services;
 
@@ -18,6 +19,7 @@ public class PollingService : IDisposable
     private PendingPromptResponse? _lastPrompt;
     private TimelineTodayResponse? _lastTimeline;
     private bool _lastConnectionState;
+    private readonly PollingHealthCoordinator _coordinator = new();
 
     /// <summary>
 /// Raised when the active tile changes (new tile, phase change, etc.)
@@ -91,9 +93,26 @@ public class PollingService : IDisposable
     /// </summary>
     public async Task PollAsync()
     {
+        if (!_coordinator.TryBeginPoll())
+        {
+            return;
+        }
+
         try
         {
             var healthy = await _api.CheckHealthAsync();
+            if (!healthy && _coordinator.TryBeginRecovery(DateTimeOffset.UtcNow))
+            {
+                try
+                {
+                    await _daemonManager.EnsureRunningAsync();
+                    healthy = await _api.CheckHealthAsync();
+                }
+                catch
+                {
+                    healthy = false;
+                }
+            }
             
             // Connection status changed
             if (healthy != _lastConnectionState)
@@ -105,6 +124,15 @@ public class PollingService : IDisposable
             if (!healthy)
             {
                 return;
+            }
+
+            try
+            {
+                await _api.TriggerSyncAsync();
+            }
+            catch
+            {
+                // Keep serving local state even if background sync trigger fails.
             }
 
             // Fetch data in parallel
@@ -135,6 +163,17 @@ public class PollingService : IDisposable
             if (HasPromptChanged(_lastPrompt, prompt))
             {
                 _lastPrompt = prompt;
+                if (prompt?.Prompt != null)
+                {
+                    var msg = $"[Polling] PendingPrompt: id={prompt.Prompt.PromptId}, kind={prompt.Prompt.Kind}, title={prompt.Prompt.Title}, actions={string.Join("|", prompt.Prompt.Actions.Select(a => $"{a.Id}({a.Label})"))}";
+                    System.Diagnostics.Debug.WriteLine(msg);
+                    App.DebugLog(msg);
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Polling] PendingPrompt: null");
+                    App.DebugLog("[Polling] PendingPrompt: null");
+                }
                 PendingPromptChanged?.Invoke(this, prompt);
             }
 
@@ -152,6 +191,10 @@ public class PollingService : IDisposable
                 _lastConnectionState = false;
                 ConnectionStatusChanged?.Invoke(this, false);
             }
+        }
+        finally
+        {
+            _coordinator.EndPoll();
         }
     }
 

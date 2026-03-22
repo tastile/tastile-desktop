@@ -33,6 +33,7 @@ public class SettingsService
         {
             var json = File.ReadAllText(SettingsFile);
             Current = JsonSerializer.Deserialize<TastileSettings>(json) ?? new();
+            Current = NormalizePromptSettings(Current);
         }
         catch
         {
@@ -56,6 +57,48 @@ public class SettingsService
         update(updated);
         Save(updated);
     }
+
+    private static TastileSettings NormalizePromptSettings(TastileSettings settings)
+    {
+        settings.PromptToastAnchor = NormalizeAnchor(settings.PromptToastAnchor);
+        settings.PromptToastDisplayMode = NormalizeDisplayMode(settings.PromptToastDisplayMode);
+        return settings;
+    }
+
+    private static string NormalizeAnchor(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return PromptToastAnchors.TopCenter;
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "top-center" or "topcenter" => PromptToastAnchors.TopCenter,
+            "top-right" or "topright" => PromptToastAnchors.TopRight,
+            "top-left" or "topleft" => PromptToastAnchors.TopLeft,
+            "bottom-center" or "bottomcenter" => PromptToastAnchors.BottomCenter,
+            "bottom-right" or "bottomright" => PromptToastAnchors.BottomRight,
+            "bottom-left" or "bottomleft" => PromptToastAnchors.BottomLeft,
+            _ => PromptToastAnchors.TopCenter,
+        };
+    }
+
+    private static string NormalizeDisplayMode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return PromptToastDisplayModes.PrimaryDisplay;
+        }
+
+        return value.Trim().ToLowerInvariant() switch
+        {
+            "primary-display" or "primarydisplay" => PromptToastDisplayModes.PrimaryDisplay,
+            "active-window-display" or "activewindowdisplay" => PromptToastDisplayModes.ActiveWindowDisplay,
+            "all-displays" or "alldisplays" => PromptToastDisplayModes.AllDisplays,
+            _ => PromptToastDisplayModes.PrimaryDisplay,
+        };
+    }
 }
 
 /// <summary>
@@ -63,10 +106,25 @@ public class SettingsService
 /// </summary>
 public record TastileSettings
 {
-    public string ThemeMode { get; set; } = ThemeManager.Light;
+    public string ThemeMode { get; set; } = ThemeManager.System;
+    public string AccentColorMode { get; set; } = AccentColorModes.WindowsAccent;
+    public string CustomAccentColorHex { get; set; } = "#0078D4";
     public int ToastNotifyMinutes { get; set; } = 15;
     public int InterventionMinutes { get; set; } = 25;
+    public bool PromptToastEnabled { get; set; } = true;
+    public int PromptToastMaxVisible { get; set; } = 3;
+    public string PromptToastDisplayMode { get; set; } = PromptToastDisplayModes.PrimaryDisplay;
+    public string PromptToastAnchor { get; set; } = PromptToastAnchors.TopCenter;
+    public bool PromptToastMirrorSecondaryDisplays { get; set; } = false;
+    public bool PromptToastAnimate { get; set; } = true;
+    public bool QuickBarAlwaysOnTop { get; set; } = true;
+    public string QuickPanelAnchor { get; set; } = QuickPanelAnchors.TopCenter;
+    public string QuickPanelOrientation { get; set; } = QuickPanelOrientations.Horizontal;
+    public bool PromptOverlayEnabled { get; set; } = true;
+    public int PromptOverlayDurationSeconds { get; set; } = 4;
+    public bool PromptOverlaySuppressFullscreen { get; set; } = true;
     public int DefaultBreakMinutes { get; set; } = 5;
+    public int DefaultDeferMinutes { get; set; } = 30;
     public int IdlePromptMinutes { get; set; } = 5;
     public int InterventionRepeatMinutes { get; set; } = 5;
     public bool LaunchAtStartup { get; set; } = false;

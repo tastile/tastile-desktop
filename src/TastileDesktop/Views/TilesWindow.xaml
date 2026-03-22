@@ -5,43 +5,84 @@
     xmlns:vm="using:TastileDesktop.ViewModels"
     Title="Tiles">
 
-    <Grid Background="{StaticResource AppBackgroundBrush}">
+    <Grid x:Name="RootGrid" Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="32" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border x:Name="TitleBarArea" Margin="12,12,12,0" Padding="14,10" CornerRadius="20" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Text="Tiles" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
-                    <RadioButton Content="All" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterAll, Mode=TwoWay}" />
-                    <RadioButton Content="Ready" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterReady, Mode=TwoWay}" />
-                    <RadioButton Content="Started" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterStarted, Mode=TwoWay}" />
-                    <RadioButton Content="Done" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterDone, Mode=TwoWay}" />
-                </StackPanel>
-            </Grid>
-        </Border>
+        <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="Transparent">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <TextBlock Text="Tiles" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TotalCount, Mode=OneWay}" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundMutedBrush}" />
+        </Grid>
 
-        <Grid Grid.Row="1" Margin="12">
-            <Border Padding="10" CornerRadius="22" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Visibility="{x:Bind ViewModel.TilesListVisibility, Mode=OneWay}">
-                <ListView ItemsSource="{x:Bind ViewModel.Tiles, Mode=OneWay}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnTileClick">
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="{StaticResource WindowPagePadding}" Spacing="16">
+
+                <Grid ColumnSpacing="16">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0" Spacing="4">
+                        <TextBlock Text="Ready" Style="{StaticResource CaptionMutedTextStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.ReadyCount, Mode=OneWay}" Style="{ThemeResource TitleTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Spacing="4">
+                        <TextBlock Text="Started" Style="{StaticResource CaptionMutedTextStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.StartedCount, Mode=OneWay}" Style="{ThemeResource TitleTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" Spacing="4">
+                        <TextBlock Text="Done" Style="{StaticResource CaptionMutedTextStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.DoneCount, Mode=OneWay}" Style="{ThemeResource TitleTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    </StackPanel>
+                </Grid>
+
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Filter" Style="{StaticResource SectionTitleTextStyle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="12">
+                        <RadioButton Content="All" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterAll, Mode=TwoWay}" />
+                        <RadioButton Content="Ready" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterReady, Mode=TwoWay}" />
+                        <RadioButton Content="Started" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterStarted, Mode=TwoWay}" />
+                        <RadioButton Content="Done" GroupName="Filter" IsChecked="{x:Bind ViewModel.IsFilterDone, Mode=TwoWay}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <ListView ItemsSource="{x:Bind ViewModel.Tiles, Mode=OneWay}" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnTileClick" Visibility="{x:Bind ViewModel.TilesListVisibility, Mode=OneWay}">
                     <ListView.ItemTemplate>
                         <DataTemplate x:DataType="vm:TileListItem">
-                            <Grid Padding="10,12" ColumnSpacing="12" Tag="{x:Bind}" RightTapped="OnTileRightTapped">
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <StackPanel Grid.Column="0" Spacing="3">
-                                    <TextBlock Text="{x:Bind Title}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{StaticResource AppForegroundBrush}" />
-                                    <TextBlock Text="{x:Bind NextActionText}" FontSize="12" Foreground="{StaticResource AppForegroundMutedBrush}" Visibility="{x:Bind HasNextAction}" />
+                            <Grid Padding="12,14" ColumnSpacing="12" Tag="{x:Bind}" RightTapped="OnTileRightTapped">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Spacing="2">
+                                    <Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.StartTileCommand, ElementName=RootGrid}" CommandParameter="{x:Bind Id}" IsEnabled="{x:Bind IsStartEnabled}" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="Start">
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" FontSize="12" />
+                                    </Button>
+                                    <Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.CompleteTileCommand, ElementName=RootGrid}" CommandParameter="{x:Bind Id}" IsEnabled="{x:Bind IsCompleteEnabled}" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="Complete">
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE73E;" FontSize="12" />
+                                    </Button>
+                                    <Button Width="28" Height="28" Padding="0" Command="{Binding DataContext.DeferTileCommand, ElementName=RootGrid}" CommandParameter="{x:Bind Id}" IsEnabled="{x:Bind IsDeferEnabled}" Background="Transparent" BorderThickness="0" ToolTipService.ToolTip="Defer">
+                                        <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE895;" FontSize="12" />
+                                    </Button>
                                 </StackPanel>
-                                <Border Grid.Column="1" Padding="10,4" Margin="0,0,8,0" CornerRadius="12" Background="{x:Bind BadgeBackground}">
-                                    <TextBlock Text="{x:Bind Lifecycle}" FontSize="11" FontWeight="SemiBold" Foreground="{x:Bind BadgeForeground}" />
+                                <StackPanel Grid.Column="1" Spacing="4">
+                                    <TextBlock Text="{x:Bind Title}" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{x:Bind NextActionText}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" Visibility="{x:Bind HasNextAction}" />
+                                </StackPanel>
+                                <Border Grid.Column="2" Padding="10,4" Margin="0,0,8,0" CornerRadius="0" Background="{x:Bind BadgeBackground}" VerticalAlignment="Center">
+                                    <TextBlock Text="{x:Bind Lifecycle}" Style="{ThemeResource CaptionTextBlockStyle}" FontWeight="SemiBold" Foreground="{x:Bind BadgeForeground}" />
                                 </Border>
-                                <TextBlock Grid.Column="2" Text="{x:Bind WorkedText}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="{x:Bind WorkedText}" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                                 <Grid.ContextFlyout>
                                     <MenuFlyout>
                                         <MenuFlyoutItem Text="Start" Tag="{x:Bind Id}" Click="OnStartTileMenuClick" IsEnabled="{x:Bind IsStartEnabled}" />
@@ -55,14 +96,12 @@
                         </DataTemplate>
                     </ListView.ItemTemplate>
                 </ListView>
-            </Border>
 
-            <Border Padding="22" CornerRadius="22" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Visibility="{x:Bind ViewModel.TilesEmptyVisibility, Mode=OneWay}">
-                <StackPanel Spacing="8">
-                    <TextBlock Text="No tiles available" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                    <TextBlock Text="{x:Bind ViewModel.IdleGuidanceText, Mode=OneWay}" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.TilesEmptyVisibility, Mode=OneWay}">
+                    <TextBlock Text="No tiles available" Style="{StaticResource SectionTitleTextStyle}" />
+                    <TextBlock Text="{x:Bind ViewModel.IdleGuidanceText, Mode=OneWay}" Style="{StaticResource SectionBodyTextStyle}" />
                 </StackPanel>
-            </Border>
-        </Grid>
+            </StackPanel>
+        </ScrollViewer>
     </Grid>
 </Window>

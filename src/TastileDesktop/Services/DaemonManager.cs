@@ -20,7 +20,11 @@ public class DaemonManager : IDisposable
 {
     private Process? _daemonProcess;
     private string _daemonPath;
-    private readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(2) };
+    private readonly HttpClient _http = new()
+    {
+        BaseAddress = new Uri("http://127.0.0.1:3140"),
+        Timeout = TimeSpan.FromSeconds(2)
+    };
 
     public DaemonManager()
     {

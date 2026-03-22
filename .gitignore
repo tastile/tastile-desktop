@@ -12,3 +12,6 @@ packages/
 # Added by cargo
 
 /target
+
+# MSBuild binary logs
+*.binlog

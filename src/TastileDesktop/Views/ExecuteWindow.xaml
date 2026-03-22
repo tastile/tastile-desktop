@@ -7,64 +7,56 @@
 
     <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="32" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border x:Name="TitleBarArea" Margin="12,12,12,0" Padding="14,10" CornerRadius="20" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-            <TextBlock Text="Execute" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-        </Border>
+        <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="Transparent">
+            <TextBlock Text="Execute" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+        </Grid>
 
-        <ScrollViewer Grid.Row="1" Margin="12" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="14">
-                <Border Padding="18" CornerRadius="22" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Visibility="{x:Bind ViewModel.PromptVisibility, Mode=OneWay}">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Prompt" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                        <TextBlock Text="{x:Bind ViewModel.PendingPromptTitle, Mode=OneWay}" FontSize="22" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundBrush}" />
-                        <TextBlock Text="{x:Bind ViewModel.PendingPromptBody, Mode=OneWay}" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                        <TextBlock Text="{x:Bind ViewModel.PendingPromptWhy, Mode=OneWay}" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundSubtleBrush}" />
-                        <ItemsControl ItemsSource="{x:Bind ViewModel.PromptActions, Mode=OneWay}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:PromptActionButtonViewModel">
-                                    <Button Content="{x:Bind Label}" Tag="{x:Bind Id}" Click="OnPromptActionClick" Margin="0,0,0,8" />
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="{StaticResource WindowPagePadding}" Spacing="20" MaxWidth="720">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Execution status" Style="{StaticResource PageTitleTextStyle}" />
+                    <TextBlock Text="Track the current focus block, break timing, and next tile while prompts stay in toast notifications." Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+
+                <StackPanel Spacing="10">
+                    <TextBlock Text="{x:Bind ViewModel.ExecutionStatusLabel, Mode=OneWay}" Style="{StaticResource CaptionMutedTextStyle}" />
+                    <TextBlock Text="{x:Bind ViewModel.ExecutionStatusTitle, Mode=OneWay}" Style="{ThemeResource TitleTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" TextWrapping="Wrap" />
+                    <TextBlock Text="{x:Bind ViewModel.ExecutionStatusBody, Mode=OneWay}" Style="{StaticResource SectionBodyTextStyle}" TextWrapping="Wrap" />
+                    <TextBlock Text="{x:Bind ViewModel.ExecutionStatusDetail, Mode=OneWay}" Style="{StaticResource CaptionMutedTextStyle}" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Spacing="10">
+                    <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.IdleVisibility, Mode=OneWay}">
+                        <TextBlock Text="Idle" Style="{StaticResource CaptionMutedTextStyle}" />
+                        <TextBlock Text="No active tile" Style="{ThemeResource TitleTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                        <TextBlock Text="{x:Bind ViewModel.IdleGuidanceText, Mode=OneWay}" Style="{StaticResource SectionBodyTextStyle}" />
                     </StackPanel>
-                </Border>
-
-                <Border Padding="18" CornerRadius="22" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-                    <StackPanel Spacing="10">
-                        <StackPanel Spacing="6" Visibility="{x:Bind ViewModel.IdleVisibility, Mode=OneWay}">
-                            <TextBlock Text="Idle" Foreground="{StaticResource AppForegroundSubtleBrush}" />
-                            <TextBlock Text="No active tile" FontSize="24" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                            <TextBlock Text="{x:Bind ViewModel.IdleGuidanceText, Mode=OneWay}" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                        </StackPanel>
-                        <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.WorkingVisibility, Mode=OneWay}">
-                            <TextBlock Text="WORK" Foreground="{StaticResource AppInteractiveBrush}" />
-                            <TextBlock Text="{x:Bind ViewModel.ActiveTileTitle, Mode=OneWay}" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundBrush}" />
-                            <TextBlock Text="{x:Bind ViewModel.ActiveTileNextAction, Mode=OneWay}" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                            <TextBlock Text="{x:Bind ViewModel.WorkElapsedText, Mode=OneWay}" FontSize="18" FontFamily="Consolas" Foreground="{StaticResource AppPrimaryBrush}" />
-                        </StackPanel>
-                        <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.BreakVisibility, Mode=OneWay}">
-                            <TextBlock Text="BREAK" Foreground="{StaticResource AppForegroundSubtleBrush}" />
-                            <TextBlock Text="{x:Bind ViewModel.BreakRemainingText, Mode=OneWay}" FontSize="24" FontFamily="Consolas" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                        </StackPanel>
+                    <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.WorkingVisibility, Mode=OneWay}">
+                        <TextBlock Text="Working now" Style="{StaticResource CaptionMutedTextStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.ActiveTileTitle, Mode=OneWay}" Style="{ThemeResource TitleTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" TextWrapping="Wrap" />
+                        <TextBlock Text="{x:Bind ViewModel.ActiveTileNextAction, Mode=OneWay}" Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.WorkElapsedText, Mode=OneWay}" Style="{ThemeResource SubtitleTextBlockStyle}" FontFamily="Consolas" Foreground="{StaticResource AppPrimaryBrush}" />
+                    </StackPanel>
+                    <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.BreakVisibility, Mode=OneWay}">
+                        <TextBlock Text="Break" Style="{StaticResource CaptionMutedTextStyle}" />
+                        <TextBlock Text="{x:Bind ViewModel.BreakRemainingText, Mode=OneWay}" Style="{ThemeResource TitleTextBlockStyle}" FontFamily="Consolas" Foreground="{StaticResource AppForegroundBrush}" />
+                    </StackPanel>
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <Button Content="Start 5m Break" Command="{x:Bind ViewModel.StartBreakCommand}" />
                             <Button Content="Complete" Command="{x:Bind ViewModel.CompleteTileCommand}" />
                             <Button Content="End Break" Command="{x:Bind ViewModel.EndBreakCommand}" />
                         </StackPanel>
-                    </StackPanel>
-                </Border>
+                </StackPanel>
 
-                <Border Padding="18" CornerRadius="22" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Quick Memo" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                        <TextBox Text="{x:Bind ViewModel.MemoText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="110" TextWrapping="Wrap" PlaceholderText="{x:Bind ViewModel.MemoPlaceholder, Mode=OneWay}" />
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Quick memo" Style="{StaticResource SectionTitleTextStyle}" />
+                    <TextBox Text="{x:Bind ViewModel.MemoText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="110" TextWrapping="Wrap" PlaceholderText="{x:Bind ViewModel.MemoPlaceholder, Mode=OneWay}" />
                         <Button Content="Attach Memo" Command="{x:Bind ViewModel.SendMemoCommand}" HorizontalAlignment="Right" />
-                    </StackPanel>
-                </Border>
+                </StackPanel>
             </StackPanel>
         </ScrollViewer>
     </Grid>

@@ -1,0 +1,3 @@
+<Project>
+  <!-- No overrides needed here; see Directory.Build.targets for the XamlCompiler workaround -->
+</Project>

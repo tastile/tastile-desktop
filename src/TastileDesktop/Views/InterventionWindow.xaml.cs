@@ -143,12 +143,16 @@ public sealed partial class InterventionWindow : Window
         if (_readyTiles.Count > 0)
         {
             ReadyTilesList.ItemsSource = _readyTiles;
-            ReadyTilesList.ItemTemplate = null; // Use default template with Title
+            ReadyTilesList.IsItemClickEnabled = true;
+            NoReadyTilesText.Visibility = Visibility.Collapsed;
+            ReadyTilesHintText.Visibility = Visibility.Visible;
         }
         else
         {
-            ReadyTilesList.ItemsSource = new[] { "No ready tiles. Create a new one!" };
+            ReadyTilesList.ItemsSource = null;
             ReadyTilesList.IsItemClickEnabled = false;
+            NoReadyTilesText.Visibility = Visibility.Visible;
+            ReadyTilesHintText.Visibility = Visibility.Collapsed;
         }
     }
 

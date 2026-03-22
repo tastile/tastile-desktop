@@ -161,7 +161,7 @@ public sealed partial class AuthWindow : Window
             {
                 Log("[StartAuthenticationAsync] Authentication successful!");
                 await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
-                _tcs.SetResult(new AuthResult 
+                _tcs.TrySetResult(new AuthResult 
                 { 
                     Success = true 
                 });
@@ -171,7 +171,7 @@ public sealed partial class AuthWindow : Window
             else
             {
                 Log("[StartAuthenticationAsync] Authentication timed out");
-                _tcs.SetResult(new AuthResult 
+                _tcs.TrySetResult(new AuthResult 
                 { 
                     Success = false, 
                     Error = "Authentication timed out. Please try again." 
@@ -183,7 +183,7 @@ public sealed partial class AuthWindow : Window
         {
             Log($"[StartAuthenticationAsync] UNEXPECTED ERROR: {ex.GetType().Name}: {ex.Message}");
             Log($"[StartAuthenticationAsync] StackTrace: {ex.StackTrace}");
-            _tcs.SetResult(new AuthResult 
+            _tcs.TrySetResult(new AuthResult 
             { 
                 Success = false, 
                 Error = ex.Message 
@@ -256,7 +256,7 @@ public sealed partial class AuthWindow : Window
         Log("[OnCancelClick] User cancelled authentication");
         if (!_tcs.Task.IsCompleted)
         {
-            _tcs.SetResult(new AuthResult 
+            _tcs.TrySetResult(new AuthResult 
             { 
                 Success = false, 
                 Error = "User cancelled" 

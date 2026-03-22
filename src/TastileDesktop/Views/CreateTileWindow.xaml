@@ -2,237 +2,194 @@
     x:Class="TastileDesktop.Views.CreateTileWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:local="using:TastileDesktop.Views"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:controls="using:TastileDesktop.Controls"
     mc:Ignorable="d"
     Title="Create Tile">
-
     <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="32" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border x:Name="TitleBarArea" Margin="12,12,12,0" Padding="14,10" CornerRadius="20" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-            <TextBlock Text="Create Tile" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-        </Border>
+        <Grid x:Name="TitleBarArea" Height="32" Background="Transparent">
+            <TextBlock Text="Create Tile" Margin="16,0,0,0" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+        </Grid>
 
-        <ScrollViewer Grid.Row="1">
-            <StackPanel Padding="24" Spacing="16" MaxWidth="480" HorizontalAlignment="Center">
-                
-                <!-- Header -->
-                <TextBlock Text="Create Tile" Style="{StaticResource TitleLargeTextBlockStyle}" />
-                
-                <!-- Title -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Title" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBox x:Name="TitleTextBox" 
-                             PlaceholderText="Enter tile title..."
-                             TextChanged="OnTitleChanged" />
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="20" Spacing="14" MaxWidth="620">
+
+                <TextBlock Text="タイトル" Style="{StaticResource SettingRowLabelTextStyle}" />
+                <TextBox x:Name="TitleTextBox" PlaceholderText="作業 25分" />
+                <ScrollViewer x:Name="TitleSuggestionScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Visibility="Collapsed">
+                    <StackPanel x:Name="TitleSuggestionPanel" Orientation="Horizontal" Spacing="8" />
+                </ScrollViewer>
+
+                <TextBlock Text="種類" Style="{StaticResource SettingRowLabelTextStyle}" />
+                <controls:TabSelector x:Name="KindSelector" SelectionChanged="OnKindSelectionChanged" />
+
+                <StackPanel x:Name="ObjectivePanel" Spacing="8">
+                    <TextBlock Text="完了モード" Style="{StaticResource SettingRowLabelTextStyle}" />
+                    <controls:TabSelector x:Name="ModeSelector" SelectionChanged="OnModeSelectionChanged" />
+                    <ToggleButton x:Name="MaximizeButton" Content="時間枠の中で最大化" Style="{StaticResource SelectorButtonStyle}" Click="OnMaximizeClick" Visibility="Collapsed" />
                 </StackPanel>
 
-                <!-- Kind (Work / Label) -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Kind" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <Grid ColumnSpacing="8">
+                <StackPanel x:Name="TimingPanel" Spacing="8">
+                    <TextBlock Text="実行タイミング" Style="{StaticResource SettingRowLabelTextStyle}" />
+                    <Grid ColumnSpacing="4">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="KindWorkButton" 
-                                Content="Task" 
-                                Click="OnKindWorkClick"
-                                HorizontalAlignment="Stretch" />
-                        <Button x:Name="KindLabelButton" 
-                                Content="Label" 
-                                Click="OnKindLabelClick"
-                                HorizontalAlignment="Stretch"
-                                Grid.Column="1" />
+                        <ToggleButton x:Name="UseStartAtButton" Content="開始" Style="{StaticResource SelectorButtonStyle}" Click="OnUseStartAtClick" />
+                        <ToggleButton x:Name="UseEndAtButton" Grid.Column="1" Content="終了" Style="{StaticResource SelectorButtonStyle}" Click="OnUseEndAtClick" />
                     </Grid>
                 </StackPanel>
+                <Grid x:Name="StartDatePanel" ColumnSpacing="8" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <DatePicker x:Name="StartDatePicker" />
+                    <TimePicker x:Name="StartTimePicker" Grid.Column="1" />
+                </Grid>
+                <Grid x:Name="EndDatePanel" ColumnSpacing="8" Visibility="Collapsed">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <DatePicker x:Name="EndDatePicker" />
+                    <TimePicker x:Name="EndTimePicker" Grid.Column="1" />
+                </Grid>
 
-                <!-- Objective Mode -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Objective" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Button x:Name="ModeFinishButton" 
-                                Content="Finish Once" 
-                                Click="OnModeFinishClick"
-                                HorizontalAlignment="Stretch" />
-                        <Button x:Name="ModeRecurringButton" 
-                                Content="Recurring" 
-                                Click="OnModeRecurringClick"
-                                HorizontalAlignment="Stretch"
-                                Grid.Column="1" />
-                    </Grid>
-                </StackPanel>
-
-                <!-- Recurrence Settings (visible when Recurring) -->
-                <StackPanel x:Name="RecurrencePanel" Spacing="8" Visibility="Collapsed">
-                    <TextBlock Text="Recurrence" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Button x:Name="FreqDailyButton" 
-                                Content="Daily" 
-                                Click="OnFreqDailyClick"
-                                HorizontalAlignment="Stretch" />
-                        <Button x:Name="FreqWeeklyButton" 
-                                Content="Weekly" 
-                                Click="OnFreqWeeklyClick"
-                                HorizontalAlignment="Stretch"
-                                Grid.Column="1" />
-                        <Button x:Name="FreqMonthlyButton" 
-                                Content="Monthly" 
-                                Click="OnFreqMonthlyClick"
-                                HorizontalAlignment="Stretch"
-                                Grid.Column="2" />
-                    </Grid>
+                <StackPanel x:Name="RecurringSchedulePanel" Spacing="8" Visibility="Collapsed">
+                    <controls:TabSelector x:Name="FreqSelector" SelectionChanged="OnFreqSelectionChanged" />
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Every" VerticalAlignment="Center" />
-                        <NumberBox x:Name="RecurrenceIntervalBox"
-                                   Value="1"
-                                   Minimum="1"
-                                   SpinButtonPlacementMode="Inline"
-                                   Grid.Column="1" />
-                        <TextBlock x:Name="RecurrenceSuffixText" Text="days" VerticalAlignment="Center" Grid.Column="2" />
+                        <TextBlock Text="毎" VerticalAlignment="Center" />
+                        <NumberBox x:Name="RecurrenceIntervalBox" Grid.Column="1" Minimum="1" SpinButtonPlacementMode="Inline" />
+                        <TextBlock x:Name="RecurrenceSuffixText" Grid.Column="2" Text="日ごと" VerticalAlignment="Center" />
                     </Grid>
-                </StackPanel>
-
-                <!-- Schedule -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Schedule" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <Grid x:Name="WeeklyDaysGrid" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ToggleButton x:Name="WeekdaySun" Content="日" Tag="0" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                        <ToggleButton x:Name="WeekdayMon" Grid.Column="1" Content="月" Tag="1" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                        <ToggleButton x:Name="WeekdayTue" Grid.Column="2" Content="火" Tag="2" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                        <ToggleButton x:Name="WeekdayWed" Grid.Column="3" Content="水" Tag="3" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                        <ToggleButton x:Name="WeekdayThu" Grid.Column="4" Content="木" Tag="4" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                        <ToggleButton x:Name="WeekdayFri" Grid.Column="5" Content="金" Tag="5" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                        <ToggleButton x:Name="WeekdaySat" Grid.Column="6" Content="土" Tag="6" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                    </Grid>
+                    <Grid x:Name="MonthlyPatternGrid" ColumnSpacing="8" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <NumberBox x:Name="MonthlyWeekBox" Header="第何週" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" />
+                        <ComboBox x:Name="MonthlyWeekdayComboBox" Grid.Column="1" Header="曜日" />
+                    </Grid>
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <ToggleButton x:Name="UseStartAtToggle" 
-                                      Content="Start At"
-                                      Click="OnUseStartAtClick"
-                                      HorizontalAlignment="Stretch" />
-                        <ToggleButton x:Name="UseEndAtToggle" 
-                                      Content="End At"
-                                      Click="OnUseEndAtClick"
-                                      HorizontalAlignment="Stretch"
-                                      Grid.Column="1" />
+                        <ToggleButton x:Name="RecurrenceUseStartAtButton" Content="開始時刻" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceUseStartAtClick" />
+                        <ToggleButton x:Name="RecurrenceUseEndAtButton" Grid.Column="1" Content="終了時刻" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceUseEndAtClick" />
                     </Grid>
-                    
-                    <!-- Start Date/Time -->
-                    <Grid x:Name="StartDatePanel" ColumnSpacing="8" Visibility="Collapsed">
+                    <Grid x:Name="RecurringWindowGrid" ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <DatePicker x:Name="StartDatePicker" Header="Date" />
-                        <TimePicker x:Name="StartTimePicker" Header="Time" Grid.Column="1" />
-                    </Grid>
-                    
-                    <!-- End Date/Time -->
-                    <Grid x:Name="EndDatePanel" ColumnSpacing="8" Visibility="Collapsed">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <DatePicker x:Name="EndDatePicker" Header="Date" />
-                        <TimePicker x:Name="EndTimePicker" Header="Time" Grid.Column="1" />
+                        <TimePicker x:Name="RecurrenceStartTimePicker" />
+                        <TimePicker x:Name="RecurrenceEndTimePicker" Grid.Column="1" />
                     </Grid>
                 </StackPanel>
 
-                <!-- Work Target (visible when Work kind) -->
                 <StackPanel x:Name="WorkTargetPanel" Spacing="8">
-                    <TextBlock Text="Work Target" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="所要時間" Style="{StaticResource SettingRowLabelTextStyle}" />
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <NumberBox x:Name="WorkHoursBox"
-                                   Header="Hours"
-                                   Value="0"
-                                   Minimum="0"
-                                   Maximum="99"
-                                   SpinButtonPlacementMode="Inline" />
-                        <NumberBox x:Name="WorkMinutesBox"
-                                   Header="Minutes"
-                                   Value="25"
-                                   Minimum="0"
-                                   Maximum="59"
-                                   SpinButtonPlacementMode="Inline"
-                                   Grid.Column="1" />
+                        <NumberBox x:Name="WorkHoursBox" Header="時間" Minimum="0" Maximum="99" SpinButtonPlacementMode="Inline" ValueChanged="OnWorkDurationChanged" />
+                        <NumberBox x:Name="WorkMinutesBox" Grid.Column="1" Header="分" Minimum="0" Maximum="59" SpinButtonPlacementMode="Inline" ValueChanged="OnWorkDurationChanged" />
                     </Grid>
-                </StackPanel>
 
-                <!-- Split Setting (visible when Work kind) -->
-                <StackPanel x:Name="SplitPanel" Spacing="8">
-                    <TextBlock Text="Break Handling" Style="{StaticResource BodyStrongTextBlockStyle}" />
+                    <TextBlock Text="分割" Style="{StaticResource SettingRowLabelTextStyle}" />
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button x:Name="SplitAllowButton" 
-                                Content="Split Work" 
-                                Click="OnSplitAllowClick"
-                                HorizontalAlignment="Stretch" />
-                        <Button x:Name="SplitKeepButton" 
-                                Content="Keep Continuous" 
-                                Click="OnSplitKeepClick"
-                                HorizontalAlignment="Stretch"
-                                Grid.Column="1" />
+                        <ToggleButton x:Name="SplitAllowButton" Content="分割してよい" Style="{StaticResource SelectorButtonStyle}" Click="OnSplitAllowClick" />
+                        <ToggleButton x:Name="SplitKeepButton" Grid.Column="1" Content="分割しない" Style="{StaticResource SelectorButtonStyle}" Click="OnSplitKeepClick" />
                     </Grid>
                 </StackPanel>
 
-                <!-- Project -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Project" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBox x:Name="ProjectTextBox" PlaceholderText="Enter or select project..." />
+                <StackPanel x:Name="RecurrenceValidityPanel" Spacing="8" Visibility="Collapsed">
+                    <TextBlock Text="有効期間" Style="{StaticResource SettingRowLabelTextStyle}" />
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ToggleButton x:Name="RecurrenceValidFromButton" Content="有効開始" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceValidFromClick" />
+                        <ToggleButton x:Name="RecurrenceValidToButton" Grid.Column="1" Content="有効終了" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceValidToClick" />
+                    </Grid>
+                    <Grid x:Name="RecurrenceValidityGrid" ColumnSpacing="8" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <DatePicker x:Name="RecurrenceValidFromDatePicker" />
+                        <DatePicker x:Name="RecurrenceValidToDatePicker" Grid.Column="1" />
+                    </Grid>
                 </StackPanel>
 
-                <!-- Tags -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Tags" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBox x:Name="TagsTextBox" PlaceholderText="Add tags (comma separated)..." />
-                </StackPanel>
+                <TextBlock Text="プロジェクト" Style="{StaticResource SettingRowLabelTextStyle}" />
+                <TextBox x:Name="ProjectTextBox" PlaceholderText="プロジェクト名" />
+                <Border x:Name="ProjectSuggestionBorder" Padding="4" Visibility="Collapsed">
+                    <StackPanel x:Name="ProjectSuggestionPanel" Spacing="2" />
+                </Border>
 
-                <!-- Memo -->
-                <StackPanel Spacing="8">
-                    <TextBlock Text="Memo" Style="{StaticResource BodyStrongTextBlockStyle}" />
-                    <TextBox x:Name="MemoTextBox" 
-                             PlaceholderText="Enter notes..."
-                             AcceptsReturn="True"
-                             TextWrapping="Wrap"
-                             MinHeight="80" />
-                </StackPanel>
+                <TextBlock Text="タグ" Style="{StaticResource SettingRowLabelTextStyle}" />
+                <TextBox x:Name="TagTextBox" PlaceholderText="タグ名" />
+                <Border x:Name="TagSuggestionBorder" Padding="4" Visibility="Collapsed">
+                    <StackPanel x:Name="TagSuggestionPanel" Spacing="2" />
+                </Border>
+                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+                    <StackPanel x:Name="SelectedTagsPanel" Orientation="Horizontal" Spacing="8" />
+                </ScrollViewer>
 
-                <!-- Error Message -->
-                <TextBlock x:Name="ErrorTextBlock" 
-                           Foreground="#FFDC2626"
-                           TextWrapping="Wrap"
-                           Visibility="Collapsed" />
+                <TextBlock Text="メモ" Style="{StaticResource SettingRowLabelTextStyle}" />
+                <TextBox x:Name="MemoTextBox" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" PlaceholderText="補足メモ" />
 
-                <!-- Buttons -->
-                <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                    <Button Content="Cancel" Click="OnCancelClick" />
-                    <Button Content="Create" 
-                            Style="{StaticResource AccentButtonStyle}" 
-                            Click="OnCreateClick" />
-                </StackPanel>
+                <TextBlock x:Name="ErrorTextBlock" Foreground="#FFD13438" TextWrapping="Wrap" Visibility="Collapsed" />
 
             </StackPanel>
         </ScrollViewer>
+
+        <Border Grid.Row="2" Padding="20,12" BorderThickness="0,1,0,0" BorderBrush="{StaticResource AppBorderBrush}">
+            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                <Button x:Name="CancelButton" MinWidth="80" Content="キャンセル" Click="OnCancelClick" />
+                <Button x:Name="CreateButton" MinWidth="80" Content="作成" Style="{ThemeResource AccentButtonStyle}" Click="OnCreateClick" />
+            </StackPanel>
+        </Border>
     </Grid>
 </Window>

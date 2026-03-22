@@ -4,160 +4,65 @@ using TastileDesktop.Views;
 namespace TastileDesktop.Services;
 
 /// <summary>
-/// Detects when user intervention is needed based on active tile state.
+/// Detects when user intervention is needed based on pending prompt state.
 /// </summary>
 public class InterventionEngine : IDisposable
 {
     private readonly PollingService _pollingService;
     private readonly CoreApiClient _api;
-    private readonly NotificationService _notificationService;
-    private readonly SettingsService _settingsService;
     private InterventionWindow? _interventionWindow;
-    
-    // Timing thresholds (loaded from settings)
-    private TimeSpan _toastNotifyThreshold => TimeSpan.FromMinutes(_settingsService.Current.ToastNotifyMinutes);
-    private TimeSpan _workInterventionThreshold => TimeSpan.FromMinutes(_settingsService.Current.InterventionMinutes);
-    private TimeSpan _breakOverdueThreshold => TimeSpan.FromMinutes(1); // Grace period after break ends
-    private TimeSpan _idlePromptThreshold => TimeSpan.FromMinutes(_settingsService.Current.IdlePromptMinutes);
-    private TimeSpan _interventionRepeatInterval => TimeSpan.FromMinutes(_settingsService.Current.InterventionRepeatMinutes);
-    
-    // Track last intervention times to prevent spam
-    private DateTimeOffset _lastWorkIntervention = DateTimeOffset.MinValue;
-    private DateTimeOffset _lastBreakIntervention = DateTimeOffset.MinValue;
-    private DateTimeOffset _lastIdleIntervention = DateTimeOffset.MinValue;
-    private DateTimeOffset? _lastToastShown;
-    private bool _toastShownForCurrentPhase = false;
-    
-    // Track last completion time for idle detection
-    private DateTimeOffset _lastCompletionTime = DateTimeOffset.UtcNow;
-    private string _lastPhase = "Idle";
 
     public InterventionEngine(PollingService pollingService, CoreApiClient api, SettingsService? settingsService = null)
     {
         _pollingService = pollingService;
         _api = api;
-        _settingsService = settingsService ?? new SettingsService();
-        _notificationService = new NotificationService(api);
-        _pollingService.ActiveTileChanged += OnActiveTileChanged;
-        _settingsService.SettingsChanged += OnSettingsChanged;
+        _pollingService.PendingPromptChanged += OnPendingPromptChanged;
     }
 
-    private void OnSettingsChanged(object? sender, EventArgs e)
+    private void OnPendingPromptChanged(object? sender, PendingPromptResponse? prompt)
     {
-        // Settings are automatically reloaded via _settingsService.Current
-        // Next polling cycle will use new values
+        var decision = PromptNotificationPolicy.Decide(prompt?.Prompt, isFullscreen: false);
+        if (!decision.ShowIntervention || prompt?.Prompt == null)
+        {
+            return;
+        }
+
+        ShowIntervention(prompt.Prompt);
     }
 
-    private void OnActiveTileChanged(object? sender, ActiveTileResponse? active)
+    private void ShowIntervention(PromptView prompt)
     {
-        if (active == null) return;
-
-        var now = DateTimeOffset.UtcNow;
-        var phase = active.Phase ?? "Idle";
-
-        // Detect completion (transition from Work to Idle)
-        if (_lastPhase == "Work" && phase == "Idle")
+        if (_interventionWindow != null)
         {
-            _lastCompletionTime = now;
+            return;
         }
-        
-        // Reset toast flag when phase changes
-        if (_lastPhase != phase)
-        {
-            _toastShownForCurrentPhase = false;
-        }
-        
-        _lastPhase = phase;
 
-        switch (phase)
+        var kind = Normalize(prompt.Kind);
+        switch (kind)
         {
-            case "Work":
-                CheckWorkIntervention(active, now);
+            case "break_end":
+                ShowBreakIntervention();
                 break;
-            case "Break":
-                CheckBreakIntervention(active, now);
+            case "start":
+                ShowIdleIntervention();
                 break;
-            case "Idle":
-                CheckIdleIntervention(active, now);
+            default:
+                ShowWorkIntervention(prompt);
                 break;
         }
     }
 
-    private void CheckWorkIntervention(ActiveTileResponse active, DateTimeOffset now)
+    private void ShowWorkIntervention(PromptView prompt)
     {
-        if (string.IsNullOrEmpty(active.PhaseStartedAt)) return;
-        if (!DateTimeOffset.TryParse(active.PhaseStartedAt, out var startedAt)) return;
+        if (_interventionWindow != null) return;
 
-        var elapsed = now - startedAt;
-        
-        // Phase 1: Show toast at 15 minutes
-        if (elapsed >= _toastNotifyThreshold && !_toastShownForCurrentPhase)
-        {
-            _toastShownForCurrentPhase = true;
-            _lastToastShown = now;
-            _notificationService.ShowWorkReminder(active.Tile?.Title ?? "Unknown", (int)elapsed.TotalMinutes);
-        }
-        
-        // Phase 2: Show unavoidable intervention at 25 minutes
-        if (elapsed >= _workInterventionThreshold && 
-            now - _lastWorkIntervention >= _interventionRepeatInterval)
-        {
-            _lastWorkIntervention = now;
-            ShowWorkIntervention(active);
-        }
-    }
-
-    private void CheckBreakIntervention(ActiveTileResponse active, DateTimeOffset now)
-    {
-        if (string.IsNullOrEmpty(active.PhaseEndsAt)) return;
-        if (!DateTimeOffset.TryParse(active.PhaseEndsAt, out var endsAt)) return;
-
-        // Break ended - show toast
-        if (now > endsAt && !_toastShownForCurrentPhase)
-        {
-            _toastShownForCurrentPhase = true;
-            _notificationService.ShowBreakOverReminder();
-        }
-
-        // Break is overdue (1 minute grace period) - show intervention
-        if (now > endsAt + _breakOverdueThreshold &&
-            now - _lastBreakIntervention >= _interventionRepeatInterval)
-        {
-            _lastBreakIntervention = now;
-            ShowBreakIntervention();
-        }
-    }
-
-    private void CheckIdleIntervention(ActiveTileResponse active, DateTimeOffset now)
-    {
-        var idleTime = now - _lastCompletionTime;
-        
-        // Phase 1: Show toast at 5 minutes
-        if (idleTime >= _idlePromptThreshold && !_toastShownForCurrentPhase)
-        {
-            _toastShownForCurrentPhase = true;
-            _notificationService.ShowIdleReminder();
-        }
-        
-        // Phase 2: Show intervention at 10 minutes (5 + 5)
-        if (idleTime >= _idlePromptThreshold + TimeSpan.FromMinutes(5) &&
-            now - _lastIdleIntervention >= _interventionRepeatInterval)
-        {
-            _lastIdleIntervention = now;
-            ShowIdleIntervention();
-        }
-    }
-
-    private void ShowWorkIntervention(ActiveTileResponse active)
-    {
-        if (_interventionWindow != null) return; // Already showing
-
+        var active = _pollingService.CurrentActiveTile;
         var window = new InterventionWindow(
             InterventionType.Work,
-            active.Tile?.Title ?? "Unknown",
-            active.PhaseStartedAt,
+            active?.Tile?.Title ?? prompt.Title,
+            active?.PhaseStartedAt,
             _pollingService.CurrentTiles);
-        
+
         window.ActionTaken += async (sender, action) =>
         {
             await HandleInterventionAction(action);
@@ -177,7 +82,7 @@ public class InterventionEngine : IDisposable
             null,
             null,
             _pollingService.CurrentTiles);
-        
+
         window.ActionTaken += async (sender, action) =>
         {
             await HandleInterventionAction(action);
@@ -197,7 +102,7 @@ public class InterventionEngine : IDisposable
             null,
             null,
             _pollingService.CurrentTiles);
-        
+
         window.ActionTaken += async (sender, action) =>
         {
             await HandleInterventionAction(action);
@@ -215,7 +120,6 @@ public class InterventionEngine : IDisposable
             switch (action)
             {
                 case InterventionAction.Continue:
-                    // Extend the current work session
                     await _api.ExtendTileAsync(25);
                     break;
                 case InterventionAction.TakeBreak:
@@ -228,10 +132,11 @@ public class InterventionEngine : IDisposable
                     await _api.EndBreakAsync();
                     break;
                 case InterventionAction.StartTile:
-                    // Start the selected tile
                     var tileId = _interventionWindow?.SelectedTileId;
                     if (!string.IsNullOrEmpty(tileId))
+                    {
                         await _api.StartTileAsync(tileId);
+                    }
                     break;
             }
         }
@@ -243,10 +148,11 @@ public class InterventionEngine : IDisposable
 
     public void Dispose()
     {
-        _pollingService.ActiveTileChanged -= OnActiveTileChanged;
-        _notificationService?.Dispose();
+        _pollingService.PendingPromptChanged -= OnPendingPromptChanged;
         _interventionWindow?.Close();
     }
+
+    private static string Normalize(string value) => value.Trim().ToLowerInvariant();
 }
 
 /// <summary>
@@ -270,5 +176,3 @@ public enum InterventionAction
     EndBreak,
     StartTile,
 }
-
-

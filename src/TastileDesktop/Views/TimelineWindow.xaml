@@ -4,47 +4,172 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:vm="using:TastileDesktop.ViewModels"
     Title="Timeline">
-
     <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
+            <RowDefinition Height="32" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Border x:Name="TitleBarArea" Margin="12,12,12,0" Padding="14,10" CornerRadius="20" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-            <TextBlock Text="Timeline" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-        </Border>
+        <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="Transparent">
+            <TextBlock Text="Timeline" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+        </Grid>
 
-        <ScrollViewer Grid.Row="1" Margin="12" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="14">
-                <Border Padding="18" CornerRadius="22" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Next Up" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                        <TextBlock Text="{x:Bind ViewModel.NextUpTitle, Mode=OneWay}" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" TextWrapping="Wrap" />
-                        <TextBlock Text="{x:Bind ViewModel.NextUpAction, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
-                    </StackPanel>
-                </Border>
+        <Grid x:Name="TimelineRootGrid" Grid.Row="1" Padding="{StaticResource WindowPagePadding}">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-                <Border Padding="18" CornerRadius="22" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-                    <StackPanel Spacing="10">
-                        <TextBlock Text="Today" FontSize="16" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" />
-                        <ItemsControl ItemsSource="{x:Bind ViewModel.TimelineSegments, Mode=OneWay}">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate x:DataType="vm:TimelineSegmentViewModel">
-                                    <Grid Padding="6,8" ColumnSpacing="12">
-                                        <Grid.ColumnDefinitions><ColumnDefinition Width="72" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                        <TextBlock Text="{x:Bind TimeText}" Foreground="{StaticResource AppForegroundMutedBrush}" FontFamily="Consolas" />
-                                        <Border Grid.Column="1" Padding="10,6" CornerRadius="14" Background="{x:Bind BadgeColor}">
-                                            <TextBlock Text="{x:Bind Title}" TextTrimming="CharacterEllipsis" />
+            <Expander Grid.Row="0" IsExpanded="False" Margin="0,0,0,6" HorizontalAlignment="Stretch" Background="{StaticResource AppSurface1Brush}">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE713;" FontSize="14" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Text="Quick controls" Style="{StaticResource SectionBodyTextStyle}" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <Grid Margin="0,8,0,0" ColumnSpacing="8" HorizontalAlignment="Stretch">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ComboBox x:Name="ScaleComboBox" Grid.Column="0" SelectionChanged="OnScaleSelectionChanged">
+                            <ComboBoxItem Content="Day" />
+                            <ComboBoxItem Content="Week" />
+                            <ComboBoxItem Content="Month" />
+                        </ComboBox>
+                        <ComboBox x:Name="RangeComboBox" Grid.Column="1" SelectionChanged="OnRangeSelectionChanged">
+                            <ComboBoxItem Content="24h" />
+                            <ComboBoxItem Content="±12h" />
+                            <ComboBoxItem Content="Sun" />
+                        </ComboBox>
+                        <Button Grid.Column="2" Content="-" MinWidth="32" Click="OnZoomOutClick" />
+                        <Button Grid.Column="3" Content="+" MinWidth="32" Click="OnZoomInClick" />
+                    </Grid>
+            </Expander>
+
+            <ScrollViewer x:Name="TimelineScrollViewer" Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" PointerWheelChanged="OnTimelineWheelChanged" HorizontalContentAlignment="Stretch">
+                <StackPanel Spacing="12" HorizontalAlignment="Stretch">
+                    <TextBlock Text="{x:Bind ViewModel.TimelineRangeLabel, Mode=OneWay}" Style="{StaticResource SectionBodyTextStyle}" />
+
+                    <Grid x:Name="TimelineCanvasHost" Margin="0,8,0,0" Height="{x:Bind ViewModel.TimelineCanvasHeight, Mode=OneWay}" HorizontalAlignment="Stretch">
+                            <ItemsControl
+                                ItemsSource="{x:Bind ViewModel.TimelineHourMarkers, Mode=OneWay}"
+                                Height="{x:Bind ViewModel.TimelineCanvasHeight, Mode=OneWay}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:TimelineHourMarkerViewModel">
+                                        <Grid Width="{Binding ActualWidth, ElementName=TimelineCanvasHost}">
+                                            <Grid.RenderTransform>
+                                                <TranslateTransform Y="{x:Bind Top}" />
+                                            </Grid.RenderTransform>
+                                            <Rectangle
+                                                Width="{Binding ActualWidth, ElementName=TimelineCanvasHost}"
+                                                Height="1"
+                                                Fill="{StaticResource AppBorderBrush}" />
+                                            <TextBlock Text="{x:Bind Label}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="10" Margin="4,-14,0,0" />
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <ItemsControl
+                                ItemsSource="{x:Bind ViewModel.TimelineBlocks, Mode=OneWay}"
+                                Height="{x:Bind ViewModel.TimelineCanvasHeight, Mode=OneWay}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <Canvas />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="vm:TimelineAbsoluteBlockViewModel">
+                                        <Border
+                                            Width="{x:Bind Width}"
+                                            Height="{x:Bind Height}"
+                                            Padding="12,6"
+                                            CornerRadius="6"
+                                            Background="{x:Bind Fill}"
+                                            BorderBrush="{x:Bind BorderBrush}"
+                                            BorderThickness="1">
+                                            <Border.RenderTransform>
+                                                <TranslateTransform X="{x:Bind Left}" Y="{x:Bind Top}" />
+                                            </Border.RenderTransform>
+                                            <Grid ColumnSpacing="12">
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="Auto" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+                                                <FontIcon
+                                                    FontFamily="Segoe Fluent Icons"
+                                                    Glyph="{x:Bind StatusIconGlyph}"
+                                                    Foreground="{x:Bind SecondaryForegroundBrush}"
+                                                    FontSize="14"
+                                                    VerticalAlignment="Center"
+                                                    ToolTipService.ToolTip="{x:Bind StatusIconToolTip}"
+                                                    Margin="0,0,4,0" />
+                                                <StackPanel Grid.Column="1" Spacing="2">
+                                                    <TextBlock Text="{x:Bind Title}" Foreground="{x:Bind ForegroundBrush}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Text="{x:Bind TimeRangeText}" Foreground="{x:Bind SecondaryForegroundBrush}" FontSize="12" />
+                                                    <TextBlock Text="{x:Bind KindLabel}" Foreground="{x:Bind SecondaryForegroundBrush}" FontSize="11" />
+                                                </StackPanel>
+                                                <TextBlock Grid.Column="2" Text="{x:Bind DurationText}" Foreground="{x:Bind SecondaryForegroundBrush}" VerticalAlignment="Top" />
+                                            </Grid>
                                         </Border>
-                                        <TextBlock Grid.Column="2" Text="{x:Bind DurationText}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
-                                    </Grid>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+
+                            <Canvas Width="{Binding ActualWidth, ElementName=TimelineCanvasHost}" Visibility="{x:Bind ViewModel.TimelineNowVisibility, Mode=OneWay}">
+                                <Canvas.RenderTransform>
+                                    <TranslateTransform Y="{x:Bind ViewModel.TimelineNowTop, Mode=OneWay}" />
+                                </Canvas.RenderTransform>
+                                <Rectangle
+                                    Canvas.Top="0"
+                                    Width="{Binding ActualWidth, ElementName=TimelineCanvasHost}"
+                                    Height="2"
+                                    Fill="{StaticResource AppPrimaryBrush}" />
+                                <Ellipse
+                                    Canvas.Left="-4"
+                                    Canvas.Top="-3"
+                                    Width="8"
+                                    Height="8"
+                                    Fill="{StaticResource AppPrimaryBrush}" />
+                                <TextBlock
+                                    Canvas.Top="-14"
+                                    Width="{Binding ActualWidth, ElementName=TimelineCanvasHost}"
+                                    TextAlignment="Right"
+                                    Padding="0,0,4,0"
+                                    Text="{x:Bind ViewModel.TimelineNowLabel, Mode=OneWay}"
+                                    Foreground="{StaticResource AppPrimaryBrush}"
+                                    FontSize="11" />
+                            </Canvas>
+                            
+                    </Grid>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Expander Grid.Row="2" IsExpanded="False" Margin="0,6,0,0" HorizontalAlignment="Stretch" Background="{StaticResource AppSurface1Brush}">
+                    <Expander.Header>
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE9E9;" FontSize="14" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Text="Advanced controls" Style="{StaticResource SectionBodyTextStyle}" />
+                        </StackPanel>
+                    </Expander.Header>
+                    <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                        <DatePicker x:Name="CustomStartDatePicker" />
+                        <TimePicker x:Name="CustomStartTimePicker" />
+                        <DatePicker x:Name="CustomEndDatePicker" />
+                        <TimePicker x:Name="CustomEndTimePicker" />
+                        <Button Content="Apply custom range" Click="OnApplyCustomRangeClick" />
                     </StackPanel>
-                </Border>
-            </StackPanel>
-        </ScrollViewer>
+            </Expander>
+        </Grid>
     </Grid>
 </Window>

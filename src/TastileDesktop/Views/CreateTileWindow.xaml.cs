@@ -1,287 +1,585 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Media;
-using System;
-using System.Linq;
+using Microsoft.UI.Xaml.Controls.Primitives;
+using Microsoft.UI.Xaml.Input;
+using TastileDesktop.Models;
 using TastileDesktop.Services;
-using Windows.UI;
 
 namespace TastileDesktop.Views;
 
-/// <summary>
-/// Create Tile window matching Web dashboard design.
-/// </summary>
 public sealed partial class CreateTileWindow : Window
 {
-    private readonly CoreApiClient _api = new();
-    private string _tileKind = "work"; // work, label
-    private string _objectiveMode = "finish_once"; // finish_once, recurring
-    private string _recurrenceFrequency = "daily"; // daily, weekly, monthly
-    private bool _breakSplitsWork = true;
-
-    public CreateTileWindow()
+    private static void Log(string msg)
     {
-        this.InitializeComponent();
-        FloatingWindowHelper.Configure(this, TitleBarArea, 520, 800);
-
-        // Initialize UI state
-        UpdateKindButtons();
-        UpdateModeButtons();
-        UpdateRecurrenceButtons();
-        UpdateSplitButtons();
-        UpdateRecurrenceVisibility();
-        UpdateWorkPanelsVisibility();
-
-        // Set default dates/times
-        StartDatePicker.Date = DateTimeOffset.Now;
-        StartTimePicker.Time = TimeSpan.FromHours(DateTime.Now.Hour).Add(TimeSpan.FromMinutes(DateTime.Now.Minute));
-        EndDatePicker.Date = DateTimeOffset.Now;
-        EndTimePicker.Time = TimeSpan.FromHours(DateTime.Now.Hour + 1).Add(TimeSpan.FromMinutes(DateTime.Now.Minute));
-    }
-
-    #region Event Handlers
-
-    private void OnTitleChanged(object sender, TextChangedEventArgs e)
-    {
-        // Auto-generate title if empty (similar to web)
-        if (string.IsNullOrWhiteSpace(TitleTextBox.Text))
+        try
         {
-            TitleTextBox.PlaceholderText = GetSuggestedTitle();
+            var path = Path.Combine(Path.GetTempPath(), "tastile-desktop.log");
+            File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
+        }
+        catch
+        {
         }
     }
 
-    private void OnKindWorkClick(object sender, RoutedEventArgs e)
+    private readonly CoreApiClient _api = new();
+    private readonly bool _isJapanese = CreateTileParityResolver.IsJapanese();
+    private CreateTileCatalog _catalog = new([], [], []);
+    private readonly HashSet<int> _recurrenceWeekdays = [];
+    private bool _titleEdited;
+    private bool _applyingSuggestedTitle;
+    private bool _durationManuallyEdited;
+    private bool _syncingAutoDuration;
+    private bool _projectInputFocused;
+    private bool _tagInputFocused;
+    private string _tileKind = "work";
+    private string _objectiveMode = "finish_once";
+    private string _recurrenceFrequency = "daily";
+    private bool _breakSplitsWork = true;
+    private bool _maximizeActive;
+    private bool _useStartAt;
+    private bool _useEndAt;
+    private bool _recurrenceValidFromActive;
+    private bool _recurrenceValidToActive;
+    private bool _recurrenceUseStartAt = true;
+    private bool _recurrenceUseEndAt = true;
+
+    public CreateTileWindow()
     {
-        _tileKind = "work";
-        UpdateKindButtons();
-        UpdateWorkPanelsVisibility();
+        try
+        {
+            Log("CreateTileWindow ctor start");
+            InitializeComponent();
+            Log("CreateTileWindow after InitializeComponent");
+            FloatingWindowHelper.Configure(this, TitleBarArea, 560, 860);
+            Log("CreateTileWindow after Configure");
+            WireDynamicHandlers();
+            InitTabSelectors();
+            Log("CreateTileWindow after InitTabSelectors");
+
+            var now = DateTime.Now;
+            RecurrenceIntervalBox.Value = 1;
+            MonthlyWeekBox.Value = 1;
+            PopulateMonthlyWeekdayOptions();
+            WorkHoursBox.Value = 0;
+            WorkMinutesBox.Value = 25;
+            StartDatePicker.Date = DateTimeOffset.Now;
+            StartTimePicker.Time = new TimeSpan(now.Hour, now.Minute, 0);
+            EndDatePicker.Date = DateTimeOffset.Now;
+            EndTimePicker.Time = new TimeSpan(now.AddHours(1).Hour, now.AddHours(1).Minute, 0);
+            RecurrenceStartTimePicker.Time = new TimeSpan(now.Hour, now.Minute, 0);
+            RecurrenceEndTimePicker.Time = new TimeSpan(now.AddHours(1).Hour, now.AddHours(1).Minute, 0);
+            RecurrenceValidFromDatePicker.Date = DateTimeOffset.Now;
+            RecurrenceValidToDatePicker.Date = DateTimeOffset.Now;
+            MonthlyWeekdayComboBox.SelectedIndex = now.DayOfWeek switch
+            {
+                DayOfWeek.Sunday => 0,
+                DayOfWeek.Monday => 1,
+                DayOfWeek.Tuesday => 2,
+                DayOfWeek.Wednesday => 3,
+                DayOfWeek.Thursday => 4,
+                DayOfWeek.Friday => 5,
+                _ => 6,
+            };
+            _recurrenceWeekdays.Add((int)now.DayOfWeek);
+
+            InitWeekdayStates();
+            InitAccentStates();
+            InitTabSelectorStates();
+            Log("CreateTileWindow after InitTabSelectorStates");
+            UpdateVisibility();
+            SyncAutoDurationFromSchedule();
+            RefreshSuggestedTitle();
+            _ = LoadCatalogAsync();
+            Log("CreateTileWindow ctor end");
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[CreateTileWindow] CRASH: {ex}");
+            Log($"CRASH in ctor: {ex}");
+            throw;
+        }
     }
 
-    private void OnKindLabelClick(object sender, RoutedEventArgs e)
+    private void InitTabSelectorStates()
     {
-        _tileKind = "label";
-        UpdateKindButtons();
-        UpdateWorkPanelsVisibility();
+        KindSelector.SelectedIndex = 0;
+        ModeSelector.SelectedIndex = 0;
+        FreqSelector.SelectedIndex = 0;
     }
 
-    private void OnModeFinishClick(object sender, RoutedEventArgs e)
+    private void InitWeekdayStates()
     {
-        _objectiveMode = "finish_once";
-        UpdateModeButtons();
-        UpdateRecurrenceVisibility();
+        SetWeekdayChecked(WeekdaySun, _recurrenceWeekdays.Contains(0));
+        SetWeekdayChecked(WeekdayMon, _recurrenceWeekdays.Contains(1));
+        SetWeekdayChecked(WeekdayTue, _recurrenceWeekdays.Contains(2));
+        SetWeekdayChecked(WeekdayWed, _recurrenceWeekdays.Contains(3));
+        SetWeekdayChecked(WeekdayThu, _recurrenceWeekdays.Contains(4));
+        SetWeekdayChecked(WeekdayFri, _recurrenceWeekdays.Contains(5));
+        SetWeekdayChecked(WeekdaySat, _recurrenceWeekdays.Contains(6));
     }
 
-    private void OnModeRecurringClick(object sender, RoutedEventArgs e)
+    private void InitAccentStates()
     {
-        _objectiveMode = "recurring";
-        UpdateModeButtons();
-        UpdateRecurrenceVisibility();
+        UseStartAtButton.IsChecked = _useStartAt;
+        UseEndAtButton.IsChecked = _useEndAt;
+        MaximizeButton.IsChecked = _maximizeActive;
+        SplitAllowButton.IsChecked = _breakSplitsWork;
+        SplitKeepButton.IsChecked = !_breakSplitsWork;
+        RecurrenceUseStartAtButton.IsChecked = _recurrenceUseStartAt;
+        RecurrenceUseEndAtButton.IsChecked = _recurrenceUseEndAt;
+        RecurrenceValidFromButton.IsChecked = _recurrenceValidFromActive;
+        RecurrenceValidToButton.IsChecked = _recurrenceValidToActive;
+        InitWeekdayStates();
     }
 
-    private void OnFreqDailyClick(object sender, RoutedEventArgs e)
+    private static void SetWeekdayChecked(ToggleButton btn, bool active)
     {
-        _recurrenceFrequency = "daily";
-        UpdateRecurrenceButtons();
+        btn.IsChecked = active;
     }
 
-    private void OnFreqWeeklyClick(object sender, RoutedEventArgs e)
+    private void WireDynamicHandlers()
     {
-        _recurrenceFrequency = "weekly";
-        UpdateRecurrenceButtons();
+        TitleTextBox.TextChanged += OnTitleTextChanged;
+        ProjectTextBox.TextChanged += OnProjectTextChanged;
+        ProjectTextBox.KeyDown += OnProjectTextBoxKeyDown;
+        ProjectTextBox.GotFocus += OnProjectTextBoxGotFocus;
+        ProjectTextBox.LostFocus += OnProjectTextBoxLostFocus;
+        TagTextBox.TextChanged += OnTagTextChanged;
+        TagTextBox.KeyDown += OnTagTextBoxKeyDown;
+        TagTextBox.GotFocus += OnTagTextBoxGotFocus;
+        TagTextBox.LostFocus += OnTagTextBoxLostFocus;
+        RecurrenceIntervalBox.ValueChanged += OnRecurrenceIntervalChanged;
+        MonthlyWeekBox.ValueChanged += (_, _) => OnScheduleBoundChanged(MonthlyWeekBox, EventArgs.Empty);
+        MonthlyWeekdayComboBox.SelectionChanged += OnMonthlyWeekdayChanged;
+        StartDatePicker.DateChanged += (_, _) => OnScheduleBoundChanged(StartDatePicker, EventArgs.Empty);
+        StartTimePicker.TimeChanged += (_, _) => OnScheduleBoundChanged(StartTimePicker, EventArgs.Empty);
+        EndDatePicker.DateChanged += (_, _) => OnScheduleBoundChanged(EndDatePicker, EventArgs.Empty);
+        EndTimePicker.TimeChanged += (_, _) => OnScheduleBoundChanged(EndTimePicker, EventArgs.Empty);
+        RecurrenceStartTimePicker.TimeChanged += (_, _) => OnScheduleBoundChanged(RecurrenceStartTimePicker, EventArgs.Empty);
+        RecurrenceEndTimePicker.TimeChanged += (_, _) => OnScheduleBoundChanged(RecurrenceEndTimePicker, EventArgs.Empty);
+        RecurrenceValidFromDatePicker.DateChanged += (_, _) => OnScheduleBoundChanged(RecurrenceValidFromDatePicker, EventArgs.Empty);
+        RecurrenceValidToDatePicker.DateChanged += (_, _) => OnScheduleBoundChanged(RecurrenceValidToDatePicker, EventArgs.Empty);
     }
 
-    private void OnFreqMonthlyClick(object sender, RoutedEventArgs e)
+    private void InitTabSelectors()
     {
-        _recurrenceFrequency = "monthly";
-        UpdateRecurrenceButtons();
+        KindSelector.ItemsSource = new[] { "タスク", "ラベル" };
+        ModeSelector.ItemsSource = new[] { "通常", "定期" };
+        FreqSelector.ItemsSource = new[] { "日次", "週次", "月次" };
     }
 
-    private void OnUseStartAtClick(object sender, RoutedEventArgs e)
+    private async Task LoadCatalogAsync()
     {
-        StartDatePanel.Visibility = UseStartAtToggle.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        try
+        {
+            var tiles = await _api.GetTilesAsync();
+            _catalog = CreateTileParityResolver.DeriveCatalog(tiles?.Tiles ?? []);
+        }
+        catch
+        {
+            _catalog = new CreateTileCatalog([], [], []);
+        }
+
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            RefreshTitleSuggestions();
+            RefreshProjectSuggestions();
+            RefreshTagSuggestions();
+        });
     }
 
-    private void OnUseEndAtClick(object sender, RoutedEventArgs e)
+    private void OnKindSelectionChanged(object? sender, int index)
     {
-        EndDatePanel.Visibility = UseEndAtToggle.IsChecked == true ? Visibility.Visible : Visibility.Collapsed;
+        _tileKind = index == 0 ? "work" : "label";
+        if (_objectiveMode != "recurring" && _objectiveMode != "maximize_within_interval")
+        {
+            _objectiveMode = "finish_once";
+            ModeSelector.SelectedIndex = 0;
+        }
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnModeSelectionChanged(object? sender, int index)
+    {
+        _objectiveMode = index == 0 ? "finish_once" : "recurring";
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnFreqSelectionChanged(object? sender, int index)
+    {
+        _recurrenceFrequency = index switch { 1 => "weekly", 2 => "monthly", _ => "daily" };
+        RecurrenceSuffixText.Text = _recurrenceFrequency switch
+        {
+            "weekly" => "週ごと",
+            "monthly" => "か月ごと",
+            _ => "日ごと",
+        };
+        WeeklyDaysGrid.Visibility = _recurrenceFrequency == "weekly" ? Visibility.Visible : Visibility.Collapsed;
+        MonthlyPatternGrid.Visibility = _recurrenceFrequency == "monthly" ? Visibility.Visible : Visibility.Collapsed;
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnRecurrenceUseStartAtClick(object sender, RoutedEventArgs e)
+    {
+        _recurrenceUseStartAt = RecurrenceUseStartAtButton.IsChecked == true;
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnRecurrenceUseEndAtClick(object sender, RoutedEventArgs e)
+    {
+        _recurrenceUseEndAt = RecurrenceUseEndAtButton.IsChecked == true;
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
     }
 
     private void OnSplitAllowClick(object sender, RoutedEventArgs e)
     {
         _breakSplitsWork = true;
-        UpdateSplitButtons();
+        SplitAllowButton.IsChecked = true;
+        SplitKeepButton.IsChecked = false;
+        UpdateVisibility();
     }
 
     private void OnSplitKeepClick(object sender, RoutedEventArgs e)
     {
         _breakSplitsWork = false;
-        UpdateSplitButtons();
+        SplitAllowButton.IsChecked = false;
+        SplitKeepButton.IsChecked = true;
+        UpdateVisibility();
     }
 
-    private void OnCancelClick(object sender, RoutedEventArgs e)
+    private void OnUseStartAtClick(object sender, RoutedEventArgs e)
     {
-        this.Close();
-    }
-
-    private async void OnCreateClick(object sender, RoutedEventArgs e)
-    {
-        if (!ValidateForm()) return;
-
-        // TODO: Call API to create tile
-        var result = await CreateTileAsync();
-        
-        if (result)
-        {
-            this.Close();
-        }
-    }
-
-    #endregion
-
-    #region UI Updates
-
-    private void UpdateKindButtons()
-    {
-        SetButtonActive(KindWorkButton, _tileKind == "work");
-        SetButtonActive(KindLabelButton, _tileKind == "label");
-    }
-
-    private void UpdateModeButtons()
-    {
-        SetButtonActive(ModeFinishButton, _objectiveMode == "finish_once");
-        SetButtonActive(ModeRecurringButton, _objectiveMode == "recurring");
-    }
-
-    private void UpdateRecurrenceButtons()
-    {
-        SetButtonActive(FreqDailyButton, _recurrenceFrequency == "daily");
-        SetButtonActive(FreqWeeklyButton, _recurrenceFrequency == "weekly");
-        SetButtonActive(FreqMonthlyButton, _recurrenceFrequency == "monthly");
-
-        // Update suffix text
-        var interval = (int)RecurrenceIntervalBox.Value;
-        RecurrenceSuffixText.Text = _recurrenceFrequency switch
-        {
-            "daily" => interval == 1 ? "day" : "days",
-            "weekly" => interval == 1 ? "week" : "weeks",
-            "monthly" => interval == 1 ? "month" : "months",
-            _ => "days"
-        };
-    }
-
-    private void UpdateSplitButtons()
-    {
-        SetButtonActive(SplitAllowButton, _breakSplitsWork);
-        SetButtonActive(SplitKeepButton, !_breakSplitsWork);
-    }
-
-    private void UpdateRecurrenceVisibility()
-    {
-        RecurrencePanel.Visibility = _objectiveMode == "recurring" ? Visibility.Visible : Visibility.Collapsed;
-    }
-
-    private void UpdateWorkPanelsVisibility()
-    {
-        var isWork = _tileKind == "work";
-        WorkTargetPanel.Visibility = isWork ? Visibility.Visible : Visibility.Collapsed;
-        SplitPanel.Visibility = isWork ? Visibility.Visible : Visibility.Collapsed;
-        
-        // For label tiles, hide objective mode selection (labels don't have objectives)
-        if (!isWork)
+        _useStartAt = UseStartAtButton.IsChecked == true;
+        if (_objectiveMode == "maximize_within_interval" && !_useEndAt)
         {
             _objectiveMode = "finish_once";
-            UpdateModeButtons();
-            UpdateRecurrenceVisibility();
+            ModeSelector.SelectedIndex = 0;
         }
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
     }
 
-    private void SetButtonActive(Button button, bool active)
+    private void OnUseEndAtClick(object sender, RoutedEventArgs e)
     {
-        if (active)
+        _useEndAt = UseEndAtButton.IsChecked == true;
+        if (_objectiveMode == "maximize_within_interval" && !_useEndAt)
         {
-            button.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
+            _objectiveMode = "finish_once";
+            ModeSelector.SelectedIndex = 0;
+            _maximizeActive = false;
+            MaximizeButton.IsChecked = false;
+        }
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnMaximizeClick(object sender, RoutedEventArgs e)
+    {
+        _maximizeActive = MaximizeButton.IsChecked == true;
+        if (_maximizeActive)
+        {
+            _objectiveMode = "maximize_within_interval";
         }
         else
         {
-            button.Style = null;
-            button.Background = (SolidColorBrush)Application.Current.Resources["ControlFillColorDefaultBrush"];
+            _objectiveMode = "finish_once";
+        }
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnWeekdayClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not ToggleButton button || button.Tag is not string raw || !int.TryParse(raw, out var day)) return;
+        if (_recurrenceWeekdays.Contains(day))
+        {
+            _recurrenceWeekdays.Remove(day);
+            if (_recurrenceWeekdays.Count == 0) { _recurrenceWeekdays.Add(day); SetWeekdayChecked(button, true); return; }
+            SetWeekdayChecked(button, false);
+        }
+        else
+        {
+            _recurrenceWeekdays.Add(day);
+            SetWeekdayChecked(button, true);
         }
     }
 
-    #endregion
-
-    #region Helpers
-
-    private string GetSuggestedTitle()
+    private void OnRecurrenceValidFromClick(object sender, RoutedEventArgs e)
     {
-        if (_tileKind == "label")
-        {
-            return "Period label";
-        }
-
-        var hours = (int)WorkHoursBox.Value;
-        var minutes = (int)WorkMinutesBox.Value;
-        var duration = hours > 0 ? $"{hours}h {minutes}m" : $"{minutes}m";
-
-        if (_objectiveMode == "recurring")
-        {
-            return $"Recurring task ({duration})";
-        }
-
-        return $"Task ({duration})";
+        _recurrenceValidFromActive = RecurrenceValidFromButton.IsChecked == true;
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
     }
 
-    private bool ValidateForm()
+    private void OnRecurrenceValidToClick(object sender, RoutedEventArgs e)
     {
-        var title = TitleTextBox.Text?.Trim();
-        if (string.IsNullOrWhiteSpace(title))
+        _recurrenceValidToActive = RecurrenceValidToButton.IsChecked == true;
+        UpdateVisibility();
+        SyncAutoDurationFromSchedule();
+    }
+
+    private void UpdateVisibility()
+    {
+        var isLabel = _tileKind == "label";
+        var isRecurring = _objectiveMode == "recurring";
+        var showMaximize = !isLabel && !isRecurring && _useEndAt;
+
+        TimingPanel.Visibility = Visibility.Visible;
+        StartDatePanel.Visibility = !isRecurring && _useStartAt ? Visibility.Visible : Visibility.Collapsed;
+        EndDatePanel.Visibility = !isRecurring && _useEndAt ? Visibility.Visible : Visibility.Collapsed;
+        RecurringSchedulePanel.Visibility = isRecurring ? Visibility.Visible : Visibility.Collapsed;
+        RecurrenceValidityPanel.Visibility = isRecurring ? Visibility.Visible : Visibility.Collapsed;
+        RecurringWindowGrid.Visibility = (_recurrenceUseStartAt || _recurrenceUseEndAt) ? Visibility.Visible : Visibility.Collapsed;
+        RecurrenceValidityGrid.Visibility = _recurrenceValidFromActive || _recurrenceValidToActive ? Visibility.Visible : Visibility.Collapsed;
+        RecurrenceValidFromDatePicker.Visibility = _recurrenceValidFromActive ? Visibility.Visible : Visibility.Collapsed;
+        RecurrenceValidToDatePicker.Visibility = _recurrenceValidToActive ? Visibility.Visible : Visibility.Collapsed;
+        RecurrenceStartTimePicker.Visibility = _recurrenceUseStartAt ? Visibility.Visible : Visibility.Collapsed;
+        RecurrenceEndTimePicker.Visibility = _recurrenceUseEndAt ? Visibility.Visible : Visibility.Collapsed;
+        MaximizeButton.Visibility = showMaximize ? Visibility.Visible : Visibility.Collapsed;
+        WorkTargetPanel.Visibility = isLabel ? Visibility.Collapsed : Visibility.Visible;
+    }
+
+    private void RefreshSuggestedTitle()
+    {
+        var suggestion = CreateTileParityResolver.GetSuggestedTitle(BuildDraft(), _isJapanese);
+        TitleTextBox.PlaceholderText = suggestion;
+        if (_titleEdited) return;
+        _applyingSuggestedTitle = true;
+        TitleTextBox.Text = suggestion;
+        _applyingSuggestedTitle = false;
+    }
+
+    private void RefreshTitleSuggestions()
+    {
+        var query = TitleTextBox.Text?.Trim() ?? string.Empty;
+        var items = _catalog.ExistingTitles
+            .Where(title => title.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+            .Take(6)
+            .ToList();
+        PopulateTitleSuggestionPanel(items, value =>
         {
-            ShowError("Please enter a title.");
+            TitleTextBox.Text = value;
+            _titleEdited = true;
+        });
+    }
+
+    private void PopulateTitleSuggestionPanel(IReadOnlyList<string> items, Action<string> onClick)
+    {
+        TitleSuggestionPanel.Children.Clear();
+        var visibility = items.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+        TitleSuggestionPanel.Visibility = visibility;
+        TitleSuggestionScrollViewer.Visibility = visibility;
+        foreach (var item in items)
+        {
+            var button = CreateSuggestionButton(item, (_, _) => onClick(item));
+            ApplyChipButtonStyle(button);
+            TitleSuggestionPanel.Children.Add(button);
+        }
+    }
+
+    private void RefreshProjectSuggestions()
+    {
+        var query = ProjectTextBox.Text?.Trim() ?? string.Empty;
+        var items = _catalog.ExistingProjects
+            .Where(project => project.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+            .Take(8)
+            .ToList();
+        PopulateDropdownPanel(ProjectSuggestionPanel, ProjectSuggestionBorder, items, CommitProjectSelection, _projectInputFocused, query, _isJapanese ? $"新規作成: {query}" : $"Create \"{query}\"");
+    }
+
+    private void RefreshTagSuggestions()
+    {
+        var query = TagTextBox.Text?.Trim() ?? string.Empty;
+        var items = _catalog.ExistingTags
+            .Where(tag => tag.Contains(query, StringComparison.CurrentCultureIgnoreCase))
+            .Where(tag => !CurrentTags().Contains(tag, StringComparer.CurrentCultureIgnoreCase))
+            .Take(8)
+            .ToList();
+        PopulateDropdownPanel(TagSuggestionPanel, TagSuggestionBorder, items, AddTag, _tagInputFocused, query, _isJapanese ? $"新規追加: #{query}" : $"Add new #{query}", "#");
+    }
+
+    private void PopulateDropdownPanel(Panel panel, FrameworkElement host, IReadOnlyList<string> items, Action<string> onClick, bool isFocused, string query, string createLabel, string prefix = "")
+    {
+        panel.Children.Clear();
+        foreach (var item in items)
+        {
+            panel.Children.Add(CreateSuggestionButton($"{prefix}{item}", (_, _) => onClick(item)));
+        }
+        if (!string.IsNullOrWhiteSpace(query) && !items.Any(item => string.Equals(item, query, StringComparison.CurrentCultureIgnoreCase)))
+        {
+            panel.Children.Add(CreateSuggestionButton(createLabel, (_, _) => onClick(query)));
+        }
+        var visibility = isFocused && panel.Children.Count > 0 ? Visibility.Visible : Visibility.Collapsed;
+        panel.Visibility = visibility;
+        host.Visibility = visibility;
+    }
+
+    private Button CreateSuggestionButton(string content, RoutedEventHandler onClick)
+    {
+        var button = new Button { Content = content };
+        ApplySuggestionButtonStyle(button);
+        button.Click += onClick;
+        return button;
+    }
+
+    private CreateTileDraft BuildDraft()
+    {
+        var startDate = _useStartAt ? Combine(StartDatePicker.Date, StartTimePicker.Time) : null;
+        var endDate = _useEndAt ? Combine(EndDatePicker.Date, EndTimePicker.Time) : null;
+        return new CreateTileDraft(
+            Title: TitleTextBox.Text,
+            TileKind: _tileKind,
+            ObjectiveMode: _objectiveMode,
+            UseStartAt: _useStartAt,
+            UseEndAt: _useEndAt,
+            StartAt: startDate,
+            EndAt: endDate,
+            RecurrenceFrequency: _recurrenceFrequency,
+            RecurrenceInterval: (int)Math.Max(1, RecurrenceIntervalBox.Value),
+            RecurrenceWeekdays: _recurrenceWeekdays.OrderBy(static value => value).ToList(),
+            RecurrenceMonthlyWeek: (int)Math.Max(1, MonthlyWeekBox.Value),
+            RecurrenceMonthlyWeekday: Math.Clamp(MonthlyWeekdayComboBox.SelectedIndex, 0, 6),
+            RecurrenceUseStartAt: _recurrenceUseStartAt,
+            RecurrenceUseEndAt: _recurrenceUseEndAt,
+            RecurrenceStartTime: _recurrenceUseStartAt ? RecurrenceStartTimePicker.Time : null,
+            RecurrenceEndTime: _recurrenceUseEndAt ? RecurrenceEndTimePicker.Time : null,
+            RecurrenceValidFromEnabled: _recurrenceValidFromActive,
+            RecurrenceValidToEnabled: _recurrenceValidToActive,
+            RecurrenceValidFromDate: _recurrenceValidFromActive ? RecurrenceValidFromDatePicker.Date : null,
+            RecurrenceValidToDate: _recurrenceValidToActive ? RecurrenceValidToDatePicker.Date : null,
+            WorkHours: (int)Math.Max(0, WorkHoursBox.Value),
+            WorkMinutes: (int)Math.Max(0, WorkMinutesBox.Value),
+            BreakSplitsWork: _breakSplitsWork,
+            Project: ProjectTextBox.Text,
+            Tags: CurrentTags(),
+            Memo: MemoTextBox.Text);
+    }
+
+    private bool TryBuildRequest(out CreateTileRequest request)
+    {
+        var draft = BuildDraft();
+        var title = string.IsNullOrWhiteSpace(draft.Title)
+            ? CreateTileParityResolver.GetSuggestedTitle(draft, _isJapanese)
+            : draft.Title.Trim();
+        var workMinutes = ((draft.WorkHours ?? 0) * 60) + (draft.WorkMinutes ?? 0);
+        var hasAnyTemporalConstraint = draft.UseStartAt || draft.UseEndAt;
+        var isRecurring = draft.ObjectiveMode == "recurring";
+
+        if (draft.UseStartAt && draft.UseEndAt && draft.StartAt.HasValue && draft.EndAt.HasValue && draft.EndAt <= draft.StartAt)
+        {
+            request = null!;
+            ShowError(_isJapanese ? "日時の前後関係を確認してください。" : "Check the start and end order.");
             return false;
         }
 
-        // Validate temporal order
-        if (UseStartAtToggle.IsChecked == true && UseEndAtToggle.IsChecked == true)
+        if (draft.ObjectiveMode == "recurring"
+            && draft.RecurrenceUseStartAt && draft.RecurrenceUseEndAt
+            && draft.RecurrenceStartTime.HasValue && draft.RecurrenceEndTime.HasValue
+            && draft.RecurrenceEndTime <= draft.RecurrenceStartTime)
         {
-            var start = StartDatePicker.Date.Date.Add(StartTimePicker.Time);
-            var end = EndDatePicker.Date.Date.Add(EndTimePicker.Time);
-            if (end <= start)
-            {
-                ShowError("End time must be after start time.");
-                return false;
-            }
+            request = null!;
+            ShowError(_isJapanese ? "定期実行の終了時刻は開始時刻より後にしてください。" : "Recurring end time must be after start time.");
+            return false;
         }
 
-        // Validate work target for work tiles
-        if (_tileKind == "work" && _objectiveMode != "recurring")
+        if (draft.ObjectiveMode == "recurring" && draft.RecurrenceInterval <= 0)
         {
-            var hasSchedule = UseStartAtToggle.IsChecked == true || UseEndAtToggle.IsChecked == true;
-            if (hasSchedule)
-            {
-                var hours = (int)WorkHoursBox.Value;
-                var minutes = (int)WorkMinutesBox.Value;
-                if (hours == 0 && minutes == 0)
-                {
-                    ShowError("Please set a work target duration.");
-                    return false;
-                }
-            }
+            request = null!;
+            ShowError(_isJapanese ? "定期実行の間隔は 1 以上にしてください。" : "Recurrence interval must be at least 1.");
+            return false;
         }
 
-        // Validate recurrence
-        if (_objectiveMode == "recurring")
+        if (draft.TileKind == "work" && !isRecurring && hasAnyTemporalConstraint && workMinutes <= 0)
         {
-            var interval = (int)RecurrenceIntervalBox.Value;
-            if (interval <= 0)
-            {
-                ShowError("Recurrence interval must be at least 1.");
-                return false;
-            }
+            request = null!;
+            ShowError(_isJapanese ? "開始または終了を指定した場合は所要時間が必要です。" : "Duration is required when start or end is specified.");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(title))
+        {
+            request = null!;
+            ShowError(_isJapanese ? "タイトルを入力してください。" : "Enter a title.");
+            return false;
         }
 
         ErrorTextBlock.Visibility = Visibility.Collapsed;
+        request = CreateTileParityResolver.BuildRequest(draft with { Title = title }, _isJapanese);
         return true;
+    }
+
+    private static void ApplySuggestionButtonStyle(Button button)
+    {
+        button.MinHeight = 32;
+        button.HorizontalAlignment = HorizontalAlignment.Stretch;
+        button.HorizontalContentAlignment = HorizontalAlignment.Left;
+        button.Padding = new Thickness(10, 6, 10, 6);
+    }
+
+    private static void ApplyChipButtonStyle(Button button)
+    {
+        button.MinHeight = 28;
+        button.Padding = new Thickness(10, 4, 10, 4);
+        button.Margin = new Thickness(0, 0, 8, 8);
+    }
+
+    private static DateTimeOffset? Combine(DateTimeOffset? date, TimeSpan time)
+    {
+        if (!date.HasValue) return null;
+        var local = date.Value.LocalDateTime.Date.Add(time);
+        return new DateTimeOffset(local, TimeZoneInfo.Local.GetUtcOffset(local));
+    }
+
+    private List<string> CurrentTags()
+        => SelectedTagsPanel.Children.OfType<Button>()
+            .Select(static button => button.Tag?.ToString())
+            .Where(static tag => !string.IsNullOrWhiteSpace(tag))
+            .Select(static tag => tag!).ToList();
+
+    private void CommitProjectSelection(string? rawProject)
+    {
+        var normalized = rawProject?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            ProjectTextBox.Text = string.Empty;
+            RefreshProjectSuggestions();
+            return;
+        }
+        var match = _catalog.ExistingProjects.FirstOrDefault(project => string.Equals(project, normalized, StringComparison.CurrentCultureIgnoreCase));
+        ProjectTextBox.Text = match ?? normalized;
+        RefreshProjectSuggestions();
+    }
+
+    private void SyncAutoDurationFromSchedule()
+    {
+        if (_durationManuallyEdited) return;
+        var autoDuration = CreateTileParityResolver.GetAutoDurationMinutes(BuildDraft());
+        if (!autoDuration.HasValue || autoDuration.Value <= 0) return;
+        _syncingAutoDuration = true;
+        WorkHoursBox.Value = autoDuration.Value / 60;
+        WorkMinutesBox.Value = autoDuration.Value % 60;
+        _syncingAutoDuration = false;
+    }
+
+    private void PopulateMonthlyWeekdayOptions()
+    {
+        MonthlyWeekdayComboBox.Items.Clear();
+        var labels = _isJapanese
+            ? new[] { "日", "月", "火", "水", "木", "金", "土" }
+            : new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
+        foreach (var label in labels) MonthlyWeekdayComboBox.Items.Add(new ComboBoxItem { Content = label });
     }
 
     private void ShowError(string message)
@@ -290,73 +588,76 @@ public sealed partial class CreateTileWindow : Window
         ErrorTextBlock.Visibility = Visibility.Visible;
     }
 
-    private async System.Threading.Tasks.Task<bool> CreateTileAsync()
+    private void OnTitleTextChanged(object sender, TextChangedEventArgs e)
     {
+        if (_applyingSuggestedTitle) return;
+        _titleEdited = !string.IsNullOrWhiteSpace(TitleTextBox.Text);
+        RefreshSuggestedTitle();
+        RefreshTitleSuggestions();
+    }
+
+    private void OnProjectTextChanged(object sender, TextChangedEventArgs e) => RefreshProjectSuggestions();
+    private void OnProjectTextBoxKeyDown(object sender, KeyRoutedEventArgs e) { if (e.Key == Windows.System.VirtualKey.Enter) CommitProjectSelection(ProjectTextBox.Text); }
+    private void OnProjectTextBoxGotFocus(object sender, RoutedEventArgs e) { _projectInputFocused = true; RefreshProjectSuggestions(); }
+    private async void OnProjectTextBoxLostFocus(object sender, RoutedEventArgs e) { await Task.Delay(100); _projectInputFocused = false; RefreshProjectSuggestions(); }
+    private void OnTagTextChanged(object sender, TextChangedEventArgs e) => RefreshTagSuggestions();
+    private void OnTagTextBoxGotFocus(object sender, RoutedEventArgs e) { _tagInputFocused = true; RefreshTagSuggestions(); }
+    private async void OnTagTextBoxLostFocus(object sender, RoutedEventArgs e) { await Task.Delay(100); _tagInputFocused = false; RefreshTagSuggestions(); }
+    private void OnTagTextBoxKeyDown(object sender, KeyRoutedEventArgs e) { if (e.Key == Windows.System.VirtualKey.Enter) AddTag(TagTextBox.Text); }
+
+    private void AddTag(string? rawTag)
+    {
+        var tag = rawTag?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(tag)) return;
+        if (CurrentTags().Contains(tag, StringComparer.CurrentCultureIgnoreCase)) { TagTextBox.Text = string.Empty; return; }
+        Button? button = null;
+        button = CreateSuggestionButton($"#{tag} ×", (_, _) => { if (button != null) SelectedTagsPanel.Children.Remove(button); RefreshTagSuggestions(); });
+        ApplyChipButtonStyle(button);
+        button.Tag = tag;
+        SelectedTagsPanel.Children.Add(button);
+        TagTextBox.Text = string.Empty;
+        RefreshTagSuggestions();
+    }
+
+    private void OnRecurrenceIntervalChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnMonthlyWeekdayChanged(object sender, SelectionChangedEventArgs e)
+    {
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private void OnWorkDurationChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
+    {
+        if (!_syncingAutoDuration) _durationManuallyEdited = true;
+        RefreshSuggestedTitle();
+    }
+
+    private void OnScheduleBoundChanged(object sender, object e)
+    {
+        SyncAutoDurationFromSchedule();
+        RefreshSuggestedTitle();
+    }
+
+    private async void OnCreateClick(object sender, RoutedEventArgs e)
+    {
+        if (!TryBuildRequest(out var request)) return;
         try
         {
-            var title = TitleTextBox.Text.Trim();
-            var nextAction = BuildNextAction();
-            var doneDefinition = BuildDoneDefinition();
-            var memoText = string.IsNullOrWhiteSpace(MemoTextBox.Text) ? null : MemoTextBox.Text.Trim();
-
-            var result = await _api.CreateTileAsync(title, nextAction, doneDefinition);
-            if (result == null)
-            {
-                ShowError("Daemon did not return a response.");
-                return false;
-            }
-
-            if (!result.Ok)
-            {
-                ShowError(result.Error ?? "Failed to create tile.");
-                return false;
-            }
-
-            if (!string.IsNullOrWhiteSpace(memoText) && !string.IsNullOrWhiteSpace(result.TileId))
-            {
-                var memoResult = await _api.AttachMemoAsync(result.TileId, memoText);
-                if (memoResult != null && !memoResult.Ok)
-                {
-                    ShowError(memoResult.Error ?? "Tile created, but memo attach failed.");
-                    return false;
-                }
-            }
-
-            return true;
+            var result = await _api.CreateTileAsync(request);
+            if (result == null) { ShowError(_isJapanese ? "Daemon から応答がありません。" : "Daemon did not return a response."); return; }
+            if (!result.Ok) { ShowError(result.Error ?? (_isJapanese ? "タイルの作成に失敗しました。" : "Failed to create tile.")); return; }
+            Close();
         }
         catch (Exception ex)
         {
-            ShowError($"Failed to create tile: {ex.Message}");
-            return false;
+            ShowError((_isJapanese ? "タイルの作成に失敗しました: " : "Failed to create tile: ") + ex.Message);
         }
     }
 
-    private string? BuildNextAction()
-    {
-        if (_tileKind == "work")
-        {
-            var hours = (int)WorkHoursBox.Value;
-            var minutes = (int)WorkMinutesBox.Value;
-            return hours > 0 || minutes > 0
-                ? $"Work target: {hours}h {minutes}m"
-                : null;
-        }
-
-        return null;
-    }
-
-    private string? BuildDoneDefinition()
-    {
-        var parts = new[]
-        {
-            !string.IsNullOrWhiteSpace(ProjectTextBox.Text) ? $"Project: {ProjectTextBox.Text.Trim()}" : null,
-            !string.IsNullOrWhiteSpace(TagsTextBox.Text) ? $"Tags: {TagsTextBox.Text.Trim()}" : null,
-            _objectiveMode == "recurring" ? $"Recurring {_recurrenceFrequency} x{(int)RecurrenceIntervalBox.Value}" : null,
-        };
-
-        var result = string.Join(" / ", parts.Where(static p => !string.IsNullOrWhiteSpace(p)));
-        return string.IsNullOrWhiteSpace(result) ? null : result;
-    }
-
-    #endregion
+    private void OnCancelClick(object sender, RoutedEventArgs e) => Close();
 }

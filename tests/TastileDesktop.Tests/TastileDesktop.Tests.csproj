@@ -5,12 +5,28 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
+    <DefineConstants>$(DefineConstants);TESTS</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\..\src\TastileDesktop\Services\DaemonCompatibility.cs" Link="DaemonCompatibility.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="AuthService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\AccentColorPreferenceResolver.cs" Link="AccentColorPreferenceResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\AbsoluteTimelineResolver.cs" Link="AbsoluteTimelineResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="CoreApiClient.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CreateTileParityResolver.cs" Link="CreateTileParityResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PollingHealthCoordinator.cs" Link="PollingHealthCoordinator.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptAttentionPolicy.cs" Link="PromptAttentionPolicy.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptAttentionOverlayState.cs" Link="PromptAttentionOverlayState.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptNotificationPolicy.cs" Link="PromptNotificationPolicy.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\QuickPanelActionResolver.cs" Link="QuickPanelActionResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\QuickPanelActionVisualResolver.cs" Link="QuickPanelActionVisualResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\QuickPanelLeadingResolver.cs" Link="QuickPanelLeadingResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\QuickPanelPlacementResolver.cs" Link="QuickPanelPlacementResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptToastPlacementResolver.cs" Link="PromptToastPlacementResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptToastStackState.cs" Link="PromptToastStackState.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\QuickBarPresentationResolver.cs" Link="QuickBarPresentationResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\SystemAccentColorDecoder.cs" Link="SystemAccentColorDecoder.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="ApiModels.cs" />
   </ItemGroup>
 

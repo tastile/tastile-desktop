@@ -62,11 +62,10 @@ public class AuthService
             // If daemon has no session, try to load from file and restore to daemon
             if (session == null)
             {
-                session = LoadSessionFromFile();
-                if (session != null)
+                var savedSession = LoadSessionFromFile();
+                if (savedSession != null)
                 {
-                    // Restore session to daemon
-                    await RestoreSessionToDaemonAsync(api, session);
+                    session = await RestoreSessionToDaemonAsync(api, savedSession);
                 }
             }
             else
@@ -165,11 +164,17 @@ public class AuthService
     /// <summary>
     /// Restore session to daemon (currently not supported by daemon API, this is a placeholder).
     /// </summary>
-    private async Task RestoreSessionToDaemonAsync(CoreApiClient api, AuthSession session)
+    private async Task<AuthSession?> RestoreSessionToDaemonAsync(CoreApiClient api, AuthSession session)
     {
-        // TODO: Implement session restoration API in daemon
-        // For now, daemon doesn't support setting session directly
-        await Task.CompletedTask;
+        try
+        {
+            return await api.RestoreSessionAsync(session);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to restore session to daemon: {ex.Message}");
+            return null;
+        }
     }
 
     /// <summary>

@@ -8,11 +8,30 @@ namespace TastileDesktop;
 
 public partial class App : Application
 {
+    private static readonly string DebugLogPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Tastile", "debug.log");
+
+    public static void DebugLog(string msg)
+    {
+        try
+        {
+            var dir = Path.GetDirectoryName(DebugLogPath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+            File.AppendAllText(DebugLogPath, $"[{DateTime.Now:HH:mm:ss.fff}] {msg}{Environment.NewLine}");
+        }
+        catch { }
+    }
     private MainWindow? _mainWindow;
     private TrayIconService? _trayIconService;
     private DaemonManager? _daemonManager;
     private readonly SettingsService _settingsService = new();
+    private readonly SystemAppearanceService _appearanceService = SystemAppearanceService.Instance;
     private bool _isShuttingDown = false;
+    public MainWindow? MainWindowInstance => _mainWindow;
 
     public App()
     {
@@ -21,6 +40,7 @@ public partial class App : Application
         AppDomain.CurrentDomain.UnhandledException += OnCurrentDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         SettingsService.GlobalSettingsChanged += OnSettingsChanged;
+        _appearanceService.AppearanceChanged += OnAppearanceChanged;
         
         // Initialize toast notifications
         ToastNotificationManagerCompat.OnActivated += OnToastActivated;
@@ -31,16 +51,29 @@ public partial class App : Application
         var queue = _mainWindow?.DispatcherQueue ?? DispatcherQueue.GetForCurrentThread();
         if (queue == null)
         {
-            ThemeManager.ApplyTheme(settings.ThemeMode, Resources);
-            FloatingWindowHelper.RefreshOpenWindows(settings.ThemeMode);
+            ApplyAppearance(_appearanceService.GetCurrentSnapshot());
             return;
         }
 
-        queue.TryEnqueue(() =>
+        queue.TryEnqueue(() => ApplyAppearance(_appearanceService.GetCurrentSnapshot()));
+    }
+
+    private void OnAppearanceChanged(object? sender, SystemAppearanceSnapshot snapshot)
+    {
+        var queue = _mainWindow?.DispatcherQueue ?? DispatcherQueue.GetForCurrentThread();
+        if (queue == null)
         {
-            ThemeManager.ApplyTheme(settings.ThemeMode, Resources);
-            FloatingWindowHelper.RefreshOpenWindows(settings.ThemeMode);
-        });
+            ApplyAppearance(snapshot);
+            return;
+        }
+
+        queue.TryEnqueue(() => ApplyAppearance(snapshot));
+    }
+
+    private void ApplyAppearance(SystemAppearanceSnapshot snapshot)
+    {
+        ThemeManager.ApplySystemAppearance(snapshot, Resources, _settingsService.Current);
+        FloatingWindowHelper.RefreshOpenWindows();
     }
 
     private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
@@ -120,6 +153,9 @@ public partial class App : Application
             // Create main window
             _mainWindow = new MainWindow();
             Log("MainWindow created");
+            await _mainWindow.InitializeAsync();
+            Log("MainWindow initialized");
+            ApplyAppearance(_appearanceService.GetCurrentSnapshot());
             
             // Setup tray icon
             Log("Creating TrayIconService...");
@@ -134,22 +170,15 @@ public partial class App : Application
             // Show window unless --minimized flag is present
             if (!cmdArgs.Contains("--minimized"))
             {
-                Log("Activating window...");
-                _mainWindow.Activate();
-                Log("Window activated");
-                _mainWindow.DispatcherQueue.TryEnqueue(() =>
+                Log("Showing quick panel...");
+                _mainWindow.ShowPanel();
+                Log("Quick panel shown");
+
+                if (cmdArgs.Contains("--debug-open-create"))
                 {
-                    try
-                    {
-                        ThemeManager.ApplyTheme(_settingsService.Current.ThemeMode, Resources);
-                        FloatingWindowHelper.RefreshOpenWindows(_settingsService.Current.ThemeMode);
-                        Log($"Deferred theme applied: '{_settingsService.Current.ThemeMode}'");
-                    }
-                    catch (Exception ex)
-                    {
-                        Log($"Deferred theme apply failed: {ex.GetType().Name}: {ex.Message}");
-                    }
-                });
+                    Log("Debug opening Create Tile...");
+                    _mainWindow.DebugOpenCreateTileWindow();
+                }
             }
             else
             {
@@ -198,6 +227,7 @@ public partial class App : Application
     public void Shutdown()
     {
         _isShuttingDown = true;
+        _appearanceService.AppearanceChanged -= OnAppearanceChanged;
         _trayIconService?.Dispose();
         _daemonManager?.Dispose();
         _mainWindow?.Close();
@@ -212,8 +242,17 @@ public static class WindowExtensions
     [DllImport("user32.dll")]
     private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+    [DllImport("user32.dll")]
+    private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
     private const int SW_HIDE = 0;
     private const int SW_SHOW = 5;
+
+    private static readonly IntPtr HWND_TOPMOST = new(-1);
+    private const uint SWP_NOMOVE = 0x0002;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const uint SWP_SHOWWINDOW = 0x0040;
+    private const uint SWP_NOACTIVATE = 0x0010;
 
     public static void Hide(this Window window)
     {
@@ -224,6 +263,12 @@ public static class WindowExtensions
     public static void Show(this Window window)
     {
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-        ShowWindow(hwnd, SW_SHOW);
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW | SWP_NOACTIVATE);
+    }
+
+    public static void BringToFront(this Window window)
+    {
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     }
 }

@@ -7,23 +7,90 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
+                <ResourceDictionary Source="Styles/Button.xaml" />
             </ResourceDictionary.MergedDictionaries>
-            <SolidColorBrush x:Key="AppBackgroundBrush" Color="#FFF5F5F5" />
-            <SolidColorBrush x:Key="AppSurface0Brush" Color="#FFFAFAFA" />
-            <SolidColorBrush x:Key="AppSurface1Brush" Color="#FFEFEFEF" />
-            <SolidColorBrush x:Key="AppSurface2Brush" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="AppSurfaceElevatedBrush" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="AppForegroundBrush" Color="#FF0A0A0A" />
-            <SolidColorBrush x:Key="AppForegroundMutedBrush" Color="#FF525252" />
-            <SolidColorBrush x:Key="AppForegroundSubtleBrush" Color="#FFA3A3A3" />
-            <SolidColorBrush x:Key="AppBorderBrush" Color="#FFD4D4D4" />
-            <SolidColorBrush x:Key="AppBorderStrongBrush" Color="#FFA3A3A3" />
-            <SolidColorBrush x:Key="AppInteractiveBrush" Color="#FF0A0A0A" />
-            <SolidColorBrush x:Key="AppInteractiveHoverBrush" Color="#FF262626" />
-            <SolidColorBrush x:Key="AppInteractiveActiveBrush" Color="#FF404040" />
-            <SolidColorBrush x:Key="AppPrimaryBrush" Color="#FF0A0A0A" />
-            <SolidColorBrush x:Key="AppPrimaryForegroundBrush" Color="#FFFFFFFF" />
-            <SolidColorBrush x:Key="AppPrimaryHoverBrush" Color="#FF262626" />
+
+            <!-- PowerToys Design System - Dark Theme (Default) -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <SolidColorBrush x:Key="PrimaryBackgroundBrush" Color="#FF202020"/>
+                    <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#FF242424"/>
+                    <SolidColorBrush x:Key="TertiaryBackgroundBrush" Color="#FF2D2D2D"/>
+                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FF2D2D2D"/>
+                    <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="#FFFFFFFF"/>
+                    <SolidColorBrush x:Key="SecondaryForegroundBrush" Color="#FF9A9A9A"/>
+                    <SolidColorBrush x:Key="TertiaryForegroundBrush" Color="#FF6B6B6B"/>
+                    <SolidColorBrush x:Key="PrimaryBorderBrush" Color="#FF3A3A3A"/>
+                    <SolidColorBrush x:Key="SecondaryBorderBrush" Color="#FF4A4A4A"/>
+                    <SolidColorBrush x:Key="AccentBrush" Color="#FF0078D4"/>
+                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#FF242424"/>
+                    <SolidColorBrush x:Key="QuickPanelBorderBrush" Color="#FF373737"/>
+                </ResourceDictionary>
+                
+                <ResourceDictionary x:Key="Light">
+                    <SolidColorBrush x:Key="PrimaryBackgroundBrush" Color="#FFF3F3F3"/>
+                    <SolidColorBrush x:Key="SecondaryBackgroundBrush" Color="#FFF9F9F9"/>
+                    <SolidColorBrush x:Key="TertiaryBackgroundBrush" Color="#FFFBFBFB"/>
+                    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFFFF"/>
+                    <SolidColorBrush x:Key="PrimaryForegroundBrush" Color="#FF000000"/>
+                    <SolidColorBrush x:Key="SecondaryForegroundBrush" Color="#FF6A6A6A"/>
+                    <SolidColorBrush x:Key="TertiaryForegroundBrush" Color="#FF9A9A9A"/>
+                    <SolidColorBrush x:Key="PrimaryBorderBrush" Color="#FFE5E5E5"/>
+                    <SolidColorBrush x:Key="SecondaryBorderBrush" Color="#FFD0D0D0"/>
+                    <SolidColorBrush x:Key="AccentBrush" Color="#FF0078D4"/>
+                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#FFF9F9F9"/>
+                    <SolidColorBrush x:Key="QuickPanelBorderBrush" Color="#FFE5E5E5"/>
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Layout Tokens -->
+            <Thickness x:Key="WindowPagePadding">32,24,32,24</Thickness>
+            <CornerRadius x:Key="CardCornerRadius">8</CornerRadius>
+            <Thickness x:Key="CardBorderThickness">1</Thickness>
+            <x:Double x:Key="QuickPanelCornerRadius">8</x:Double>
+            <x:Double x:Key="ControlCornerRadius">4</x:Double>
+
+            <!-- Card Style (background only, no visible border — PowerToys flat design) -->
+            <Style x:Key="WindowCardBorderStyle" TargetType="Border">
+                <Setter Property="Background" Value="{StaticResource CardBackgroundBrush}"/>
+                <Setter Property="BorderThickness" Value="0"/>
+            </Style>
+
+            <!-- Text Styles -->
+            <Style x:Key="PageTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource TitleLargeTextBlockStyle}">
+                <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
+            </Style>
+            <Style x:Key="SectionTitleTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyStrongTextBlockStyle}">
+                <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
+                <Setter Property="FontSize" Value="16"/>
+            </Style>
+            <Style x:Key="SectionBodyTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{StaticResource SecondaryForegroundBrush}"/>
+                <Setter Property="FontSize" Value="13"/>
+            </Style>
+            <Style x:Key="CaptionMutedTextStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionTextBlockStyle}">
+                <Setter Property="Foreground" Value="{StaticResource TertiaryForegroundBrush}"/>
+                <Setter Property="FontSize" Value="12"/>
+            </Style>
+            <Style x:Key="SettingRowLabelTextStyle" TargetType="TextBlock" BasedOn="{StaticResource BodyTextBlockStyle}">
+                <Setter Property="Foreground" Value="{StaticResource PrimaryForegroundBrush}"/>
+                <Setter Property="FontWeight" Value="SemiBold"/>
+                <Setter Property="FontSize" Value="14"/>
+            </Style>
+
+            <!-- Legacy Compatibility -->
+            <StaticResource x:Key="AppBackgroundBrush" ResourceKey="PrimaryBackgroundBrush"/>
+            <StaticResource x:Key="AppSurface0Brush" ResourceKey="PrimaryBackgroundBrush"/>
+            <StaticResource x:Key="AppSurface1Brush" ResourceKey="SecondaryBackgroundBrush"/>
+            <StaticResource x:Key="AppSurface2Brush" ResourceKey="TertiaryBackgroundBrush"/>
+            <StaticResource x:Key="AppSurfaceElevatedBrush" ResourceKey="CardBackgroundBrush"/>
+            <StaticResource x:Key="AppForegroundBrush" ResourceKey="PrimaryForegroundBrush"/>
+            <StaticResource x:Key="AppForegroundMutedBrush" ResourceKey="SecondaryForegroundBrush"/>
+            <StaticResource x:Key="AppForegroundSubtleBrush" ResourceKey="TertiaryForegroundBrush"/>
+            <StaticResource x:Key="AppBorderBrush" ResourceKey="PrimaryBorderBrush"/>
+            <StaticResource x:Key="AppPrimaryBrush" ResourceKey="AccentBrush"/>
+
+            <StaticResource x:Key="AccentButtonStyle" ResourceKey="AccentButtonStyle"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
