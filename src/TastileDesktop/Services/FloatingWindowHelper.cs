@@ -271,11 +271,11 @@ internal static class FloatingWindowHelper
             return;
         }
 
-        // PowerToys方式: DWM角丸を有効化（8px）
-        var cornerPreference = DwmWindowCornerPreferenceRound;
+        // DWM角丸は無効化（XAML側のBorder CornerRadius="8"で制御）
+        var cornerPreference = DwmWindowCornerPreferenceDoNotRound;
         _ = DwmSetWindowAttribute(hwnd, DwmWindowCornerPreferenceAttribute, ref cornerPreference, sizeof(uint));
 
-        // DWMボーダーは無効化（XAML側でBorderBrushを制御）
+        // DWMボーダーを完全に無効化
         var borderColor = DwmColorNone;
         _ = DwmSetWindowAttribute(hwnd, DwmBorderColorAttribute, ref borderColor, sizeof(uint));
     }

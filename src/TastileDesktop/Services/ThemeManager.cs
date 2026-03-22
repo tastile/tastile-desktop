@@ -35,34 +35,30 @@ public static class ThemeManager
     {
         CurrentSnapshot = snapshot with { };
 
-        var targetResources = resources ?? Application.Current?.Resources;
-        if (targetResources == null)
+        // RequestedTheme is set per-window by FloatingWindowHelper.ApplyWindowTheme.
+        // Here we only update the accent color brushes that are defined in ThemeDictionaries
+        // and therefore need to be updated in both Dark and Light dictionaries.
+        var accentColor = AccentColorPreferenceResolver.Resolve(snapshot, settings);
+        var accentHex = $"#{accentColor.R:X2}{accentColor.G:X2}{accentColor.B:X2}";
+        var accentHoverHex = Lighten(accentColor, 0.10);
+
+        // Update accent brushes in both theme dictionaries so they're correct regardless of theme
+        var appResources = resources ?? Application.Current?.Resources;
+        if (appResources != null)
         {
-            return;
+            UpdateAccentInThemeDictionary(appResources, "Dark", accentHex, accentHoverHex);
+            UpdateAccentInThemeDictionary(appResources, "Light", accentHex, accentHoverHex);
         }
+    }
 
-        var palette = CurrentSnapshot.HighContrastEnabled
-            ? CreateHighContrastPalette(CurrentSnapshot)
-            : CurrentSnapshot.AppTheme == ElementTheme.Dark
-                ? CreateDarkPalette(CurrentSnapshot)
-                : CreateLightPalette(CurrentSnapshot);
+    private static void UpdateAccentInThemeDictionary(ResourceDictionary resources, string themeKey, string accentHex, string accentHoverHex)
+    {
+        if (!resources.ThemeDictionaries.TryGetValue(themeKey, out var themeObj) || themeObj is not ResourceDictionary themeDict)
+            return;
 
-        SetBrush(targetResources, "AppBackgroundBrush", palette.Background);
-        SetBrush(targetResources, "AppSurface0Brush", palette.Surface0);
-        SetBrush(targetResources, "AppSurface1Brush", palette.Surface1);
-        SetBrush(targetResources, "AppSurface2Brush", palette.Surface2);
-        SetBrush(targetResources, "AppSurfaceElevatedBrush", palette.SurfaceElevated);
-        SetBrush(targetResources, "AppForegroundBrush", palette.Foreground);
-        SetBrush(targetResources, "AppForegroundMutedBrush", palette.ForegroundMuted);
-        SetBrush(targetResources, "AppForegroundSubtleBrush", palette.ForegroundSubtle);
-        SetBrush(targetResources, "AppBorderBrush", palette.Border);
-        SetBrush(targetResources, "AppBorderStrongBrush", palette.BorderStrong);
-        SetBrush(targetResources, "AppInteractiveBrush", palette.Interactive);
-        SetBrush(targetResources, "AppInteractiveHoverBrush", palette.InteractiveHover);
-        SetBrush(targetResources, "AppInteractiveActiveBrush", palette.InteractiveActive);
-        SetBrush(targetResources, "AppPrimaryBrush", palette.Primary);
-        SetBrush(targetResources, "AppPrimaryForegroundBrush", palette.PrimaryForeground);
-        SetBrush(targetResources, "AppPrimaryHoverBrush", palette.PrimaryHover);
+        SetBrush(themeDict, "AccentBrush", accentHex);
+        SetBrush(themeDict, "AppPrimaryBrush", accentHex);
+        SetBrush(themeDict, "AppPrimaryHoverBrush", accentHoverHex);
     }
 
     public static void ApplyTheme(string mode, ResourceDictionary? resources = null)

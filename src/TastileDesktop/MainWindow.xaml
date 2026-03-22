@@ -5,7 +5,7 @@
     xmlns:viewModels="using:TastileDesktop.ViewModels"
     Title="Tastile">
 
-    <Grid Background="Transparent" MaxWidth="892">
+    <Grid Background="Transparent" Width="892">
         <Border
             Background="{ThemeResource QuickPanelBackgroundBrush}"
             BorderBrush="{ThemeResource QuickPanelBorderBrush}"
@@ -15,8 +15,8 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="1*" MaxWidth="320" />
-                    <ColumnDefinition Width="Auto" MaxWidth="280" />
+                    <ColumnDefinition Width="*" MaxWidth="320" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -37,7 +37,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,6,0" MinWidth="200">
+                    <Border Grid.Column="0" Background="{ThemeResource AppSurface1Brush}" BorderBrush="{ThemeResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Margin="0,0,6,0" MinWidth="200">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -59,7 +59,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="viewModels:TileListItem">
-                                    <Button Tag="{x:Bind Id}" Click="OnRunningTileClick" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,3" Margin="4,0,0,0">
+                                    <Button Tag="{x:Bind Id}" Click="OnRunningTileClick" Background="{ThemeResource AppSurface1Brush}" BorderBrush="{ThemeResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,3" Margin="4,0,0,0">
                                         <StackPanel Margin="0">
                                             <StackPanel Orientation="Horizontal">
                                                 <Button Width="16" Height="16" Padding="0" Background="Transparent" BorderThickness="0" Tag="{x:Bind Id}" Click="OnTaskStatusIconClick">
@@ -81,7 +81,7 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Tag="{x:Bind ViewModel.NextUpTileId, Mode=OneWay}" Click="OnNextPrimaryTileClick" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Visibility="{x:Bind ViewModel.NextUpVisibility, Mode=OneWay}" Margin="0,0,4,0">
+                    <Button Grid.Column="0" Tag="{x:Bind ViewModel.NextUpTileId, Mode=OneWay}" Click="OnNextPrimaryTileClick" Background="{ThemeResource AppSurface1Brush}" BorderBrush="{ThemeResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="8,4" Visibility="{x:Bind ViewModel.NextUpVisibility, Mode=OneWay}" Margin="0,0,4,0">
                         <StackPanel>
                             <StackPanel Orientation="Horizontal">
                                 <Button Width="18" Height="18" Padding="0" Background="Transparent" BorderThickness="0" Tag="{x:Bind ViewModel.NextUpTileId, Mode=OneWay}" Click="OnTaskStatusIconClick">
@@ -101,7 +101,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate x:DataType="viewModels:TileListItem">
-                                    <Button Tag="{x:Bind Id}" Click="OnNextCandidateTileClick" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,3" Margin="4,0,0,0">
+                                    <Button Tag="{x:Bind Id}" Click="OnNextCandidateTileClick" Background="{ThemeResource AppSurface1Brush}" BorderBrush="{ThemeResource AppBorderBrush}" BorderThickness="1" CornerRadius="4" Padding="6,3" Margin="4,0,0,0">
                                         <StackPanel Margin="0">
                                             <StackPanel Orientation="Horizontal">
                                                 <Button Width="16" Height="16" Padding="0" Background="Transparent" BorderThickness="0" Tag="{x:Bind Id}" Click="OnTaskStatusIconClick">
