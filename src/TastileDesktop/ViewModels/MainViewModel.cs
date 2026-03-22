@@ -419,27 +419,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public IReadOnlyList<TileListItem> NextQuickCandidates =>
         _allTiles.Where(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase)).Skip(1).Take(5).ToList();
     public string MainCountdownText =>
-        IsWorking
-            ? WorkRemainingText
-            : NextUpStartCountdownText;
-    public string NextUpStartText => NextUpTile?.NextStartLabel ?? "unscheduled";
-    public string NextUpStartCountdownText
+        ActiveTile?.PhaseEndsAt != null && DateTimeOffset.TryParse(ActiveTile.PhaseEndsAt, out var endsAt)
+            ? FormatCountdown(endsAt - DateTimeOffset.UtcNow)
+            : NextUpTile?.NextStartLabel ?? "00:00";
+
+    private static string FormatCountdown(TimeSpan remaining)
     {
-        get
-        {
-            if (NextUpTile == null || string.IsNullOrWhiteSpace(NextUpTile.NextStartLabel))
-            {
-                return "00:00";
-            }
-            if (!_nextStartByTileId.TryGetValue(NextUpTile.Id, out var startAt))
-            {
-                return "00:00";
-            }
-            var remaining = startAt - DateTimeOffset.Now;
-            if (remaining.TotalSeconds <= 0) return "00:00";
-            return $"{(int)remaining.TotalHours:00}:{remaining.Minutes:00}:{remaining.Seconds:00}";
-        }
+        if (remaining.TotalSeconds <= 0) return "00:00";
+        return remaining.TotalHours >= 1
+            ? $"{(int)remaining.TotalHours:00}:{remaining.Minutes:00}:{remaining.Seconds:00}"
+            : $"{remaining.Minutes:00}:{remaining.Seconds:00}";
     }
+    public string NextUpStartText => NextUpTile?.NextStartLabel ?? "unscheduled";
+    
+    // Core が計算した next_start を表示するだけ（UI側で計算しない）
 
     public string IdleGuidanceText
     {
@@ -469,31 +462,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     
     public string? ActiveTileNextAction => ActiveTile?.Tile?.NextAction;
 
-    public string WorkElapsedText
-    {
-        get
-        {
-            if (ActiveTile?.PhaseStartedAt == null) return "00:00";
-            if (!DateTimeOffset.TryParse(ActiveTile.PhaseStartedAt, out var startedAt)) return "00:00";
-            
-            var elapsed = DateTimeOffset.UtcNow - startedAt;
-            return $"{(int)elapsed.TotalMinutes:00}:{elapsed.Seconds:00}";
-        }
-    }
+    public string WorkElapsedText => "N/A"; // Core が計算するため UI 側では不要
 
-    public string BreakRemainingText
-    {
-        get
-        {
-            if (ActiveTile?.PhaseEndsAt == null) return "On break";
-            if (!DateTimeOffset.TryParse(ActiveTile.PhaseEndsAt, out var endsAt)) return "On break";
-            
-            var remaining = endsAt - DateTimeOffset.UtcNow;
-            return remaining.TotalSeconds > 0 
-                ? $"{(int)remaining.TotalMinutes:00}:{remaining.Seconds:00} remaining"
-                : "Break ended";
-        }
-    }
+    public string BreakRemainingText => "N/A"; // Core が計算するため UI 側では不要
 
     private InterventionEngine? _interventionEngine;
     private PromptAttentionOverlayService? _promptAttentionOverlayService;
@@ -816,7 +787,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(TimelineNowVisibility));
         OnPropertyChanged(nameof(HasNoTimelineSegments));
         OnPropertyChanged(nameof(NextUpStartText));
-        OnPropertyChanged(nameof(NextUpStartCountdownText));
         OnPropertyChanged(nameof(MainCountdownText));
         OnPropertyChanged(nameof(NextQuickCandidates));
     }
@@ -863,7 +833,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(NextUpWorkedText));
         OnPropertyChanged(nameof(NextUpMetaText));
         OnPropertyChanged(nameof(NextUpStartText));
-        OnPropertyChanged(nameof(NextUpStartCountdownText));
         OnPropertyChanged(nameof(MainCountdownText));
         OnPropertyChanged(nameof(NextUpTileId));
         OnPropertyChanged(nameof(NextUpVisibility));
@@ -976,19 +945,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    public string WorkRemainingText
-    {
-        get
-        {
-            if (ActiveTile?.PhaseEndsAt == null) return WorkElapsedText;
-            if (!DateTimeOffset.TryParse(ActiveTile.PhaseEndsAt, out var endsAt)) return WorkElapsedText;
-
-            var remaining = endsAt - DateTimeOffset.UtcNow;
-            return remaining.TotalSeconds > 0
-                ? $"{(int)remaining.TotalMinutes:00}:{remaining.Seconds:00}"
-                : "00:00";
-        }
-    }
+    public string WorkRemainingText => "N/A"; // Core が phase_ends_at で計算済み
 
     public string ExecutionStatusLabel => IsWorking
         ? "Work block"
@@ -1035,15 +992,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         IsWorking,
         IsOnBreak,
         ReadyCount,
-        WorkRemainingText,
-        BreakRemainingText);
-    public string QuickBarTimerText => IsWorking
-        ? WorkRemainingText
-        : IsOnBreak
-            ? BreakRemainingText.Replace(" remaining", string.Empty, StringComparison.OrdinalIgnoreCase)
-            : IsConnected
-                ? "Ready"
-                : "Offline";
+        MainCountdownText,
+        MainCountdownText);
+    public string QuickBarTimerText => IsConnected
+        ? MainCountdownText
+        : "Offline";
     public double QuickBarProgressValue
     {
         get
@@ -1282,7 +1235,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPendingPromptChanged(this, new PendingPromptResponse(prompt));
     }
 
-    // Fix 1: DeferTile command
+    // DeferTile command - Core に defer を送るだけ（UI側で判断しない）
     [RelayCommand]
     private async Task DeferTileAsync(string? tileId)
     {
@@ -1290,18 +1243,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            // 実行中タスクがあれば先に中断（先送り対象と異なる場合も含む）
-            var running = MainRunningTask;
-            if (running != null && string.Equals(running.Id, tileId, StringComparison.OrdinalIgnoreCase))
-            {
-                // 実行中タスク自体を先送り → そのまま defer
-            }
-            else if (running != null)
-            {
-                // 別のタスクが実行中 → 先に中断
-                await _api.DeferTileAsync(running.Id);
-            }
-
             var result = await _api.DeferTileAsync(tileId);
             if (result != null && !result.Ok)
                 StatusMessage = $"Error: {result.Error}";

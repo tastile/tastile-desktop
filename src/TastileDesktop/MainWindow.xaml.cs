@@ -208,87 +208,22 @@ public sealed partial class MainWindow : Window
             return;
         }
         ViewModel.FocusRunningTile(tileId);
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
     }
 
     private void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-            return;
-        ShowTileActionToast(tileId);
+        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
     }
 
     private void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-            return;
-        ShowTileActionToast(tileId);
+        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
     }
 
     private void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-            return;
-        ShowTileActionToast(tileId);
-    }
-
-    private void ShowTileActionToast(string tileId)
-    {
-        var tile = ViewModel.Tiles.FirstOrDefault(t => string.Equals(t.Id, tileId, StringComparison.OrdinalIgnoreCase));
-        if (tile == null) return;
-
-        var isRunning = string.Equals(tile.Lifecycle, "Started", StringComparison.OrdinalIgnoreCase);
-        var actions = isRunning
-            ? new List<Models.PromptActionView> { new("COMPLETE", "完了"), new("DEFER", "先送り") }
-            : new List<Models.PromptActionView> { new("START", "開始"), new("DEFER", "先送り") };
-
-        var prompt = new Models.PromptView(
-            PromptId: $"tile-action-{tileId}",
-            Kind: "tile-action",
-            Severity: "normal",
-            TileId: tileId,
-            Title: tile.Title,
-            Body: isRunning ? "実行中のタスク操作" : "次のタスク操作",
-            Why: string.Empty,
-            SuggestedMinutes: null,
-            Actions: actions,
-            ExpiresAt: null,
-            Stale: false);
-
-        PromptToastDisplayService.Instance.ShowPrompt(
-            prompt,
-            maxActions: 2,
-            actionHandler: async actionId =>
-            {
-                var id = actionId.ToUpperInvariant();
-                switch (id)
-                {
-                    case "START":
-                        // 実行中タスクがあれば先に中断してから開始
-                        var running = ViewModel.MainRunningTask;
-                        if (running != null && !string.Equals(running.Id, tileId, StringComparison.OrdinalIgnoreCase))
-                            await ViewModel.DeferTileCommand.ExecuteAsync(running.Id);
-                        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
-                        break;
-                    case "DEFER":
-                        await ViewModel.DeferTileCommand.ExecuteAsync(tileId);
-                        break;
-                    case "COMPLETE":
-                    case "COMPLETE_AND_START_NEXT":
-                        await ViewModel.CompleteTileCommand.ExecuteAsync(null);
-                        break;
-                }
-                PromptToastDisplayService.Instance.Hide();
-            },
-            deferHandler: async (_, minutes) =>
-            {
-                // 先送り: 実行中なら中断してから defer
-                if (isRunning)
-                    await ViewModel.DeferTileCommand.ExecuteAsync(tileId);
-                else if (minutes.HasValue)
-                    await ViewModel.DeferTileCommand.ExecuteAsync(tileId);
-                PromptToastDisplayService.Instance.Hide();
-            });
+        // Core の PendingPrompt に従う（UI側で独自にトーストを出さない）
     }
 
     private async void OnPendingPromptActionClick(object sender, RoutedEventArgs e)
