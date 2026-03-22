@@ -130,9 +130,14 @@
                                            Foreground="{ThemeResource PrimaryForegroundBrush}"
                                            TextTrimming="CharacterEllipsis" MaxWidth="190" />
                             </StackPanel>
-                            <TextBlock Text="{x:Bind ViewModel.NextUpStartText, Mode=OneWay}"
-                                       FontSize="10" Foreground="{ThemeResource SecondaryForegroundBrush}"
-                                       Margin="0,2,0,0" />
+                            <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,2,0,0">
+                                <TextBlock Text="{x:Bind ViewModel.NextUpStartText, Mode=OneWay}"
+                                           FontSize="10" FontFamily="Consolas"
+                                           Foreground="{ThemeResource SecondaryForegroundBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.NextUp.TargetDurationText, Mode=OneWay}"
+                                           FontSize="10" FontFamily="Consolas"
+                                           Foreground="{ThemeResource TertiaryForegroundBrush}" />
+                            </StackPanel>
                         </StackPanel>
                     </Button>
 

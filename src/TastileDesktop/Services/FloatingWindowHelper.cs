@@ -36,7 +36,17 @@ internal static class FloatingWindowHelper
     {
         Register(window);
         ApplyWindowTheme(window);
-        window.SystemBackdrop = null;
+
+        // PowerToys方式: Acrylicバックドロップで透過背景を実現
+        try
+        {
+            window.SystemBackdrop = new Microsoft.UI.Xaml.Media.DesktopAcrylicBackdrop();
+        }
+        catch
+        {
+            window.SystemBackdrop = null;
+        }
+
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
 
         var appWindow = GetAppWindow(window);

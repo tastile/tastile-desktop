@@ -225,11 +225,63 @@ public sealed partial class MainWindow : Window
         await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
-    private async void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
+    private void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
             return;
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        ShowTileActionToast(tileId);
+    }
+
+    private void ShowTileActionToast(string tileId)
+    {
+        var tile = ViewModel.Tiles.FirstOrDefault(t => string.Equals(t.Id, tileId, StringComparison.OrdinalIgnoreCase));
+        if (tile == null) return;
+
+        var isRunning = string.Equals(tile.Lifecycle, "Started", StringComparison.OrdinalIgnoreCase);
+        var actions = isRunning
+            ? new List<Models.PromptActionView> { new("COMPLETE", "完了"), new("DEFER", "先送り") }
+            : new List<Models.PromptActionView> { new("START", "開始"), new("DEFER", "先送り") };
+
+        var prompt = new Models.PromptView(
+            PromptId: $"tile-action-{tileId}",
+            Kind: "tile-action",
+            Severity: "normal",
+            TileId: tileId,
+            Title: tile.Title,
+            Body: isRunning ? "実行中のタスク操作" : "次のタスク操作",
+            Why: string.Empty,
+            SuggestedMinutes: null,
+            Actions: actions,
+            ExpiresAt: null,
+            Stale: false);
+
+        PromptToastDisplayService.Instance.ShowPrompt(
+            prompt,
+            maxActions: 2,
+            actionHandler: async actionId =>
+            {
+                var id = actionId.ToUpperInvariant();
+                switch (id)
+                {
+                    case "START":
+                        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+                        break;
+                    case "DEFER":
+                        await ViewModel.DeferTileCommand.ExecuteAsync(tileId);
+                        break;
+                    case "COMPLETE":
+                    case "COMPLETE_AND_START_NEXT":
+                        await ViewModel.CompleteTileCommand.ExecuteAsync(null);
+                        break;
+                }
+                PromptToastDisplayService.Instance.Hide();
+            },
+            deferHandler: async (_, minutes) =>
+            {
+                if (minutes.HasValue)
+                    await ViewModel.DeferTileCommand.ExecuteAsync(tileId);
+                PromptToastDisplayService.Instance.Hide();
+            });
     }
 
     private async void OnPendingPromptActionClick(object sender, RoutedEventArgs e)
