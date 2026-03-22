@@ -22,9 +22,7 @@ public sealed partial class MainWindow : Window
     private double _runningDragStartOffset;
     private double _nextDragStartX;
     private double _nextDragStartOffset;
-    private string? _taskActionTileId;
-    private string? _taskActionPrimaryCommand;
-    private string? _taskActionSecondaryCommand;
+
 
     public MainViewModel ViewModel { get; } = new();
 
@@ -216,103 +214,22 @@ public sealed partial class MainWindow : Window
     private async void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-        {
             return;
-        }
-        ShowTaskActionPrompt(tileId);
+        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
-    private void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
+    private async void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-        {
             return;
-        }
-        ShowTaskActionPrompt(tileId);
+        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
-    private void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
+    private async void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-        {
             return;
-        }
-        var tile = ViewModel.Tiles.FirstOrDefault(t => string.Equals(t.Id, tileId, StringComparison.OrdinalIgnoreCase));
-        if (tile == null)
-        {
-            return;
-        }
-        ShowTaskActionPrompt(tile.Id);
-    }
-
-    private void ShowTaskActionPrompt(string tileId)
-    {
-        var tile = ViewModel.Tiles.FirstOrDefault(t => string.Equals(t.Id, tileId, StringComparison.OrdinalIgnoreCase));
-        if (tile == null)
-        {
-            return;
-        }
-
-        _taskActionTileId = tile.Id;
-        var isRunning = string.Equals(tile.Lifecycle, "Started", StringComparison.OrdinalIgnoreCase);
-        TaskActionPromptTitle.Text = tile.Title;
-        TaskActionPromptBody.Text = isRunning ? "Running task actions" : "Next task actions";
-
-        if (isRunning)
-        {
-            _taskActionPrimaryCommand = "DEFER";
-            _taskActionSecondaryCommand = "COMPLETE_AND_START_NEXT";
-            TaskActionPrimaryButton.Content = "Interrupt + schedule";
-            TaskActionSecondaryButton.Content = "Complete";
-        }
-        else
-        {
-            _taskActionPrimaryCommand = "START";
-            _taskActionSecondaryCommand = "DEFER";
-            TaskActionPrimaryButton.Content = "Start now";
-            TaskActionSecondaryButton.Content = "Defer";
-        }
-
-        TaskActionPromptToast.Visibility = Visibility.Visible;
-    }
-
-    private async void OnTaskActionPrimaryClick(object sender, RoutedEventArgs e)
-    {
-        await ExecuteTaskActionAsync(_taskActionPrimaryCommand);
-    }
-
-    private async void OnTaskActionSecondaryClick(object sender, RoutedEventArgs e)
-    {
-        await ExecuteTaskActionAsync(_taskActionSecondaryCommand);
-    }
-
-    private void OnTaskActionCancelClick(object sender, RoutedEventArgs e)
-    {
-        TaskActionPromptToast.Visibility = Visibility.Collapsed;
-    }
-
-    private async Task ExecuteTaskActionAsync(string? command)
-    {
-        if (string.IsNullOrWhiteSpace(command) || string.IsNullOrWhiteSpace(_taskActionTileId))
-        {
-            TaskActionPromptToast.Visibility = Visibility.Collapsed;
-            return;
-        }
-
-        switch (command)
-        {
-            case "START":
-                await ViewModel.StartTileCommand.ExecuteAsync(_taskActionTileId);
-                break;
-            case "DEFER":
-                await ViewModel.DeferTileCommand.ExecuteAsync(_taskActionTileId);
-                break;
-            case "COMPLETE_AND_START_NEXT":
-                await ViewModel.CompleteTileCommand.ExecuteAsync(null);
-                break;
-        }
-
-        TaskActionPromptToast.Visibility = Visibility.Collapsed;
+        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
     private async void OnPendingPromptActionClick(object sender, RoutedEventArgs e)

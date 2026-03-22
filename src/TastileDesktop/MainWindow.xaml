@@ -5,7 +5,6 @@
     xmlns:viewModels="using:TastileDesktop.ViewModels"
     Title="Tastile">
 
-    <!-- Width=892 fixed; Background=Transparent lets WS_EX_NOREDIRECTIONBITMAP show through -->
     <Grid Background="Transparent" Width="892" Height="88">
         <Border
             Background="{ThemeResource QuickPanelBackgroundBrush}"
@@ -13,62 +12,62 @@
             BorderThickness="1"
             CornerRadius="8">
 
-            <!-- 4 fixed columns: [clock 120] [running 220] [next *] [buttons 152] -->
+            <!-- [clock 110] [running *] [next 240] [buttons 152] -->
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="120" />
-                    <ColumnDefinition Width="220" />
+                    <ColumnDefinition Width="110" />
                     <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="240" />
                     <ColumnDefinition Width="152" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Col 0: Countdown + date/time stacked -->
-                <StackPanel Grid.Column="0" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0,8,0">
+                <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="12,0,8,0">
                     <TextBlock x:Name="StatusText"
-                               FontSize="28" FontFamily="Consolas" FontWeight="SemiBold"
+                               FontSize="26" FontFamily="Consolas" FontWeight="SemiBold"
                                Foreground="{ThemeResource PrimaryForegroundBrush}"
-                               Text="{x:Bind ViewModel.MainCountdownText, Mode=OneWay}"
-                               HorizontalAlignment="Left" />
+                               Text="{x:Bind ViewModel.MainCountdownText, Mode=OneWay}" />
                     <TextBlock x:Name="DateText"
-                               FontSize="11" FontFamily="Consolas"
+                               FontSize="10" FontFamily="Consolas"
                                Foreground="{ThemeResource SecondaryForegroundBrush}"
-                               Text="----/--/--" HorizontalAlignment="Left" />
+                               Text="----/--/--" />
                     <TextBlock x:Name="ClockText"
-                               FontSize="11" FontFamily="Consolas"
+                               FontSize="10" FontFamily="Consolas"
                                Foreground="{ThemeResource SecondaryForegroundBrush}"
-                               Text="--:--:--" HorizontalAlignment="Left" />
+                               Text="--:--:--" />
                 </StackPanel>
 
-                <!-- Col 1: Running tasks (fixed 220px, always visible) -->
-                <Grid Grid.Column="1" Margin="0,8,6,8" VerticalAlignment="Stretch">
+                <!-- Col 1: Running tasks (fills remaining space, priority display) -->
+                <Grid Grid.Column="1" Margin="0,8,8,8" VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- Primary running task - always takes space -->
+                    <!-- Primary running task - large, always visible -->
                     <Border Grid.Row="0"
                             Background="{ThemeResource AppSurface1Brush}"
                             BorderBrush="{ThemeResource AppBorderBrush}"
-                            BorderThickness="1" CornerRadius="4" Padding="6,4">
+                            BorderThickness="1" CornerRadius="4" Padding="8,5">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Width="22" Height="22" Padding="0"
+                            <Button Grid.Column="0" Width="26" Height="26" Padding="0"
                                     Background="Transparent" BorderThickness="0"
                                     Tag="{x:Bind ViewModel.MainRunningTask.Id, Mode=OneWay}"
                                     Click="OnTaskStatusIconClick">
                                 <FontIcon FontFamily="Segoe Fluent Icons"
                                           Glyph="{x:Bind ViewModel.MainRunningTask.StatusGlyph, Mode=OneWay}"
-                                          FontSize="11" Foreground="{ThemeResource PrimaryForegroundBrush}" />
+                                          FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" />
                             </Button>
-                            <StackPanel Grid.Column="1">
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
                                 <TextBlock Text="{x:Bind ViewModel.MainRunningTask.Title, Mode=OneWay}"
-                                           FontSize="11" Foreground="{ThemeResource PrimaryForegroundBrush}"
+                                           FontSize="13" FontWeight="SemiBold"
+                                           Foreground="{ThemeResource PrimaryForegroundBrush}"
                                            TextTrimming="CharacterEllipsis" />
-                                <ProgressBar Height="3" Margin="0,2,0,0" Minimum="0" Maximum="100"
+                                <ProgressBar Height="3" Margin="0,3,0,0" Minimum="0" Maximum="100"
                                              Value="{x:Bind ViewModel.MainRunningTask.ProgressPercent, Mode=OneWay}" />
                             </StackPanel>
                         </Grid>
@@ -78,7 +77,7 @@
                     <ScrollViewer x:Name="RunningTasksScrollViewer" Grid.Row="1"
                                   HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
                                   HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" ZoomMode="Disabled"
-                                  Margin="0,3,0,0">
+                                  Margin="0,3,0,0" MaxHeight="24">
                         <ItemsControl ItemsSource="{x:Bind ViewModel.SecondaryRunningQuickTiles, Mode=OneWay}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -91,20 +90,12 @@
                                             Background="{ThemeResource AppSurface1Brush}"
                                             BorderBrush="{ThemeResource AppBorderBrush}"
                                             BorderThickness="1" CornerRadius="4" Padding="5,2" Margin="0,0,4,0">
-                                        <StackPanel>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button Width="14" Height="14" Padding="0"
-                                                        Background="Transparent" BorderThickness="0"
-                                                        Tag="{x:Bind Id}" Click="OnTaskStatusIconClick">
-                                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind StatusGlyph}"
-                                                              FontSize="8" Foreground="{ThemeResource PrimaryForegroundBrush}" />
-                                                </Button>
-                                                <TextBlock Text="{x:Bind Title}" FontSize="10"
-                                                           Foreground="{ThemeResource PrimaryForegroundBrush}"
-                                                           TextTrimming="CharacterEllipsis" MaxWidth="120" />
-                                            </StackPanel>
-                                            <ProgressBar Height="2" Margin="0,2,0,0" Minimum="0" Maximum="100"
-                                                         Value="{x:Bind ProgressPercent}" />
+                                        <StackPanel Orientation="Horizontal" Spacing="4">
+                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind StatusGlyph}"
+                                                      FontSize="9" Foreground="{ThemeResource PrimaryForegroundBrush}" />
+                                            <TextBlock Text="{x:Bind Title}" FontSize="10"
+                                                       Foreground="{ThemeResource PrimaryForegroundBrush}"
+                                                       TextTrimming="CharacterEllipsis" MaxWidth="130" />
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>
@@ -113,11 +104,11 @@
                     </ScrollViewer>
                 </Grid>
 
-                <!-- Col 2: Next up + candidates (fills remaining space) -->
-                <Grid Grid.Column="2" Margin="0,8,6,8" VerticalAlignment="Stretch">
+                <!-- Col 2: Next up + candidates (fixed 240px) -->
+                <Grid Grid.Column="2" Margin="0,8,8,8" VerticalAlignment="Stretch">
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
                     <!-- Primary next tile -->
@@ -126,26 +117,22 @@
                             Click="OnNextPrimaryTileClick"
                             Background="{ThemeResource AppSurface1Brush}"
                             BorderBrush="{ThemeResource AppBorderBrush}"
-                            BorderThickness="1" CornerRadius="4" Padding="6,4"
+                            BorderThickness="1" CornerRadius="4" Padding="8,5"
                             Visibility="{x:Bind ViewModel.NextUpVisibility, Mode=OneWay}"
-                            HorizontalAlignment="Left" MaxWidth="220">
+                            HorizontalAlignment="Stretch" HorizontalContentAlignment="Left">
                         <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Button Width="18" Height="18" Padding="0"
-                                        Background="Transparent" BorderThickness="0"
-                                        Tag="{x:Bind ViewModel.NextUpTileId, Mode=OneWay}"
-                                        Click="OnTaskStatusIconClick">
-                                    <FontIcon FontFamily="Segoe Fluent Icons"
-                                              Glyph="{x:Bind ViewModel.NextUp.StatusGlyph, Mode=OneWay}"
-                                              FontSize="10" Foreground="{ThemeResource PrimaryForegroundBrush}" />
-                                </Button>
+                            <StackPanel Orientation="Horizontal" Spacing="4">
+                                <FontIcon FontFamily="Segoe Fluent Icons"
+                                          Glyph="{x:Bind ViewModel.NextUp.StatusGlyph, Mode=OneWay}"
+                                          FontSize="11" Foreground="{ThemeResource PrimaryForegroundBrush}" />
                                 <TextBlock Text="{x:Bind ViewModel.NextUpTitle, Mode=OneWay}"
-                                           FontSize="11" Foreground="{ThemeResource PrimaryForegroundBrush}"
-                                           TextTrimming="CharacterEllipsis" MaxWidth="180" />
+                                           FontSize="12" FontWeight="SemiBold"
+                                           Foreground="{ThemeResource PrimaryForegroundBrush}"
+                                           TextTrimming="CharacterEllipsis" MaxWidth="190" />
                             </StackPanel>
                             <TextBlock Text="{x:Bind ViewModel.NextUpStartText, Mode=OneWay}"
                                        FontSize="10" Foreground="{ThemeResource SecondaryForegroundBrush}"
-                                       Margin="0,1,0,0" />
+                                       Margin="0,2,0,0" />
                         </StackPanel>
                     </Button>
 
@@ -153,7 +140,7 @@
                     <ScrollViewer x:Name="NextCandidatesScrollViewer" Grid.Row="1"
                                   HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
                                   HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" ZoomMode="Disabled"
-                                  Margin="0,3,0,0">
+                                  Margin="0,3,0,0" MaxHeight="24">
                         <ItemsControl ItemsSource="{x:Bind ViewModel.NextQuickCandidates, Mode=OneWay}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -167,21 +154,16 @@
                                             BorderBrush="{ThemeResource AppBorderBrush}"
                                             BorderThickness="1" CornerRadius="4" Padding="5,2" Margin="0,0,4,0">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Button Width="14" Height="14" Padding="0"
-                                                        Background="Transparent" BorderThickness="0"
-                                                        Tag="{x:Bind Id}" Click="OnTaskStatusIconClick">
-                                                    <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind StatusGlyph}"
-                                                              FontSize="8" Foreground="{ThemeResource PrimaryForegroundBrush}" />
-                                                </Button>
+                                            <StackPanel Orientation="Horizontal" Spacing="3">
+                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{x:Bind StatusGlyph}"
+                                                          FontSize="9" Foreground="{ThemeResource PrimaryForegroundBrush}" />
                                                 <TextBlock Text="{x:Bind Title}" FontSize="10"
                                                            Foreground="{ThemeResource PrimaryForegroundBrush}"
                                                            TextTrimming="CharacterEllipsis" MaxWidth="100" />
                                             </StackPanel>
                                             <TextBlock Text="{x:Bind NextStartDisplay}" FontSize="9"
                                                        FontFamily="Consolas"
-                                                       Foreground="{ThemeResource SecondaryForegroundBrush}"
-                                                       Margin="0,1,0,0" />
+                                                       Foreground="{ThemeResource SecondaryForegroundBrush}" />
                                         </StackPanel>
                                     </Button>
                                 </DataTemplate>
@@ -190,7 +172,7 @@
                     </ScrollViewer>
                 </Grid>
 
-                <!-- Col 3: 8 buttons (2 rows × 4), always visible, fixed 152px -->
+                <!-- Col 3: 8 buttons (2×4), always visible -->
                 <Grid Grid.Column="3" Margin="4,6,8,6" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -234,33 +216,6 @@
                     </StackPanel>
                 </Grid>
             </Grid>
-        </Border>
-
-        <!-- Toast overlay -->
-        <Border x:Name="TaskActionPromptToast"
-                Canvas.ZIndex="1001"
-                Visibility="Collapsed"
-                HorizontalAlignment="Right"
-                VerticalAlignment="Top"
-                Margin="0,8,8,0"
-                Padding="10"
-                CornerRadius="6"
-                Background="{ThemeResource AppSurfaceElevatedBrush}"
-                BorderBrush="{ThemeResource AppBorderBrush}"
-                BorderThickness="1">
-            <StackPanel MaxWidth="360">
-                <TextBlock x:Name="TaskActionPromptTitle" FontWeight="SemiBold"
-                           Foreground="{ThemeResource PrimaryForegroundBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,6"/>
-                <TextBlock x:Name="TaskActionPromptBody"
-                           Foreground="{ThemeResource SecondaryForegroundBrush}"
-                           TextWrapping="Wrap" Margin="0,0,0,6"/>
-                <StackPanel Orientation="Horizontal">
-                    <Button x:Name="TaskActionPrimaryButton" Click="OnTaskActionPrimaryClick" Margin="0,0,6,0"/>
-                    <Button x:Name="TaskActionSecondaryButton" Click="OnTaskActionSecondaryClick" Margin="0,0,6,0"/>
-                    <Button Content="Cancel" Click="OnTaskActionCancelClick"/>
-                </StackPanel>
-            </StackPanel>
         </Border>
     </Grid>
 </Window>
