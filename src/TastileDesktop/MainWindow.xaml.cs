@@ -208,32 +208,26 @@ public sealed partial class MainWindow : Window
             return;
         }
         ViewModel.FocusRunningTile(tileId);
-        // 実行中タイルをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        // 実行中タイルをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
+        // TODO: Core に「このタイルについて prompt を要求」する API が必要
     }
 
-    private async void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
+    private void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-            return;
-        // Next タイルをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        // Next タイルをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
+        // TODO: Core に「このタイルについて prompt を要求」する API が必要
     }
 
-    private async void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
+    private void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-            return;
-        // Candidate タイルをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        // Candidate タイルをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
+        // TODO: Core に「このタイルについて prompt を要求」する API が必要
     }
 
-    private async void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
+    private void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-            return;
-        // ステータスアイコンをクリック → Core に StartTile を送る（Core が適切な prompt を返す）
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        // ステータスアイコンをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
+        // TODO: Core に「このタイルについて prompt を要求」する API が必要
     }
 
     private async void OnPendingPromptActionClick(object sender, RoutedEventArgs e)
