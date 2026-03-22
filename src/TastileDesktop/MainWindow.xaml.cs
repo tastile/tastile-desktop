@@ -211,18 +211,18 @@ public sealed partial class MainWindow : Window
         await ViewModel.StartTileCommand.ExecuteAsync(tileId);
     }
 
-    private async void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
+    private void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
             return;
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        ShowTileActionToast(tileId);
     }
 
-    private async void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
+    private void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
             return;
-        await ViewModel.StartTileCommand.ExecuteAsync(tileId);
+        ShowTileActionToast(tileId);
     }
 
     private void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
@@ -264,6 +264,10 @@ public sealed partial class MainWindow : Window
                 switch (id)
                 {
                     case "START":
+                        // 実行中タスクがあれば先に中断してから開始
+                        var running = ViewModel.MainRunningTask;
+                        if (running != null && !string.Equals(running.Id, tileId, StringComparison.OrdinalIgnoreCase))
+                            await ViewModel.DeferTileCommand.ExecuteAsync(running.Id);
                         await ViewModel.StartTileCommand.ExecuteAsync(tileId);
                         break;
                     case "DEFER":
@@ -278,7 +282,10 @@ public sealed partial class MainWindow : Window
             },
             deferHandler: async (_, minutes) =>
             {
-                if (minutes.HasValue)
+                // 先送り: 実行中なら中断してから defer
+                if (isRunning)
+                    await ViewModel.DeferTileCommand.ExecuteAsync(tileId);
+                else if (minutes.HasValue)
                     await ViewModel.DeferTileCommand.ExecuteAsync(tileId);
                 PromptToastDisplayService.Instance.Hide();
             });

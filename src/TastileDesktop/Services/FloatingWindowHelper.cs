@@ -36,17 +36,9 @@ internal static class FloatingWindowHelper
     {
         Register(window);
         ApplyWindowTheme(window);
-
-        // PowerToys方式: Acrylicバックドロップで透過背景を実現
-        try
-        {
-            window.SystemBackdrop = new Microsoft.UI.Xaml.Media.DesktopAcrylicBackdrop();
-        }
-        catch
-        {
-            window.SystemBackdrop = null;
-        }
-
+        // SystemBackdrop=null + WS_EX_NOREDIRECTIONBITMAP で透過を実現
+        // AcrylicBackdropはSetBorderAndTitleBar(false,false)と競合するため使用しない
+        window.SystemBackdrop = null;
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
 
         var appWindow = GetAppWindow(window);
@@ -283,6 +275,16 @@ internal static class FloatingWindowHelper
         var exStyle = GetWindowLongPtrCompat(hwnd, GwlExStyle).ToInt64();
         exStyle |= WsExNoRedirectionBitmap;
         _ = SetWindowLongPtrCompat(hwnd, GwlExStyle, new IntPtr(exStyle));
+
+        // DWM_BLURBEHIND で完全透過を強制（黒背景の最終手段）
+        var blurBehind = new DWM_BLURBEHIND
+        {
+            dwFlags = DWM_BB_ENABLE | DWM_BB_BLURREGION,
+            fEnable = true,
+            hRgnBlur = IntPtr.Zero,
+            fTransitionOnMaximized = false,
+        };
+        _ = DwmEnableBlurBehindWindow(hwnd, ref blurBehind);
     }
 
     private static void ApplyPanelChrome(IntPtr hwnd)
@@ -387,6 +389,21 @@ internal static class FloatingWindowHelper
 
     [DllImport("dwmapi.dll", PreserveSig = true)]
     private static extern int DwmSetWindowAttribute(IntPtr hwnd, uint attribute, ref uint attributeValue, uint attributeSize);
+
+    [DllImport("dwmapi.dll", PreserveSig = true)]
+    private static extern int DwmEnableBlurBehindWindow(IntPtr hwnd, ref DWM_BLURBEHIND pBlurBehind);
+
+    private const uint DWM_BB_ENABLE = 0x00000001;
+    private const uint DWM_BB_BLURREGION = 0x00000002;
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct DWM_BLURBEHIND
+    {
+        public uint dwFlags;
+        public bool fEnable;
+        public IntPtr hRgnBlur;
+        public bool fTransitionOnMaximized;
+    }
 
     [DllImport("user32.dll", EntryPoint = "GetWindowLongW", SetLastError = true)]
     private static extern int GetWindowLong(IntPtr hwnd, int index);

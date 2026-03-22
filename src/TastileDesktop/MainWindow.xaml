@@ -111,7 +111,7 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
 
-                    <!-- Primary next tile -->
+                    <!-- Primary next tile: whole button opens toast -->
                     <Button Grid.Row="0"
                             Tag="{x:Bind ViewModel.NextUpTileId, Mode=OneWay}"
                             Click="OnNextPrimaryTileClick"
@@ -141,7 +141,7 @@
                         </StackPanel>
                     </Button>
 
-                    <!-- Next candidates scroll -->
+                    <!-- Next candidates scroll: whole button opens toast -->
                     <ScrollViewer x:Name="NextCandidatesScrollViewer" Grid.Row="1"
                                   HorizontalScrollBarVisibility="Hidden" VerticalScrollBarVisibility="Disabled"
                                   HorizontalScrollMode="Enabled" VerticalScrollMode="Disabled" ZoomMode="Disabled"
@@ -177,24 +177,24 @@
                     </ScrollViewer>
                 </Grid>
 
-                <!-- Col 3: 8 buttons (2×4), always visible -->
+                <!-- Col 3: 8 buttons ordered: [Refresh|Settings|Pin|Hide] / [Execute|Tiles|Timeline|Create] -->
                 <Grid Grid.Column="3" Margin="4,6,8,6" VerticalAlignment="Center">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
-                        <Button x:Name="CreateTileButton" Width="34" Height="28" Click="OnOpenCreateTileWindowClick"
-                                ToolTipService.ToolTip="Create Tile" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource AccentBrush}" Glyph="&#xE710;" />
+                        <Button x:Name="RefreshButton" Width="34" Height="28" Click="OnRefreshClick"
+                                ToolTipService.ToolTip="Refresh" Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE72C;" />
                         </Button>
-                        <Button x:Name="TilesButton" Width="34" Height="28" Click="OnOpenTilesWindowClick"
-                                ToolTipService.ToolTip="Tiles" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE8A5;" />
+                        <Button x:Name="SettingsButton" Width="34" Height="28" Click="OnOpenSettingsWindowClick"
+                                ToolTipService.ToolTip="Settings" Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE713;" />
                         </Button>
-                        <Button x:Name="TimelineButton" Width="34" Height="28" Click="OnOpenTimelineWindowClick"
-                                ToolTipService.ToolTip="Timeline" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE787;" />
+                        <Button x:Name="PinButton" Width="34" Height="28" Click="OnPinClick"
+                                ToolTipService.ToolTip="Pin window" Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE718;" />
                         </Button>
                         <Button x:Name="HideButton" Width="34" Height="28" Click="OnHidePanelClick"
                                 ToolTipService.ToolTip="Hide" Background="Transparent" BorderThickness="0" Padding="0">
@@ -206,17 +206,17 @@
                                 ToolTipService.ToolTip="Execute" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE768;" />
                         </Button>
-                        <Button x:Name="RefreshButton" Width="34" Height="28" Click="OnRefreshClick"
-                                ToolTipService.ToolTip="Refresh" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE72C;" />
+                        <Button x:Name="TilesButton" Width="34" Height="28" Click="OnOpenTilesWindowClick"
+                                ToolTipService.ToolTip="Tiles" Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE8A5;" />
                         </Button>
-                        <Button x:Name="PinButton" Width="34" Height="28" Click="OnPinClick"
-                                ToolTipService.ToolTip="Pin window" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE718;" />
+                        <Button x:Name="TimelineButton" Width="34" Height="28" Click="OnOpenTimelineWindowClick"
+                                ToolTipService.ToolTip="Timeline" Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE787;" />
                         </Button>
-                        <Button x:Name="SettingsButton" Width="34" Height="28" Click="OnOpenSettingsWindowClick"
-                                ToolTipService.ToolTip="Settings" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE713;" />
+                        <Button x:Name="CreateTileButton" Width="34" Height="28" Click="OnOpenCreateTileWindowClick"
+                                ToolTipService.ToolTip="Create Tile" Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource AccentBrush}" Glyph="&#xE710;" />
                         </Button>
                     </StackPanel>
                 </Grid>
