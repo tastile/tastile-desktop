@@ -69,7 +69,7 @@ public class PollingService : IDisposable
     {
         _api = api;
         _daemonManager = daemonManager;
-        _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
+        _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) }; // 2秒 → 5秒に延長
         _timer.Tick += async (_, _) => await PollAsync();
     }
 
@@ -87,14 +87,6 @@ public class PollingService : IDisposable
     /// Stop polling.
     /// </summary>
     public void Stop() => _timer.Stop();
-
-    /// <summary>
-    /// Reset the tiles hash so the next PollAsync always fires TilesChanged.
-    /// </summary>
-    public void InvalidateTilesCache()
-    {
-        _lastTilesHash = null;
-    }
 
     /// <summary>
     /// Force an immediate poll.
@@ -234,16 +226,8 @@ public class PollingService : IDisposable
         if (old?.Prompt == null && current?.Prompt == null) return false;
         if (old?.Prompt == null || current?.Prompt == null) return true;
 
-        var oldActions = string.Join(",", old.Prompt.Actions.Select(a => a.Id));
-        var currentActions = string.Join(",", current.Prompt.Actions.Select(a => a.Id));
-        return old.Prompt.PromptId != current.Prompt.PromptId
-            || old.Prompt.Kind != current.Prompt.Kind
-            || old.Prompt.Title != current.Prompt.Title
-            || old.Prompt.Body != current.Prompt.Body
-            || old.Prompt.Why != current.Prompt.Why
-            || oldActions != currentActions
-            || old.Prompt.ExpiresAt != current.Prompt.ExpiresAt
-            || old.Prompt.Stale != current.Prompt.Stale;
+        // PromptId のみで判定（同じプロンプトなら Stale や他のフィールドが変わっても再描画しない）
+        return old.Prompt.PromptId != current.Prompt.PromptId;
     }
 
     private static bool HasTimelineChanged(TimelineTodayResponse? old, TimelineTodayResponse? current)

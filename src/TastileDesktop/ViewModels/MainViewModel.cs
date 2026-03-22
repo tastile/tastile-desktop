@@ -617,83 +617,88 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         App.DebugLog($"[Toast] Showing prompt: {prompt.Prompt.Title}, actions: {string.Join(",", prompt.Prompt.Actions.Select(a => a.Id))}, kind: {prompt.Prompt.Kind}");
 
         _lastHandledPromptId = prompt.Prompt.PromptId;
-        _promptToastDisplayService?.ShowPrompt(
-            prompt.Prompt,
-            settings.Current.PromptToastMaxVisible,
-            async actionId =>
-            {
-                _toastDismissedByAction = true;
-                System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
-                try
+        
+        // 非同期でトースト表示（UIスレッドをブロックしない）
+        _ = Task.Run(() =>
+        {
+            _promptToastDisplayService?.ShowPrompt(
+                prompt.Prompt,
+                settings.Current.PromptToastMaxVisible,
+                async actionId =>
                 {
-                    var id = actionId.ToUpperInvariant();
-                    System.Diagnostics.Debug.WriteLine($"[Toast] Action ID (upper): {id}");
-                    switch (id)
+                    _toastDismissedByAction = true;
+                    System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
+                    try
                     {
-                        case "CONTINUE":
-                        case "DISMISS":
-                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                            break;
-                        case "BREAK":
-                        case "START_BREAK":
-                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                            await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
-                            break;
-                        case "COMPLETE":
-                        case "COMPLETE_AND_START_NEXT":
-                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                            await _api.CompleteTileAsync();
-                            break;
-                        case "END_BREAK":
-                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                            await _api.EndBreakAsync();
-                            break;
-                        case "EXTEND":
-                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                            await _api.ExtendTileAsync(10);
-                            break;
-                        case "START":
-                        case "START_TILE":
-                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                            if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId))
-                            {
-                                await _api.StartTileAsync(prompt.Prompt.TileId);
-                            }
-                            break;
-                        default:
-                            System.Diagnostics.Debug.WriteLine($"[Toast] Action NOT matched: {id}");
-                            break;
+                        var id = actionId.ToUpperInvariant();
+                        System.Diagnostics.Debug.WriteLine($"[Toast] Action ID (upper): {id}");
+                        switch (id)
+                        {
+                            case "CONTINUE":
+                            case "DISMISS":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                break;
+                            case "BREAK":
+                            case "START_BREAK":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
+                                break;
+                            case "COMPLETE":
+                            case "COMPLETE_AND_START_NEXT":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.CompleteTileAsync();
+                                break;
+                            case "END_BREAK":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.EndBreakAsync();
+                                break;
+                            case "EXTEND":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.ExtendTileAsync(10);
+                                break;
+                            case "START":
+                            case "START_TILE":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId))
+                                {
+                                    await _api.StartTileAsync(prompt.Prompt.TileId);
+                                }
+                                break;
+                            default:
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action NOT matched: {id}");
+                                break;
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    System.Diagnostics.Debug.WriteLine($"[Toast] Action error: {ex.Message}");
-                }
-                finally
-                {
-                    _promptToastDisplayService?.Hide();
-                }
-            },
-            async (actionId, minutes) =>
-            {
-                _toastDismissedByAction = true;
-                System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
-                try
-                {
-                    if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId) && minutes.HasValue)
+                    catch (Exception ex)
                     {
-                        await _api.DeferTileAsync(prompt.Prompt.TileId, minutes: minutes.Value);
+                        System.Diagnostics.Debug.WriteLine($"[Toast] Action error: {ex.Message}");
                     }
-                }
-                catch (Exception ex)
+                    finally
+                    {
+                        _promptToastDisplayService?.Hide();
+                    }
+                },
+                async (actionId, minutes) =>
                 {
-                    System.Diagnostics.Debug.WriteLine($"[Toast] Defer error: {ex.Message}");
-                }
-                finally
-                {
-                    _promptToastDisplayService?.Hide();
-                }
-            });
+                    _toastDismissedByAction = true;
+                    System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
+                    try
+                    {
+                        if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId) && minutes.HasValue)
+                        {
+                            await _api.DeferTileAsync(prompt.Prompt.TileId, minutes: minutes.Value);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"[Toast] Defer error: {ex.Message}");
+                    }
+                    finally
+                    {
+                        _promptToastDisplayService?.Hide();
+                    }
+                });
+        });
     }
 
     private void OnTimelineChanged(object? sender, TimelineTodayResponse? timeline)
@@ -1251,8 +1256,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
                 StatusMessage = $"Deferred: {tile?.Title ?? tileId}";
             }
-            // ハッシュをリセットして強制的にTilesChangedを発火させる
-            _pollingService.InvalidateTilesCache();
             await _pollingService.PollAsync();
         }
         catch (Exception ex)
