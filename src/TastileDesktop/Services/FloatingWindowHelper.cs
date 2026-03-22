@@ -55,6 +55,7 @@ internal static class FloatingWindowHelper
         }
 
         StripPanelWindowStyles(hwnd);
+        EnablePanelTransparency(hwnd);
         ApplyPanelChrome(hwnd);
     }
 
@@ -264,6 +265,16 @@ internal static class FloatingWindowHelper
         OpenWindows.Add(new WeakReference<Window>(window));
     }
 
+    private static void EnablePanelTransparency(IntPtr hwnd)
+    {
+        if (hwnd == IntPtr.Zero) return;
+
+        // WS_EX_NOREDIRECTIONBITMAP: DirectComposition経由で描画し、黒背景を排除
+        var exStyle = GetWindowLongPtrCompat(hwnd, GwlExStyle).ToInt64();
+        exStyle |= WsExNoRedirectionBitmap;
+        _ = SetWindowLongPtrCompat(hwnd, GwlExStyle, new IntPtr(exStyle));
+    }
+
     private static void ApplyPanelChrome(IntPtr hwnd)
     {
         if (hwnd == IntPtr.Zero)
@@ -356,6 +367,7 @@ internal static class FloatingWindowHelper
     private const long WsExDlgModalFrame = 0x00000001L;
     private const long WsExWindowEdge = 0x00000100L;
     private const long WsExClientEdge = 0x00000200L;
+    private const long WsExNoRedirectionBitmap = 0x00200000L;
     private const uint SwpNoSize = 0x0001;
     private const uint SwpNoMove = 0x0002;
     private const uint SwpNoZOrder = 0x0004;
