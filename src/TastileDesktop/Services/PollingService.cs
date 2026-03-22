@@ -120,6 +120,7 @@ public class PollingService : IDisposable
             {
                 _hasConnectionChange = false;
                 _lastConnectionState = _pendingConnectionState;
+                System.Diagnostics.Debug.WriteLine($"[UI Update] Connection: {_pendingConnectionState}");
                 ConnectionStatusChanged?.Invoke(this, _pendingConnectionState);
             }
 
@@ -127,6 +128,7 @@ public class PollingService : IDisposable
             {
                 _hasActiveTileChange = false;
                 _lastActiveTile = _pendingActiveTile;
+                System.Diagnostics.Debug.WriteLine($"[UI Update] ActiveTile: phase={_pendingActiveTile?.Phase}, tile={_pendingActiveTile?.Tile?.Title}");
                 ActiveTileChanged?.Invoke(this, _pendingActiveTile);
             }
 
@@ -134,6 +136,7 @@ public class PollingService : IDisposable
             {
                 _hasTilesChange = false;
                 _lastTiles = _pendingTiles;
+                System.Diagnostics.Debug.WriteLine($"[UI Update] Tiles: count={_pendingTiles?.Tiles?.Count}");
                 TilesChanged?.Invoke(this, _pendingTiles);
             }
 
@@ -159,6 +162,7 @@ public class PollingService : IDisposable
             {
                 _hasTimelineChange = false;
                 _lastTimeline = _pendingTimeline;
+                System.Diagnostics.Debug.WriteLine($"[UI Update] Timeline: items={_pendingTimeline?.Items?.Count}");
                 TimelineChanged?.Invoke(this, _pendingTimeline);
             }
         }
