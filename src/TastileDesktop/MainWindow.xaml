@@ -5,7 +5,7 @@
     xmlns:viewModels="using:TastileDesktop.ViewModels"
     Title="Tastile">
 
-    <Grid Background="Transparent">
+    <Grid Background="Transparent" MaxWidth="892">
         <Border
             Background="{ThemeResource QuickPanelBackgroundBrush}"
             BorderBrush="{ThemeResource QuickPanelBorderBrush}"
@@ -15,8 +15,8 @@
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="1*" />
-                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="1*" MaxWidth="320" />
+                    <ColumnDefinition Width="Auto" MaxWidth="280" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
