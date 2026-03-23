@@ -118,7 +118,12 @@ public class CoreApiClient
         => await PostCommandAsync("/commands/tile/defer", new { tile_id = tileId, reason, minutes });
 
     public async Task<CommandResponse?> StartBreakAsync(int breakMin)
-        => await PostCommandAsync("/commands/break/start", new { break_min = breakMin });
+    {
+        Log($"[StartBreakAsync] Starting break: {breakMin} minutes");
+        var result = await PostCommandAsync("/commands/break/start", new { break_min = breakMin });
+        Log($"[StartBreakAsync] Result: ok={result?.Ok}, error={result?.Error}");
+        return result;
+    }
 
     public async Task<CommandResponse?> EndBreakAsync()
         => await PostCommandAsync("/commands/break/end", new { });
@@ -131,6 +136,26 @@ public class CoreApiClient
 
     public async Task<CommandResponse?> DeleteTileAsync(string tileId)
         => await PostCommandAsync("/commands/tile/delete", new { tile_id = tileId });
+
+    public async Task<RequestPromptResponse?> RequestPromptAsync(string tileId)
+    {
+        try
+        {
+            Log($"[RequestPromptAsync] Requesting prompt for tile: {tileId}");
+            var response = await _httpClient.PostAsJsonAsync("/commands/prompt/request", new { tile_id = tileId });
+            Log($"[RequestPromptAsync] Response status: {response.StatusCode}");
+            
+            var result = await response.Content.ReadFromJsonAsync<RequestPromptResponse>();
+            Log($"[RequestPromptAsync] Result: ok={result?.Ok}, hasPrompt={result?.Prompt != null}, error={result?.Error}");
+            
+            return result;
+        }
+        catch (Exception ex)
+        {
+            Log($"[RequestPromptAsync] Exception: {ex.Message}");
+            throw;
+        }
+    }
 
     private async Task<CommandResponse?> PostCommandAsync<T>(string path, T body)
     {

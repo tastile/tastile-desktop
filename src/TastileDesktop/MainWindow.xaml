@@ -48,7 +48,8 @@
                     <Border Grid.Row="0"
                             Background="{ThemeResource AppSurface1Brush}"
                             BorderBrush="{ThemeResource AppBorderBrush}"
-                            BorderThickness="1" CornerRadius="4" Padding="8,5">
+                            BorderThickness="1" CornerRadius="4" Padding="8,5"
+                            Visibility="{x:Bind ViewModel.MainRunningTaskVisibility, Mode=OneWay}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
@@ -59,7 +60,7 @@
                                     Tag="{x:Bind ViewModel.MainRunningTask.Id, Mode=OneWay}"
                                     Click="OnTaskStatusIconClick">
                                 <FontIcon FontFamily="Segoe Fluent Icons"
-                                          Glyph="{x:Bind ViewModel.MainRunningTask.StatusGlyph, Mode=OneWay}"
+                                          Glyph="{x:Bind ViewModel.MainRunningTask.StatusGlyph, Mode=OneWay, FallbackValue='&#xE945;'}"
                                           FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" />
                             </Button>
                             <StackPanel Grid.Column="1" VerticalAlignment="Center">
@@ -123,7 +124,7 @@
                         <StackPanel>
                             <StackPanel Orientation="Horizontal" Spacing="4">
                                 <FontIcon FontFamily="Segoe Fluent Icons"
-                                          Glyph="{x:Bind ViewModel.NextUp.StatusGlyph, Mode=OneWay}"
+                                          Glyph="{x:Bind ViewModel.NextUpTile.StatusGlyph, Mode=OneWay, FallbackValue='&#xE768;'}"
                                           FontSize="11" Foreground="{ThemeResource PrimaryForegroundBrush}" />
                                 <TextBlock Text="{x:Bind ViewModel.NextUpTitle, Mode=OneWay}"
                                            FontSize="12" FontWeight="SemiBold"
@@ -134,7 +135,7 @@
                                 <TextBlock Text="{x:Bind ViewModel.NextUpStartText, Mode=OneWay}"
                                            FontSize="10" FontFamily="Consolas"
                                            Foreground="{ThemeResource SecondaryForegroundBrush}" />
-                                <TextBlock Text="{x:Bind ViewModel.NextUp.TargetDurationText, Mode=OneWay}"
+                                <TextBlock Text="{x:Bind ViewModel.NextUpTile.TargetDurationText, Mode=OneWay, FallbackValue=''}"
                                            FontSize="10" FontFamily="Consolas"
                                            Foreground="{ThemeResource TertiaryForegroundBrush}" />
                             </StackPanel>

@@ -412,6 +412,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public TileListItem? MainRunningTask =>
         RunningQuickTiles.FirstOrDefault(t => string.Equals(t.Id, _focusedRunningTileId, StringComparison.OrdinalIgnoreCase))
         ?? RunningQuickTiles.FirstOrDefault();
+    
+    public bool HasMainRunningTask => MainRunningTask != null;
+    public Visibility MainRunningTaskVisibility => HasMainRunningTask ? Visibility.Visible : Visibility.Collapsed;
     public IReadOnlyList<TileListItem> SecondaryRunningQuickTiles =>
         MainRunningTask == null
             ? RunningQuickTiles
@@ -587,29 +590,46 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnPromptToastPromptChanged(object? sender, PendingPromptResponse? prompt)
     {
+        System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Called with prompt: {(prompt?.Prompt != null ? prompt.Prompt.Title : "null")}");
+        App.DebugLog($"[OnPromptToastPromptChanged] Called with prompt: {(prompt?.Prompt != null ? prompt.Prompt.Title : "null")}");
+
         if (prompt?.Prompt == null)
         {
+            System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Prompt is null, hiding toast");
+            App.DebugLog($"[OnPromptToastPromptChanged] Prompt is null, hiding toast");
             _lastHandledPromptId = null;
             _toastDismissedByAction = false;
             _promptToastDisplayService?.Hide();
             return;
         }
 
+        System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptId}, Dismissed by action: {_toastDismissedByAction}");
+        App.DebugLog($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptId}, Dismissed by action: {_toastDismissedByAction}");
+
         if (_toastDismissedByAction && prompt.Prompt.PromptId == _lastHandledPromptId)
         {
+            System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Skipping - already dismissed by action");
+            App.DebugLog($"[OnPromptToastPromptChanged] Skipping - already dismissed by action");
             return;
         }
 
         if (prompt.Prompt.PromptId == _lastHandledPromptId)
         {
+            System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Skipping - already handled");
+            App.DebugLog($"[OnPromptToastPromptChanged] Skipping - already handled");
             return;
         }
 
         var settings = new SettingsService();
         var decision = PromptNotificationPolicy.Decide(prompt.Prompt, isFullscreen: false);
 
+        System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Decision: ShowToast={decision.ShowToast}, ShowIntervention={decision.ShowIntervention}");
+        App.DebugLog($"[OnPromptToastPromptChanged] Decision: ShowToast={decision.ShowToast}, ShowIntervention={decision.ShowIntervention}");
+
         if (!decision.ShowToast)
         {
+            System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Decision is not to show toast");
+            App.DebugLog($"[OnPromptToastPromptChanged] Decision is not to show toast");
             return;
         }
 
@@ -617,88 +637,100 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         App.DebugLog($"[Toast] Showing prompt: {prompt.Prompt.Title}, actions: {string.Join(",", prompt.Prompt.Actions.Select(a => a.Id))}, kind: {prompt.Prompt.Kind}");
 
         _lastHandledPromptId = prompt.Prompt.PromptId;
+        _toastDismissedByAction = false; // リセット
         
-        // 非同期でトースト表示（UIスレッドをブロックしない）
-        _ = Task.Run(() =>
-        {
-            _promptToastDisplayService?.ShowPrompt(
-                prompt.Prompt,
-                settings.Current.PromptToastMaxVisible,
-                async actionId =>
+        // UI スレッドでトースト表示
+        _promptToastDisplayService?.ShowPrompt(
+            prompt.Prompt,
+            settings.Current.PromptToastMaxVisible,
+            async actionId =>
+            {
+                _toastDismissedByAction = true;
+                System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
+                App.DebugLog($"[Toast] Action clicked: {actionId}");
+                
+                // まずトーストを隠す
+                _promptToastDisplayService?.Hide();
+                
+                try
                 {
-                    _toastDismissedByAction = true;
-                    System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
-                    try
+                    var id = actionId.ToUpperInvariant();
+                    System.Diagnostics.Debug.WriteLine($"[Toast] Action ID (upper): {id}");
+                    switch (id)
                     {
-                        var id = actionId.ToUpperInvariant();
-                        System.Diagnostics.Debug.WriteLine($"[Toast] Action ID (upper): {id}");
-                        switch (id)
-                        {
-                            case "CONTINUE":
-                            case "DISMISS":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                break;
-                            case "BREAK":
-                            case "START_BREAK":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
-                                break;
-                            case "COMPLETE":
-                            case "COMPLETE_AND_START_NEXT":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.CompleteTileAsync();
-                                break;
-                            case "END_BREAK":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.EndBreakAsync();
-                                break;
-                            case "EXTEND":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.ExtendTileAsync(10);
-                                break;
-                            case "START":
-                            case "START_TILE":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId))
-                                {
-                                    await _api.StartTileAsync(prompt.Prompt.TileId);
-                                }
-                                break;
-                            default:
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action NOT matched: {id}");
-                                break;
-                        }
+                        case "CONTINUE":
+                        case "DISMISS":
+                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                            break;
+                        case "BREAK":
+                        case "START_BREAK":
+                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                            await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
+                            break;
+                        case "COMPLETE":
+                        case "COMPLETE_AND_START_NEXT":
+                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                            await _api.CompleteTileAsync();
+                            break;
+                        case "END_BREAK":
+                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                            await _api.EndBreakAsync();
+                            break;
+                        case "EXTEND":
+                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                            await _api.ExtendTileAsync(10);
+                            break;
+                        case "START":
+                        case "START_TILE":
+                            System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                            if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId))
+                            {
+                                await _api.StartTileAsync(prompt.Prompt.TileId);
+                            }
+                            break;
+                        default:
+                            System.Diagnostics.Debug.WriteLine($"[Toast] Action NOT matched: {id}");
+                            break;
                     }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[Toast] Action error: {ex.Message}");
-                    }
-                    finally
-                    {
-                        _promptToastDisplayService?.Hide();
-                    }
-                },
-                async (actionId, minutes) =>
+                    
+                    // アクション実行後、即座にポーリングして状態を更新
+                    System.Diagnostics.Debug.WriteLine($"[Toast] Polling after action");
+                    App.DebugLog($"[Toast] Polling after action");
+                    await _pollingService.PollAsync();
+                }
+                catch (Exception ex)
                 {
-                    _toastDismissedByAction = true;
-                    System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
-                    try
+                    System.Diagnostics.Debug.WriteLine($"[Toast] Action error: {ex.Message}");
+                    App.DebugLog($"[Toast] Action error: {ex.Message}");
+                }
+            },
+            async (actionId, minutes) =>
+            {
+                _toastDismissedByAction = true;
+                System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
+                App.DebugLog($"[Toast] Defer: action={actionId}, minutes={minutes}");
+                
+                // まずトーストを隠す
+                _promptToastDisplayService?.Hide();
+                
+                try
+                {
+                    if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId) && minutes.HasValue)
                     {
-                        if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId) && minutes.HasValue)
-                        {
-                            await _api.DeferTileAsync(prompt.Prompt.TileId, minutes: minutes.Value);
-                        }
+                        await _api.DeferTileAsync(prompt.Prompt.TileId, minutes: minutes.Value);
                     }
-                    catch (Exception ex)
-                    {
-                        System.Diagnostics.Debug.WriteLine($"[Toast] Defer error: {ex.Message}");
-                    }
-                    finally
-                    {
-                        _promptToastDisplayService?.Hide();
-                    }
-                });
-        });
+                    
+                    // アクション実行後、即座にポーリングして状態を更新
+                    System.Diagnostics.Debug.WriteLine($"[Toast] Polling after defer");
+                    App.DebugLog($"[Toast] Polling after defer");
+                    await _pollingService.PollAsync();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[Toast] Defer error: {ex.Message}");
+                    App.DebugLog($"[Toast] Defer error: {ex.Message}");
+                }
+            });
     }
 
     private void OnTimelineChanged(object? sender, TimelineTodayResponse? timeline)
@@ -823,6 +855,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         .ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase)
         .ToList();
 
+        var runningCount = _allTiles.Count(t => t.Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase));
+        System.Diagnostics.Debug.WriteLine($"[OnTilesChanged] Total tiles: {_allTiles.Count}, Running: {runningCount}");
+        foreach (var tile in _allTiles.Where(t => t.Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase)))
+        {
+            System.Diagnostics.Debug.WriteLine($"  - Running tile: {tile.Title} (id={tile.Id})");
+        }
+
         ApplyFilter();
         OnPropertyChanged(nameof(IsTilesEmpty));
         OnPropertyChanged(nameof(TilesEmptyVisibility));
@@ -844,6 +883,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(NextUpEmptyVisibility));
         OnPropertyChanged(nameof(RunningQuickTiles));
         OnPropertyChanged(nameof(MainRunningTask));
+        OnPropertyChanged(nameof(HasMainRunningTask));
+        OnPropertyChanged(nameof(MainRunningTaskVisibility));
         OnPropertyChanged(nameof(SecondaryRunningQuickTiles));
         OnPropertyChanged(nameof(NextQuickCandidates));
         OnPropertyChanged(nameof(ExecutionStatusTitle));
@@ -1237,7 +1278,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public void InjectPrompt(PromptView prompt)
     {
         if (prompt == null) return;
-        OnPendingPromptChanged(this, new PendingPromptResponse(prompt));
+        
+        System.Diagnostics.Debug.WriteLine($"[InjectPrompt] Injecting prompt: {prompt.Title}");
+        App.DebugLog($"[InjectPrompt] Injecting prompt: {prompt.Title}");
+        
+        // PendingPromptを更新
+        var response = new PendingPromptResponse(prompt);
+        OnPendingPromptChanged(this, response);
+        
+        // トースト通知も直接トリガー
+        OnPromptToastPromptChanged(this, response);
     }
 
     // DeferTile command - Core に defer を送るだけ（UI側で判断しない）

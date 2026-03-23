@@ -158,3 +158,9 @@ public record CreateTileTimedLabelRequest(
     [property: JsonPropertyName("start_at")] string? StartAt,
     [property: JsonPropertyName("end_at")] string? EndAt
 );
+
+public record RequestPromptResponse(
+    [property: JsonPropertyName("ok")] bool Ok,
+    [property: JsonPropertyName("prompt")] PromptView? Prompt,
+    [property: JsonPropertyName("error")] string? Error
+);

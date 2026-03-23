@@ -61,7 +61,15 @@ public sealed partial class SettingsWindow : Window
             Math.Clamp(ViewModel.PromptToastMaxVisible, 1, 5),
             async actionId =>
             {
-                System.Diagnostics.Debug.WriteLine($"Toast action: {actionId}");
+                System.Diagnostics.Debug.WriteLine($"[Test Toast] Action clicked: {actionId}");
+                App.DebugLog($"[Test Toast] Action clicked: {actionId}");
+                PromptToastDisplayService.Instance.Hide();
+            },
+            async (actionId, minutes) =>
+            {
+                System.Diagnostics.Debug.WriteLine($"[Test Toast] Defer clicked: {actionId}, minutes: {minutes}");
+                App.DebugLog($"[Test Toast] Defer clicked: {actionId}, minutes: {minutes}");
+                PromptToastDisplayService.Instance.Hide();
             });
     }
 

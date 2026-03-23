@@ -208,26 +208,70 @@ public sealed partial class MainWindow : Window
             return;
         }
         ViewModel.FocusRunningTile(tileId);
-        // 実行中タイルをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
-        // TODO: Core に「このタイルについて prompt を要求」する API が必要
+        // Core に prompt を要求
+        await RequestPromptForTileAsync(tileId);
     }
 
-    private void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
+    private async void OnNextPrimaryTileClick(object sender, RoutedEventArgs e)
     {
-        // Next タイルをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
-        // TODO: Core に「このタイルについて prompt を要求」する API が必要
+        if (ViewModel.NextUpTileId is not string tileId || string.IsNullOrWhiteSpace(tileId))
+        {
+            return;
+        }
+        // Core に prompt を要求
+        await RequestPromptForTileAsync(tileId);
     }
 
-    private void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
+    private async void OnNextCandidateTileClick(object sender, RoutedEventArgs e)
     {
-        // Candidate タイルをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
-        // TODO: Core に「このタイルについて prompt を要求」する API が必要
+        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
+        {
+            return;
+        }
+        // Core に prompt を要求
+        await RequestPromptForTileAsync(tileId);
     }
 
-    private void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
+    private async void OnTaskStatusIconClick(object sender, RoutedEventArgs e)
     {
-        // ステータスアイコンをクリック → 何もしない（Core が自動的に prompt を生成するのを待つ）
-        // TODO: Core に「このタイルについて prompt を要求」する API が必要
+        if (sender is not FrameworkElement element || element.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
+        {
+            return;
+        }
+        // Core に prompt を要求
+        await RequestPromptForTileAsync(tileId);
+    }
+
+    private async Task RequestPromptForTileAsync(string tileId)
+    {
+        try
+        {
+            Log($"[RequestPromptForTileAsync] Requesting prompt for tile: {tileId}");
+            App.DebugLog($"[RequestPromptForTileAsync] Requesting prompt for tile: {tileId}");
+            
+            var response = await ViewModel.ApiClient.RequestPromptAsync(tileId);
+            
+            Log($"[RequestPromptForTileAsync] Response: ok={response?.Ok}, hasPrompt={response?.Prompt != null}, error={response?.Error}");
+            App.DebugLog($"[RequestPromptForTileAsync] Response: ok={response?.Ok}, hasPrompt={response?.Prompt != null}, error={response?.Error}");
+            
+            if (response?.Ok == true && response.Prompt != null)
+            {
+                Log($"[RequestPromptForTileAsync] Injecting prompt: {response.Prompt.Title}");
+                App.DebugLog($"[RequestPromptForTileAsync] Injecting prompt: {response.Prompt.Title}");
+                // Core から返された prompt を ViewModel に注入
+                ViewModel.InjectPrompt(response.Prompt);
+            }
+            else if (response?.Error != null)
+            {
+                Log($"[RequestPromptForTileAsync] Error: {response.Error}");
+                App.DebugLog($"[RequestPromptForTileAsync] Error: {response.Error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"[RequestPromptForTileAsync] Exception: {ex.Message}");
+            App.DebugLog($"[RequestPromptForTileAsync] Exception: {ex.Message}");
+        }
     }
 
     private async void OnPendingPromptActionClick(object sender, RoutedEventArgs e)
