@@ -31,6 +31,11 @@ on:
         required: false
         default: ""
         type: string
+      app_storage_path:
+        description: "Optional app binary path (default: <platform>/tastile-<platform>-<version>.exe)"
+        required: false
+        default: ""
+        type: string
 
 jobs:
   verify-desktop-core-build:
@@ -92,37 +97,59 @@ jobs:
           test -n "${{ secrets.SUPABASE_URL }}" || (echo "Missing SUPABASE_URL" && exit 1)
           test -n "${{ secrets.SUPABASE_SECRET_KEY }}" || (echo "Missing SUPABASE_SECRET_KEY" && exit 1)
           test -n "${{ secrets.SUPABASE_UPDATE_BUCKET }}" || (echo "Missing SUPABASE_UPDATE_BUCKET" && exit 1)
-          test -n "${{ secrets.CORE_REPO_READ_TOKEN }}" || (echo "Missing CORE_REPO_READ_TOKEN" && exit 1)
+
+      - name: Resolve storage paths
+        id: resolve-paths
+        shell: bash
+        run: |
+          if [ -n "${{ github.event.inputs.storage_path }}" ]; then
+            manifest_path="${{ github.event.inputs.storage_path }}"
+          else
+            manifest_path="updates/${{ github.event.inputs.platform }}/manifest.json"
+          fi
+          if [ -n "${{ github.event.inputs.app_storage_path }}" ]; then
+            app_path="${{ github.event.inputs.app_storage_path }}"
+          else
+            app_path="${{ github.event.inputs.platform }}/tastile-${{ github.event.inputs.platform }}-${{ github.event.inputs.latest_version }}.exe"
+          fi
+          app_public_url="${{ secrets.SUPABASE_URL }}/storage/v1/object/public/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${app_path}"
+          echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
+          echo "app_path=$app_path" >> "$GITHUB_OUTPUT"
+          echo "app_public_url=$app_public_url" >> "$GITHUB_OUTPUT"
+
+      - name: Download app binary from source URL
+        shell: bash
+        run: |
+          mkdir -p dist/update
+          curl -fsSL "${{ github.event.inputs.download_url }}" -o dist/update/app.bin
+
+      - name: Upload app binary to Supabase Storage
+        shell: bash
+        run: |
+          curl -fsS -X POST \
+            "${{ secrets.SUPABASE_URL }}/storage/v1/object/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${{ steps.resolve-paths.outputs.app_path }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SECRET_KEY }}" \
+            -H "apikey: ${{ secrets.SUPABASE_SECRET_KEY }}" \
+            -H "Content-Type: application/octet-stream" \
+            -H "x-upsert: true" \
+            --data-binary @dist/update/app.bin
 
       - name: Build manifest.json
         shell: bash
         run: |
-          mkdir -p dist/update
           cat > dist/update/manifest.json <<'JSON'
           {
             "latest_version": "${{ github.event.inputs.latest_version }}",
-            "download_url": "${{ github.event.inputs.download_url }}",
+            "download_url": "${{ steps.resolve-paths.outputs.app_public_url }}",
             "notes": "${{ github.event.inputs.notes }}"
           }
           JSON
-
-      - name: Resolve storage path
-        id: resolve-path
-        shell: bash
-        run: |
-          if [ -n "${{ github.event.inputs.storage_path }}" ]; then
-            resolved="${{ github.event.inputs.storage_path }}"
-          else
-            resolved="updates/${{ github.event.inputs.platform }}/manifest.json"
-          fi
-          echo "resolved_path=$resolved" >> "$GITHUB_OUTPUT"
-          echo "Resolved manifest path: $resolved"
 
       - name: Upload manifest to Supabase Storage
         shell: bash
         run: |
           curl -fsS -X POST \
-            "${{ secrets.SUPABASE_URL }}/storage/v1/object/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${{ steps.resolve-path.outputs.resolved_path }}" \
+            "${{ secrets.SUPABASE_URL }}/storage/v1/object/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${{ steps.resolve-paths.outputs.manifest_path }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SECRET_KEY }}" \
             -H "apikey: ${{ secrets.SUPABASE_SECRET_KEY }}" \
             -H "Content-Type: application/json" \
@@ -132,5 +159,7 @@ jobs:
       - name: Print public manifest URL
         shell: bash
         run: |
+          echo "App URL:"
+          echo "${{ steps.resolve-paths.outputs.app_public_url }}"
           echo "Manifest URL:"
-          echo "${{ secrets.SUPABASE_URL }}/storage/v1/object/public/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${{ steps.resolve-path.outputs.resolved_path }}"
+          echo "${{ secrets.SUPABASE_URL }}/storage/v1/object/public/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${{ steps.resolve-paths.outputs.manifest_path }}"

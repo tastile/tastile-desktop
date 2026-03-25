@@ -1,0 +1,34 @@
+param(
+    [Parameter(Mandatory = $true)][string]$LatestVersion,
+    [Parameter(Mandatory = $true)][string]$DownloadUrl,
+    [Parameter(Mandatory = $false)][string]$Notes = "",
+    [Parameter(Mandatory = $false)][string]$Platform = "desktop",
+    [Parameter(Mandatory = $false)][string]$StoragePath = "",
+    [Parameter(Mandatory = $false)][string]$AppStoragePath = ""
+)
+
+Set-StrictMode -Version Latest
+$ErrorActionPreference = "Stop"
+
+Write-Host "Trigger workflow: Publish update manifest"
+Write-Host "Use GitHub Actions workflow_dispatch with:"
+Write-Host "  platform       = $Platform"
+Write-Host "  latest_version = $LatestVersion"
+Write-Host "  download_url   = $DownloadUrl"
+Write-Host "  notes          = $Notes"
+if ([string]::IsNullOrWhiteSpace($StoragePath)) {
+    Write-Host "  storage_path   = (empty => updates/$Platform/manifest.json)"
+} else {
+    Write-Host "  storage_path   = $StoragePath"
+}
+if ([string]::IsNullOrWhiteSpace($AppStoragePath)) {
+    Write-Host "  app_storage_path = (empty => $Platform/tastile-$Platform-$LatestVersion.exe)"
+} else {
+    Write-Host "  app_storage_path = $AppStoragePath"
+}
+Write-Host ""
+Write-Host "Required repo secrets:"
+Write-Host "  SUPABASE_URL"
+Write-Host "  SUPABASE_SECRET_KEY"
+Write-Host "  SUPABASE_UPDATE_BUCKET"
+Write-Host "  CORE_REPO_READ_TOKEN"
