@@ -43,6 +43,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tastile/tastile-core
+          token: ${{ secrets.CORE_REPO_READ_TOKEN }}
           path: .deps/tastile-core
 
       - name: Create sibling junction for core path compatibility
@@ -80,6 +81,7 @@ jobs:
           test -n "${{ secrets.SUPABASE_URL }}" || (echo "Missing SUPABASE_URL" && exit 1)
           test -n "${{ secrets.SUPABASE_SECRET_KEY }}" || (echo "Missing SUPABASE_SECRET_KEY" && exit 1)
           test -n "${{ secrets.SUPABASE_UPDATE_BUCKET }}" || (echo "Missing SUPABASE_UPDATE_BUCKET" && exit 1)
+          test -n "${{ secrets.CORE_REPO_READ_TOKEN }}" || (echo "Missing CORE_REPO_READ_TOKEN" && exit 1)
 
       - name: Build manifest.json
         shell: bash
