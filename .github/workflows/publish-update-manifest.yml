@@ -40,9 +40,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Checkout core repo at sibling path
-        shell: pwsh
-        run: |
-          git clone --depth 1 https://github.com/tastile/tastile-core.git "$env:GITHUB_WORKSPACE\..\tastile-core"
+        uses: actions/checkout@v4
+        with:
+          repository: tastile/tastile-core
+          path: ../tastile-core
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
