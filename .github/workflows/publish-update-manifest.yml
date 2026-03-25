@@ -43,7 +43,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tastile/tastile-core
-          path: ../tastile-core
+          path: .deps/tastile-core
+
+      - name: Create sibling junction for core path compatibility
+        shell: pwsh
+        run: |
+          New-Item -ItemType Junction -Path "$env:GITHUB_WORKSPACE\..\tastile-core" -Target "$env:GITHUB_WORKSPACE\.deps\tastile-core" -Force | Out-Null
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
