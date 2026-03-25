@@ -66,13 +66,17 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
+      - name: Prebuild daemon for copy inclusion
+        shell: pwsh
+        run: |
+          cargo build -p tastile-daemon --release
+        working-directory: ${{ github.workspace }}\..\tastile-core
+
       - name: Verify desktop+core relative path build
         shell: pwsh
         run: |
           dotnet build "src\TastileDesktop\TastileDesktop.csproj" `
             -c Release `
-            -p:DaemonRustTarget=x86_64-pc-windows-msvc `
-            -p:DaemonBinaryPath=..\..\..\tastile-core\target\x86_64-pc-windows-msvc\release\tastile-daemon.exe `
             -p:AppxPackage=false `
             -p:WindowsPackageType=None
 
