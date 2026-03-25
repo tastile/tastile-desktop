@@ -14,7 +14,7 @@ WizardStyle=modern
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-SetupIconFile={#SourceDir}\Assets\tastile.ico
+SetupIconFile={#SourceDir}\tastile-icon.ico
 UninstallDisplayIcon={app}\TastileDesktop.exe
 
 [Languages]
