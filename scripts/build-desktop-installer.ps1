@@ -24,6 +24,8 @@ try {
     dotnet publish "src\TastileDesktop\TastileDesktop.csproj" `
         -c Release `
         -r $Runtime `
+        -p:DaemonRustTarget=x86_64-pc-windows-msvc `
+        -p:DaemonBinaryPath=..\..\..\tastile-core\target\x86_64-pc-windows-msvc\release\tastile-daemon.exe `
         -p:AppxPackage=false `
         -p:WindowsPackageType=None `
         -o $publishDir
