@@ -18,10 +18,6 @@ on:
         description: "Latest app version (e.g. 0.2.0)"
         required: true
         type: string
-      download_url:
-        description: "Installer or package URL"
-        required: true
-        type: string
       notes:
         description: "Release notes shown in update toast"
         required: false
@@ -38,8 +34,11 @@ on:
         type: string
 
 jobs:
-  verify-desktop-core-build:
+  build-desktop-installer:
     runs-on: windows-latest
+    outputs:
+      installer_name: ${{ steps.installer.outputs.installer_name }}
+      installer_path: ${{ steps.installer.outputs.installer_path }}
     steps:
       - name: Checkout desktop repo
         uses: actions/checkout@v4
@@ -71,26 +70,41 @@ jobs:
         with:
           targets: x86_64-pc-windows-msvc
 
-      - name: Prebuild daemon for copy inclusion
+      - name: Install Inno Setup
         shell: pwsh
         run: |
-          cargo build -p tastile-daemon --release
-        working-directory: ${{ github.workspace }}\..\tastile-core
+          choco install innosetup -y --no-progress
 
-      - name: Verify desktop+core relative path build
+      - name: Build desktop installer
+        id: installer
         shell: pwsh
         run: |
-          dotnet build "src\TastileDesktop\TastileDesktop.csproj" `
-            -c Release `
-            -p:AppxPackage=false `
-            -p:WindowsPackageType=None
+          .\scripts\build-desktop-installer.ps1 -Version "${{ github.event.inputs.latest_version }}"
+          $name = "tastile-desktop-${{ github.event.inputs.latest_version }}-setup.exe"
+          $path = "artifacts\installer\$name"
+          if (!(Test-Path $path)) { throw "Installer not found: $path" }
+          "installer_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+          "installer_path=$path" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-installer
+          path: ${{ steps.installer.outputs.installer_path }}
+          if-no-files-found: error
 
   publish-manifest:
-    needs: verify-desktop-core-build
+    needs: build-desktop-installer
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-installer
+          path: dist/update
 
       - name: Validate required secrets
         run: |
@@ -110,29 +124,25 @@ jobs:
           if [ -n "${{ github.event.inputs.app_storage_path }}" ]; then
             app_path="${{ github.event.inputs.app_storage_path }}"
           else
-            app_path="${{ github.event.inputs.platform }}/tastile-${{ github.event.inputs.platform }}-${{ github.event.inputs.latest_version }}.exe"
+            app_path="${{ github.event.inputs.platform }}/${{ needs.build-desktop-installer.outputs.installer_name }}"
           fi
           app_public_url="${{ secrets.SUPABASE_URL }}/storage/v1/object/public/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${app_path}"
           echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
           echo "app_path=$app_path" >> "$GITHUB_OUTPUT"
           echo "app_public_url=$app_public_url" >> "$GITHUB_OUTPUT"
 
-      - name: Download app binary from source URL
-        shell: bash
-        run: |
-          mkdir -p dist/update
-          curl -fsSL "${{ github.event.inputs.download_url }}" -o dist/update/app.bin
-
       - name: Upload app binary to Supabase Storage
         shell: bash
         run: |
+          installer_path="dist/update/${{ needs.build-desktop-installer.outputs.installer_name }}"
+          test -f "$installer_path" || (echo "Installer artifact missing: $installer_path" && exit 1)
           curl -fsS -X POST \
             "${{ secrets.SUPABASE_URL }}/storage/v1/object/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${{ steps.resolve-paths.outputs.app_path }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SECRET_KEY }}" \
             -H "apikey: ${{ secrets.SUPABASE_SECRET_KEY }}" \
             -H "Content-Type: application/octet-stream" \
             -H "x-upsert: true" \
-            --data-binary @dist/update/app.bin
+            --data-binary @"$installer_path"
 
       - name: Build manifest.json
         shell: bash
