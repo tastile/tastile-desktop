@@ -28,14 +28,6 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.2903.40" />
   </ItemGroup>
 
-  <!-- Include tastile-daemon.exe in the package -->
-  <ItemGroup>
-    <Content Include="$(DaemonBinaryPath)"
-             Condition="Exists('$(DaemonBinaryPath)')">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
   <!-- Include app icon -->
   <ItemGroup>
     <Content Include="..\..\..\tastile-icon.ico">
@@ -54,6 +46,15 @@
     <Exec
       Command="cargo build -p tastile-daemon --release --target $(DaemonRustTarget)"
       WorkingDirectory="$(MSBuildThisFileDirectory)..\..\..\tastile-core" />
+  </Target>
+
+  <Target Name="BundleDaemonBinary" BeforeTargets="CopyFilesToOutputDirectory">
+    <Message Text="Copying tastile-daemon.exe into desktop output..." Importance="high" />
+    <Copy
+      SourceFiles="$(MSBuildThisFileDirectory)$(DaemonBinaryPath)"
+      DestinationFiles="$(TargetDir)tastile-daemon.exe"
+      SkipUnchangedFiles="false"
+      Condition="Exists('$(MSBuildThisFileDirectory)$(DaemonBinaryPath)')" />
   </Target>
 
   <Target Name="VerifyBundledDaemon" AfterTargets="CopyFilesToOutputDirectory">
