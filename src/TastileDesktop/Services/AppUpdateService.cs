@@ -34,10 +34,16 @@ public sealed class AppUpdateService
             }
 
             var hasUpdate = CompareVersions(manifest.LatestVersion, currentVersion) > 0;
+            if (!Uri.TryCreate(manifest.DownloadUrl, UriKind.Absolute, out var downloadUri) ||
+                !string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+            {
+                return new AppUpdateInfo(false, currentVersion, string.Empty, null);
+            }
+
             return new AppUpdateInfo(
                 HasUpdate: hasUpdate,
                 LatestVersion: manifest.LatestVersion,
-                DownloadUrl: manifest.DownloadUrl,
+                DownloadUrl: downloadUri.ToString(),
                 Notes: manifest.Notes);
         }
         catch (HttpRequestException)

@@ -131,7 +131,7 @@ public partial class App : Application
         {
             if (oauthCallback != null)
             {
-                Log($"Secondary instance received OAuth callback: {oauthCallback}");
+                Log("Secondary instance received OAuth callback");
                 OAuthCallbackHandoff.Store(oauthCallback);
             }
             Log("Another instance is already running. Exiting.");
@@ -153,7 +153,7 @@ public partial class App : Application
             
             if (oauthCallback != null)
             {
-                Log($"Received OAuth callback: {oauthCallback}");
+                Log("Received OAuth callback");
                 await HandleOAuthCallbackAsync(oauthCallback);
                 // Don't exit - ensure daemon is running
             }
@@ -246,7 +246,7 @@ public partial class App : Application
         }
         
         var (code, state) = result.Value;
-        Log($"OAuth code received, state: {state}");
+        Log("OAuth callback parsed");
 
         if (!OAuthCallbackHandoff.MatchesExpectedState(state))
         {
@@ -350,13 +350,19 @@ public partial class App : Application
                     PromptToastDisplayService.Instance.Hide();
                     if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!string.IsNullOrWhiteSpace(update.DownloadUrl))
+                        if (Uri.TryCreate(update.DownloadUrl, UriKind.Absolute, out var downloadUri) &&
+                            string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
                         {
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                             {
-                                FileName = update.DownloadUrl,
+                                FileName = downloadUri.ToString(),
                                 UseShellExecute = true,
                             });
+                        }
+                        else
+                        {
+                            Log("Rejected startup update install because the download URL was invalid.");
+                            return;
                         }
 
                         Shutdown();

@@ -42,7 +42,12 @@ internal static class DaemonCompatibility
             }
 
             var expected = ResolveExpectedSha256(daemonBinaryPath, expectedBinarySha256);
-            if (expected is not null && !string.Equals(payload.BinarySha256, expected, StringComparison.OrdinalIgnoreCase))
+            if (expected is null)
+            {
+                return false;
+            }
+
+            if (!string.Equals(payload.BinarySha256, expected, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }

@@ -210,7 +210,7 @@ public sealed partial class AuthWindow : Window
 
             try
             {
-                var callbackUrl = OAuthCallbackHandoff.Take();
+                var callbackUrl = OAuthCallbackHandoff.Peek();
                 if (!string.IsNullOrWhiteSpace(callbackUrl))
                 {
                     Log("[PollForAuthenticationAsync] Found callback handoff; exchanging code via daemon");
@@ -227,6 +227,7 @@ public sealed partial class AuthWindow : Window
                         var exchanged = await _api.SignInWithOAuthAsync("google", code, "tastile://auth/callback");
                         if (!string.IsNullOrWhiteSpace(exchanged?.AccessToken))
                         {
+                            OAuthCallbackHandoff.ClearCallback();
                             OAuthCallbackHandoff.ClearExpectedState();
                             Log("[PollForAuthenticationAsync] Callback handoff exchange succeeded");
                             return true;
@@ -280,6 +281,7 @@ public sealed partial class AuthWindow : Window
         Log("[OnCancelClick] User cancelled authentication");
         if (!_tcs.Task.IsCompleted)
         {
+            OAuthCallbackHandoff.ClearCallback();
             OAuthCallbackHandoff.ClearExpectedState();
             _tcs.TrySetResult(new AuthResult 
             { 
@@ -313,6 +315,7 @@ public sealed partial class AuthWindow : Window
     {
         if (!_tcs.Task.IsCompleted)
         {
+            OAuthCallbackHandoff.ClearCallback();
             OAuthCallbackHandoff.ClearExpectedState();
             _tcs.TrySetResult(new AuthResult
             {

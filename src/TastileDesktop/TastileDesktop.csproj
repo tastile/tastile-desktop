@@ -50,11 +50,13 @@
 
   <Target Name="BundleDaemonBinary" BeforeTargets="CopyFilesToOutputDirectory">
     <Message Text="Copying tastile-daemon.exe into desktop output..." Importance="high" />
+    <Error
+      Text="Bundled tastile-daemon.exe is missing: $(MSBuildThisFileDirectory)$(DaemonBinaryPath)"
+      Condition="!Exists('$(MSBuildThisFileDirectory)$(DaemonBinaryPath)')" />
     <Copy
       SourceFiles="$(MSBuildThisFileDirectory)$(DaemonBinaryPath)"
       DestinationFiles="$(TargetDir)tastile-daemon.exe"
-      SkipUnchangedFiles="false"
-      Condition="Exists('$(MSBuildThisFileDirectory)$(DaemonBinaryPath)')" />
+      SkipUnchangedFiles="false" />
   </Target>
 
   <Target Name="VerifyBundledDaemon" AfterTargets="CopyFilesToOutputDirectory">

@@ -8,6 +8,16 @@ namespace TastileDesktop;
 
 public sealed partial class MainWindow : Window
 {
+    private static readonly HashSet<string> ClockOnlyPropertyNames =
+    [
+        nameof(MainViewModel.MainCountdownText),
+        nameof(MainViewModel.QuickBarTimerText),
+        nameof(MainViewModel.QuickBarProgressValue),
+        nameof(MainViewModel.MainRunningProgressPercent),
+        nameof(MainViewModel.ExecutionStatusDetail),
+        nameof(MainViewModel.QuickPanelLeadingText),
+    ];
+
     private readonly SettingsService _settings = new();
     private readonly NativeQuickPanelWindow _nativePanel;
     private readonly List<Window> _ownedWindows = [];
@@ -54,7 +64,10 @@ public sealed partial class MainWindow : Window
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         DispatcherQueue.TryEnqueue(UpdateQuickPanelUI);
-        RefreshNativePanel();
+        if (string.IsNullOrEmpty(e.PropertyName) || !ClockOnlyPropertyNames.Contains(e.PropertyName))
+        {
+            RefreshNativePanel();
+        }
     }
 
     private void UpdateQuickPanelUI()
@@ -122,31 +135,51 @@ public sealed partial class MainWindow : Window
 
     private async void OnAccountClick(object sender, RoutedEventArgs e)
     {
-        if (!AuthService.Instance.IsAuthenticated)
+        try
         {
-            var authWindow = new AuthWindow(ViewModel.ApiClient);
-            authWindow.Activate();
-            var result = await authWindow.AuthResultTask;
-            if (result.Success)
+            if (!AuthService.Instance.IsAuthenticated)
             {
-                await AuthService.Instance.RefreshSessionFromDaemonAsync(ViewModel.ApiClient);
+                var authWindow = new AuthWindow(ViewModel.ApiClient);
+                authWindow.Activate();
+                var result = await authWindow.AuthResultTask;
+                if (result.Success)
+                {
+                    await AuthService.Instance.RefreshSessionFromDaemonAsync(ViewModel.ApiClient);
+                    await ViewModel.RefreshAsync();
+                    ViewModel.StatusMessage = "Signed in";
+                    UpdateAccountUI();
+                }
+                else if (!string.IsNullOrWhiteSpace(result.Error) &&
+                         !string.Equals(result.Error, "Authentication window closed", StringComparison.Ordinal))
+                {
+                    ViewModel.StatusMessage = result.Error;
+                }
+
+                return;
+            }
+
+            await AuthService.Instance.SignOutAsync(ViewModel.ApiClient);
+            try
+            {
                 await ViewModel.RefreshAsync();
-                ViewModel.StatusMessage = "Signed in";
+                ViewModel.StatusMessage = "Signed out";
+            }
+            catch (Exception ex)
+            {
+                Log($"[OnAccountClick] post-signout refresh failed: {ex.Message}");
+                ViewModel.StatusMessage = "Signed out (refresh failed)";
+            }
+            finally
+            {
                 UpdateAccountUI();
             }
-            else if (!string.IsNullOrWhiteSpace(result.Error) &&
-                     !string.Equals(result.Error, "Authentication window closed", StringComparison.Ordinal))
-            {
-                ViewModel.StatusMessage = result.Error;
-            }
-
-            return;
         }
-
-        await AuthService.Instance.SignOutAsync(ViewModel.ApiClient);
-        await ViewModel.RefreshAsync();
-        ViewModel.StatusMessage = "Signed out";
-        UpdateAccountUI();
+        catch (Exception ex)
+        {
+            Log($"[OnAccountClick] failed: {ex.Message}");
+            ViewModel.StatusMessage = $"Authentication failed: {ex.Message}";
+            UpdateAccountUI();
+        }
     }
 
     private async void OnRefreshClick(object sender, RoutedEventArgs e)

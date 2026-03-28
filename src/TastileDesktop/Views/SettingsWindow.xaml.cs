@@ -110,26 +110,42 @@ public sealed partial class SettingsWindow : Window
 
     private async void OnSignInGoogleClick(object sender, RoutedEventArgs e)
     {
-        var authWindow = new AuthWindow(_api);
-        authWindow.Activate();
-        var result = await authWindow.AuthResultTask;
-        if (result.Success)
+        try
         {
-            await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
-            RefreshAuthStatus();
-            return;
-        }
+            var authWindow = new AuthWindow(_api);
+            authWindow.Activate();
+            var result = await authWindow.AuthResultTask;
+            if (result.Success)
+            {
+                await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
+                RefreshAuthStatus();
+                return;
+            }
 
-        if (!string.IsNullOrWhiteSpace(result.Error))
+            if (!string.IsNullOrWhiteSpace(result.Error))
+            {
+                AuthStatusTextBlock.Text = result.Error;
+            }
+        }
+        catch (Exception ex)
         {
-            AuthStatusTextBlock.Text = result.Error;
+            AuthStatusTextBlock.Text = $"Sign-in failed: {ex.Message}";
+            App.DebugLog($"[SettingsWindow] Sign-in failed: {ex}");
         }
     }
 
     private async void OnSignOutClick(object sender, RoutedEventArgs e)
     {
-        await AuthService.Instance.SignOutAsync(_api);
-        RefreshAuthStatus();
+        try
+        {
+            await AuthService.Instance.SignOutAsync(_api);
+            RefreshAuthStatus();
+        }
+        catch (Exception ex)
+        {
+            AuthStatusTextBlock.Text = $"Sign-out failed: {ex.Message}";
+            App.DebugLog($"[SettingsWindow] Sign-out failed: {ex}");
+        }
     }
 
     private async void OnCheckUpdateClick(object sender, RoutedEventArgs e)
@@ -284,13 +300,20 @@ public sealed partial class SettingsWindow : Window
                 PromptToastDisplayService.Instance.Hide();
                 if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (!string.IsNullOrWhiteSpace(update.DownloadUrl))
+                    if (Uri.TryCreate(update.DownloadUrl, UriKind.Absolute, out var downloadUri) &&
+                        (string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(downloadUri.Scheme, "ms-appinstaller", StringComparison.OrdinalIgnoreCase)))
                     {
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
-                            FileName = update.DownloadUrl,
+                            FileName = downloadUri.ToString(),
                             UseShellExecute = true,
                         });
+                    }
+                    else
+                    {
+                        UpdateStatusTextBlock.Text = "Update link is invalid.";
+                        return;
                     }
 
                     ((App)Application.Current).Shutdown();

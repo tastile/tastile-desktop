@@ -202,7 +202,22 @@ public class CoreApiClient
     }
 
     public async Task<TastileDesktop.Models.TileQuotaResponse?> GetTileQuotaAsync()
-        => await _httpClient.GetFromJsonAsync<TastileDesktop.Models.TileQuotaResponse>("/auth/tile-quota");
+    {
+        var response = await _httpClient.GetAsync("/auth/tile-quota");
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
+            if (desktopSession != null)
+            {
+                Log("[GetTileQuotaAsync] Unauthorized from daemon, restoring desktop session and retrying quota check");
+                await RestoreSessionAsync(desktopSession);
+                response = await _httpClient.GetAsync("/auth/tile-quota");
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<TastileDesktop.Models.TileQuotaResponse>();
+    }
 
     public async Task<AuthSession?> GetSessionAsync()
     {

@@ -69,7 +69,7 @@ internal static class OAuthCallbackHandoff
         }
     }
 
-    public static string? Take()
+    public static string? Peek()
     {
         try
         {
@@ -79,12 +79,26 @@ internal static class OAuthCallbackHandoff
             }
 
             var value = File.ReadAllText(CallbackPath).Trim();
-            File.Delete(CallbackPath);
             return string.IsNullOrWhiteSpace(value) ? null : value;
         }
         catch
         {
             return null;
+        }
+    }
+
+    public static void ClearCallback()
+    {
+        try
+        {
+            if (File.Exists(CallbackPath))
+            {
+                File.Delete(CallbackPath);
+            }
+        }
+        catch
+        {
+            // Best-effort cleanup only.
         }
     }
 
@@ -100,11 +114,6 @@ internal static class OAuthCallbackHandoff
         foreach (var pair in uri.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = pair.Split('=', 2);
-            if (parts.Length == 0)
-            {
-                continue;
-            }
-
             if (!string.Equals(Uri.UnescapeDataString(parts[0]), "state", StringComparison.Ordinal))
             {
                 continue;

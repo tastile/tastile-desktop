@@ -59,7 +59,9 @@ public sealed class DaemonCompatibilityTests
             BaseAddress = new Uri("http://localhost:3140"),
         };
 
-        var compatible = await DaemonCompatibility.IsCompatibleAsync(client);
+        var compatible = await DaemonCompatibility.IsCompatibleAsync(
+            client,
+            expectedBinarySha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
         Assert.True(compatible);
     }
@@ -149,6 +151,37 @@ public sealed class DaemonCompatibilityTests
         var compatible = await DaemonCompatibility.IsCompatibleAsync(
             client,
             expectedBinarySha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
+        Assert.False(compatible);
+    }
+
+    [Fact]
+    public async Task IsCompatibleAsync_ReturnsFalse_WhenExpectedShaCannotBeResolved()
+    {
+        using var client = new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsolutePath == "/health")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK);
+            }
+
+            if (request.RequestUri?.AbsolutePath == "/version")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"version\":\"test\",\"app\":\"tastile-daemon\",\"binary_sha256\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"}"),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        };
+
+        var compatible = await DaemonCompatibility.IsCompatibleAsync(
+            client,
+            daemonBinaryPath: Path.Combine(Path.GetTempPath(), $"missing-daemon-{Guid.NewGuid():N}.exe"));
 
         Assert.False(compatible);
     }

@@ -134,6 +134,36 @@ public sealed class AppUpdateServiceTests
         Assert.Equal(string.Empty, result.DownloadUrl);
     }
 
+    [Fact]
+    public async Task CheckForUpdateAsync_ReturnsNoUpdate_WhenManifestDownloadUrlIsNotHttps()
+    {
+        var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsoluteUri == "https://updates.example.com/manifest.json")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "latest_version": "9.9.9",
+                      "download_url": "ms-appinstaller:?source=https://example.com/tastile.appinstaller",
+                      "notes": "Bug fixes"
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        })));
+
+        var result = await service.CheckForUpdateAsync(
+            manifestUrl: "https://updates.example.com/manifest.json",
+            currentVersion: "1.0.0");
+
+        Assert.False(result.HasUpdate);
+        Assert.Equal(string.Empty, result.DownloadUrl);
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

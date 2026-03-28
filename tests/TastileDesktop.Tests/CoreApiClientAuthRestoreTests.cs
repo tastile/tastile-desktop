@@ -132,6 +132,87 @@ public sealed class CoreApiClientAuthRestoreTests
         Assert.Equal(1, exchangeCalls);
     }
 
+    [Fact]
+    public async Task GetTileQuotaAsync_RestoresSessionAndRetries_WhenDaemonReturnsUnauthorized()
+    {
+        var restoreCalls = 0;
+        var quotaCalls = 0;
+        var sessionCalls = 0;
+
+        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (path == "/auth/session")
+            {
+                sessionCalls++;
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "user_id": "user-123",
+                      "email": "user@example.com",
+                      "access_token": "token-123",
+                      "refresh_token": "refresh-123",
+                      "expires_at": "2099-01-01T00:00:00Z"
+                    }
+                    """),
+                };
+            }
+
+            if (path == "/auth/tile-quota")
+            {
+                quotaCalls++;
+                if (quotaCalls == 1)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "plan": "free",
+                      "tile_count": 5,
+                      "max_tiles": 100,
+                      "remaining_tiles": 95,
+                      "limit_reached": false
+                    }
+                    """),
+                };
+            }
+
+            if (path == "/auth/session/restore")
+            {
+                restoreCalls++;
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "user_id": "user-123",
+                      "email": "user@example.com",
+                      "access_token": "token-123",
+                      "refresh_token": "refresh-123",
+                      "expires_at": "2099-01-01T00:00:00Z"
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        var quota = await client.GetTileQuotaAsync();
+
+        Assert.NotNull(quota);
+        Assert.False(quota!.LimitReached);
+        Assert.Equal(2, quotaCalls);
+        Assert.Equal(1, restoreCalls);
+        Assert.Equal(1, sessionCalls);
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
