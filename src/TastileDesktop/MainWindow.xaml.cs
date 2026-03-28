@@ -144,12 +144,8 @@ public sealed partial class MainWindow : Window
         }
 
         await AuthService.Instance.SignOutAsync(ViewModel.ApiClient);
-        UpdateAccountUI();
-        var app = (App)Application.Current;
-        await app.EnsureAuthenticatedAsync(ViewModel.ApiClient, "Sign-out requires immediate Google re-authentication.");
-
         await ViewModel.RefreshAsync();
-        ViewModel.StatusMessage = "Signed in";
+        ViewModel.StatusMessage = "Signed out";
         UpdateAccountUI();
     }
 

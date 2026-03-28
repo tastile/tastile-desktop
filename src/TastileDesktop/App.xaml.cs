@@ -175,7 +175,11 @@ public partial class App : Application
             await AuthService.Instance.InitializeAsync(apiClient);
             if (!AuthService.Instance.IsAuthenticated)
             {
-                await EnsureAuthenticatedAsync(apiClient, "Authentication required before launch.");
+                if (!await EnsureAuthenticatedAsync(apiClient, "Authentication required before launch."))
+                {
+                    Shutdown();
+                    return;
+                }
             }
 
             // Create main window
@@ -184,7 +188,11 @@ public partial class App : Application
             await _mainWindow.InitializeAsync();
             if (!AuthService.Instance.IsAuthenticated)
             {
-                await EnsureAuthenticatedAsync(apiClient, "Main window initialized without session.");
+                if (!await EnsureAuthenticatedAsync(apiClient, "Main window initialized without session."))
+                {
+                    Shutdown();
+                    return;
+                }
             }
 
             Log("MainWindow initialized");
@@ -240,12 +248,19 @@ public partial class App : Application
         var (code, state) = result.Value;
         Log($"OAuth code received, state: {state}");
 
+        if (!OAuthCallbackHandoff.MatchesExpectedState(state))
+        {
+            Log("Ignoring OAuth callback because state did not match the expected value.");
+            return;
+        }
+
         try
         {
             var apiClient = new Services.CoreApiClient();
             var exchange = await apiClient.SignInWithOAuthAsync("google", code, "tastile://auth/callback");
             if (exchange?.AccessToken is { Length: > 0 })
             {
+                OAuthCallbackHandoff.ClearExpectedState();
                 await AuthService.Instance.RefreshSessionFromDaemonAsync(apiClient);
                 Log("OAuth callback processed via daemon exchange");
                 return;
@@ -260,7 +275,7 @@ public partial class App : Application
         Log("OAuth callback stored for handoff fallback");
     }
 
-    public async Task EnsureAuthenticatedAsync(CoreApiClient apiClient, string reason)
+    public async Task<bool> EnsureAuthenticatedAsync(CoreApiClient apiClient, string reason)
     {
         Log($"{reason} Waiting for Google OAuth completion.");
         while (!AuthService.Instance.IsAuthenticated)
@@ -270,12 +285,14 @@ public partial class App : Application
             var authResult = await authWindow.AuthResultTask;
             if (!authResult.Success)
             {
-                await Task.Delay(500);
-                continue;
+                Log($"Authentication aborted: {authResult.Error}");
+                return false;
             }
 
             await AuthService.Instance.RefreshSessionFromDaemonAsync(apiClient);
         }
+
+        return true;
     }
 
     private async Task CheckForUpdatesOnLaunchAsync()

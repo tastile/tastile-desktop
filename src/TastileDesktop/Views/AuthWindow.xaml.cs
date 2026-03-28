@@ -17,6 +17,7 @@ public sealed partial class AuthWindow : Window
     private readonly CoreApiClient _api;
     private readonly TaskCompletionSource<AuthResult> _tcs = new();
     private string? _authUrl;
+    private string? _expectedState;
 
     public Task<AuthResult> AuthResultTask => _tcs.Task;
 
@@ -90,6 +91,8 @@ public sealed partial class AuthWindow : Window
             {
                 authUrl = await _api.StartBrowserAuthAsync("google");
                 _authUrl = authUrl;
+                _expectedState = OAuthCallbackHandoff.ExtractStateFromAuthUrl(authUrl);
+                OAuthCallbackHandoff.StoreExpectedState(_expectedState);
                 Log($"[StartAuthenticationAsync] StartBrowserAuthAsync returned URL: {authUrl}");
             }
             catch (Exception ex)
@@ -214,10 +217,17 @@ public sealed partial class AuthWindow : Window
                     var parsed = ProtocolHandler.ParseOAuthCallback(callbackUrl);
                     if (parsed != null)
                     {
-                        var (code, _) = parsed.Value;
+                        var (code, state) = parsed.Value;
+                        if (!OAuthCallbackHandoff.MatchesExpectedState(state))
+                        {
+                            Log("[PollForAuthenticationAsync] Ignoring callback handoff because OAuth state did not match.");
+                            continue;
+                        }
+
                         var exchanged = await _api.SignInWithOAuthAsync("google", code, "tastile://auth/callback");
                         if (!string.IsNullOrWhiteSpace(exchanged?.AccessToken))
                         {
+                            OAuthCallbackHandoff.ClearExpectedState();
                             Log("[PollForAuthenticationAsync] Callback handoff exchange succeeded");
                             return true;
                         }
@@ -270,6 +280,7 @@ public sealed partial class AuthWindow : Window
         Log("[OnCancelClick] User cancelled authentication");
         if (!_tcs.Task.IsCompleted)
         {
+            OAuthCallbackHandoff.ClearExpectedState();
             _tcs.TrySetResult(new AuthResult 
             { 
                 Success = false, 
@@ -302,6 +313,7 @@ public sealed partial class AuthWindow : Window
     {
         if (!_tcs.Task.IsCompleted)
         {
+            OAuthCallbackHandoff.ClearExpectedState();
             _tcs.TrySetResult(new AuthResult
             {
                 Success = false,

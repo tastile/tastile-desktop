@@ -3,6 +3,7 @@ using Microsoft.UI.Windowing;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
+using System.Threading;
 
 namespace TastileDesktop.Views;
 
@@ -16,6 +17,7 @@ public sealed partial class SettingsWindow : Window
     private readonly CoreApiClient _api = new();
     private readonly AppUpdateService _updateService = new();
     private readonly DispatcherTimer _syncStatusTimer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private readonly SemaphoreSlim _syncRefreshGate = new(1, 1);
 
     public SettingsWindow()
     {
@@ -185,6 +187,11 @@ public sealed partial class SettingsWindow : Window
 
     private async Task RefreshSyncStatusAsync()
     {
+        if (!await _syncRefreshGate.WaitAsync(0))
+        {
+            return;
+        }
+
         try
         {
             var status = await _api.GetSyncStatusAsync();
@@ -228,6 +235,10 @@ public sealed partial class SettingsWindow : Window
             SyncStateTextBlock.Text = "Unavailable";
             SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
             App.DebugLog($"[SyncStatus] Failed to refresh: {ex}");
+        }
+        finally
+        {
+            _syncRefreshGate.Release();
         }
     }
 

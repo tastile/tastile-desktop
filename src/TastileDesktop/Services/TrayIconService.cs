@@ -202,9 +202,11 @@ public class TrayIconService : IDisposable
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
         // Rebuild menu when execution state changes
-        if (e.PropertyName == "ExecutionView" ||
+        if (string.IsNullOrEmpty(e.PropertyName) ||
             e.PropertyName == nameof(MainViewModel.IsWorking) ||
-            e.PropertyName == nameof(MainViewModel.IsOnBreak))
+            e.PropertyName == nameof(MainViewModel.IsOnBreak) ||
+            e.PropertyName == nameof(MainViewModel.ActiveTileTitle) ||
+            e.PropertyName == nameof(MainViewModel.NextUpTitle))
         {
             if (_trayIcon != null)
             {
@@ -213,8 +215,13 @@ public class TrayIconService : IDisposable
         }
         
         // Update icon when connection status changes
-        if (e.PropertyName == nameof(MainViewModel.IsConnected) ||
-            e.PropertyName == nameof(MainViewModel.Tiles))
+        if (string.IsNullOrEmpty(e.PropertyName) ||
+            e.PropertyName == nameof(MainViewModel.IsConnected) ||
+            e.PropertyName == nameof(MainViewModel.Tiles) ||
+            e.PropertyName == nameof(MainViewModel.ActiveTileTitle) ||
+            e.PropertyName == nameof(MainViewModel.NextUpTitle) ||
+            e.PropertyName == nameof(MainViewModel.IsWorking) ||
+            e.PropertyName == nameof(MainViewModel.IsOnBreak))
         {
             UpdateTrayIconStatus();
         }
