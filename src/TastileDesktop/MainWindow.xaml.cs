@@ -145,6 +145,13 @@ public sealed partial class MainWindow : Window
                 if (result.Success)
                 {
                     await AuthService.Instance.RefreshSessionFromDaemonAsync(ViewModel.ApiClient);
+                    if (!AuthService.Instance.IsAuthenticated)
+                    {
+                        ViewModel.StatusMessage = "Signed in, but failed to load session";
+                        UpdateAccountUI();
+                        return;
+                    }
+
                     await ViewModel.RefreshAsync();
                     ViewModel.StatusMessage = "Signed in";
                     UpdateAccountUI();
