@@ -170,7 +170,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private List<TileListItem> _allTiles = new();
     private ObservableCollection<TileListItem> _tiles = new();
     private string _selectedFilter = "All";
-    private ActiveTileResponse? _activeTile;
+    private ExecutionView? _executionView;
     private PendingPromptResponse? _pendingPrompt;
     private bool _isConnected;
     private string _statusMessage = string.Empty;
@@ -252,12 +252,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Tiles.Clear();
         foreach (var tile in source)
             Tiles.Add(tile);
-    }
-
-    public ActiveTileResponse? ActiveTile
-    {
-        get => _activeTile;
-        set => SetProperty(ref _activeTile, value);
     }
 
     public PendingPromptResponse? PendingPrompt
@@ -388,7 +382,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public string PendingPromptSeverity => PendingPrompt?.Prompt?.Severity ?? string.Empty;
     public int? PendingPromptSuggestedMinutes => PendingPrompt?.Prompt?.SuggestedMinutes;
     public bool HasPendingPrompt => PendingPrompt?.Prompt != null;
-    public string MemoPlaceholder => ActiveTile?.Tile != null
+    public string MemoPlaceholder => _executionView?.MainTile != null
         ? "Attach memo to active tile..."
         : "Send a free memo to core...";
 
@@ -409,9 +403,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public Visibility NextUpEmptyVisibility => NextUpTile is null ? Visibility.Visible : Visibility.Collapsed;
     public IReadOnlyList<TileListItem> RunningQuickTiles =>
         _allTiles.Where(t => t.Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase)).ToList();
-    public TileListItem? MainRunningTask =>
-        RunningQuickTiles.FirstOrDefault(t => string.Equals(t.Id, _focusedRunningTileId, StringComparison.OrdinalIgnoreCase))
-        ?? RunningQuickTiles.FirstOrDefault();
+    public TileListItem? MainRunningTask
+    {
+        get
+        {
+            var runningTiles = RunningQuickTiles;
+            if (runningTiles.Count == 0)
+            {
+                return null;
+            }
+
+            var selectedId = RunningTileSelection.SelectMainRunningTileId(
+                runningTiles.Select(tile => new RunningTileSnapshot(tile.Id, tile.Title)).ToList(),
+                _focusedRunningTileId,
+                _executionView?.MainTile?.Id);
+
+            return runningTiles.FirstOrDefault(tile => string.Equals(tile.Id, selectedId, StringComparison.OrdinalIgnoreCase))
+                ?? runningTiles.FirstOrDefault();
+        }
+    }
     
     public bool HasMainRunningTask => MainRunningTask != null;
     public Visibility MainRunningTaskVisibility => HasMainRunningTask ? Visibility.Visible : Visibility.Collapsed;
@@ -422,9 +432,33 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public IReadOnlyList<TileListItem> NextQuickCandidates =>
         _allTiles.Where(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase)).Skip(1).Take(5).ToList();
     public string MainCountdownText =>
-        ActiveTile?.PhaseEndsAt != null && DateTimeOffset.TryParse(ActiveTile.PhaseEndsAt, out var endsAt)
+        _executionView?.MainTileEndsAt != null && DateTimeOffset.TryParse(_executionView.MainTileEndsAt, out var endsAt)
             ? FormatCountdown(endsAt - DateTimeOffset.UtcNow)
             : NextUpTile?.NextStartLabel ?? "00:00";
+
+    public double MainRunningProgressPercent
+    {
+        get
+        {
+            var running = MainRunningTask;
+            if (running is null)
+            {
+                return 0d;
+            }
+
+            if (_executionView?.MainTileStartedAt != null
+                && _executionView?.MainTileEndsAt != null
+                && DateTimeOffset.TryParse(_executionView.MainTileStartedAt, out var startedAt)
+                && DateTimeOffset.TryParse(_executionView.MainTileEndsAt, out var endsAt))
+            {
+                var totalSeconds = Math.Max(1d, (endsAt - startedAt).TotalSeconds);
+                var elapsedSeconds = Math.Clamp((DateTimeOffset.UtcNow - startedAt).TotalSeconds, 0d, totalSeconds);
+                return Math.Round((elapsedSeconds / totalSeconds) * 100d, 1);
+            }
+
+            return running.ProgressPercent;
+        }
+    }
 
     private static string FormatCountdown(TimeSpan remaining)
     {
@@ -452,18 +486,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     // Computed properties for UI state
-    public bool IsIdle => ActiveTile?.Tile == null || 
-                          string.Equals(ActiveTile.Phase, "Idle", StringComparison.OrdinalIgnoreCase);
+    // These values come directly from Core via ExecutionView - do not calculate in UI
+    public bool IsIdle => _executionView?.IsIdle ?? true;
     
-    public bool IsWorking => ActiveTile?.Tile != null && 
-                             string.Equals(ActiveTile.Phase, "Work", StringComparison.OrdinalIgnoreCase);
+    public bool IsWorking => _executionView?.IsWorking ?? false;
     
-    public bool IsOnBreak => ActiveTile?.Tile != null && 
-                             string.Equals(ActiveTile.Phase, "Break", StringComparison.OrdinalIgnoreCase);
+    public bool IsOnBreak => _executionView?.IsOnBreak ?? false;
 
-    public string? ActiveTileTitle => ActiveTile?.Tile?.Title;
+    public string? ActiveTileTitle => _executionView?.MainTile?.Title;
     
-    public string? ActiveTileNextAction => ActiveTile?.Tile?.NextAction;
+    public string? ActiveTileNextAction => _executionView?.MainTile?.NextAction;
 
     public string WorkElapsedText => "N/A"; // Core が計算するため UI 側では不要
 
@@ -481,7 +513,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _pollingService = new PollingService(_api, new DaemonManager());
         
         // Subscribe to polling events
-        _pollingService.ActiveTileChanged += OnActiveTileChanged;
+        _pollingService.ExecutionViewChanged += OnExecutionViewChanged;
         _pollingService.TilesChanged += OnTilesChanged;
         _pollingService.PendingPromptChanged += OnPendingPromptChanged;
         _pollingService.TimelineChanged += OnTimelineChanged;
@@ -500,9 +532,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         await _pollingService.StartAsync();
     }
 
-    private void OnActiveTileChanged(object? sender, ActiveTileResponse? active)
+    private void OnExecutionViewChanged(object? sender, ExecutionView? view)
     {
-        ActiveTile = active;
+        _executionView = view;
         
         // Notify all computed properties changed
         OnPropertyChanged(nameof(IsIdle));
@@ -550,6 +582,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(QuickBarBreakIconVisibility));
         OnPropertyChanged(nameof(QuickBarReadyIconVisibility));
         OnPropertyChanged(nameof(QuickBarOfflineIconVisibility));
+        OnPropertyChanged(nameof(MainCountdownText));
+        OnPropertyChanged(nameof(MainRunningProgressPercent));
     }
 
     private void OnPendingPromptChanged(object? sender, PendingPromptResponse? prompt)
@@ -885,6 +919,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(MainRunningTask));
         OnPropertyChanged(nameof(HasMainRunningTask));
         OnPropertyChanged(nameof(MainRunningTaskVisibility));
+        OnPropertyChanged(nameof(MainRunningProgressPercent));
         OnPropertyChanged(nameof(SecondaryRunningQuickTiles));
         OnPropertyChanged(nameof(NextQuickCandidates));
         OnPropertyChanged(nameof(ExecutionStatusTitle));
@@ -950,6 +985,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         if (string.IsNullOrWhiteSpace(tileId)) return;
         _focusedRunningTileId = tileId;
         OnPropertyChanged(nameof(MainRunningTask));
+        OnPropertyChanged(nameof(MainRunningProgressPercent));
         OnPropertyChanged(nameof(SecondaryRunningQuickTiles));
     }
 
@@ -962,11 +998,39 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         return start.ToString("MM/dd HH:mm");
     }
 
+
+    private async Task<bool> EnsureCreateQuotaAvailableAsync()
+    {
+        try
+        {
+            var quota = await _api.GetTileQuotaAsync();
+            if (quota == null)
+            {
+                StatusMessage = "Error: failed to validate tile limit.";
+                return false;
+            }
+
+            if (quota.LimitReached)
+            {
+                StatusMessage = "Error: free plan limit reached (100 tiles).";
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: failed to validate tile limit ({ex.Message})";
+            return false;
+        }
+    }
+
     [RelayCommand]
     private async Task CreateTileAsync()
     {
         var title = NewTileTitle?.Trim();
         if (string.IsNullOrEmpty(title)) return;
+        if (!await EnsureCreateQuotaAvailableAsync()) return;
 
         try
         {
@@ -1047,13 +1111,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         get
         {
-            if (ActiveTile?.PhaseStartedAt == null || ActiveTile?.PhaseEndsAt == null)
+            if (_executionView?.MainTileStartedAt == null || _executionView?.MainTileEndsAt == null)
             {
                 return 0;
             }
 
-            if (!DateTimeOffset.TryParse(ActiveTile.PhaseStartedAt, out var startedAt) ||
-                !DateTimeOffset.TryParse(ActiveTile.PhaseEndsAt, out var endsAt))
+            if (!DateTimeOffset.TryParse(_executionView.MainTileStartedAt, out var startedAt) ||
+                !DateTimeOffset.TryParse(_executionView.MainTileEndsAt, out var endsAt))
             {
                 return 0;
             }
@@ -1063,7 +1127,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return Math.Round((elapsedSeconds / totalSeconds) * 100d, 1);
         }
     }
-    public Visibility QuickBarProgressVisibility => (IsWorking || IsOnBreak) && ActiveTile?.PhaseEndsAt != null
+    public Visibility QuickBarProgressVisibility => (IsWorking || IsOnBreak) && _executionView?.MainTileEndsAt != null
         ? Visibility.Visible
         : Visibility.Collapsed;
     public Visibility QuickBarPromptIndicatorVisibility => HasPendingPrompt ? Visibility.Visible : Visibility.Collapsed;
@@ -1096,8 +1160,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         get
         {
-            if (ActiveTile?.PhaseEndsAt != null &&
-                DateTimeOffset.TryParse(ActiveTile.PhaseEndsAt, out var endsAt))
+            if (_executionView?.MainTileEndsAt != null &&
+                DateTimeOffset.TryParse(_executionView.MainTileEndsAt, out var endsAt))
             {
                 var label = IsOnBreak ? "Break ends" : IsWorking ? "Block ends" : "Available at";
                 return $"{label} {endsAt.ToLocalTime():HH:mm}";
@@ -1138,6 +1202,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     public Task RefreshAsync() => _pollingService.PollAsync();
+
+    public void NotifyTimeAdvanced()
+    {
+        OnPropertyChanged(nameof(MainCountdownText));
+        OnPropertyChanged(nameof(QuickBarTimerText));
+        OnPropertyChanged(nameof(QuickBarProgressValue));
+        OnPropertyChanged(nameof(MainRunningProgressPercent));
+        OnPropertyChanged(nameof(ExecutionStatusDetail));
+        OnPropertyChanged(nameof(QuickPanelLeadingText));
+    }
 
     [RelayCommand]
     private async Task CompleteTileAsync()
@@ -1224,12 +1298,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _api.AttachMemoAsync(ActiveTile?.Tile?.Id, text);
+            var result = await _api.AttachMemoAsync(_executionView?.MainTile?.Id, text);
             if (result != null && !result.Ok)
                 StatusMessage = $"Error: {result.Error}";
             else
             {
-                StatusMessage = ActiveTile?.Tile != null ? "Memo attached to active tile" : "Global memo sent";
+                StatusMessage = _executionView?.MainTile != null ? "Memo attached to active tile" : "Global memo sent";
                 MemoText = string.Empty;
             }
         }

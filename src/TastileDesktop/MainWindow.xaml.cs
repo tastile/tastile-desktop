@@ -43,7 +43,7 @@ public sealed partial class MainWindow : Window
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         _settings.SettingsChanged += (_, _) => RefreshNativePanel();
         AuthService.Instance.AuthStateChanged += (_, _) => DispatcherQueue.TryEnqueue(UpdateAccountUI);
-        _clockTimer.Tick += (_, _) => UpdateClock();
+        _clockTimer.Tick += (_, _) => OnClockTick();
         _clockTimer.Start();
         Closed += (_, _) => _nativePanel.Dispose();
         UpdateAccountUI();
@@ -144,7 +144,12 @@ public sealed partial class MainWindow : Window
         }
 
         await AuthService.Instance.SignOutAsync(ViewModel.ApiClient);
-        ViewModel.StatusMessage = "Signed out";
+        UpdateAccountUI();
+        var app = (App)Application.Current;
+        await app.EnsureAuthenticatedAsync(ViewModel.ApiClient, "Sign-out requires immediate Google re-authentication.");
+
+        await ViewModel.RefreshAsync();
+        ViewModel.StatusMessage = "Signed in";
         UpdateAccountUI();
     }
 
@@ -320,6 +325,12 @@ public sealed partial class MainWindow : Window
         var now = DateTime.Now;
         DateText.Text = now.ToString("yyyy/MM/dd");
         ClockText.Text = now.ToString("HH:mm:ss");
+    }
+
+    private void OnClockTick()
+    {
+        UpdateClock();
+        ViewModel.NotifyTimeAdvanced();
     }
 
     private void OnQuitClick(object sender, RoutedEventArgs e)

@@ -14,6 +14,8 @@
     <!-- Unpackaged mode for development; set AppxPackage=true for MSIX release -->
     <AppxPackage>false</AppxPackage>
     <WindowsPackageType>None</WindowsPackageType>
+    <DaemonRustTarget>x86_64-pc-windows-msvc</DaemonRustTarget>
+    <DaemonBinaryPath>..\..\..\tastile-core\target\$(DaemonRustTarget)\release\tastile-daemon.exe</DaemonBinaryPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -28,9 +30,9 @@
 
   <!-- Include tastile-daemon.exe in the package -->
   <ItemGroup>
-    <Content Include="..\..\..\tastile-core\target\release\tastile-daemon.exe"
-             Condition="Exists('..\..\..\tastile-core\target\release\tastile-daemon.exe')">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <Content Include="$(DaemonBinaryPath)"
+             Condition="Exists('$(DaemonBinaryPath)')">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
@@ -50,13 +52,13 @@
   <Target Name="BuildBundledDaemon" BeforeTargets="PrepareForBuild">
     <Message Text="Ensuring latest tastile-daemon release build is bundled..." Importance="high" />
     <Exec
-      Command="cargo build -p tastile-daemon --release"
+      Command="cargo build -p tastile-daemon --release --target $(DaemonRustTarget)"
       WorkingDirectory="$(MSBuildThisFileDirectory)..\..\..\tastile-core" />
   </Target>
 
   <Target Name="VerifyBundledDaemon" AfterTargets="CopyFilesToOutputDirectory">
     <Message Text="Verifying bundled tastile-daemon matches latest release build..." Importance="high" />
     <Exec
-      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$release = [System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\..\..\tastile-core\target\release\tastile-daemon.exe'); $bundled = [System.IO.Path]::GetFullPath('$(TargetDir)tastile-daemon.exe'); if (!(Test-Path $release)) { throw ('release tastile-daemon.exe is missing: ' + $release) }; if (!(Test-Path $bundled)) { throw ('bundled tastile-daemon.exe is missing: ' + $bundled) }; $sha = [System.Security.Cryptography.SHA256]::Create(); try { $releaseHash = [System.BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes($release))).Replace('-', ''); $bundledHash = [System.BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes($bundled))).Replace('-', ''); } finally { $sha.Dispose() }; if ($releaseHash -ne $bundledHash) { throw ('bundled tastile-daemon.exe is stale: release=' + $releaseHash + ' bundled=' + $bundledHash) }; exit 0&quot;" />
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$release = [System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)$(DaemonBinaryPath)'); $bundled = [System.IO.Path]::GetFullPath('$(TargetDir)tastile-daemon.exe'); if (!(Test-Path $release)) { throw ('release tastile-daemon.exe is missing: ' + $release) }; if (!(Test-Path $bundled)) { throw ('bundled tastile-daemon.exe is missing: ' + $bundled) }; $sha = [System.Security.Cryptography.SHA256]::Create(); try { $releaseHash = [System.BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes($release))).Replace('-', ''); $bundledHash = [System.BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes($bundled))).Replace('-', ''); } finally { $sha.Dispose() }; if ($releaseHash -ne $bundledHash) { throw ('bundled tastile-daemon.exe is stale: release=' + $releaseHash + ' bundled=' + $bundledHash) }; exit 0&quot;" />
   </Target>
 </Project>

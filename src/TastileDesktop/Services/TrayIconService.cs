@@ -131,7 +131,7 @@ public class TrayIconService : IDisposable
         menu.Items.Add(quickCreateItem);
 
         // Current tile status (disabled)
-        var currentTile = _viewModel.ActiveTile?.Tile?.Title ?? "No active tile";
+        var currentTile = _viewModel.ActiveTileTitle ?? "No active tile";
         var statusItem = new MenuFlyoutItem
         {
             Text = $"Current: {currentTile}",
@@ -201,8 +201,8 @@ public class TrayIconService : IDisposable
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // Rebuild menu when active tile changes
-        if (e.PropertyName == nameof(MainViewModel.ActiveTile) ||
+        // Rebuild menu when execution state changes
+        if (e.PropertyName == "ExecutionView" ||
             e.PropertyName == nameof(MainViewModel.IsWorking) ||
             e.PropertyName == nameof(MainViewModel.IsOnBreak))
         {
@@ -358,7 +358,16 @@ public class TrayIconService : IDisposable
         {
             var title = textBox.Text?.Trim();
             if (!string.IsNullOrEmpty(title))
+            {
+                var quota = await _api.GetTileQuotaAsync();
+                if (quota?.LimitReached == true)
+                {
+                    _viewModel.StatusMessage = "Error: free plan limit reached (100 tiles).";
+                    return;
+                }
+
                 await _api.CreateTileAsync(title);
+            }
         }
     }
 

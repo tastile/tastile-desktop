@@ -14,7 +14,7 @@ public class PollingService : IDisposable
     private readonly DispatcherTimer _timer;
     private readonly DaemonManager _daemonManager;
     
-    private ActiveTileResponse? _lastActiveTile;
+    private ExecutionView? _lastExecutionView;
     private TilesResponse? _lastTiles;
     private PendingPromptResponse? _lastPrompt;
     private TimelineTodayResponse? _lastTimeline;
@@ -23,12 +23,12 @@ public class PollingService : IDisposable
     
     // UI更新のthrottle用
     private readonly object _pendingChangesLock = new();
-    private bool _hasActiveTileChange;
+    private bool _hasExecutionViewChange;
     private bool _hasTilesChange;
     private bool _hasPromptChange;
     private bool _hasTimelineChange;
     private bool _hasConnectionChange;
-    private ActiveTileResponse? _pendingActiveTile;
+    private ExecutionView? _pendingExecutionView;
     private TilesResponse? _pendingTiles;
     private PendingPromptResponse? _pendingPrompt;
     private TimelineTodayResponse? _pendingTimeline;
@@ -36,9 +36,10 @@ public class PollingService : IDisposable
     private readonly DispatcherTimer _uiUpdateTimer;
 
     /// <summary>
-/// Raised when the active tile changes (new tile, phase change, etc.)
+    /// Raised when execution state changes (work/break/idle status, main tile, etc.)
+    /// This is derived from Core and should be used directly by UI without calculation.
     /// </summary>
-    public event EventHandler<ActiveTileResponse?>? ActiveTileChanged;
+    public event EventHandler<ExecutionView?>? ExecutionViewChanged;
     
     /// <summary>
     /// Raised when the tiles list changes.
@@ -61,9 +62,10 @@ public class PollingService : IDisposable
     public event EventHandler<bool>? ConnectionStatusChanged;
 
     /// <summary>
-    /// Current cached active tile.
+    /// Current execution state derived from Core (tiles are the only truth).
+    /// UI should use this directly - do not calculate IsWorking/IsOnBreak/IsIdle.
     /// </summary>
-    public ActiveTileResponse? CurrentActiveTile => _lastActiveTile;
+    public ExecutionView? CurrentExecutionView => _lastExecutionView;
     
     /// <summary>
     /// Current cached tiles.
@@ -124,12 +126,12 @@ public class PollingService : IDisposable
                 ConnectionStatusChanged?.Invoke(this, _pendingConnectionState);
             }
 
-            if (_hasActiveTileChange)
+            if (_hasExecutionViewChange)
             {
-                _hasActiveTileChange = false;
-                _lastActiveTile = _pendingActiveTile;
-                System.Diagnostics.Debug.WriteLine($"[UI Update] ActiveTile: phase={_pendingActiveTile?.Phase}, tile={_pendingActiveTile?.Tile?.Title}");
-                ActiveTileChanged?.Invoke(this, _pendingActiveTile);
+                _hasExecutionViewChange = false;
+                _lastExecutionView = _pendingExecutionView;
+                System.Diagnostics.Debug.WriteLine($"[UI Update] ExecutionView: isWorking={_pendingExecutionView?.IsWorking}, isOnBreak={_pendingExecutionView?.IsOnBreak}, isIdle={_pendingExecutionView?.IsIdle}, mainTile={_pendingExecutionView?.MainTile?.Title}");
+                ExecutionViewChanged?.Invoke(this, _pendingExecutionView);
             }
 
             if (_hasTilesChange)
@@ -211,7 +213,11 @@ public class PollingService : IDisposable
 
             try
             {
-                await _api.TriggerSyncAsync();
+                // Avoid spurious "sync failed" when daemon rejects unauthenticated sync endpoints.
+                if (AuthService.Instance.IsAuthenticated)
+                {
+                    await _api.TriggerSyncAsync();
+                }
             }
             catch
             {
@@ -219,28 +225,29 @@ public class PollingService : IDisposable
             }
 
             // Fetch data in parallel
-            var activeTask = _api.GetActiveTileAsync();
+            var executionViewTask = _api.GetExecutionViewAsync();
             var tilesTask = _api.GetTilesAsync();
             var promptTask = _api.GetPendingPromptAsync();
             var timelineTask = _api.GetTodayTimelineAsync();
-            await Task.WhenAll(activeTask, tilesTask, promptTask, timelineTask);
+            await Task.WhenAll(executionViewTask, tilesTask, promptTask, timelineTask);
 
-            var active = activeTask.Result;
+            var executionView = executionViewTask.Result;
             var tiles = tilesTask.Result;
             var prompt = promptTask.Result;
             var timeline = timelineTask.Result;
 
             // Check for changes and mark pending (UI更新は別スレッドで throttle)
-            if (HasActiveTileChanged(_lastActiveTile, active))
+            // ExecutionView comes from Core - UI should use it directly without calculation
+            if (executionView != null && HasExecutionViewChanged(_lastExecutionView, executionView))
             {
                 lock (_pendingChangesLock)
                 {
-                    _hasActiveTileChange = true;
-                    _pendingActiveTile = active;
+                    _hasExecutionViewChange = true;
+                    _pendingExecutionView = executionView;
                 }
             }
 
-            if (HasTilesChanged(_lastTiles, tiles))
+            if (tiles != null && HasTilesChanged(_lastTiles, tiles))
             {
                 lock (_pendingChangesLock)
                 {
@@ -249,7 +256,7 @@ public class PollingService : IDisposable
                 }
             }
 
-            if (HasPromptChanged(_lastPrompt, prompt))
+            if (prompt != null && HasPromptChanged(_lastPrompt, prompt))
             {
                 lock (_pendingChangesLock)
                 {
@@ -258,7 +265,7 @@ public class PollingService : IDisposable
                 }
             }
 
-            if (HasTimelineChanged(_lastTimeline, timeline))
+            if (timeline != null && HasTimelineChanged(_lastTimeline, timeline))
             {
                 lock (_pendingChangesLock)
                 {
@@ -285,16 +292,19 @@ public class PollingService : IDisposable
         }
     }
 
-    private static bool HasActiveTileChanged(ActiveTileResponse? old, ActiveTileResponse? current)
+    private static bool HasExecutionViewChanged(ExecutionView? old, ExecutionView? current)
     {
         if (old == null && current == null) return false;
         if (old == null || current == null) return true;
         
-        return old.Phase != current.Phase
-            || old.PhaseStartedAt != current.PhaseStartedAt
-            || old.PhaseEndsAt != current.PhaseEndsAt
-            || (old.Tile?.Id != current.Tile?.Id)
-            || (old.Tile?.Title != current.Tile?.Title);
+        return old.IsWorking != current.IsWorking
+            || old.IsOnBreak != current.IsOnBreak
+            || old.IsIdle != current.IsIdle
+            || (old.MainTile?.Id != current.MainTile?.Id)
+            || (old.MainTile?.Title != current.MainTile?.Title)
+            || old.MainTileStartedAt != current.MainTileStartedAt
+            || old.MainTileEndsAt != current.MainTileEndsAt
+            || old.PendingPromptId != current.PendingPromptId;
     }
 
     private string? _lastTilesHash;

@@ -48,7 +48,7 @@ public class DaemonManager : IDisposable
     public async Task<bool> EnsureRunningAsync()
     {
         // If a compatible daemon is already running, reuse it.
-        if (await DaemonCompatibility.IsCompatibleAsync(_http))
+        if (await DaemonCompatibility.IsCompatibleAsync(_http, daemonBinaryPath: _daemonPath))
         {
             return true;
         }
@@ -112,7 +112,7 @@ public class DaemonManager : IDisposable
     {
         try
         {
-            return await DaemonCompatibility.IsCompatibleAsync(_http);
+            return await DaemonCompatibility.IsCompatibleAsync(_http, daemonBinaryPath: _daemonPath);
         }
         catch
         {

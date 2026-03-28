@@ -1,17 +1,20 @@
+.vs/
+.idea/
 bin/
 obj/
-.vs/
+artifacts/
+TestResults/
+.deps/
+
 *.user
 *.suo
 *.DotSettings.user
-packages/
 *.nupkg
-.idea/
-
-
-# Added by cargo
-
-/target
-
-# MSBuild binary logs
 *.binlog
+*.log
+*.pfx
+
+packages/
+target/
+
+AGENTS.md

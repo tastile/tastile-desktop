@@ -13,20 +13,23 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="Transparent">
-            <TextBlock Text="Authentication" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+        <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="{StaticResource AppSurface0Brush}">
+            <TextBlock Text="Google sign-in" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
         </Grid>
 
         <Grid Grid.Row="1" Padding="{StaticResource WindowPagePadding}">
-            <Border Style="{StaticResource WindowCardBorderStyle}" Padding="24" MaxWidth="420" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border Style="{StaticResource WindowCardBorderStyle}" Padding="24" MaxWidth="420" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="280">
                 <StackPanel Spacing="16">
-                    <ProgressRing IsActive="True" Width="40" Height="40" HorizontalAlignment="Center" />
+                    <ProgressRing IsActive="True" Width="40" Height="40" HorizontalAlignment="Center" Foreground="{StaticResource AppPrimaryBrush}" />
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Waiting for authentication" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
-                        <TextBlock Text="Complete the sign-in flow in your browser. This window will close automatically after the daemon confirms the session." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" />
+                        <TextBlock Text="Sign in with Google" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
+                        <TextBlock Text="We opened your browser. Complete Google sign-in there, then return here." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" />
                     </StackPanel>
-                    <TextBlock x:Name="StatusTextBlock" Text="" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundMutedBrush}" TextAlignment="Center" />
-                    <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClick" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="StatusTextBlock" Text="Waiting for Google authentication..." TextWrapping="Wrap" Foreground="{StaticResource AppForegroundSubtleBrush}" TextAlignment="Center" />
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                        <Button x:Name="OpenBrowserButton" Content="Open browser again" Click="OnOpenBrowserClick" />
+                        <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClick" />
+                    </StackPanel>
                 </StackPanel>
             </Border>
         </Grid>

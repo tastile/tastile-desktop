@@ -3,6 +3,7 @@ using Microsoft.UI.Dispatching;
 using TastileDesktop.Services;
 using System.Runtime.InteropServices;
 using Microsoft.Toolkit.Uwp.Notifications;
+using TastileDesktop.Views;
 
 namespace TastileDesktop;
 
@@ -32,6 +33,7 @@ public partial class App : Application
     private TrayIconService? _trayIconService;
     private DaemonManager? _daemonManager;
     private readonly SettingsService _settingsService = new();
+    private readonly AppUpdateService _appUpdateService = new();
     private readonly SystemAppearanceService _appearanceService = SystemAppearanceService.Instance;
     private bool _isShuttingDown = false;
     public MainWindow? MainWindowInstance => _mainWindow;
@@ -118,12 +120,20 @@ public partial class App : Application
 
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
+        var cmdArgs = Environment.GetCommandLineArgs();
+        var oauthCallback = cmdArgs.FirstOrDefault(a => a.StartsWith("tastile://", StringComparison.OrdinalIgnoreCase));
+
         // シングルインスタンスチェック
         bool createdNew;
         _singleInstanceMutex = new Mutex(true, MutexName, out createdNew);
         
         if (!createdNew)
         {
+            if (oauthCallback != null)
+            {
+                Log($"Secondary instance received OAuth callback: {oauthCallback}");
+                OAuthCallbackHandoff.Store(oauthCallback);
+            }
             Log("Another instance is already running. Exiting.");
             // 既存インスタンスにフォーカスを送る（将来実装）
             Exit();
@@ -140,10 +150,6 @@ public partial class App : Application
                 Log("Registering tastile:// protocol...");
                 ProtocolHandler.RegisterProtocol();
             }
-            
-            // Check if launched via custom URL (OAuth callback)
-            var cmdArgs = Environment.GetCommandLineArgs();
-            var oauthCallback = cmdArgs.FirstOrDefault(a => a.StartsWith("tastile://"));
             
             if (oauthCallback != null)
             {
@@ -165,19 +171,33 @@ public partial class App : Application
                 Log("WARNING: Daemon failed to start - app will use mock mode");
             }
             
+            var apiClient = new Services.CoreApiClient();
+            await AuthService.Instance.InitializeAsync(apiClient);
+            if (!AuthService.Instance.IsAuthenticated)
+            {
+                await EnsureAuthenticatedAsync(apiClient, "Authentication required before launch.");
+            }
+
             // Create main window
             _mainWindow = new MainWindow();
             Log("MainWindow created");
             await _mainWindow.InitializeAsync();
+            if (!AuthService.Instance.IsAuthenticated)
+            {
+                await EnsureAuthenticatedAsync(apiClient, "Main window initialized without session.");
+            }
+
             Log("MainWindow initialized");
             ApplyAppearance(_appearanceService.GetCurrentSnapshot());
             
             // Setup tray icon
             Log("Creating TrayIconService...");
-            _trayIconService = new TrayIconService(_mainWindow.ViewModel, new Services.CoreApiClient());
+            _trayIconService = new TrayIconService(_mainWindow.ViewModel, apiClient);
             Log("Initializing tray icon...");
             _trayIconService.Initialize(_mainWindow);
             Log("Tray icon initialized");
+
+            _ = CheckForUpdatesOnLaunchAsync();
             
             // Handle window close to minimize to tray instead
             _mainWindow.Closed += OnMainWindowClosed;
@@ -219,11 +239,118 @@ public partial class App : Application
         
         var (code, state) = result.Value;
         Log($"OAuth code received, state: {state}");
-        
-        // TODO: Send code and state to daemon to complete OAuth
-        // For now, just log it
-        await Task.Delay(100);
-        Log("OAuth callback processed");
+
+        try
+        {
+            var apiClient = new Services.CoreApiClient();
+            var exchange = await apiClient.SignInWithOAuthAsync("google", code, "tastile://auth/callback");
+            if (exchange?.AccessToken is { Length: > 0 })
+            {
+                await AuthService.Instance.RefreshSessionFromDaemonAsync(apiClient);
+                Log("OAuth callback processed via daemon exchange");
+                return;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log($"OAuth callback exchange failed: {ex.Message}");
+        }
+
+        OAuthCallbackHandoff.Store(callbackUrl);
+        Log("OAuth callback stored for handoff fallback");
+    }
+
+    public async Task EnsureAuthenticatedAsync(CoreApiClient apiClient, string reason)
+    {
+        Log($"{reason} Waiting for Google OAuth completion.");
+        while (!AuthService.Instance.IsAuthenticated)
+        {
+            var authWindow = new AuthWindow(apiClient);
+            authWindow.Activate();
+            var authResult = await authWindow.AuthResultTask;
+            if (!authResult.Success)
+            {
+                await Task.Delay(500);
+                continue;
+            }
+
+            await AuthService.Instance.RefreshSessionFromDaemonAsync(apiClient);
+        }
+    }
+
+    private async Task CheckForUpdatesOnLaunchAsync()
+    {
+        try
+        {
+            var settings = _settingsService.Current;
+            var manifestUrl = settings.UpdateManifestUrl;
+            if (string.IsNullOrWhiteSpace(manifestUrl))
+            {
+                return;
+            }
+
+            var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
+            var update = await _appUpdateService.CheckForUpdateAsync(manifestUrl, currentVersion);
+            if (!_appUpdateService.ShouldPromptForUpdate(update, settings.IgnoredUpdateVersion))
+            {
+                return;
+            }
+
+            ShowStartupUpdateToast(update);
+        }
+        catch (Exception ex)
+        {
+            Log($"Update check failed: {ex.Message}");
+        }
+    }
+
+    private void ShowStartupUpdateToast(AppUpdateInfo update)
+    {
+        var prompt = new Models.PromptView(
+            PromptId: $"startup-update-{Guid.NewGuid():N}",
+            Kind: "app_update",
+            Severity: "info",
+            TileId: null,
+            Title: $"Update available: {update.LatestVersion}",
+            Body: string.IsNullOrWhiteSpace(update.Notes) ? "Restart to install the latest version." : update.Notes,
+            Why: "A newer version is available.",
+            SuggestedMinutes: null,
+            Actions:
+            [
+                new Models.PromptActionView("install_update", "Restart & Install"),
+                new Models.PromptActionView("ignore_update", "Ignore"),
+            ],
+            ExpiresAt: null,
+            Stale: false);
+
+        DispatcherQueue.GetForCurrentThread()?.TryEnqueue(() =>
+        {
+            PromptToastDisplayService.Instance.ShowPrompt(
+                prompt,
+                maxActions: 2,
+                async actionId =>
+                {
+                    PromptToastDisplayService.Instance.Hide();
+                    if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (!string.IsNullOrWhiteSpace(update.DownloadUrl))
+                        {
+                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                            {
+                                FileName = update.DownloadUrl,
+                                UseShellExecute = true,
+                            });
+                        }
+
+                        Shutdown();
+                    }
+                    else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _settingsService.Update(s => s.IgnoredUpdateVersion = update.LatestVersion);
+                    }
+                    await Task.CompletedTask;
+                });
+        });
     }
 
     private void OnMainWindowClosed(object sender, WindowEventArgs args)

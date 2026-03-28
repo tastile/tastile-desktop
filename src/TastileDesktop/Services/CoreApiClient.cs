@@ -2,6 +2,7 @@ namespace TastileDesktop.Services;
 
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Diagnostics;
@@ -71,12 +72,42 @@ public class CoreApiClient
     public async Task TriggerSyncAsync()
     {
         var response = await _httpClient.PostAsync("/sync/trigger", null);
+        if (response.IsSuccessStatusCode)
+        {
+            return;
+        }
+
+        // Daemon auth session is in-memory only; after daemon restart we may need
+        // to restore desktop-held session before retrying sync.
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
+            if (desktopSession != null)
+            {
+                Log("[TriggerSyncAsync] Unauthorized from daemon, restoring desktop session and retrying sync");
+                await RestoreSessionAsync(desktopSession);
+
+                var retry = await _httpClient.PostAsync("/sync/trigger", null);
+                retry.EnsureSuccessStatusCode();
+                return;
+            }
+        }
+
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<SyncStatusResponse?> GetSyncStatusAsync()
+        => await _httpClient.GetFromJsonAsync<SyncStatusResponse>("/sync/status");
 
     // Read endpoints
     public async Task<TilesResponse?> GetTilesAsync()
         => await _httpClient.GetFromJsonAsync<TilesResponse>("/read/tiles");
+
+    public async Task<ExecutionView?> GetExecutionViewAsync()
+        => await _httpClient.GetFromJsonAsync<ExecutionView>("/read/execution-view");
+
+    public async Task<TilesInProgressResponse?> GetTilesInProgressAsync()
+        => await _httpClient.GetFromJsonAsync<TilesInProgressResponse>("/read/tiles-in-progress");
 
     public async Task<ActiveTileResponse?> GetActiveTileAsync()
         => await _httpClient.GetFromJsonAsync<ActiveTileResponse>("/read/active-tile");
@@ -103,7 +134,7 @@ public class CoreApiClient
 
     // Command endpoints
     public async Task<CommandResponse?> CreateTileAsync(string title, string? nextAction = null, string? doneDefinition = null)
-        => await CreateTileAsync(new CreateTileRequest(title, nextAction, doneDefinition, null, null, null, null, null));
+        => await CreateTileAsync(new CreateTileRequest(title, nextAction, doneDefinition, null, null, null, null, null, null));
 
     public async Task<CommandResponse?> CreateTileAsync(CreateTileRequest request)
         => await PostCommandAsync("/commands/tile/create", request);
@@ -164,25 +195,14 @@ public class CoreApiClient
     }
 
     // Auth endpoints
-    public async Task<AuthSession?> SignInAsync(string email, string password)
-    {
-        var response = await _httpClient.PostAsJsonAsync("/auth/signin", new { email, password });
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<AuthSession>();
-    }
-
-    public async Task<AuthSession?> SignUpAsync(string email, string password)
-    {
-        var response = await _httpClient.PostAsJsonAsync("/auth/signup", new { email, password });
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<AuthSession>();
-    }
-
     public async Task SignOutAsync()
     {
         var response = await _httpClient.PostAsync("/auth/signout", null);
         response.EnsureSuccessStatusCode();
     }
+
+    public async Task<TastileDesktop.Models.TileQuotaResponse?> GetTileQuotaAsync()
+        => await _httpClient.GetFromJsonAsync<TastileDesktop.Models.TileQuotaResponse>("/auth/tile-quota");
 
     public async Task<AuthSession?> GetSessionAsync()
     {
@@ -235,11 +255,10 @@ public class CoreApiClient
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/callback", new 
-            { 
-                provider, 
-                code, 
-                redirect_uri = redirectUri 
+            // Daemon API uses /auth/oauth/exchange for client-managed callback flows.
+            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/exchange", new
+            {
+                code,
             });
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<OAuthTokenResponse>();
@@ -336,4 +355,40 @@ public class OAuthUser
     
     [JsonPropertyName("user_metadata")]
     public Dictionary<string, object>? UserMetadata { get; set; }
+}
+
+public class SyncStatusResponse
+{
+    [JsonPropertyName("in_progress")]
+    public bool InProgress { get; set; }
+
+    [JsonPropertyName("last_attempt_at")]
+    public string? LastAttemptAt { get; set; }
+
+    [JsonPropertyName("last_success_at")]
+    public string? LastSuccessAt { get; set; }
+
+    [JsonPropertyName("last_error")]
+    public string? LastError { get; set; }
+
+    [JsonPropertyName("last_result")]
+    public SyncResultResponse? LastResult { get; set; }
+}
+
+public class SyncResultResponse
+{
+    [JsonPropertyName("uploaded")]
+    public int Uploaded { get; set; }
+
+    [JsonPropertyName("downloaded")]
+    public int Downloaded { get; set; }
+
+    [JsonPropertyName("failed")]
+    public int Failed { get; set; }
+
+    [JsonPropertyName("conflicts")]
+    public int Conflicts { get; set; }
+
+    [JsonPropertyName("applied")]
+    public int Applied { get; set; }
 }

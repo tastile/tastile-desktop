@@ -56,11 +56,11 @@ public class InterventionEngine : IDisposable
     {
         if (_interventionWindow != null) return;
 
-        var active = _pollingService.CurrentActiveTile;
+        var executionView = _pollingService.CurrentExecutionView;
         var window = new InterventionWindow(
             InterventionType.Work,
-            active?.Tile?.Title ?? prompt.Title,
-            active?.PhaseStartedAt,
+            executionView?.MainTile?.Title ?? prompt.Title,
+            executionView?.MainTileStartedAt,
             _pollingService.CurrentTiles);
 
         window.ActionTaken += async (sender, action) =>

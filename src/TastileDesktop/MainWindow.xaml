@@ -69,7 +69,7 @@
                                            Foreground="{ThemeResource PrimaryForegroundBrush}"
                                            TextTrimming="CharacterEllipsis" />
                                 <ProgressBar Height="3" Margin="0,3,0,0" Minimum="0" Maximum="100"
-                                             Value="{x:Bind ViewModel.MainRunningTask.ProgressPercent, Mode=OneWay}" />
+                                             Value="{x:Bind ViewModel.MainRunningProgressPercent, Mode=OneWay}" />
                             </StackPanel>
                         </Grid>
                     </Border>

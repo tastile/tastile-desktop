@@ -16,6 +16,7 @@ public sealed partial class AuthWindow : Window
 {
     private readonly CoreApiClient _api;
     private readonly TaskCompletionSource<AuthResult> _tcs = new();
+    private string? _authUrl;
 
     public Task<AuthResult> AuthResultTask => _tcs.Task;
 
@@ -88,6 +89,7 @@ public sealed partial class AuthWindow : Window
             try
             {
                 authUrl = await _api.StartBrowserAuthAsync("google");
+                _authUrl = authUrl;
                 Log($"[StartAuthenticationAsync] StartBrowserAuthAsync returned URL: {authUrl}");
             }
             catch (Exception ex)
@@ -118,12 +120,7 @@ public sealed partial class AuthWindow : Window
             Log($"[StartAuthenticationAsync] Opening browser with URL: {authUrl}");
             try
             {
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = authUrl,
-                    UseShellExecute = true
-                };
-                System.Diagnostics.Process.Start(psi);
+                OpenBrowser(authUrl);
                 Log("[StartAuthenticationAsync] Browser opened successfully");
             }
             catch (Exception ex)
@@ -210,6 +207,23 @@ public sealed partial class AuthWindow : Window
 
             try
             {
+                var callbackUrl = OAuthCallbackHandoff.Take();
+                if (!string.IsNullOrWhiteSpace(callbackUrl))
+                {
+                    Log("[PollForAuthenticationAsync] Found callback handoff; exchanging code via daemon");
+                    var parsed = ProtocolHandler.ParseOAuthCallback(callbackUrl);
+                    if (parsed != null)
+                    {
+                        var (code, _) = parsed.Value;
+                        var exchanged = await _api.SignInWithOAuthAsync("google", code, "tastile://auth/callback");
+                        if (!string.IsNullOrWhiteSpace(exchanged?.AccessToken))
+                        {
+                            Log("[PollForAuthenticationAsync] Callback handoff exchange succeeded");
+                            return true;
+                        }
+                    }
+                }
+
                 Log($"[PollForAuthenticationAsync] About to call IsAuthenticatedAsync...");
                 var isAuthenticated = await _api.IsAuthenticatedAsync();
                 Log($"[PollForAuthenticationAsync] IsAuthenticatedAsync returned: {isAuthenticated}");
@@ -242,7 +256,7 @@ public sealed partial class AuthWindow : Window
             {
                 StatusTextBlock.Text = $"Error: {message}";
                 StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                    Windows.UI.Color.FromArgb(255, 239, 68, 68));
+                    ThemeManager.GetColor("AppPrimaryBrush"));
             }
             catch (Exception ex)
             {
@@ -265,6 +279,25 @@ public sealed partial class AuthWindow : Window
         this.Close();
     }
 
+    private void OnOpenBrowserClick(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrWhiteSpace(_authUrl))
+        {
+            ShowError("Authentication URL is not ready yet.");
+            return;
+        }
+
+        try
+        {
+            OpenBrowser(_authUrl);
+            StatusTextBlock.Text = "Browser reopened. Complete Google sign-in there.";
+        }
+        catch (Exception ex)
+        {
+            ShowError($"Failed to open browser: {ex.Message}");
+        }
+    }
+
     private void OnWindowClosed(object sender, WindowEventArgs args)
     {
         if (!_tcs.Task.IsCompleted)
@@ -282,5 +315,15 @@ public sealed partial class AuthWindow : Window
         var path = Path.Combine(Path.GetTempPath(), "tastile-desktop-debug.log");
         File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
         Debug.WriteLine(message);
+    }
+
+    private static void OpenBrowser(string url)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = url,
+            UseShellExecute = true
+        };
+        Process.Start(psi);
     }
 }

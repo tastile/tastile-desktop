@@ -146,7 +146,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Toast reminder" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.ToastNotifyMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.ToastNotifyMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -156,7 +156,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Force intervention" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionMinutes, Mode=TwoWay}" Minimum="1" Maximum="120" SpinButtonPlacementMode="Inline" Width="120" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionMinutes, Mode=TwoWay}" Minimum="1" Maximum="120" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -166,7 +166,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Repeat intervention" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionRepeatMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionRepeatMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes after dismissed" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -186,7 +186,7 @@
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Prompt toast max stack" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastMaxVisible, Mode=TwoWay}" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" Width="120" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastMaxVisible, Mode=TwoWay}" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Visible cards at once. New prompts stay on top and older ones wait underneath." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -258,7 +258,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Overlay duration" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptOverlayDurationSeconds, Mode=TwoWay}" Minimum="1" Maximum="15" SpinButtonPlacementMode="Inline" Width="120" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptOverlayDurationSeconds, Mode=TwoWay}" Minimum="1" Maximum="15" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="seconds" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -285,7 +285,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Default break time" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.DefaultBreakMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.DefaultBreakMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -295,9 +295,79 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Idle prompt after" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.IdlePromptMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.IdlePromptMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                </StackPanel>
+
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Account" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                    <TextBlock x:Name="AuthStatusTextBlock" Text="Not signed in" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Sign in with Google" Click="OnSignInGoogleClick" />
+                        <Button Content="Sign out" Click="OnSignOutClick" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Sync" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="State" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncStateTextBlock" Grid.Column="1" Text="Unknown" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Last attempt" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncLastAttemptTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Last success" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncLastSuccessTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                    </Grid>
+
+                    <TextBlock x:Name="SyncLastResultTextBlock" Text="Result: -" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
+                    <TextBlock x:Name="SyncLastErrorTextBlock" Text="Error: -" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Sync now" Click="OnSyncNowClick" />
+                        <Button Content="Refresh status" Click="OnRefreshSyncStatusClick" />
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Updates" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Manifest URL" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" Text="{x:Bind ViewModel.UpdateManifestUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="https://your-project.supabase.co/storage/v1/object/public/updates/manifest.json" />
+                    </Grid>
+                    <TextBlock Text="Supabase Storage の manifest.json を指定してください。" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Check for updates" Click="OnCheckUpdateClick" />
+                    </StackPanel>
+                    <TextBlock x:Name="UpdateStatusTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">

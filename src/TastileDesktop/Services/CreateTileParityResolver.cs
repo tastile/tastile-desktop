@@ -10,14 +10,81 @@ public static class CreateTileParityResolver
 
     public static int? GetAutoDurationMinutes(CreateTileDraft draft)
     {
-        var recurrenceDuration = GetRecurringWindowDurationMinutes(draft);
-        if (recurrenceDuration.HasValue) return recurrenceDuration.Value;
+        var isRecurring = string.Equals(draft.ObjectiveMode, "recurring", StringComparison.Ordinal);
+        if (isRecurring)
+        {
+            var recurrenceDuration = GetRecurringWindowDurationMinutes(draft);
+            if (recurrenceDuration.HasValue) return recurrenceDuration.Value;
+        }
 
         var bounded = GetBoundedDurationMinutes(draft.StartAt, draft.EndAt);
         if (bounded.HasValue) return bounded.Value;
 
         var manual = GetWorkTargetMinutes(draft);
         return manual > 0 ? manual : null;
+    }
+
+    public static CreateTileManualAdjustGuidance GetManualAdjustGuidance(CreateTileRequest request, bool isJapanese)
+    {
+        var focusStart = !string.IsNullOrWhiteSpace(request.Temporal?.FixedStart);
+        var focusEnd = !string.IsNullOrWhiteSpace(request.Temporal?.FixedEnd);
+        if (!focusStart && !focusEnd)
+        {
+            focusStart = true;
+        }
+
+        string message;
+        if (isJapanese)
+        {
+            message = focusStart && focusEnd
+                ? "開始と終了の日時を手動で調整してください。"
+                : focusStart
+                    ? "開始日時を手動で調整してください。"
+                    : "終了日時を手動で調整してください。";
+        }
+        else
+        {
+            message = focusStart && focusEnd
+                ? "Please adjust start and end time manually."
+                : focusStart
+                    ? "Please adjust the start time manually."
+                    : "Please adjust the end time manually.";
+        }
+
+        return new CreateTileManualAdjustGuidance(focusStart, focusEnd, message);
+    }
+
+    public static PromptView BuildCreateConflictToastPrompt(CreateConflictPrompt prompt, bool isJapanese)
+    {
+        var actions = (prompt.Options ?? [])
+            .Where(static option => !string.IsNullOrWhiteSpace(option.Id))
+            .Select(static option => new PromptActionView(option.Id, string.IsNullOrWhiteSpace(option.Label) ? option.Id : option.Label))
+            .ToList();
+
+        if (!actions.Any(static action => string.Equals(action.Id, "cancel_create", StringComparison.OrdinalIgnoreCase)))
+        {
+            actions.Add(new PromptActionView("cancel_create", isJapanese ? "作成を中止" : "Cancel create"));
+        }
+
+        var title = string.IsNullOrWhiteSpace(prompt.Title)
+            ? (isJapanese ? "時間競合を検知しました" : "Time conflict detected")
+            : prompt.Title;
+        var message = string.IsNullOrWhiteSpace(prompt.Message)
+            ? (isJapanese ? "重なりを検出しました。作成方法を選択してください。" : "Overlap detected. Choose how to proceed.")
+            : prompt.Message;
+
+        return new PromptView(
+            PromptId: $"create-conflict-{Guid.NewGuid():N}",
+            Kind: "create_conflict",
+            Severity: "warning",
+            TileId: null,
+            Title: title!,
+            Body: message!,
+            Why: message!,
+            SuggestedMinutes: null,
+            Actions: actions,
+            ExpiresAt: null,
+            Stale: false);
     }
 
     public static CreateTileRequest BuildRequest(CreateTileDraft draft, bool isJapanese)
@@ -86,7 +153,8 @@ public static class CreateTileParityResolver
             Objective: objective,
             Interruption: interruption,
             Automation: automation,
-            Annotation: annotation);
+            Annotation: annotation,
+            ConflictResolution: null);
     }
 
     public static string GetSuggestedTitle(CreateTileDraft draft, bool isJapanese)

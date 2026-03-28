@@ -7,7 +7,7 @@
     xmlns:controls="using:TastileDesktop.Controls"
     mc:Ignorable="d"
     Title="Create Tile">
-    <Grid Background="{StaticResource AppBackgroundBrush}">
+    <Grid x:Name="RootGrid" Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="32" />
             <RowDefinition Height="*" />
