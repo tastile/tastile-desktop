@@ -29,6 +29,11 @@ public sealed record CreateTileDraft(
     List<string>? Tags = null,
     string? Memo = null);
 
+public sealed record CreateTileManualAdjustGuidance(
+    bool FocusStart,
+    bool FocusEnd,
+    string Message);
+
 public sealed class CreateTileCatalog
 {
     public static CreateTileCatalog Instance { get; } = new();

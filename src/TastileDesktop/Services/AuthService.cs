@@ -37,7 +37,7 @@ public class AuthService
 
     private AuthSession? _currentSession;
 
-    public bool IsAuthenticated => _currentSession != null;
+    public bool IsAuthenticated => IsSessionValid(_currentSession);
     public AuthSession? CurrentSession => _currentSession;
     public string? UserEmail => _currentSession?.Email;
     public string? UserId => _currentSession?.UserId;
@@ -46,8 +46,19 @@ public class AuthService
 
     private AuthService() { }
 
-    private static string SessionFilePath =>
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Tastile", "session.json");
+    private static string SessionFilePath
+    {
+        get
+        {
+            var appData = Environment.GetEnvironmentVariable("APPDATA");
+            if (string.IsNullOrWhiteSpace(appData))
+            {
+                appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            }
+
+            return Path.Combine(appData, "Tastile", "session.json");
+        }
+    }
 
     /// <summary>
     /// Initialize and load existing session.
@@ -56,24 +67,8 @@ public class AuthService
     {
         try
         {
-            // Try to get session from daemon first
+            // Require an active daemon session. Do not silently restore from local file.
             var session = await api.GetSessionAsync();
-
-            // If daemon has no session, try to load from file and restore to daemon
-            if (session == null)
-            {
-                var savedSession = LoadSessionFromFile();
-                if (savedSession != null)
-                {
-                    session = await RestoreSessionToDaemonAsync(api, savedSession);
-                }
-            }
-            else
-            {
-                // If daemon has a session, save it to file for next time
-                SaveSessionToFile(session);
-            }
-
             UpdateSession(session);
         }
         catch
@@ -178,42 +173,6 @@ public class AuthService
     }
 
     /// <summary>
-    /// Sign in with email and password via tastile-core.
-    /// </summary>
-    public async Task<bool> SignInAsync(CoreApiClient api, string email, string password)
-    {
-        try
-        {
-            var session = await api.SignInAsync(email, password);
-            UpdateSession(session);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Sign in failed: {ex.Message}");
-            return false;
-        }
-    }
-
-    /// <summary>
-    /// Sign up with email and password via tastile-core.
-    /// </summary>
-    public async Task<bool> SignUpAsync(CoreApiClient api, string email, string password)
-    {
-        try
-        {
-            var session = await api.SignUpAsync(email, password);
-            UpdateSession(session);
-            return true;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"Sign up failed: {ex.Message}");
-            return false;
-        }
-    }
-
-    /// <summary>
     /// Sign out via tastile-core.
     /// </summary>
     public async Task SignOutAsync(CoreApiClient api)
@@ -242,6 +201,11 @@ public class AuthService
 
     private bool UpdateSession(AuthSession? session)
     {
+        if (!IsSessionValid(session))
+        {
+            session = null;
+        }
+
         var changed = !SessionsEqual(_currentSession, session);
 
         _currentSession = session;
@@ -276,5 +240,13 @@ public class AuthService
             && left.AccessToken == right.AccessToken
             && left.RefreshToken == right.RefreshToken
             && left.ExpiresAt == right.ExpiresAt;
+    }
+
+    private static bool IsSessionValid(AuthSession? session)
+    {
+        return session != null
+            && !string.IsNullOrWhiteSpace(session.UserId)
+            && !string.IsNullOrWhiteSpace(session.Email)
+            && !string.IsNullOrWhiteSpace(session.AccessToken);
     }
 }

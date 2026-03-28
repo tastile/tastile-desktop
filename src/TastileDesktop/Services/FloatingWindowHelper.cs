@@ -184,10 +184,17 @@ internal static class FloatingWindowHelper
                 OpenWindows.RemoveAt(i);
                 continue;
             }
-
-            ApplyWindowTheme(window, ThemeManager.CurrentElementTheme);
-            ApplyBackdrop(window);
-            ApplyTitleBarTheme(window);
+            try
+            {
+                ApplyWindowTheme(window, ThemeManager.CurrentElementTheme);
+                ApplyBackdrop(window);
+                ApplyTitleBarTheme(window);
+            }
+            catch
+            {
+                // Window can be closed between registration and theme refresh.
+                OpenWindows.RemoveAt(i);
+            }
         }
     }
 

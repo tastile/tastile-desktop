@@ -13,6 +13,7 @@ namespace TastileDesktop.ViewModels;
 public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly SettingsService _settingsService;
+    private readonly StartupRegistrationService _startupRegistrationService;
     private int _toastNotifyMinutes;
     private int _interventionMinutes;
     private bool _promptToastEnabled;
@@ -28,6 +29,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private int _idlePromptMinutes;
     private int _interventionRepeatMinutes;
     private bool _launchAtStartup;
+    private string _updateManifestUrl = string.Empty;
     private string _accentColorMode = AccentColorModes.WindowsAccent;
     private string _customAccentColorHex = "#0078D4";
     private string _windowsAccentColorHex = "#000000";
@@ -235,15 +237,23 @@ public sealed partial class SettingsViewModel : ObservableObject
         set => SetProperty(ref _launchAtStartup, value);
     }
 
+    public string UpdateManifestUrl
+    {
+        get => _updateManifestUrl;
+        set => SetProperty(ref _updateManifestUrl, value);
+    }
+
     public SettingsViewModel()
     {
         _settingsService = new SettingsService();
+        _startupRegistrationService = new StartupRegistrationService();
         LoadSettings();
     }
 
     public SettingsViewModel(SettingsService settingsService)
     {
         _settingsService = settingsService;
+        _startupRegistrationService = new StartupRegistrationService();
         LoadSettings();
     }
 
@@ -267,6 +277,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IdlePromptMinutes = current.IdlePromptMinutes;
         InterventionRepeatMinutes = current.InterventionRepeatMinutes;
         LaunchAtStartup = current.LaunchAtStartup;
+        UpdateManifestUrl = current.UpdateManifestUrl;
         UpdateSystemAppearance(SystemAppearanceService.Instance.GetCurrentSnapshot());
     }
 
@@ -297,6 +308,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void Save()
     {
+        var current = _settingsService.Current;
         var settings = new TastileSettings
         {
             ThemeMode = ThemeManager.System,
@@ -317,6 +329,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             IdlePromptMinutes = IdlePromptMinutes,
             InterventionRepeatMinutes = InterventionRepeatMinutes,
             LaunchAtStartup = LaunchAtStartup,
+            UpdateManifestUrl = string.IsNullOrWhiteSpace(UpdateManifestUrl) ? current.UpdateManifestUrl : UpdateManifestUrl.Trim(),
         };
         _settingsService.Save(settings);
         
@@ -334,22 +347,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         try
         {
-            const string valueName = "Tastile";
-            using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
-                @"Software\Microsoft\Windows\CurrentVersion\Run", writable: true);
-
-            if (key == null) return;
-
-            if (enable)
-            {
-                var exePath = Environment.ProcessPath;
-                if (exePath != null)
-                    key.SetValue(valueName, $"\"{exePath}\" --minimized");
-            }
-            else
-            {
-                key.DeleteValue(valueName, throwOnMissingValue: false);
-            }
+            _startupRegistrationService.Apply(enable);
         }
         catch (Exception ex)
         {

@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
 
@@ -9,6 +10,8 @@ namespace TastileDesktop.Views;
 
 public sealed partial class CreateTileWindow : Window
 {
+    private const string CreateCanceledErrorCode = "__create_canceled__";
+    private static readonly SolidColorBrush ManualAdjustHighlightBrush = new(Windows.UI.Color.FromArgb(255, 255, 193, 7));
     private static void Log(string msg)
     {
         try
@@ -22,6 +25,7 @@ public sealed partial class CreateTileWindow : Window
     }
 
     private readonly CoreApiClient _api = new();
+    private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly bool _isJapanese = CreateTileParityResolver.IsJapanese();
     private CreateTileCatalog _catalog = new([], [], []);
     private readonly HashSet<int> _recurrenceWeekdays = [];
@@ -643,13 +647,44 @@ public sealed partial class CreateTileWindow : Window
         RefreshSuggestedTitle();
     }
 
+
+    private async Task<bool> EnsureTileQuotaAvailableAsync()
+    {
+        try
+        {
+            var quota = await _api.GetTileQuotaAsync();
+            if (quota == null)
+            {
+                ShowError(_isJapanese ? "タイル上限を確認できませんでした。" : "Could not verify tile limit.");
+                return false;
+            }
+
+            if (quota.LimitReached)
+            {
+                ShowError(_isJapanese
+                    ? "無料プランの上限（100タイル）に達しました。不要なタイルを整理するか、プランをアップグレードしてください。"
+                    : "Free plan limit reached (100 tiles). Archive tiles or upgrade your plan.");
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            ShowError((_isJapanese ? "タイル上限の確認に失敗しました: " : "Failed to validate tile limit: ") + ex.Message);
+            return false;
+        }
+    }
+
     private async void OnCreateClick(object sender, RoutedEventArgs e)
     {
         if (!TryBuildRequest(out var request)) return;
+        if (!await EnsureTileQuotaAvailableAsync()) return;
         try
         {
-            var result = await _api.CreateTileAsync(request);
+            var result = await TryCreateWithConflictResolutionAsync(request);
             if (result == null) { ShowError(_isJapanese ? "Daemon から応答がありません。" : "Daemon did not return a response."); return; }
+            if (!result.Ok && string.Equals(result.Error, CreateCanceledErrorCode, StringComparison.Ordinal)) { return; }
             if (!result.Ok) { ShowError(result.Error ?? (_isJapanese ? "タイルの作成に失敗しました。" : "Failed to create tile.")); return; }
             Close();
         }
@@ -657,6 +692,94 @@ public sealed partial class CreateTileWindow : Window
         {
             ShowError((_isJapanese ? "タイルの作成に失敗しました: " : "Failed to create tile: ") + ex.Message);
         }
+    }
+
+    private async Task<CommandResponse?> TryCreateWithConflictResolutionAsync(CreateTileRequest request)
+    {
+        var result = await _api.CreateTileAsync(request);
+        if (result?.Prompt?.Kind != "create_conflict")
+        {
+            return result;
+        }
+
+        var choice = await ShowConflictResolutionToastAsync(result.Prompt);
+        if (string.IsNullOrWhiteSpace(choice) || string.Equals(choice, "cancel_create", StringComparison.OrdinalIgnoreCase))
+        {
+            _promptToast.Hide();
+            return new CommandResponse(false, [], null, result.Prompt, CreateCanceledErrorCode);
+        }
+
+        if (string.Equals(choice, "manual_adjust", StringComparison.OrdinalIgnoreCase))
+        {
+            var guidance = CreateTileParityResolver.GetManualAdjustGuidance(request, _isJapanese);
+            ApplyManualAdjustGuidance(guidance);
+            return new CommandResponse(false, [], null, result.Prompt, guidance.Message);
+        }
+
+        var retried = request with { ConflictResolution = choice };
+        return await _api.CreateTileAsync(retried);
+    }
+
+    private async Task<string?> ShowConflictResolutionToastAsync(CreateConflictPrompt prompt)
+    {
+        var toastPrompt = CreateTileParityResolver.BuildCreateConflictToastPrompt(prompt, _isJapanese);
+        var completion = new TaskCompletionSource<string?>();
+
+        _promptToast.ShowPrompt(
+            toastPrompt,
+            maxActions: Math.Clamp(toastPrompt.Actions.Count, 1, 5),
+            async actionId =>
+            {
+                _promptToast.Hide();
+                completion.TrySetResult(actionId);
+                await Task.CompletedTask;
+            });
+
+        return await completion.Task;
+    }
+
+    private void ApplyManualAdjustGuidance(CreateTileManualAdjustGuidance guidance)
+    {
+        ClearManualAdjustHighlight();
+
+        if (guidance.FocusStart)
+        {
+            _useStartAt = true;
+            UseStartAtButton.IsChecked = true;
+            StartDatePanel.Visibility = Visibility.Visible;
+            StartDatePicker.BorderBrush = ManualAdjustHighlightBrush;
+            StartTimePicker.BorderBrush = ManualAdjustHighlightBrush;
+        }
+
+        if (guidance.FocusEnd)
+        {
+            _useEndAt = true;
+            UseEndAtButton.IsChecked = true;
+            EndDatePanel.Visibility = Visibility.Visible;
+            EndDatePicker.BorderBrush = ManualAdjustHighlightBrush;
+            EndTimePicker.BorderBrush = ManualAdjustHighlightBrush;
+        }
+
+        UpdateVisibility();
+
+        if (guidance.FocusStart)
+        {
+            StartDatePicker.Focus(FocusState.Programmatic);
+            return;
+        }
+
+        if (guidance.FocusEnd)
+        {
+            EndDatePicker.Focus(FocusState.Programmatic);
+        }
+    }
+
+    private void ClearManualAdjustHighlight()
+    {
+        StartDatePicker.ClearValue(Control.BorderBrushProperty);
+        StartTimePicker.ClearValue(Control.BorderBrushProperty);
+        EndDatePicker.ClearValue(Control.BorderBrushProperty);
+        EndTimePicker.ClearValue(Control.BorderBrushProperty);
     }
 
     private void OnCancelClick(object sender, RoutedEventArgs e) => Close();

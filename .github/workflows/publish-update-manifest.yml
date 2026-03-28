@@ -63,7 +63,7 @@ jobs:
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "9.0.x"
+          global-json-file: global.json
 
       - name: Setup Rust toolchain
         uses: dtolnay/rust-toolchain@stable

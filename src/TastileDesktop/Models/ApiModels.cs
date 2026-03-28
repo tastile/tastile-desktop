@@ -21,6 +21,24 @@ public record TilesResponse(
     [property: JsonPropertyName("tiles")] List<TileView> Tiles
 );
 
+public record ExecutionView(
+    [property: JsonPropertyName("tiles_in_progress")] List<TileView> TilesInProgress,
+    [property: JsonPropertyName("main_tile")] TileView? MainTile,
+    [property: JsonPropertyName("is_working")] bool IsWorking,
+    [property: JsonPropertyName("is_on_break")] bool IsOnBreak,
+    [property: JsonPropertyName("is_idle")] bool IsIdle,
+    [property: JsonPropertyName("main_tile_started_at")] string? MainTileStartedAt,
+    [property: JsonPropertyName("main_tile_ends_at")] string? MainTileEndsAt,
+    [property: JsonPropertyName("pending_prompt_id")] string? PendingPromptId,
+    [property: JsonPropertyName("tile_count")] int TileCount,
+    [property: JsonPropertyName("event_count")] int EventCount
+);
+
+public record TilesInProgressResponse(
+    [property: JsonPropertyName("tiles")] List<TileView> Tiles,
+    [property: JsonPropertyName("count")] int Count
+);
+
 public record ActiveTileResponse(
     [property: JsonPropertyName("tile")] TileView? Tile,
     [property: JsonPropertyName("phase")] string Phase,
@@ -44,7 +62,29 @@ public record CommandResponse(
     [property: JsonPropertyName("ok")] bool Ok,
     [property: JsonPropertyName("events")] List<string> Events,
     [property: JsonPropertyName("tile_id")] string? TileId,
+    [property: JsonPropertyName("prompt")] CreateConflictPrompt? Prompt,
     [property: JsonPropertyName("error")] string? Error
+);
+
+public record CreateConflictPrompt(
+    [property: JsonPropertyName("kind")] string Kind,
+    [property: JsonPropertyName("title")] string? Title,
+    [property: JsonPropertyName("message")] string? Message,
+    [property: JsonPropertyName("options")] List<CreateConflictOption>? Options
+);
+
+public record CreateConflictOption(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("label")] string Label
+);
+
+
+public record TileQuotaResponse(
+    [property: JsonPropertyName("plan")] string Plan,
+    [property: JsonPropertyName("tile_count")] int TileCount,
+    [property: JsonPropertyName("max_tiles")] int MaxTiles,
+    [property: JsonPropertyName("remaining_tiles")] int RemainingTiles,
+    [property: JsonPropertyName("limit_reached")] bool LimitReached
 );
 
 public record PendingPromptResponse(
@@ -93,7 +133,8 @@ public record CreateTileRequest(
     [property: JsonPropertyName("objective")] CreateTileObjectiveRequest? Objective,
     [property: JsonPropertyName("interruption")] CreateTileInterruptionRequest? Interruption,
     [property: JsonPropertyName("automation")] CreateTileAutomationRequest? Automation,
-    [property: JsonPropertyName("annotation")] CreateTileAnnotationRequest? Annotation
+    [property: JsonPropertyName("annotation")] CreateTileAnnotationRequest? Annotation,
+    [property: JsonPropertyName("conflict_resolution")] string? ConflictResolution
 );
 
 public record CreateTileTemporalRequest(

@@ -14,7 +14,7 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("ItemsSource=\"{x:Bind ViewModel.TimelineHourMarkers, Mode=OneWay}\"", xaml);
         Assert.Contains("ItemsSource=\"{x:Bind ViewModel.TimelineBlocks, Mode=OneWay}\"", xaml);
 
-        Assert.Contains("Setter Property=\"Canvas.Top\" Value=\"{Binding Top}\"", xaml);
-        Assert.Contains("Setter Property=\"Canvas.Left\" Value=\"{Binding Left}\"", xaml);
+        Assert.Contains("TranslateTransform Y=\"{x:Bind Top}\"", xaml);
+        Assert.Contains("TranslateTransform X=\"{x:Bind Left}\" Y=\"{x:Bind Top}\"", xaml);
     }
 }

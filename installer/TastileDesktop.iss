@@ -32,7 +32,7 @@ Name: "{autoprograms}\Tastile Desktop"; Filename: "{app}\TastileDesktop.exe"
 Name: "{autodesktop}\Tastile Desktop"; Filename: "{app}\TastileDesktop.exe"; Tasks: desktopicon
 
 [Registry]
-Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "TastileDesktop"; ValueData: """{app}\TastileDesktop.exe"""; Tasks: startup; Flags: uninsdeletevalue
+Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "TastileDesktop"; ValueData: """{app}\TastileDesktop.exe"" --minimized"; Tasks: startup; Flags: uninsdeletevalue
 
 [Run]
 Filename: "{app}\TastileDesktop.exe"; Description: "Launch Tastile Desktop"; Flags: nowait postinstall skipifsilent

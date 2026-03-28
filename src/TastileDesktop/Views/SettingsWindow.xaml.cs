@@ -3,6 +3,7 @@ using Microsoft.UI.Windowing;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
+using System.Threading;
 
 namespace TastileDesktop.Views;
 
@@ -13,6 +14,10 @@ public sealed partial class SettingsWindow : Window
 {
     public SettingsViewModel ViewModel { get; } = new();
     private readonly SystemAppearanceService _appearanceService = SystemAppearanceService.Instance;
+    private readonly CoreApiClient _api = new();
+    private readonly AppUpdateService _updateService = new();
+    private readonly DispatcherTimer _syncStatusTimer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private readonly SemaphoreSlim _syncRefreshGate = new(1, 1);
 
     public SettingsWindow()
     {
@@ -20,6 +25,11 @@ public sealed partial class SettingsWindow : Window
         FloatingWindowHelper.Configure(this, TitleBarArea, 520, 700);
         ViewModel.UpdateSystemAppearance(_appearanceService.GetCurrentSnapshot());
         _appearanceService.AppearanceChanged += OnAppearanceChanged;
+        AuthService.Instance.AuthStateChanged += OnAuthStateChanged;
+        RefreshAuthStatus();
+        _syncStatusTimer.Tick += OnSyncStatusTimerTick;
+        _syncStatusTimer.Start();
+        _ = RefreshSyncStatusAsync();
         Closed += OnClosed;
     }
 
@@ -81,6 +91,240 @@ public sealed partial class SettingsWindow : Window
     private void OnClosed(object sender, WindowEventArgs args)
     {
         _appearanceService.AppearanceChanged -= OnAppearanceChanged;
+        AuthService.Instance.AuthStateChanged -= OnAuthStateChanged;
+        _syncStatusTimer.Tick -= OnSyncStatusTimerTick;
+        _syncStatusTimer.Stop();
         Closed -= OnClosed;
+    }
+
+    private void OnAuthStateChanged(object? sender, EventArgs e)
+    {
+        DispatcherQueue.TryEnqueue(RefreshAuthStatus);
+    }
+
+    private void RefreshAuthStatus()
+    {
+        var email = AuthService.Instance.UserEmail;
+        AuthStatusTextBlock.Text = string.IsNullOrWhiteSpace(email) ? "Not signed in" : $"Signed in as {email}";
+    }
+
+    private async void OnSignInGoogleClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var authWindow = new AuthWindow(_api);
+            authWindow.Activate();
+            var result = await authWindow.AuthResultTask;
+            if (result.Success)
+            {
+                await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
+                RefreshAuthStatus();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.Error))
+            {
+                AuthStatusTextBlock.Text = result.Error;
+            }
+        }
+        catch (Exception ex)
+        {
+            AuthStatusTextBlock.Text = $"Sign-in failed: {ex.Message}";
+            App.DebugLog($"[SettingsWindow] Sign-in failed: {ex}");
+        }
+    }
+
+    private async void OnSignOutClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await AuthService.Instance.SignOutAsync(_api);
+            RefreshAuthStatus();
+        }
+        catch (Exception ex)
+        {
+            AuthStatusTextBlock.Text = $"Sign-out failed: {ex.Message}";
+            App.DebugLog($"[SettingsWindow] Sign-out failed: {ex}");
+        }
+    }
+
+    private async void OnCheckUpdateClick(object sender, RoutedEventArgs e)
+    {
+        var manifestUrl = ViewModel.UpdateManifestUrl?.Trim();
+        if (string.IsNullOrWhiteSpace(manifestUrl))
+        {
+            UpdateStatusTextBlock.Text = "Manifest URL is required.";
+            return;
+        }
+
+        try
+        {
+            var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
+            var result = await _updateService.CheckForUpdateAsync(manifestUrl, currentVersion);
+            if (!result.HasUpdate)
+            {
+                UpdateStatusTextBlock.Text = "You are up to date.";
+                return;
+            }
+
+            UpdateStatusTextBlock.Text = $"Update {result.LatestVersion} is available.";
+            ShowUpdateToast(result);
+        }
+        catch (Exception ex)
+        {
+            UpdateStatusTextBlock.Text = $"Update check failed: {ex.Message}";
+        }
+    }
+
+    private async void OnSyncNowClick(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            await _api.TriggerSyncAsync();
+            await RefreshSyncStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            SyncStateTextBlock.Text = "Sync failed";
+            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
+            App.DebugLog($"[SyncStatus] Manual sync failed: {ex}");
+        }
+    }
+
+    private async void OnRefreshSyncStatusClick(object sender, RoutedEventArgs e)
+    {
+        await RefreshSyncStatusAsync();
+    }
+
+    private async void OnSyncStatusTimerTick(object? sender, object e)
+    {
+        await RefreshSyncStatusAsync();
+    }
+
+    private async Task RefreshSyncStatusAsync()
+    {
+        if (!await _syncRefreshGate.WaitAsync(0))
+        {
+            return;
+        }
+
+        try
+        {
+            var status = await _api.GetSyncStatusAsync();
+            if (status == null)
+            {
+                SyncStateTextBlock.Text = "Unknown";
+                return;
+            }
+
+            var hasFailedOps = status.LastResult?.Failed > 0;
+            SyncStateTextBlock.Text = status.InProgress
+                ? "Syncing"
+                : (hasFailedOps || !string.IsNullOrWhiteSpace(status.LastError) ? "Error" : "Idle");
+            SyncLastAttemptTextBlock.Text = FormatTimestamp(status.LastAttemptAt);
+            SyncLastSuccessTextBlock.Text = FormatTimestamp(status.LastSuccessAt);
+
+            if (status.LastResult != null)
+            {
+                SyncLastResultTextBlock.Text = $"Result: uploaded={status.LastResult.Uploaded}, downloaded={status.LastResult.Downloaded}, applied={status.LastResult.Applied}, failed={status.LastResult.Failed}";
+            }
+            else
+            {
+                SyncLastResultTextBlock.Text = "Result: -";
+            }
+
+            if (!string.IsNullOrWhiteSpace(status.LastError))
+            {
+                SyncLastErrorTextBlock.Text = $"Error: {status.LastError}";
+            }
+            else if (hasFailedOps)
+            {
+                SyncLastErrorTextBlock.Text = $"Error: sync reported failed={status.LastResult!.Failed}. Check daemon logs for details.";
+            }
+            else
+            {
+                SyncLastErrorTextBlock.Text = "Error: -";
+            }
+        }
+        catch (Exception ex)
+        {
+            SyncStateTextBlock.Text = "Unavailable";
+            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
+            App.DebugLog($"[SyncStatus] Failed to refresh: {ex}");
+        }
+        finally
+        {
+            _syncRefreshGate.Release();
+        }
+    }
+
+    private static string FormatTimestamp(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return "-";
+        }
+
+        if (DateTimeOffset.TryParse(value, out var parsed))
+        {
+            return parsed.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+        }
+
+        return value;
+    }
+
+    private void ShowUpdateToast(AppUpdateInfo update)
+    {
+        var prompt = new PromptView(
+            PromptId: $"update-{Guid.NewGuid():N}",
+            Kind: "app_update",
+            Severity: "info",
+            TileId: null,
+            Title: $"Update available: {update.LatestVersion}",
+            Body: string.IsNullOrWhiteSpace(update.Notes) ? "Restart to install the latest version." : update.Notes,
+            Why: "An application update is available.",
+            SuggestedMinutes: null,
+            Actions: new List<PromptActionView>
+            {
+                new("install_update", "Restart & Install"),
+                new("ignore_update", "Ignore"),
+            },
+            ExpiresAt: null,
+            Stale: false);
+
+        PromptToastDisplayService.Instance.ShowPrompt(
+            prompt,
+            maxActions: 2,
+            async actionId =>
+            {
+                PromptToastDisplayService.Instance.Hide();
+                if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (Uri.TryCreate(update.DownloadUrl, UriKind.Absolute, out var downloadUri) &&
+                        (string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
+                         string.Equals(downloadUri.Scheme, "ms-appinstaller", StringComparison.OrdinalIgnoreCase)))
+                    {
+                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+                        {
+                            FileName = downloadUri.ToString(),
+                            UseShellExecute = true,
+                        });
+                    }
+                    else
+                    {
+                        UpdateStatusTextBlock.Text = "Update link is invalid.";
+                        return;
+                    }
+
+                    ((App)Application.Current).Shutdown();
+                }
+                else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
+                {
+                    var settingsService = new SettingsService();
+                    settingsService.Update(settings => settings.IgnoredUpdateVersion = update.LatestVersion);
+                    UpdateStatusTextBlock.Text = $"Ignored update {update.LatestVersion}.";
+                }
+                await Task.CompletedTask;
+            });
     }
 }

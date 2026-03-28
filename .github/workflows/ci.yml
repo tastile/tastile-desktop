@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  unit-tests:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Run unit tests
+        shell: pwsh
+        run: .\scripts\check.ps1 -SkipDesktopBuild
+
+  desktop-build:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: windows-latest
+    steps:
+      - name: Checkout desktop repo
+        uses: actions/checkout@v4
+
+      - name: Provide monorepo-level app icon for build
+        shell: pwsh
+        run: |
+          Copy-Item "$env:GITHUB_WORKSPACE\src\TastileDesktop\Assets\tastile.ico" "$env:GITHUB_WORKSPACE\..\tastile-icon.ico" -Force
+
+      - name: Checkout core repo at sibling path
+        uses: actions/checkout@v4
+        with:
+          repository: tastile/tastile-core
+          token: ${{ secrets.CORE_REPO_READ_TOKEN }}
+          path: .deps/tastile-core
+
+      - name: Create sibling junction for core path compatibility
+        shell: pwsh
+        run: |
+          New-Item -ItemType Junction -Path "$env:GITHUB_WORKSPACE\..\tastile-core" -Target "$env:GITHUB_WORKSPACE\.deps\tastile-core" -Force | Out-Null
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Setup Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+
+      - name: Build desktop application
+        shell: pwsh
+        run: .\scripts\check.ps1

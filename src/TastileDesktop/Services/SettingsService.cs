@@ -128,4 +128,6 @@ public record TastileSettings
     public int IdlePromptMinutes { get; set; } = 5;
     public int InterventionRepeatMinutes { get; set; } = 5;
     public bool LaunchAtStartup { get; set; } = false;
+    public string UpdateManifestUrl { get; set; } = Environment.GetEnvironmentVariable("TASTILE_UPDATE_URL")?.Trim() ?? string.Empty;
+    public string IgnoredUpdateVersion { get; set; } = string.Empty;
 }

@@ -52,7 +52,46 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
-    public async Task InitializeAsync_RestoresSavedSessionToDaemon_WhenDaemonSessionIsMissing()
+    public async Task RefreshSessionFromDaemonAsync_DoesNotAuthenticate_WhenAccessTokenMissing()
+    {
+        await WithIsolatedAppDataAsync(async () =>
+        {
+            var service = CreateIsolatedAuthService();
+
+            var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+            {
+                if (request.RequestUri?.AbsolutePath == "/auth/session")
+                {
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent("""
+                        {
+                          "user_id": "user-123",
+                          "email": "user@example.com",
+                          "access_token": "",
+                          "refresh_token": "refresh-123",
+                          "expires_at": "2099-01-01T00:00:00Z"
+                        }
+                        """),
+                    };
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.NotFound);
+            }))
+            {
+                BaseAddress = new Uri("http://localhost:3140"),
+            });
+
+            var changed = await service.RefreshSessionFromDaemonAsync(client);
+
+            Assert.False(changed);
+            Assert.False(service.IsAuthenticated);
+            Assert.Null(service.UserEmail);
+        });
+    }
+
+    [Fact]
+    public async Task InitializeAsync_DoesNotRestoreSavedSession_WhenDaemonSessionIsMissing()
     {
         await WithIsolatedAppDataAsync(async tempAppData =>
         {
@@ -102,10 +141,45 @@ public sealed class AuthServiceTests
 
             await service.InitializeAsync(client);
 
-            Assert.True(restoreCalled);
-            Assert.True(service.IsAuthenticated);
-            Assert.Equal("restore@example.com", service.UserEmail);
+            Assert.False(restoreCalled);
+            Assert.False(service.IsAuthenticated);
+            Assert.Null(service.UserEmail);
         });
+    }
+
+    [Fact]
+    public async Task GetTileQuotaAsync_ParsesQuotaResponse()
+    {
+        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsolutePath == "/auth/tile-quota")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "plan": "free",
+                      "tile_count": 100,
+                      "max_tiles": 100,
+                      "remaining_tiles": 0,
+                      "limit_reached": true
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        var quota = await client.GetTileQuotaAsync();
+
+        Assert.NotNull(quota);
+        Assert.Equal("free", quota!.Plan);
+        Assert.Equal(100, quota.TileCount);
+        Assert.True(quota.LimitReached);
     }
 
     [Fact]
