@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="..\..\src\TastileDesktop\Services\DaemonCompatibility.cs" Link="DaemonCompatibility.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="AuthService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\RuntimeProfile.cs" Link="RuntimeProfile.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="CoreApiClient.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\OAuthCallbackHandoff.cs" Link="OAuthCallbackHandoff.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AppUpdateService.cs" Link="AppUpdateService.cs" />

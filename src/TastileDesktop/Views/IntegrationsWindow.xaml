@@ -1,0 +1,42 @@
+<Window
+    x:Class="TastileDesktop.Views.IntegrationsWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Title="Integrations">
+
+    <Grid Background="{StaticResource AppBackgroundBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="Transparent">
+            <TextBlock Text="Integrations" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel Padding="{StaticResource WindowPagePadding}" Spacing="16" MaxWidth="720">
+                <StackPanel Spacing="6">
+                    <TextBlock Text="Google Calendar" Style="{StaticResource PageTitleTextStyle}" />
+                    <TextBlock Text="Connect Disconnect Sync now をここから操作できます" Style="{StaticResource SectionBodyTextStyle}" />
+                </StackPanel>
+
+                <Border Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
+                    <StackPanel Spacing="8">
+                        <TextBlock x:Name="StatusTextBlock" Text="Status: loading" Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="ReadWriteTextBlock" Text="Read/Write: -" Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="AccountTextBlock" Text="Account: -" Style="{StaticResource SectionBodyTextStyle}" />
+                        <TextBlock x:Name="SyncedTextBlock" Text="Last synced: -" Style="{StaticResource SectionBodyTextStyle}" />
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="ConnectButton" Content="Connect" Click="OnConnectClick" />
+                            <Button x:Name="DisconnectButton" Content="Disconnect" Click="OnDisconnectClick" />
+                            <Button x:Name="SyncNowButton" Content="Sync now" Click="OnSyncNowClick" />
+                            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefreshClick" />
+                        </StackPanel>
+                        <TextBlock x:Name="ErrorTextBlock" Text="" Foreground="{StaticResource AccentErrorBrush}" TextWrapping="Wrap" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>

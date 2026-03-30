@@ -85,7 +85,7 @@ public sealed class CoreApiClientAuthRestoreTests
     }
 
     [Fact]
-    public async Task SignInWithOAuthAsync_UsesExchangeEndpoint()
+    public async Task SignInWithOAuthAsync_UsesExchangeEndpoint_WithState()
     {
         var exchangeCalls = 0;
 
@@ -98,6 +98,7 @@ public sealed class CoreApiClientAuthRestoreTests
                 var body = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult() ?? string.Empty;
                 var json = JsonDocument.Parse(body).RootElement;
                 Assert.Equal("code-123", json.GetProperty("code").GetString());
+                Assert.Equal("state-123", json.GetProperty("state").GetString());
                 Assert.False(json.TryGetProperty("redirect_uri", out _));
                 Assert.False(json.TryGetProperty("provider", out _));
 
@@ -125,7 +126,7 @@ public sealed class CoreApiClientAuthRestoreTests
             BaseAddress = new Uri("http://localhost:3140"),
         });
 
-        var result = await client.SignInWithOAuthAsync("google", "code-123", "tastile://auth/callback");
+        var result = await client.SignInWithOAuthAsync("google", "code-123", "tastile://auth/callback", "state-123");
 
         Assert.NotNull(result);
         Assert.Equal("token-123", result!.AccessToken);
@@ -219,4 +220,3 @@ public sealed class CoreApiClientAuthRestoreTests
             => Task.FromResult(responder(request));
     }
 }
-

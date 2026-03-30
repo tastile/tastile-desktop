@@ -24,11 +24,14 @@ public class CoreApiClient
         catch { }
     }
 
-    public CoreApiClient(string baseUrl = "http://127.0.0.1:3140")
+    public CoreApiClient(string? baseUrl = null)
     {
+        var resolvedBaseUrl = string.IsNullOrWhiteSpace(baseUrl)
+            ? RuntimeProfile.DaemonBaseUrl
+            : baseUrl;
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(baseUrl),
+            BaseAddress = new Uri(resolvedBaseUrl),
             Timeout = TimeSpan.FromSeconds(4),
         };
     }
@@ -219,6 +222,56 @@ public class CoreApiClient
         return await response.Content.ReadFromJsonAsync<TastileDesktop.Models.TileQuotaResponse>();
     }
 
+    public async Task<IntegrationSettingsResponse?> GetIntegrationSettingsAsync()
+    {
+        var response = await _httpClient.GetAsync("/auth/integrations/settings");
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
+            if (desktopSession != null)
+            {
+                await RestoreSessionAsync(desktopSession);
+                response = await _httpClient.GetAsync("/auth/integrations/settings");
+            }
+        }
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<IntegrationSettingsResponse>();
+    }
+
+    public async Task<IntegrationSettingsResponse?> UpdateGoogleCalendarIntegrationAsync(
+        bool? connected = null,
+        bool? canRead = null,
+        bool? canWrite = null,
+        string? accountEmail = null,
+        string? lastSyncedAt = null)
+    {
+        var payload = new Dictionary<string, object?>();
+        if (connected.HasValue) payload["connected"] = connected.Value;
+        if (canRead.HasValue) payload["can_read"] = canRead.Value;
+        if (canWrite.HasValue) payload["can_write"] = canWrite.Value;
+        if (accountEmail is not null || (connected.HasValue && !connected.Value)) payload["account_email"] = accountEmail;
+        if (lastSyncedAt is not null) payload["last_synced_at"] = lastSyncedAt;
+
+        var response = await _httpClient.PostAsJsonAsync("/auth/integrations/settings", new
+        {
+            google_calendar = payload,
+        });
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
+            if (desktopSession != null)
+            {
+                await RestoreSessionAsync(desktopSession);
+                response = await _httpClient.PostAsJsonAsync("/auth/integrations/settings", new
+                {
+                    google_calendar = payload,
+                });
+            }
+        }
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<IntegrationSettingsResponse>();
+    }
+
     public async Task<AuthSession?> GetSessionAsync()
     {
         try
@@ -266,7 +319,7 @@ public class CoreApiClient
     /// <summary>
     /// Exchange OAuth authorization code for session.
     /// </summary>
-    public async Task<OAuthTokenResponse?> SignInWithOAuthAsync(string provider, string code, string redirectUri)
+    public async Task<OAuthTokenResponse?> SignInWithOAuthAsync(string provider, string code, string redirectUri, string? state = null)
     {
         try
         {
@@ -274,6 +327,7 @@ public class CoreApiClient
             var response = await _httpClient.PostAsJsonAsync("/auth/oauth/exchange", new
             {
                 code,
+                state,
             });
             response.EnsureSuccessStatusCode();
             return await response.Content.ReadFromJsonAsync<OAuthTokenResponse>();
@@ -406,4 +460,28 @@ public class SyncResultResponse
 
     [JsonPropertyName("applied")]
     public int Applied { get; set; }
+}
+
+public class IntegrationSettingsResponse
+{
+    [JsonPropertyName("google_calendar")]
+    public GoogleCalendarIntegrationResponse GoogleCalendar { get; set; } = new();
+}
+
+public class GoogleCalendarIntegrationResponse
+{
+    [JsonPropertyName("connected")]
+    public bool Connected { get; set; }
+
+    [JsonPropertyName("can_read")]
+    public bool CanRead { get; set; } = true;
+
+    [JsonPropertyName("can_write")]
+    public bool CanWrite { get; set; } = true;
+
+    [JsonPropertyName("account_email")]
+    public string? AccountEmail { get; set; }
+
+    [JsonPropertyName("last_synced_at")]
+    public string? LastSyncedAt { get; set; }
 }

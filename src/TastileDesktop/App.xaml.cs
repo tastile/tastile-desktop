@@ -10,11 +10,11 @@ namespace TastileDesktop;
 public partial class App : Application
 {
     private static readonly string DebugLogPath = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-        "Tastile", "debug.log");
+        RuntimeProfile.GetLocalAppDataDirectory(),
+        "debug.log");
 
     private static Mutex? _singleInstanceMutex;
-    private const string MutexName = "Global\\TastileDesktopSingleInstance";
+    private static readonly string MutexName = $"Global\\TastileDesktopSingleInstance-{RuntimeProfile.Name}";
 
     public static void DebugLog(string msg)
     {
@@ -256,19 +256,11 @@ public partial class App : Application
 
         try
         {
-            var apiClient = new Services.CoreApiClient();
-            var exchange = await apiClient.SignInWithOAuthAsync("google", code, "tastile://auth/callback");
-            if (exchange?.AccessToken is { Length: > 0 })
-            {
-                OAuthCallbackHandoff.ClearExpectedState();
-                await AuthService.Instance.RefreshSessionFromDaemonAsync(apiClient);
-                Log("OAuth callback processed via daemon exchange");
-                return;
-            }
+            Log("OAuth callback received by app; daemon-managed localhost callback remains the source of truth.");
         }
         catch (Exception ex)
         {
-            Log($"OAuth callback exchange failed: {ex.Message}");
+            Log($"OAuth callback handoff processing failed: {ex.Message}");
         }
 
         OAuthCallbackHandoff.Store(callbackUrl);

@@ -4,7 +4,11 @@
       "commandName": "MsixPackage"
     },
     "TastileDesktop (Unpackaged)": {
-      "commandName": "Project"
+      "commandName": "Project",
+      "environmentVariables": {
+        "TASTILE_PROFILE": "dev",
+        "TASTILE_DAEMON_PORT": "3141"
+      }
     }
   }
 }

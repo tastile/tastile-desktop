@@ -20,14 +20,16 @@ public class DaemonManager : IDisposable
 {
     private Process? _daemonProcess;
     private string _daemonPath;
+    private readonly string _daemonBaseUrl;
     private readonly HttpClient _http = new()
     {
-        BaseAddress = new Uri("http://127.0.0.1:3140"),
+        BaseAddress = new Uri(RuntimeProfile.DaemonBaseUrl),
         Timeout = TimeSpan.FromSeconds(2)
     };
 
     public DaemonManager()
     {
+        _daemonBaseUrl = RuntimeProfile.DaemonBaseUrl;
         // Look for daemon next to this exe, then in PATH
         var appDir = AppContext.BaseDirectory;
         var localPath = Path.Combine(appDir, "tastile-daemon.exe");
@@ -85,6 +87,7 @@ public class DaemonManager : IDisposable
             RedirectStandardOutput = true,
             RedirectStandardError = true,
         };
+        ApplyProfileEnvironment(psi);
 
         try
         {
@@ -128,5 +131,44 @@ public class DaemonManager : IDisposable
             _daemonProcess.Dispose();
         }
         _http.Dispose();
+    }
+
+    private void ApplyProfileEnvironment(ProcessStartInfo psi)
+    {
+        var profileDataDir = RuntimeProfile.GetAppDataDirectory();
+        Directory.CreateDirectory(profileDataDir);
+
+        psi.Environment["APPDATA"] = profileDataDir;
+        psi.Environment["TASTILE_PROFILE"] = RuntimeProfile.Name;
+        psi.Environment["TASTILE_DAEMON_PORT"] = RuntimeProfile.DaemonPort.ToString();
+
+        var scopedUpdateUrl = RuntimeProfile.ResolveEnvironmentValue("TASTILE_UPDATE_URL");
+        if (!string.IsNullOrWhiteSpace(scopedUpdateUrl))
+        {
+            psi.Environment["TASTILE_UPDATE_URL"] = scopedUpdateUrl;
+        }
+
+        var scopedSupabaseUrl = RuntimeProfile.ResolveEnvironmentValue("SUPABASE_URL");
+        if (!string.IsNullOrWhiteSpace(scopedSupabaseUrl))
+        {
+            psi.Environment["SUPABASE_URL"] = scopedSupabaseUrl;
+        }
+
+        var scopedSupabasePublishableKey = RuntimeProfile.ResolveEnvironmentValue("SUPABASE_PUBLISHABLE_KEY");
+        if (!string.IsNullOrWhiteSpace(scopedSupabasePublishableKey))
+        {
+            psi.Environment["SUPABASE_PUBLISHABLE_KEY"] = scopedSupabasePublishableKey;
+            psi.Environment["SUPABASE_ANON_KEY"] = scopedSupabasePublishableKey;
+        }
+        else
+        {
+            var scopedSupabaseAnonKey = RuntimeProfile.ResolveEnvironmentValue("SUPABASE_ANON_KEY");
+            if (!string.IsNullOrWhiteSpace(scopedSupabaseAnonKey))
+            {
+                psi.Environment["SUPABASE_ANON_KEY"] = scopedSupabaseAnonKey;
+            }
+        }
+
+        DaemonLog.Write($"Runtime profile={RuntimeProfile.Name}, daemon_base_url={_daemonBaseUrl}, appdata={profileDataDir}");
     }
 }

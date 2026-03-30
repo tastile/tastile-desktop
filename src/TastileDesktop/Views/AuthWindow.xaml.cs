@@ -213,25 +213,18 @@ public sealed partial class AuthWindow : Window
                 var callbackUrl = OAuthCallbackHandoff.Peek();
                 if (!string.IsNullOrWhiteSpace(callbackUrl))
                 {
-                    Log("[PollForAuthenticationAsync] Found callback handoff; exchanging code via daemon");
+                    Log("[PollForAuthenticationAsync] Found callback handoff; waiting for daemon-managed localhost callback");
                     var parsed = ProtocolHandler.ParseOAuthCallback(callbackUrl);
                     if (parsed != null)
                     {
-                        var (code, state) = parsed.Value;
+                        var (_, state) = parsed.Value;
                         if (!OAuthCallbackHandoff.MatchesExpectedState(state))
                         {
                             Log("[PollForAuthenticationAsync] Ignoring callback handoff because OAuth state did not match.");
                             continue;
                         }
 
-                        var exchanged = await _api.SignInWithOAuthAsync("google", code, "tastile://auth/callback");
-                        if (!string.IsNullOrWhiteSpace(exchanged?.AccessToken))
-                        {
-                            OAuthCallbackHandoff.ClearCallback();
-                            OAuthCallbackHandoff.ClearExpectedState();
-                            Log("[PollForAuthenticationAsync] Callback handoff exchange succeeded");
-                            return true;
-                        }
+                        Log("[PollForAuthenticationAsync] Callback handoff matched expected state; daemon should complete via localhost callback.");
                     }
                 }
 

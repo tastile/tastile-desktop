@@ -58,6 +58,28 @@ Run the desktop app:
 dotnet run --project .\src\TastileDesktop\TastileDesktop.csproj
 ```
 
+### Runtime profile separation
+
+Desktop supports profile isolation via environment variables
+
+- `TASTILE_PROFILE=prod` (default) uses `%APPDATA%\Tastile`
+- `TASTILE_PROFILE=dev` uses `%APPDATA%\Tastile-dev`
+
+For local unpackaged runs we recommend
+
+```powershell
+$env:TASTILE_PROFILE="dev"
+$env:TASTILE_DAEMON_PORT="3141"
+dotnet run --project .\src\TastileDesktop\TastileDesktop.csproj
+```
+
+Optional profile-scoped secrets to avoid mixing production credentials
+
+- `TASTILE_DEV_SUPABASE_URL`
+- `TASTILE_DEV_SUPABASE_PUBLISHABLE_KEY` (recommended)
+- `TASTILE_DEV_SUPABASE_ANON_KEY`
+- `TASTILE_DEV_TASTILE_UPDATE_URL`
+
 Create a release installer:
 
 ```powershell

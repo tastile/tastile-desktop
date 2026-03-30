@@ -344,6 +344,11 @@ public sealed partial class MainWindow : Window
         OpenOwnedWindow(() => new CreateTileWindow());
     }
 
+    private void OnOpenIntegrationsWindowClick(object sender, RoutedEventArgs e)
+    {
+        OpenOwnedWindow(() => new IntegrationsWindow());
+    }
+
     private void OnOpenSettingsWindowClick(object sender, RoutedEventArgs e)
     {
         OpenOwnedWindow(() => new SettingsWindow());
@@ -394,6 +399,9 @@ public sealed partial class MainWindow : Window
                 return;
             case "open-create":
                 OpenOwnedWindow(() => new CreateTileWindow());
+                return;
+            case "open-integrations":
+                OpenOwnedWindow(() => new IntegrationsWindow());
                 return;
             case "open-settings":
                 OpenOwnedWindow(() => new SettingsWindow());

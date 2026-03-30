@@ -215,6 +215,10 @@
                                 ToolTipService.ToolTip="Timeline" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE787;" />
                         </Button>
+                        <Button x:Name="IntegrationsButton" Width="34" Height="28" Click="OnOpenIntegrationsWindowClick"
+                                ToolTipService.ToolTip="Integrations" Background="Transparent" BorderThickness="0" Padding="0">
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE774;" />
+                        </Button>
                         <Button x:Name="CreateTileButton" Width="34" Height="28" Click="OnOpenCreateTileWindowClick"
                                 ToolTipService.ToolTip="Create Tile" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource AccentBrush}" Glyph="&#xE710;" />

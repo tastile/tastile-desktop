@@ -50,13 +50,7 @@ public class AuthService
     {
         get
         {
-            var appData = Environment.GetEnvironmentVariable("APPDATA");
-            if (string.IsNullOrWhiteSpace(appData))
-            {
-                appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-            }
-
-            return Path.Combine(appData, "Tastile", "session.json");
+            return Path.Combine(RuntimeProfile.GetAppDataDirectory(), "session.json");
         }
     }
 
