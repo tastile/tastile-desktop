@@ -83,8 +83,10 @@ Optional profile-scoped secrets to avoid mixing production credentials
 Create a release installer:
 
 ```powershell
-.\scripts\build-desktop-installer.ps1 -Version 0.1.0
+.\scripts\build-desktop-installer.ps1 -Version 0.2.0
 ```
+
+Use the same version for the app build, installer filename, and hosted update manifest so the desktop client can compare versions correctly.
 
 ## Update publication
 
@@ -92,6 +94,8 @@ Installer upload and update-manifest publication are handled by:
 
 - `.github/workflows/publish-update-manifest.yml`
 - `scripts/publish-update-manifest.ps1`
+
+The workflow runs on GitHub release publication and also supports manual `workflow_dispatch`. For release events, it derives the version from the release tag, uploads the matching installer, and writes the hosted `manifest.json`.
 
 The app checks a hosted `manifest.json` and opens the installer download URL when an update is available.
 

@@ -321,12 +321,12 @@ public partial class App : Application
             Severity: "info",
             TileId: null,
             Title: $"Update available: {update.LatestVersion}",
-            Body: string.IsNullOrWhiteSpace(update.Notes) ? "Restart to install the latest version." : update.Notes,
+            Body: string.IsNullOrWhiteSpace(update.Notes) ? "Download the installer and install the latest version." : update.Notes,
             Why: "A newer version is available.",
             SuggestedMinutes: null,
             Actions:
             [
-                new Models.PromptActionView("install_update", "Restart & Install"),
+                new Models.PromptActionView("install_update", "Install Update"),
                 new Models.PromptActionView("ignore_update", "Ignore"),
             ],
             ExpiresAt: null,
@@ -342,22 +342,20 @@ public partial class App : Application
                     PromptToastDisplayService.Instance.Hide();
                     if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (Uri.TryCreate(update.DownloadUrl, UriKind.Absolute, out var downloadUri) &&
-                            string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+                        try
                         {
+                            var installerPath = await _appUpdateService.DownloadInstallerAsync(update.DownloadUrl);
                             System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                             {
-                                FileName = downloadUri.ToString(),
+                                FileName = installerPath,
                                 UseShellExecute = true,
                             });
+                            Shutdown();
                         }
-                        else
+                        catch (Exception ex)
                         {
-                            Log("Rejected startup update install because the download URL was invalid.");
-                            return;
+                            Log($"Update install failed: {ex.Message}");
                         }
-
-                        Shutdown();
                     }
                     else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
                     {

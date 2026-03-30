@@ -11,7 +11,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 Write-Host "Trigger workflow: Publish update manifest"
-Write-Host "Use GitHub Actions workflow_dispatch with:"
+Write-Host "Use GitHub Actions workflow_dispatch for ad hoc publishes, or create a GitHub Release to publish automatically."
+Write-Host "workflow_dispatch inputs:"
 Write-Host "  platform       = $Platform"
 Write-Host "  latest_version = $LatestVersion"
 Write-Host "  download_url   = $DownloadUrl"

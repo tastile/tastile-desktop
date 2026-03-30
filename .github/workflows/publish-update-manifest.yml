@@ -1,6 +1,9 @@
 name: Publish update manifest
 
 on:
+  release:
+    types:
+      - published
   workflow_dispatch:
     inputs:
       platform:
@@ -37,6 +40,7 @@ jobs:
   build-desktop-installer:
     runs-on: windows-latest
     outputs:
+      app_version: ${{ steps.version.outputs.version }}
       installer_name: ${{ steps.installer.outputs.installer_name }}
       installer_path: ${{ steps.installer.outputs.installer_path }}
     steps:
@@ -75,12 +79,29 @@ jobs:
         run: |
           choco install innosetup -y --no-progress
 
+      - name: Resolve release version
+        id: version
+        shell: pwsh
+        run: |
+          $version = "${{ github.event_name == 'workflow_dispatch' && github.event.inputs.latest_version || github.event.release.tag_name || '' }}"
+
+          $version = $version.Trim()
+          if ($version.StartsWith("v", [System.StringComparison]::OrdinalIgnoreCase)) {
+            $version = $version.Substring(1)
+          }
+
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            throw "Unable to resolve a release version from workflow inputs or release metadata."
+          }
+
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
       - name: Build desktop installer
         id: installer
         shell: pwsh
         run: |
-          .\scripts\build-desktop-installer.ps1 -Version "${{ github.event.inputs.latest_version }}"
-          $name = "tastile-desktop-${{ github.event.inputs.latest_version }}-setup.exe"
+          .\scripts\build-desktop-installer.ps1 -Version "${{ steps.version.outputs.version }}"
+          $name = "tastile-desktop-${{ steps.version.outputs.version }}-setup.exe"
           $path = "artifacts\installer\$name"
           if (!(Test-Path $path)) { throw "Installer not found: $path" }
           "installer_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
@@ -115,16 +136,20 @@ jobs:
       - name: Resolve storage paths
         id: resolve-paths
         shell: bash
+        env:
+          INPUT_PLATFORM: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.platform || 'desktop' }}
+          INPUT_STORAGE_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.storage_path || '' }}
+          INPUT_APP_STORAGE_PATH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.app_storage_path || '' }}
         run: |
-          if [ -n "${{ github.event.inputs.storage_path }}" ]; then
-            manifest_path="${{ github.event.inputs.storage_path }}"
+          if [ -n "$INPUT_STORAGE_PATH" ]; then
+            manifest_path="$INPUT_STORAGE_PATH"
           else
-            manifest_path="updates/${{ github.event.inputs.platform }}/manifest.json"
+            manifest_path="updates/$INPUT_PLATFORM/manifest.json"
           fi
-          if [ -n "${{ github.event.inputs.app_storage_path }}" ]; then
-            app_path="${{ github.event.inputs.app_storage_path }}"
+          if [ -n "$INPUT_APP_STORAGE_PATH" ]; then
+            app_path="$INPUT_APP_STORAGE_PATH"
           else
-            app_path="${{ github.event.inputs.platform }}/${{ needs.build-desktop-installer.outputs.installer_name }}"
+            app_path="$INPUT_PLATFORM/${{ needs.build-desktop-installer.outputs.installer_name }}"
           fi
           app_public_url="${{ secrets.SUPABASE_URL }}/storage/v1/object/public/${{ secrets.SUPABASE_UPDATE_BUCKET }}/${app_path}"
           echo "manifest_path=$manifest_path" >> "$GITHUB_OUTPUT"
@@ -146,14 +171,35 @@ jobs:
 
       - name: Build manifest.json
         shell: bash
+        env:
+          UPDATE_VERSION: ${{ needs.build-desktop-installer.outputs.app_version }}
+          UPDATE_NOTES: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.notes || '' }}
+          RELEASE_NOTES: ${{ github.event.release.body || '' }}
+          UPDATE_DOWNLOAD_URL: ${{ steps.resolve-paths.outputs.app_public_url }}
         run: |
-          cat > dist/update/manifest.json <<'JSON'
-          {
-            "latest_version": "${{ github.event.inputs.latest_version }}",
-            "download_url": "${{ steps.resolve-paths.outputs.app_public_url }}",
-            "notes": "${{ github.event.inputs.notes }}"
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          version = os.environ.get("UPDATE_VERSION", "").strip()
+          if version.lower().startswith("v"):
+              version = version[1:]
+
+          notes = os.environ.get("UPDATE_NOTES", "").strip()
+          if not notes:
+              notes = os.environ.get("RELEASE_NOTES", "").strip()
+
+          manifest = {
+              "latest_version": version,
+              "download_url": os.environ["UPDATE_DOWNLOAD_URL"],
+              "notes": notes,
           }
-          JSON
+          Path("dist/update/manifest.json").write_text(
+              json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+              encoding="utf-8",
+          )
+          PY
 
       - name: Upload manifest to Supabase Storage
         shell: bash

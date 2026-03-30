@@ -164,6 +164,40 @@ public sealed class AppUpdateServiceTests
         Assert.Equal(string.Empty, result.DownloadUrl);
     }
 
+    [Fact]
+    public async Task DownloadInstallerAsync_SavesHttpsPayloadToExecutableFile()
+    {
+        var payload = new byte[] { 1, 2, 3, 4, 5 };
+        var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsoluteUri == "https://updates.example.com/tastile-0.3.0-setup.exe")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(payload),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        })));
+
+        var path = await service.DownloadInstallerAsync("https://updates.example.com/tastile-0.3.0-setup.exe");
+
+        try
+        {
+            Assert.EndsWith(".exe", path, StringComparison.OrdinalIgnoreCase);
+            Assert.True(File.Exists(path));
+            Assert.Equal(payload, await File.ReadAllBytesAsync(path));
+        }
+        finally
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

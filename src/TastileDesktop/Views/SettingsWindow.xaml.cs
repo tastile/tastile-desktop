@@ -281,12 +281,12 @@ public sealed partial class SettingsWindow : Window
             Severity: "info",
             TileId: null,
             Title: $"Update available: {update.LatestVersion}",
-            Body: string.IsNullOrWhiteSpace(update.Notes) ? "Restart to install the latest version." : update.Notes,
+            Body: string.IsNullOrWhiteSpace(update.Notes) ? "Download the installer and install the latest version." : update.Notes,
             Why: "An application update is available.",
             SuggestedMinutes: null,
             Actions: new List<PromptActionView>
             {
-                new("install_update", "Restart & Install"),
+                new("install_update", "Install Update"),
                 new("ignore_update", "Ignore"),
             },
             ExpiresAt: null,
@@ -300,23 +300,20 @@ public sealed partial class SettingsWindow : Window
                 PromptToastDisplayService.Instance.Hide();
                 if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))
                 {
-                    if (Uri.TryCreate(update.DownloadUrl, UriKind.Absolute, out var downloadUri) &&
-                        (string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase) ||
-                         string.Equals(downloadUri.Scheme, "ms-appinstaller", StringComparison.OrdinalIgnoreCase)))
+                    try
                     {
+                        var installerPath = await _updateService.DownloadInstallerAsync(update.DownloadUrl);
                         System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
                         {
-                            FileName = downloadUri.ToString(),
+                            FileName = installerPath,
                             UseShellExecute = true,
                         });
+                        ((App)Application.Current).Shutdown();
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        UpdateStatusTextBlock.Text = "Update link is invalid.";
-                        return;
+                        UpdateStatusTextBlock.Text = $"Update install failed: {ex.Message}";
                     }
-
-                    ((App)Application.Current).Shutdown();
                 }
                 else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
                 {

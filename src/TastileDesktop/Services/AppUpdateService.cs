@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Diagnostics;
 using System.Text.Json.Serialization;
 
 namespace TastileDesktop.Services;
@@ -68,6 +69,35 @@ public sealed class AppUpdateService
         }
 
         return !string.Equals(update.LatestVersion, ignoredVersion, StringComparison.OrdinalIgnoreCase);
+    }
+
+    public async Task<string> DownloadInstallerAsync(string downloadUrl)
+    {
+        if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var downloadUri) ||
+            !string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Installer download URL must use HTTPS.", nameof(downloadUrl));
+        }
+
+        var fileName = Path.GetFileName(downloadUri.LocalPath);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = "tastile-update.exe";
+        }
+        else if (!Path.HasExtension(fileName))
+        {
+            fileName = $"{fileName}.exe";
+        }
+
+        var tempPath = Path.Combine(Path.GetTempPath(), $"tastile-update-{Guid.NewGuid():N}-{fileName}");
+        using var response = await _httpClient.GetAsync(downloadUri, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+
+        await using var source = await response.Content.ReadAsStreamAsync();
+        await using var destination = File.Create(tempPath);
+        await source.CopyToAsync(destination);
+
+        return tempPath;
     }
 
     private static int CompareVersions(string left, string right)

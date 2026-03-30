@@ -1,9 +1,14 @@
 param(
-    [Parameter(Mandatory = $false)][string]$Version = "0.1.0"
+    [Parameter(Mandatory = $false)][string]$Version = "0.2.0"
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+$Version = $Version.Trim()
+if ($Version.StartsWith("v", [System.StringComparison]::OrdinalIgnoreCase)) {
+    $Version = $Version.Substring(1)
+}
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $buildOutDir = Join-Path $repoRoot "artifacts\desktop-build"
@@ -22,6 +27,7 @@ Push-Location $repoRoot
 try {
     dotnet build "src\TastileDesktop\TastileDesktop.csproj" `
         -c Release `
+        -p:Version=$Version `
         -p:DaemonRustTarget=x86_64-pc-windows-msvc `
         -p:DaemonBinaryPath=..\..\..\tastile-core\target\x86_64-pc-windows-msvc\release\tastile-daemon.exe `
         -p:AppxPackage=false `
