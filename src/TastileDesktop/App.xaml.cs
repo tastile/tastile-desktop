@@ -388,6 +388,7 @@ public partial class App : Application
         _singleInstanceMutex?.ReleaseMutex();
         _singleInstanceMutex?.Dispose();
         _mainWindow?.Close();
+        Exit();
     }
 }
 
