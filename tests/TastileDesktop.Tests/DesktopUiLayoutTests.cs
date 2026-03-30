@@ -26,4 +26,18 @@ public sealed class DesktopUiLayoutTests
         Assert.DoesNotContain("UpdateManifestUrl", xaml);
         Assert.Contains("Check for updates", xaml);
     }
+
+    [Fact]
+    public void SettingsWindow_ActionButtons_UseFullWidthLayout()
+    {
+        var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Views\SettingsWindow.xaml"));
+        var xaml = File.ReadAllText(xamlPath);
+
+        Assert.DoesNotContain("HorizontalAlignment=\"Left\"", xaml);
+        Assert.Contains("Content=\"Sign in with Google\" Click=\"OnSignInGoogleClick\" HorizontalAlignment=\"Stretch\"", xaml);
+        Assert.Contains("Content=\"Sign out\" Click=\"OnSignOutClick\" HorizontalAlignment=\"Stretch\"", xaml);
+        Assert.Contains("Content=\"Sync now\" Click=\"OnSyncNowClick\" HorizontalAlignment=\"Stretch\"", xaml);
+        Assert.Contains("Content=\"Refresh status\" Click=\"OnRefreshSyncStatusClick\" HorizontalAlignment=\"Stretch\"", xaml);
+        Assert.Contains("Content=\"Check for updates\" Click=\"OnCheckUpdateClick\" HorizontalAlignment=\"Stretch\"", xaml);
+    }
 }

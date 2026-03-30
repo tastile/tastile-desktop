@@ -240,7 +240,7 @@
                     </Grid>
                     <TextBlock Text="Fade the prompt toast stack in when it appears. Disabled automatically if Windows animations are turned off." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
-                    <Button Content="Test prompt toast" Click="OnTestPromptToastClick" HorizontalAlignment="Left" Margin="0,8,0,0" />
+                    <Button Content="Test prompt toast" Click="OnTestPromptToastClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
@@ -272,7 +272,7 @@
                     </Grid>
                     <TextBlock Text="Skip the overlay when another app occupies the full monitor, such as games or video playback" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
-                    <Button Content="Test overlay" Click="OnTestPromptOverlayClick" HorizontalAlignment="Left" Margin="0,8,0,0" />
+                    <Button Content="Test overlay" Click="OnTestPromptOverlayClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
@@ -305,10 +305,14 @@
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <TextBlock x:Name="AuthStatusTextBlock" Text="Not signed in" Foreground="{StaticResource AppForegroundSubtleBrush}" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Sign in with Google" Click="OnSignInGoogleClick" />
-                        <Button Content="Sign out" Click="OnSignOutClick" />
-                    </StackPanel>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Sign in with Google" Click="OnSignInGoogleClick" HorizontalAlignment="Stretch" />
+                        <Button Grid.Column="1" Content="Sign out" Click="OnSignOutClick" HorizontalAlignment="Stretch" />
+                    </Grid>
                 </StackPanel>
 
                 <StackPanel Spacing="12">
@@ -345,10 +349,14 @@
                     <TextBlock x:Name="SyncLastResultTextBlock" Text="Result: -" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
                     <TextBlock x:Name="SyncLastErrorTextBlock" Text="Error: -" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
 
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Sync now" Click="OnSyncNowClick" />
-                        <Button Content="Refresh status" Click="OnRefreshSyncStatusClick" />
-                    </StackPanel>
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Sync now" Click="OnSyncNowClick" HorizontalAlignment="Stretch" />
+                        <Button Grid.Column="1" Content="Refresh status" Click="OnRefreshSyncStatusClick" HorizontalAlignment="Stretch" />
+                    </Grid>
                 </StackPanel>
 
                 <StackPanel Spacing="12">
@@ -356,9 +364,7 @@
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <TextBlock Text="Updates are delivered automatically from Tastile release channel." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="Check for updates" Click="OnCheckUpdateClick" />
-                    </StackPanel>
+                    <Button Content="Check for updates" Click="OnCheckUpdateClick" HorizontalAlignment="Stretch" />
                     <TextBlock x:Name="UpdateStatusTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
