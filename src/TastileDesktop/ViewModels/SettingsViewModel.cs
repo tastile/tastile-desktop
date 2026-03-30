@@ -29,7 +29,6 @@ public sealed partial class SettingsViewModel : ObservableObject
     private int _idlePromptMinutes;
     private int _interventionRepeatMinutes;
     private bool _launchAtStartup;
-    private string _updateManifestUrl = string.Empty;
     private string _accentColorMode = AccentColorModes.WindowsAccent;
     private string _customAccentColorHex = "#0078D4";
     private string _windowsAccentColorHex = "#000000";
@@ -237,12 +236,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         set => SetProperty(ref _launchAtStartup, value);
     }
 
-    public string UpdateManifestUrl
-    {
-        get => _updateManifestUrl;
-        set => SetProperty(ref _updateManifestUrl, value);
-    }
-
     public SettingsViewModel()
     {
         _settingsService = new SettingsService();
@@ -277,7 +270,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         IdlePromptMinutes = current.IdlePromptMinutes;
         InterventionRepeatMinutes = current.InterventionRepeatMinutes;
         LaunchAtStartup = current.LaunchAtStartup;
-        UpdateManifestUrl = current.UpdateManifestUrl;
         UpdateSystemAppearance(SystemAppearanceService.Instance.GetCurrentSnapshot());
     }
 
@@ -329,7 +321,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             IdlePromptMinutes = IdlePromptMinutes,
             InterventionRepeatMinutes = InterventionRepeatMinutes,
             LaunchAtStartup = LaunchAtStartup,
-            UpdateManifestUrl = string.IsNullOrWhiteSpace(UpdateManifestUrl) ? current.UpdateManifestUrl : UpdateManifestUrl.Trim(),
+            UpdateManifestUrl = current.UpdateManifestUrl,
         };
         _settingsService.Save(settings);
         

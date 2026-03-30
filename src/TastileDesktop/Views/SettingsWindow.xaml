@@ -355,15 +355,7 @@
                     <TextBlock Text="Updates" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Manifest URL" VerticalAlignment="Center" />
-                        <TextBox Grid.Column="1" Text="{x:Bind ViewModel.UpdateManifestUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="https://your-project.supabase.co/storage/v1/object/public/updates/manifest.json" />
-                    </Grid>
-                    <TextBlock Text="Supabase Storage の manifest.json を指定してください。" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock Text="Updates are delivered automatically from Tastile release channel." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                     <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button Content="Check for updates" Click="OnCheckUpdateClick" />
                     </StackPanel>

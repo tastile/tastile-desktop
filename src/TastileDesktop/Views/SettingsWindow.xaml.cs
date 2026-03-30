@@ -150,17 +150,10 @@ public sealed partial class SettingsWindow : Window
 
     private async void OnCheckUpdateClick(object sender, RoutedEventArgs e)
     {
-        var manifestUrl = ViewModel.UpdateManifestUrl?.Trim();
-        if (string.IsNullOrWhiteSpace(manifestUrl))
-        {
-            UpdateStatusTextBlock.Text = "Manifest URL is required.";
-            return;
-        }
-
         try
         {
             var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
-            var result = await _updateService.CheckForUpdateAsync(manifestUrl, currentVersion);
+            var result = await _updateService.CheckForUpdateAsync(string.Empty, currentVersion);
             if (!result.HasUpdate)
             {
                 UpdateStatusTextBlock.Text = "You are up to date.";

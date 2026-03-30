@@ -12,6 +12,7 @@ public sealed record AppUpdateInfo(
 
 public sealed class AppUpdateService
 {
+    private const string DefaultUpdateEndpoint = "https://tastile.app/api/version";
     private readonly HttpClient _httpClient;
 
     public AppUpdateService(HttpClient? httpClient = null)
@@ -21,21 +22,20 @@ public sealed class AppUpdateService
 
     public async Task<AppUpdateInfo> CheckForUpdateAsync(string manifestUrl, string currentVersion)
     {
-        if (string.IsNullOrWhiteSpace(manifestUrl))
-        {
-            return new AppUpdateInfo(false, currentVersion, string.Empty, null);
-        }
+        var resolvedManifestUrl = ResolveManifestUrl(manifestUrl);
 
         try
         {
-            var manifest = await _httpClient.GetFromJsonAsync<UpdateManifest>(manifestUrl);
-            if (manifest == null || string.IsNullOrWhiteSpace(manifest.LatestVersion) || string.IsNullOrWhiteSpace(manifest.DownloadUrl))
+            var manifest = await _httpClient.GetFromJsonAsync<UpdateManifest>(resolvedManifestUrl);
+            var latestVersion = manifest?.ResolvedLatestVersion;
+            var downloadUrl = manifest?.ResolvedDownloadUrl;
+            if (string.IsNullOrWhiteSpace(latestVersion) || string.IsNullOrWhiteSpace(downloadUrl))
             {
                 return new AppUpdateInfo(false, currentVersion, string.Empty, null);
             }
 
-            var hasUpdate = CompareVersions(manifest.LatestVersion, currentVersion) > 0;
-            if (!Uri.TryCreate(manifest.DownloadUrl, UriKind.Absolute, out var downloadUri) ||
+            var hasUpdate = CompareVersions(latestVersion, currentVersion) > 0;
+            if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var downloadUri) ||
                 !string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             {
                 return new AppUpdateInfo(false, currentVersion, string.Empty, null);
@@ -43,9 +43,9 @@ public sealed class AppUpdateService
 
             return new AppUpdateInfo(
                 HasUpdate: hasUpdate,
-                LatestVersion: manifest.LatestVersion,
+                LatestVersion: latestVersion,
                 DownloadUrl: downloadUri.ToString(),
-                Notes: manifest.Notes);
+                Notes: manifest?.ResolvedNotes);
         }
         catch (HttpRequestException)
         {
@@ -110,15 +110,40 @@ public sealed class AppUpdateService
         return string.Compare(left, right, StringComparison.OrdinalIgnoreCase);
     }
 
+    private static string ResolveManifestUrl(string? manifestUrl)
+    {
+        if (!string.IsNullOrWhiteSpace(manifestUrl))
+        {
+            return manifestUrl.Trim();
+        }
+
+        var runtimeConfigured = RuntimeProfile.ResolveEnvironmentValue("TASTILE_UPDATE_URL");
+        return string.IsNullOrWhiteSpace(runtimeConfigured) ? DefaultUpdateEndpoint : runtimeConfigured.Trim();
+    }
+
     private sealed class UpdateManifest
     {
         [JsonPropertyName("latest_version")]
-        public string LatestVersion { get; set; } = string.Empty;
+        public string? LatestVersion { get; set; }
+
+        [JsonPropertyName("latest")]
+        public string? Latest { get; set; }
 
         [JsonPropertyName("download_url")]
-        public string DownloadUrl { get; set; } = string.Empty;
+        public string? DownloadUrl { get; set; }
 
         [JsonPropertyName("notes")]
         public string? Notes { get; set; }
+
+        [JsonPropertyName("release_notes")]
+        public string? ReleaseNotes { get; set; }
+
+        public string? ResolvedLatestVersion =>
+            string.IsNullOrWhiteSpace(LatestVersion) ? Latest?.Trim() : LatestVersion.Trim();
+
+        public string? ResolvedDownloadUrl => DownloadUrl?.Trim();
+
+        public string? ResolvedNotes =>
+            string.IsNullOrWhiteSpace(Notes) ? ReleaseNotes?.Trim() : Notes.Trim();
     }
 }

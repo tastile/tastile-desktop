@@ -85,7 +85,24 @@ public sealed class AppUpdateServiceTests
     [Fact]
     public async Task CheckForUpdateAsync_ReturnsNoUpdate_WhenManifestUrlIsBlank()
     {
-        var service = new AppUpdateService();
+        var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsoluteUri == "https://tastile.app/api/version")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "latest": "1.0.0",
+                      "download_url": "https://example.com/tastile-setup.exe",
+                      "release_notes": "No-op"
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        })));
 
         var result = await service.CheckForUpdateAsync(
             manifestUrl: "",
