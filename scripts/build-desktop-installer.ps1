@@ -1,5 +1,5 @@
 param(
-[Parameter(Mandatory = $false)][string]$Version = "0.2.5"
+[Parameter(Mandatory = $false)][string]$Version = "0.2.6"
 )
 
 Set-StrictMode -Version Latest
@@ -34,6 +34,13 @@ try {
         -p:PublishSingleFile=false `
         -p:AppxPackage=false `
         -p:WindowsPackageType=None
+
+    $daemonSource = [System.IO.Path]::GetFullPath((Join-Path $repoRoot "..\tastile-core\target\x86_64-pc-windows-msvc\release\tastile-daemon.exe"))
+    if (!(Test-Path $daemonSource)) {
+        throw "Bundled daemon missing: $daemonSource"
+    }
+
+    Copy-Item $daemonSource (Join-Path $buildOutDir "tastile-daemon.exe") -Force
 
     $installerIconDir = Join-Path $buildOutDir "Assets"
     New-Item -ItemType Directory -Path $installerIconDir -Force | Out-Null
