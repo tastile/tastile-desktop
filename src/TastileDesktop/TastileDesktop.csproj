@@ -18,7 +18,7 @@
     <!-- Unpackaged mode for development; set AppxPackage=true for MSIX release -->
     <AppxPackage>false</AppxPackage>
     <WindowsPackageType>None</WindowsPackageType>
-    <ApplicationIcon>..\..\..\docs\tastile-icon.ico</ApplicationIcon>
+    <ApplicationIcon>..\Assets\tastile.ico</ApplicationIcon>
     <DaemonRustTarget>x86_64-pc-windows-msvc</DaemonRustTarget>
     <DaemonBinaryPath>..\..\..\tastile-core\target\$(DaemonRustTarget)\release\tastile-daemon.exe</DaemonBinaryPath>
   </PropertyGroup>
