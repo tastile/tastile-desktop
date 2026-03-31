@@ -2,6 +2,9 @@
     x:Class="TastileDesktop.Views.IntegrationsWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
     Title="Integrations">
 
     <Grid Background="{StaticResource AppBackgroundBrush}">
@@ -15,25 +18,26 @@
         </Grid>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Padding="{StaticResource WindowPagePadding}" Spacing="16" MaxWidth="720">
+            <StackPanel Padding="32" Spacing="24" MaxWidth="720">
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Google Calendar" Style="{StaticResource PageTitleTextStyle}" />
-                    <TextBlock Text="Connect Disconnect Sync now をここから操作できます" Style="{StaticResource SectionBodyTextStyle}" />
+                    <TextBlock Text="Google Calendar" Style="{ThemeResource TitleLargeTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock Text="Connect Disconnect Sync now をここから操作できます" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
-                <Border Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="8" Padding="12">
-                    <StackPanel Spacing="8">
-                        <TextBlock x:Name="StatusTextBlock" Text="Status: loading" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="ReadWriteTextBlock" Text="Read/Write: -" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="AccountTextBlock" Text="Account: -" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock x:Name="SyncedTextBlock" Text="Last synced: -" Style="{StaticResource SectionBodyTextStyle}" />
-                        <StackPanel Orientation="Horizontal" Spacing="8">
-                            <Button x:Name="ConnectButton" Content="Connect" Click="OnConnectClick" />
-                            <Button x:Name="DisconnectButton" Content="Disconnect" Click="OnDisconnectClick" />
-                            <Button x:Name="SyncNowButton" Content="Sync now" Click="OnSyncNowClick" />
+                <Border CornerRadius="0" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
+                    <StackPanel>
+                        <TextBlock x:Name="StatusTextBlock" Text="Status: loading" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                        <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" Margin="0,8,0,8" />
+                        <TextBlock x:Name="ReadWriteTextBlock" Text="Read/Write: -" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                        <TextBlock x:Name="AccountTextBlock" Text="Account: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
+                        <TextBlock x:Name="SyncedTextBlock" Text="Last synced: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button x:Name="ConnectButton" Content="Connect" Click="OnConnectClick" Margin="0,0,8,0" />
+                            <Button x:Name="DisconnectButton" Content="Disconnect" Click="OnDisconnectClick" Margin="0,0,8,0" />
+                            <Button x:Name="SyncNowButton" Content="Sync now" Click="OnSyncNowClick" Margin="0,0,8,0" />
                             <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefreshClick" />
                         </StackPanel>
-                        <TextBlock x:Name="ErrorTextBlock" Text="" Foreground="{StaticResource AccentErrorBrush}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="ErrorTextBlock" Text="" Foreground="#FF0000" TextWrapping="Wrap" Margin="0,8,0,0" />
                     </StackPanel>
                 </Border>
             </StackPanel>

@@ -200,7 +200,7 @@ public partial class App : Application
             
             // Setup tray icon
             Log("Creating TrayIconService...");
-            _trayIconService = new TrayIconService(_mainWindow.ViewModel, apiClient);
+            _trayIconService = new TrayIconService(_mainWindow.ViewModel, apiClient, () => Shutdown());
             Log("Initializing tray icon...");
             _trayIconService.Initialize(_mainWindow);
             Log("Tray icon initialized");

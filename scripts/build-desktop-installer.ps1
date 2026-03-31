@@ -1,5 +1,5 @@
 param(
-[Parameter(Mandatory = $false)][string]$Version = "0.2.9"
+[Parameter(Mandatory = $false)][string]$Version = "0.2.10"
 )
 
 Set-StrictMode -Version Latest

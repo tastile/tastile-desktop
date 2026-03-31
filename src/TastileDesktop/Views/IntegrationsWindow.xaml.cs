@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Windowing;
 using TastileDesktop.Services;
 
 namespace TastileDesktop.Views;
@@ -9,9 +10,8 @@ public sealed partial class IntegrationsWindow : Window
 
     public IntegrationsWindow()
     {
-        InitializeComponent();
+        this.InitializeComponent();
         FloatingWindowHelper.Configure(this, TitleBarArea, 560, 480);
-        _ = RefreshAsync();
     }
 
     private async Task RefreshAsync()
@@ -39,12 +39,25 @@ public sealed partial class IntegrationsWindow : Window
     {
         try
         {
-            await _api.UpdateGoogleCalendarIntegrationAsync(connected: true);
-            await RefreshAsync();
+            var authWindow = new AuthWindow(_api);
+            authWindow.Activate();
+            var result = await authWindow.AuthResultTask;
+            if (result.Success)
+            {
+                await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
+                await RefreshAsync();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.Error))
+            {
+                ErrorTextBlock.Text = result.Error;
+            }
         }
         catch (Exception ex)
         {
             ErrorTextBlock.Text = $"Connect failed: {ex.Message}";
+            App.DebugLog($"[IntegrationsWindow] Connect failed: {ex}");
         }
     }
 

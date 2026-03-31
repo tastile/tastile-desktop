@@ -12,13 +12,15 @@ public class TrayIconService : IDisposable
 {
     private readonly MainViewModel _viewModel;
     private readonly CoreApiClient _api;
+    private readonly Action _quitCallback;
     private TaskbarIcon? _trayIcon;
     private Window? _mainWindow;
 
-    public TrayIconService(MainViewModel viewModel, CoreApiClient api)
+    public TrayIconService(MainViewModel viewModel, CoreApiClient api, Action quitCallback)
     {
         _viewModel = viewModel;
         _api = api;
+        _quitCallback = quitCallback;
     }
 
     /// <summary>
@@ -381,10 +383,7 @@ public class TrayIconService : IDisposable
     private void QuitApplication()
     {
         _trayIcon?.Dispose();
-        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
-        {
-            ((App)Application.Current).Shutdown();
-        });
+        _quitCallback();
     }
 
     public void Dispose()

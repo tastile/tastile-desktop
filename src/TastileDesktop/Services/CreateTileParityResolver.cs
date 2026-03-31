@@ -125,7 +125,7 @@ public static class CreateTileParityResolver
             ObjectiveMode: draft.ObjectiveMode ?? "finish_once",
             TargetWorkMin: string.Equals(draft.TileKind, "work", StringComparison.Ordinal) ? workMinutes : null,
             TargetRestMin: null,
-            DoneRule: null,
+            DoneRule: ResolveDoneRule(draft),
             Recurrence: recurrence);
 
         var interruption = new CreateTileInterruptionRequest(
@@ -340,6 +340,23 @@ public static class CreateTileParityResolver
             return isJapanese ? "この期間にラベルを適用" : "Apply this label within the selected period";
         }
         return isJapanese ? "開始して最初の1手を実行" : "Start and execute the first step";
+    }
+
+    private static string? ResolveDoneRule(CreateTileDraft draft)
+    {
+        if (string.Equals(draft.ObjectiveMode, "maximize_within_interval", StringComparison.Ordinal))
+        {
+            return "interval_end";
+        }
+
+        if (string.Equals(draft.ObjectiveMode, "recurring", StringComparison.Ordinal)
+            && draft.RecurrenceUseEndAt
+            && draft.RecurrenceEndTime.HasValue)
+        {
+            return "time_reached";
+        }
+
+        return "manual";
     }
 
     private static string NormalizeTag(string? value)

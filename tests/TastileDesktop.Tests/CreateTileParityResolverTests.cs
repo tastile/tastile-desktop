@@ -114,4 +114,46 @@ public sealed class CreateTileParityResolverTests
         Assert.Contains(toastPrompt.Actions, static action => action.Id == "auto_nearest");
         Assert.Contains(toastPrompt.Actions, static action => action.Id == "cancel_create");
     }
+
+    [Fact]
+    public void BuildRequest_MapsRecurringDoneRule_ToTimeReached_WhenEndTimeSpecified()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Recurring with end",
+            TileKind: "work",
+            ObjectiveMode: "recurring",
+            RecurrenceUseStartAt: true,
+            RecurrenceUseEndAt: true,
+            RecurrenceStartTime: TimeSpan.FromHours(22),
+            RecurrenceEndTime: TimeSpan.FromHours(23),
+            RecurrenceFrequency: "daily",
+            RecurrenceInterval: 1,
+            WorkHours: 0,
+            WorkMinutes: 30);
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Objective);
+        Assert.Equal("time_reached", request.Objective!.DoneRule);
+    }
+
+    [Fact]
+    public void BuildRequest_MapsMaximizeDoneRule_ToIntervalEnd()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Maximize",
+            TileKind: "work",
+            ObjectiveMode: "maximize_within_interval",
+            UseStartAt: true,
+            UseEndAt: true,
+            StartAt: DateTimeOffset.Parse("2026-03-31T09:00:00+09:00"),
+            EndAt: DateTimeOffset.Parse("2026-03-31T10:00:00+09:00"),
+            WorkHours: 0,
+            WorkMinutes: 60);
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Objective);
+        Assert.Equal("interval_end", request.Objective!.DoneRule);
+    }
 }
