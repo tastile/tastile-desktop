@@ -61,13 +61,41 @@ public class AuthService
     {
         try
         {
-            // Require an active daemon session. Do not silently restore from local file.
             var session = await api.GetSessionAsync();
-            UpdateSession(session);
+            if (IsSessionValid(session))
+            {
+                UpdateSession(session);
+                return;
+            }
+
+            var localSession = LoadSessionFromFile();
+            if (!IsSessionValid(localSession))
+            {
+                UpdateSession(null);
+                return;
+            }
+
+            var restored = await RestoreSessionToDaemonAsync(api, localSession!);
+            UpdateSession(restored);
         }
         catch
         {
-            UpdateSession(null);
+            var localSession = LoadSessionFromFile();
+            if (!IsSessionValid(localSession))
+            {
+                UpdateSession(null);
+                return;
+            }
+
+            try
+            {
+                var restored = await RestoreSessionToDaemonAsync(api, localSession!);
+                UpdateSession(restored);
+            }
+            catch
+            {
+                UpdateSession(null);
+            }
         }
     }
 

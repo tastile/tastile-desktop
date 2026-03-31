@@ -91,7 +91,7 @@ public sealed class AuthServiceTests
     }
 
     [Fact]
-    public async Task InitializeAsync_DoesNotRestoreSavedSession_WhenDaemonSessionIsMissing()
+    public async Task InitializeAsync_RestoresSavedSession_WhenDaemonSessionIsMissing()
     {
         await WithIsolatedAppDataAsync(async tempAppData =>
         {
@@ -141,9 +141,9 @@ public sealed class AuthServiceTests
 
             await service.InitializeAsync(client);
 
-            Assert.False(restoreCalled);
-            Assert.False(service.IsAuthenticated);
-            Assert.Null(service.UserEmail);
+            Assert.True(restoreCalled);
+            Assert.True(service.IsAuthenticated);
+            Assert.Equal("restore@example.com", service.UserEmail);
         });
     }
 
