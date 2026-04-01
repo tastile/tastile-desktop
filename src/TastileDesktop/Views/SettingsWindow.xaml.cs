@@ -31,6 +31,9 @@ public sealed partial class SettingsWindow : Window
         _syncStatusTimer.Start();
         _ = RefreshSyncStatusAsync();
         Closed += OnClosed;
+
+        var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
+        CurrentVersionTextBlock.Text = $"Current version: {currentVersion}";
     }
 
     private void OnSaveClick(object sender, RoutedEventArgs e)

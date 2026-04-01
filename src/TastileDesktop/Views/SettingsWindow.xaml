@@ -363,6 +363,7 @@
                     <TextBlock Text="Updates" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
+                    <TextBlock x:Name="CurrentVersionTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                     <TextBlock Text="Updates are delivered automatically from Tastile release channel." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                     <Button Content="Check for updates" Click="OnCheckUpdateClick" HorizontalAlignment="Stretch" />
                     <TextBlock x:Name="UpdateStatusTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
