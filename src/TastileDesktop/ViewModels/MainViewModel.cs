@@ -71,6 +71,23 @@ public sealed class TileListItem : ObservableObject
     private int? _targetWorkMin;
     private double _progressPercent;
     private string? _nextStartLabel;
+    private string? _fixedStart;
+    private string? _activeStart;
+    private string? _fixedEnd;
+    private string? _activeEnd;
+    private string? _releaseAt;
+    private string? _dueAt;
+    private int? _targetRestMin;
+    private string? _doneRule;
+    private string? _doneDefinition;
+    private int _interruptPenalty;
+    private int _resumePenalty;
+    private bool _breakSplitsWork;
+    private bool _externalInterruptOnly;
+    private bool _autoStart;
+    private bool _autoComplete;
+    private string? _semanticRole;
+    private List<string>? _labels;
 
     public string Id 
     { 
@@ -129,6 +146,170 @@ public sealed class TileListItem : ObservableObject
         }
     }
     public string NextStartDisplay => string.IsNullOrWhiteSpace(NextStartLabel) ? "unscheduled" : NextStartLabel;
+    
+    public string? FixedStart
+    {
+        get => _fixedStart;
+        set => SetProperty(ref _fixedStart, value);
+    }
+
+    public string? ActiveStart
+    {
+        get => _activeStart;
+        set => SetProperty(ref _activeStart, value);
+    }
+
+    public string? FixedEnd
+    {
+        get => _fixedEnd;
+        set => SetProperty(ref _fixedEnd, value);
+    }
+
+    public string? ActiveEnd
+    {
+        get => _activeEnd;
+        set => SetProperty(ref _activeEnd, value);
+    }
+
+    public string? ReleaseAt
+    {
+        get => _releaseAt;
+        set => SetProperty(ref _releaseAt, value);
+    }
+
+    public string? DueAt
+    {
+        get => _dueAt;
+        set => SetProperty(ref _dueAt, value);
+    }
+
+    public int? TargetRestMin
+    {
+        get => _targetRestMin;
+        set => SetProperty(ref _targetRestMin, value);
+    }
+
+    public string? DoneRule
+    {
+        get => _doneRule;
+        set => SetProperty(ref _doneRule, value);
+    }
+
+    public string? ObjectiveMode { get; set; }
+
+    public string? DoneDefinition
+    {
+        get => _doneDefinition;
+        set => SetProperty(ref _doneDefinition, value);
+    }
+
+    public int InterruptPenalty
+    {
+        get => _interruptPenalty;
+        set => SetProperty(ref _interruptPenalty, value);
+    }
+
+    public int ResumePenalty
+    {
+        get => _resumePenalty;
+        set => SetProperty(ref _resumePenalty, value);
+    }
+
+    public bool BreakSplitsWork
+    {
+        get => _breakSplitsWork;
+        set => SetProperty(ref _breakSplitsWork, value);
+    }
+
+    public bool ExternalInterruptOnly
+    {
+        get => _externalInterruptOnly;
+        set => SetProperty(ref _externalInterruptOnly, value);
+    }
+
+    public bool AutoStart
+    {
+        get => _autoStart;
+        set => SetProperty(ref _autoStart, value);
+    }
+
+    public bool AutoComplete
+    {
+        get => _autoComplete;
+        set => SetProperty(ref _autoComplete, value);
+    }
+
+    public string? SemanticRole
+    {
+        get => _semanticRole;
+        set => SetProperty(ref _semanticRole, value);
+    }
+
+    public List<string>? Labels
+    {
+        get => _labels;
+        set => SetProperty(ref _labels, value);
+    }
+
+    public string? RecurrenceSettings { get; set; }
+
+    public RecurrenceInfo? RecurrenceFromObjective { get; set; }
+
+    public int? RecurrenceStepMin { get; set; }
+    public int? RecurrenceWindowStartMin { get; set; }
+    public int? RecurrenceWindowEndMin { get; set; }
+    public string? RecurrenceExpression { get; set; }
+
+    public string ScheduledTimeDisplay
+    {
+        get
+        {
+            if (Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrEmpty(ActiveEnd))
+                {
+                    if (DateTime.TryParse(ActiveEnd, out var endTime))
+                    {
+                        var remaining = endTime - DateTime.Now;
+                        if (remaining.TotalMinutes > 0)
+                            return $"{(int)remaining.TotalMinutes}m remaining";
+                        return "ending";
+                    }
+                }
+                return WorkedMinutes > 0 ? $"{WorkedMinutes}m worked" : "";
+            }
+            else if (Lifecycle.Equals("Done", StringComparison.OrdinalIgnoreCase))
+            {
+                if (!string.IsNullOrEmpty(FixedEnd))
+                {
+                    if (DateTime.TryParse(FixedEnd, out var endTime))
+                    {
+                        return $"ended {endTime:HH:mm}";
+                    }
+                }
+                return WorkedMinutes > 0 ? $"{WorkedMinutes}m total" : "";
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(FixedStart))
+                {
+                    if (DateTime.TryParse(FixedStart, out var startTime))
+                    {
+                        return $"scheduled {startTime:HH:mm}";
+                    }
+                }
+                if (!string.IsNullOrEmpty(ActiveStart))
+                {
+                    if (DateTime.TryParse(ActiveStart, out var startTime))
+                    {
+                        return $"scheduled {startTime:HH:mm}";
+                    }
+                }
+            }
+            return "";
+        }
+    }
+
     public string StatusGlyph => Lifecycle.Trim().ToLowerInvariant() switch
     {
         "started" => "\uE945",
@@ -199,6 +380,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         get => _tiles;
         set => SetProperty(ref _tiles, value);
     }
+
+
 
     // Fix 2: Filter
     public string SelectedFilter

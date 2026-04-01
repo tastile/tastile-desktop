@@ -187,6 +187,7 @@
 
         <Border Grid.Row="2" Padding="20,12" BorderThickness="0,1,0,0" BorderBrush="{StaticResource AppBorderBrush}">
             <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
+                <Button x:Name="DeleteButton" MinWidth="80" Content="削除" Click="OnDeleteClick" Visibility="Collapsed" />
                 <Button x:Name="CancelButton" MinWidth="80" Content="キャンセル" Click="OnCancelClick" />
                 <Button x:Name="CreateButton" MinWidth="80" Content="作成" Style="{ThemeResource AccentButtonStyle}" Click="OnCreateClick" />
             </StackPanel>

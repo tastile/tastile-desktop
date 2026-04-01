@@ -5,6 +5,7 @@ using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
+using TastileDesktop.ViewModels;
 
 namespace TastileDesktop.Views;
 
@@ -27,6 +28,7 @@ public sealed partial class CreateTileWindow : Window
     private readonly CoreApiClient _api = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly bool _isJapanese = CreateTileParityResolver.IsJapanese();
+    private readonly string? _editTileId;
     private CreateTileCatalog _catalog = new([], [], []);
     private readonly HashSet<int> _recurrenceWeekdays = [];
     private bool _titleEdited;
@@ -47,8 +49,14 @@ public sealed partial class CreateTileWindow : Window
     private bool _recurrenceUseStartAt = true;
     private bool _recurrenceUseEndAt = true;
 
-    public CreateTileWindow()
+    public CreateTileWindow() : this(null)
     {
+    }
+
+    public CreateTileWindow(string? editTileId, TileListItem? editTile = null)
+    {
+        _editTileId = editTileId;
+        
         try
         {
             Log("CreateTileWindow ctor start");
@@ -90,6 +98,220 @@ public sealed partial class CreateTileWindow : Window
             InitAccentStates();
             InitTabSelectorStates();
             Log("CreateTileWindow after InitTabSelectorStates");
+
+            if (!string.IsNullOrEmpty(_editTileId))
+            {
+                Title = "Edit Tile";
+                Log($"Edit mode: editTileId={_editTileId}");
+                if (editTile != null)
+                {
+                    Log($"Edit tile: Title={editTile.Title}, SemanticRole={editTile.SemanticRole}, ObjectiveMode={editTile.ObjectiveMode}, TargetWorkMin={editTile.TargetWorkMin}, FixedStart={editTile.FixedStart}, FixedEnd={editTile.FixedEnd}, BreakSplitsWork={editTile.BreakSplitsWork}");
+
+                    TitleTextBox.Text = editTile.Title;
+                    _titleEdited = true;
+
+                    var isLabel = editTile.SemanticRole == "label";
+                    var isRecurring = editTile.ObjectiveMode == "recurring";
+                    var isMaximize = editTile.ObjectiveMode == "maximize_within_interval";
+
+                    Log($"isLabel={isLabel}, isRecurring={isRecurring}, isMaximize={isMaximize}");
+
+                    if (isLabel)
+                    {
+                        KindSelector.SelectedIndex = 1;
+                        _tileKind = "label";
+                    }
+                    else
+                    {
+                        KindSelector.SelectedIndex = 0;
+                        _tileKind = "work";
+                    }
+
+                    if (isRecurring)
+                    {
+                        ModeSelector.SelectedIndex = 1;
+                        _objectiveMode = "recurring";
+                        Log("Set mode to recurring");
+                    }
+                    else if (isMaximize)
+                    {
+                        ModeSelector.SelectedIndex = 0;
+                        _objectiveMode = "maximize_within_interval";
+                        _maximizeActive = true;
+                        MaximizeButton.IsChecked = true;
+                        Log("Set mode to maximize");
+                    }
+                    else
+                    {
+                        ModeSelector.SelectedIndex = 0;
+                        _objectiveMode = "finish_once";
+                        Log("Set mode to finish_once");
+                    }
+
+                    if (editTile.TargetWorkMin.HasValue)
+                    {
+                        var totalMinutes = editTile.TargetWorkMin.Value;
+                        WorkHoursBox.Value = totalMinutes / 60;
+                        WorkMinutesBox.Value = totalMinutes % 60;
+                        _durationManuallyEdited = true;
+                    }
+
+                    if (editTile.BreakSplitsWork)
+                    {
+                        SplitAllowButton.IsChecked = true;
+                        SplitKeepButton.IsChecked = false;
+                        _breakSplitsWork = true;
+                    }
+                    else
+                    {
+                        SplitAllowButton.IsChecked = false;
+                        SplitKeepButton.IsChecked = true;
+                        _breakSplitsWork = false;
+                    }
+
+                    if (!string.IsNullOrEmpty(editTile.FixedStart))
+                    {
+                        try
+                        {
+                            var fixedStart = DateTimeOffset.Parse(editTile.FixedStart);
+                            _useStartAt = true;
+                            UseStartAtButton.IsChecked = true;
+                            StartDatePicker.Date = fixedStart;
+                            StartTimePicker.Time = fixedStart.TimeOfDay;
+                            StartDatePanel.Visibility = Visibility.Visible;
+                        }
+                        catch { }
+                    }
+                    else if (!string.IsNullOrEmpty(editTile.ActiveStart))
+                    {
+                        try
+                        {
+                            var activeStart = DateTimeOffset.Parse(editTile.ActiveStart);
+                            _useStartAt = true;
+                            UseStartAtButton.IsChecked = true;
+                            StartDatePicker.Date = activeStart;
+                            StartTimePicker.Time = activeStart.TimeOfDay;
+                            StartDatePanel.Visibility = Visibility.Visible;
+                        }
+                        catch { }
+                    }
+
+                    if (!string.IsNullOrEmpty(editTile.FixedEnd))
+                    {
+                        try
+                        {
+                            var fixedEnd = DateTimeOffset.Parse(editTile.FixedEnd);
+                            _useEndAt = true;
+                            UseEndAtButton.IsChecked = true;
+                            EndDatePicker.Date = fixedEnd;
+                            EndTimePicker.Time = fixedEnd.TimeOfDay;
+                            EndDatePanel.Visibility = Visibility.Visible;
+                        }
+                        catch { }
+                    }
+                    else if (!string.IsNullOrEmpty(editTile.ActiveEnd))
+                    {
+                        try
+                        {
+                            var activeEnd = DateTimeOffset.Parse(editTile.ActiveEnd);
+                            _useEndAt = true;
+                            UseEndAtButton.IsChecked = true;
+                            EndDatePicker.Date = activeEnd;
+                            EndTimePicker.Time = activeEnd.TimeOfDay;
+                            EndDatePanel.Visibility = Visibility.Visible;
+                        }
+                        catch { }
+                    }
+
+                    if (!string.IsNullOrEmpty(editTile.ReleaseAt))
+                    {
+                        try
+                        {
+                            var releaseAt = DateTimeOffset.Parse(editTile.ReleaseAt);
+                            RecurrenceValidFromButton.IsChecked = true;
+                            _recurrenceValidFromActive = true;
+                            RecurrenceValidFromDatePicker.Date = releaseAt;
+                            RecurrenceValidityGrid.Visibility = Visibility.Visible;
+                        }
+                        catch { }
+                    }
+
+                    if (!string.IsNullOrEmpty(editTile.DueAt))
+                    {
+                        try
+                        {
+                            var dueAt = DateTimeOffset.Parse(editTile.DueAt);
+                            RecurrenceValidToButton.IsChecked = true;
+                            _recurrenceValidToActive = true;
+                            RecurrenceValidToDatePicker.Date = dueAt;
+                            RecurrenceValidityGrid.Visibility = Visibility.Visible;
+                        }
+                        catch { }
+                    }
+
+                    if (editTile.Labels != null && editTile.Labels.Count > 0)
+                    {
+                        ProjectTextBox.Text = editTile.Labels[0];
+                        for (int i = 1; i < editTile.Labels.Count; i++)
+                        {
+                            AddTag(editTile.Labels[i]);
+                        }
+                    }
+
+                    // MemoTextBox is for user notes, not DoneDefinition - leave empty in edit mode
+
+                    if (editTile.RecurrenceStepMin.HasValue)
+                    {
+                        var stepMin = editTile.RecurrenceStepMin.Value;
+                        if (stepMin >= 1440)
+                        {
+                            RecurrenceIntervalBox.Value = stepMin / 1440;
+                        }
+                        else if (stepMin >= 60)
+                        {
+                            RecurrenceIntervalBox.Value = stepMin / 60;
+                        }
+                        else
+                        {
+                            RecurrenceIntervalBox.Value = stepMin;
+                        }
+                    }
+
+                    if (editTile.RecurrenceWindowStartMin.HasValue && editTile.RecurrenceWindowEndMin.HasValue)
+                    {
+                        var windowStart = editTile.RecurrenceWindowStartMin.Value;
+                        var windowEnd = editTile.RecurrenceWindowEndMin.Value;
+                        var startHour = windowStart / 60;
+                        var startMinute = windowStart % 60;
+                        var endHour = windowEnd / 60;
+                        var endMinute = windowEnd % 60;
+                        RecurrenceStartTimePicker.Time = new TimeSpan(startHour, startMinute, 0);
+                        RecurrenceEndTimePicker.Time = new TimeSpan(endHour, endMinute, 0);
+                        RecurringWindowGrid.Visibility = Visibility.Visible;
+                    }
+
+                    if (!string.IsNullOrEmpty(editTile.RecurrenceExpression))
+                    {
+                        var expr = editTile.RecurrenceExpression;
+                        if (expr.Contains("freq=daily"))
+                        {
+                            FreqSelector.SelectedIndex = 0;
+                        }
+                        else if (expr.Contains("freq=weekly"))
+                        {
+                            FreqSelector.SelectedIndex = 1;
+                        }
+                        else if (expr.Contains("freq=monthly"))
+                        {
+                            FreqSelector.SelectedIndex = 2;
+                        }
+                    }
+
+                    DeleteButton.Visibility = Visibility.Visible;
+                    CreateButton.Content = "保存";
+                }
+            }
+
             UpdateVisibility();
             SyncAutoDurationFromSchedule();
             RefreshSuggestedTitle();
@@ -679,13 +901,22 @@ public sealed partial class CreateTileWindow : Window
     private async void OnCreateClick(object sender, RoutedEventArgs e)
     {
         if (!TryBuildRequest(out var request)) return;
-        if (!await EnsureTileQuotaAvailableAsync()) return;
+        if (!string.IsNullOrEmpty(_editTileId))
+        {
+            if (!await EnsureTileQuotaAvailableAsync()) return;
+        }
         try
         {
             var result = await TryCreateWithConflictResolutionAsync(request);
             if (result == null) { ShowError(_isJapanese ? "Daemon から応答がありません。" : "Daemon did not return a response."); return; }
             if (!result.Ok && string.Equals(result.Error, CreateCanceledErrorCode, StringComparison.Ordinal)) { return; }
             if (!result.Ok) { ShowError(result.Error ?? (_isJapanese ? "タイルの作成に失敗しました。" : "Failed to create tile.")); return; }
+
+            if (!string.IsNullOrEmpty(_editTileId))
+            {
+                await _api.DeleteTileAsync(_editTileId);
+            }
+
             Close();
         }
         catch (Exception ex)
@@ -783,4 +1014,13 @@ public sealed partial class CreateTileWindow : Window
     }
 
     private void OnCancelClick(object sender, RoutedEventArgs e) => Close();
+
+    private async void OnDeleteClick(object sender, RoutedEventArgs e)
+    {
+        if (!string.IsNullOrEmpty(_editTileId))
+        {
+            await _api.DeleteTileAsync(_editTileId);
+            Close();
+        }
+    }
 }

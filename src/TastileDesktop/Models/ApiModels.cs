@@ -14,7 +14,46 @@ public record TileView(
     [property: JsonPropertyName("labels")] List<string>? Labels,
     [property: JsonPropertyName("objective_mode")] string? ObjectiveMode,
     [property: JsonPropertyName("target_work_min")] int? TargetWorkMin,
-    [property: JsonPropertyName("resume_note")] string? ResumeNote
+    [property: JsonPropertyName("target_rest_min")] int? TargetRestMin,
+    [property: JsonPropertyName("done_rule")] string? DoneRule,
+    [property: JsonPropertyName("resume_note")] string? ResumeNote,
+    [property: JsonPropertyName("temporal")] TemporalConditions? Temporal,
+    [property: JsonPropertyName("interruption")] InterruptionConditions? Interruption,
+    [property: JsonPropertyName("automation")] AutomationConditions? Automation,
+    [property: JsonPropertyName("recurrence")] RecurrenceInfo? Recurrence,
+    [property: JsonPropertyName("objective")] ObjectiveInfo? Objective
+);
+
+public record ObjectiveInfo(
+    [property: JsonPropertyName("recurrence")] RecurrenceInfo? Recurrence
+);
+
+public record TemporalConditions(
+    [property: JsonPropertyName("release_at")] string? ReleaseAt,
+    [property: JsonPropertyName("due_at")] string? DueAt,
+    [property: JsonPropertyName("fixed_start")] string? FixedStart,
+    [property: JsonPropertyName("fixed_end")] string? FixedEnd,
+    [property: JsonPropertyName("active_start")] string? ActiveStart,
+    [property: JsonPropertyName("active_end")] string? ActiveEnd
+);
+
+public record InterruptionConditions(
+    [property: JsonPropertyName("interrupt_penalty")] int InterruptPenalty,
+    [property: JsonPropertyName("resume_penalty")] int ResumePenalty,
+    [property: JsonPropertyName("break_splits_work")] bool BreakSplitsWork,
+    [property: JsonPropertyName("external_interrupt_only")] bool ExternalInterruptOnly
+);
+
+public record AutomationConditions(
+    [property: JsonPropertyName("auto_start")] bool AutoStart,
+    [property: JsonPropertyName("auto_complete")] bool AutoComplete
+);
+
+public record RecurrenceInfo(
+    [property: JsonPropertyName("step_min")] int StepMin,
+    [property: JsonPropertyName("window_start_min")] int WindowStartMin,
+    [property: JsonPropertyName("window_end_min")] int WindowEndMin,
+    [property: JsonPropertyName("expression")] string? Expression
 );
 
 public record TilesResponse(

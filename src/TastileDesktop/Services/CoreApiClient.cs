@@ -106,8 +106,23 @@ public class CoreApiClient
     public async Task<TilesResponse?> GetTilesAsync()
         => await _httpClient.GetFromJsonAsync<TilesResponse>("/read/tiles");
 
+    public async Task<TilesResponse?> GetTilesAsync(string viewMode, string? lifecycle = null, int? limit = null, string? search = null)
+    {
+        var queryParams = new List<string>();
+        if (!string.IsNullOrEmpty(viewMode)) queryParams.Add($"view_mode={viewMode}");
+        if (!string.IsNullOrEmpty(lifecycle)) queryParams.Add($"lifecycle={lifecycle}");
+        if (limit.HasValue) queryParams.Add($"limit={limit.Value}");
+        if (!string.IsNullOrEmpty(search)) queryParams.Add($"search={Uri.EscapeDataString(search)}");
+
+        var query = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
+        return await _httpClient.GetFromJsonAsync<TilesResponse>($"/read/tiles{query}");
+    }
+
     public async Task<ExecutionView?> GetExecutionViewAsync()
         => await _httpClient.GetFromJsonAsync<ExecutionView>("/read/execution-view");
+
+    public async Task<TileView?> GetTileByIdAsync(string tileId)
+        => await _httpClient.GetFromJsonAsync<TileView>($"/read/tile/{tileId}");
 
     public async Task<TilesInProgressResponse?> GetTilesInProgressAsync()
         => await _httpClient.GetFromJsonAsync<TilesInProgressResponse>("/read/tiles-in-progress");
