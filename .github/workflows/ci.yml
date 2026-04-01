@@ -32,7 +32,8 @@ jobs:
       - name: Provide monorepo-level app icon for build
         shell: pwsh
         run: |
-          Copy-Item "$env:GITHUB_WORKSPACE\src\TastileDesktop\Assets\tastile.ico" "$env:GITHUB_WORKSPACE\..\tastile-icon.ico" -Force
+          New-Item -ItemType Directory -Force -Path "$env:GITHUB_WORKSPACE\docs" | Out-Null
+          Copy-Item "$env:GITHUB_WORKSPACE\src\TastileDesktop\Assets\tastile.ico" "$env:GITHUB_WORKSPACE\docs\tastile-icon.ico" -Force
 
       - name: Checkout core repo at sibling path
         uses: actions/checkout@v4
