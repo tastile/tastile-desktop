@@ -1115,6 +1115,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(StartedCount));
         OnPropertyChanged(nameof(DoneCount));
         OnPropertyChanged(nameof(NextUpTile));
+        OnPropertyChanged(nameof(NextUp));
         OnPropertyChanged(nameof(NextUpTitle));
         OnPropertyChanged(nameof(NextUpAction));
         OnPropertyChanged(nameof(NextUpWorkedText));
@@ -1405,6 +1406,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         finally
         {
             OnPropertyChanged(nameof(NextUpTile));
+            OnPropertyChanged(nameof(NextUp));
             OnPropertyChanged(nameof(NextUpTitle));
             OnPropertyChanged(nameof(NextUpAction));
             OnPropertyChanged(nameof(NextUpWorkedText));
