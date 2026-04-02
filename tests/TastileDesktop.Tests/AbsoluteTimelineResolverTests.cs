@@ -41,6 +41,9 @@ public sealed class AbsoluteTimelineResolverTests
 
         Assert.Equal(2, layout.Blocks.Count);
         Assert.All(layout.Blocks, block => Assert.Equal(2, block.TotalLanes));
-        Assert.NotEqual(layout.Blocks[0].Lane, layout.Blocks[1].Lane);
+
+        var lanesByTileId = layout.Blocks.ToDictionary(block => block.TileId!, block => block.Lane);
+        Assert.Equal(2, lanesByTileId.Values.Distinct().Count());
+        Assert.NotEqual(lanesByTileId["tile-a"], lanesByTileId["tile-b"]);
     }
 }
