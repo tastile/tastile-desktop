@@ -71,6 +71,7 @@ public sealed class TileListItem : ObservableObject
     private int? _targetWorkMin;
     private double _progressPercent;
     private string? _nextStartLabel;
+    private string? _projectedNextStartAt;
     private string? _fixedStart;
     private string? _activeStart;
     private string? _fixedEnd;
@@ -144,6 +145,11 @@ public sealed class TileListItem : ObservableObject
                 OnPropertyChanged(nameof(NextStartDisplay));
             }
         }
+    }
+    public string? ProjectedNextStartAt
+    {
+        get => _projectedNextStartAt;
+        set => SetProperty(ref _projectedNextStartAt, value);
     }
     public string NextStartDisplay => string.IsNullOrWhiteSpace(NextStartLabel) ? "unscheduled" : NextStartLabel;
     
@@ -291,23 +297,30 @@ public sealed class TileListItem : ObservableObject
             }
             else
             {
-                if (!string.IsNullOrEmpty(FixedStart))
+            if (!string.IsNullOrEmpty(FixedStart))
+            {
+                if (DateTime.TryParse(FixedStart, out var startTime))
                 {
-                    if (DateTime.TryParse(FixedStart, out var startTime))
-                    {
-                        return $"scheduled {startTime:HH:mm}";
-                    }
-                }
-                if (!string.IsNullOrEmpty(ActiveStart))
-                {
-                    if (DateTime.TryParse(ActiveStart, out var startTime))
-                    {
-                        return $"scheduled {startTime:HH:mm}";
-                    }
+                    return $"scheduled {startTime:HH:mm}";
                 }
             }
-            return "";
+            if (!string.IsNullOrEmpty(ActiveStart))
+            {
+                if (DateTime.TryParse(ActiveStart, out var startTime))
+                {
+                    return $"scheduled {startTime:HH:mm}";
+                }
+            }
+            if (!string.IsNullOrEmpty(ProjectedNextStartAt))
+            {
+                if (DateTimeOffset.TryParse(ProjectedNextStartAt, out var projectedStart))
+                {
+                    return $"scheduled {projectedStart.ToLocalTime():HH:mm}";
+                }
+            }
         }
+        return "";
+    }
     }
 
     public string StatusGlyph => Lifecycle.Trim().ToLowerInvariant() switch
@@ -373,7 +386,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private string _timelineNowLabel = string.Empty;
     private Visibility _timelineNowVisibility = Visibility.Collapsed;
     private string? _focusedRunningTileId;
-    private readonly Dictionary<string, DateTimeOffset> _nextStartByTileId = new(StringComparer.OrdinalIgnoreCase);
+    private string? _nextActionableTileId;
+    private DateTimeOffset? _nextActionableStartAt;
 
     public ObservableCollection<TileListItem> Tiles
     {
@@ -569,9 +583,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         ? "Attach memo to active tile..."
         : "Send a free memo to core...";
 
-    public TileListItem? NextUpTile =>
-        _allTiles.FirstOrDefault(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase))
-        ?? _allTiles.FirstOrDefault(t => t.Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase));
+    internal static TileListItem? ResolveNextUpTile(IReadOnlyList<TileListItem> allTiles, string? nextActionableTileId)
+    {
+        if (string.IsNullOrWhiteSpace(nextActionableTileId))
+        {
+            return null;
+        }
+
+        return allTiles.FirstOrDefault(tile =>
+            string.Equals(tile.Id, nextActionableTileId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    public TileListItem? NextUpTile => ResolveNextUpTile(_allTiles, _nextActionableTileId);
     // Alias used by MainWindow.xaml x:Bind (ViewModel.NextUp.StatusGlyph)
     public TileListItem? NextUp => NextUpTile;
 
@@ -613,11 +636,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ? RunningQuickTiles
             : RunningQuickTiles.Where(t => !string.Equals(t.Id, MainRunningTask.Id, StringComparison.OrdinalIgnoreCase)).ToList();
     public IReadOnlyList<TileListItem> NextQuickCandidates =>
-        _allTiles.Where(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase)).Skip(1).Take(5).ToList();
-    public string MainCountdownText =>
-        _executionView?.MainTileEndsAt != null && DateTimeOffset.TryParse(_executionView.MainTileEndsAt, out var endsAt)
-            ? FormatCountdown(endsAt - DateTimeOffset.UtcNow)
-            : NextUpTile?.NextStartLabel ?? "00:00";
+        _allTiles
+            .Where(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase))
+            .Where(t => NextUpTile == null || !string.Equals(t.Id, NextUpTile.Id, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
+    public string MainCountdownText => CountdownTextResolver.Resolve(
+        _executionView?.MainTileEndsAt,
+        _nextActionableStartAt,
+        DateTimeOffset.UtcNow);
 
     public double MainRunningProgressPercent
     {
@@ -643,13 +670,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private static string FormatCountdown(TimeSpan remaining)
-    {
-        if (remaining.TotalSeconds <= 0) return "00:00";
-        return remaining.TotalHours >= 1
-            ? $"{(int)remaining.TotalHours:00}:{remaining.Minutes:00}:{remaining.Seconds:00}"
-            : $"{remaining.Minutes:00}:{remaining.Seconds:00}";
-    }
     public string NextUpStartText => NextUpTile?.NextStartLabel ?? "unscheduled";
     
     // Core が計算した next_start を表示するだけ（UI側で計算しない）
@@ -689,6 +709,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private PromptToastDisplayService? _promptToastDisplayService;
     private string? _lastHandledPromptId;
     private bool _toastDismissedByAction;
+    public PollingService PollingService => _pollingService;
 
     public MainViewModel()
     {
@@ -708,6 +729,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _promptAttentionOverlayService = PromptAttentionOverlayService.Instance;
         _promptToastDisplayService = PromptToastDisplayService.Instance;
         _pollingService.PendingPromptChanged += OnPromptToastPromptChanged;
+
     }
 
     public async Task InitializeAsync()
@@ -963,24 +985,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private void OnTimelineChanged(object? sender, TimelineTodayResponse? timeline)
     {
-        _nextStartByTileId.Clear();
-        var nowLocal = DateTimeOffset.Now;
-        foreach (var item in timeline?.Items ?? [])
-        {
-            if (!string.Equals(item.Kind, "scheduled", StringComparison.OrdinalIgnoreCase)) continue;
-            if (string.Equals(item.SemanticRole, "break", StringComparison.OrdinalIgnoreCase)) continue;
-            if (string.IsNullOrWhiteSpace(item.TileId)) continue;
-            if (!DateTimeOffset.TryParse(item.StartedAt, out var start)) continue;
-            var startLocal = start.ToLocalTime();
-            if (startLocal <= nowLocal) continue;
-            if (!_nextStartByTileId.TryGetValue(item.TileId, out var existing) || startLocal < existing)
-            {
-                _nextStartByTileId[item.TileId] = startLocal;
-            }
-        }
         foreach (var tile in _allTiles)
         {
-            tile.NextStartLabel = ResolveNextStartLabel(tile.Id);
+            tile.NextStartLabel = ResolveNextStartLabel(tile.ProjectedNextStartAt);
         }
 
         const double laneGap = 4d;
@@ -1066,6 +1073,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         if (tiles?.Tiles == null) return;
 
+        _nextActionableTileId = string.IsNullOrWhiteSpace(tiles.NextActionableTileId)
+            ? null
+            : tiles.NextActionableTileId;
+        _nextActionableStartAt = DateTimeOffset.TryParse(tiles.NextActionableStartAt, out var nextStart)
+            ? nextStart
+            : null;
+
         _allTiles = tiles.Tiles.Select(t => new TileListItem
         {
             Id = t.Id,
@@ -1077,7 +1091,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ProgressPercent = t.TargetWorkMin.HasValue && t.TargetWorkMin.Value > 0
                 ? Math.Clamp((double)t.WorkedMinutes / t.TargetWorkMin.Value * 100d, 0d, 100d)
                 : 0d,
-            NextStartLabel = ResolveNextStartLabel(t.Id),
+            ProjectedNextStartAt = t.ProjectedNextStartAt,
+            NextStartLabel = ResolveNextStartLabel(t.ProjectedNextStartAt),
         })
         .OrderBy(t => LifecycleSortKey(t.Lifecycle))
         .ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase)
@@ -1100,6 +1115,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(StartedCount));
         OnPropertyChanged(nameof(DoneCount));
         OnPropertyChanged(nameof(NextUpTile));
+        OnPropertyChanged(nameof(NextUp));
         OnPropertyChanged(nameof(NextUpTitle));
         OnPropertyChanged(nameof(NextUpAction));
         OnPropertyChanged(nameof(NextUpWorkedText));
@@ -1183,13 +1199,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SecondaryRunningQuickTiles));
     }
 
-    private string? ResolveNextStartLabel(string tileId)
+    private string? ResolveNextStartLabel(string? projectedNextStartAt)
     {
-        if (!_nextStartByTileId.TryGetValue(tileId, out var start))
+        if (string.IsNullOrWhiteSpace(projectedNextStartAt))
         {
             return null;
         }
-        return start.ToString("MM/dd HH:mm");
+        if (!DateTimeOffset.TryParse(projectedNextStartAt, out var start))
+        {
+            return null;
+        }
+        return start.ToLocalTime().ToString("MM/dd HH:mm");
     }
 
 
@@ -1386,6 +1406,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         finally
         {
             OnPropertyChanged(nameof(NextUpTile));
+            OnPropertyChanged(nameof(NextUp));
             OnPropertyChanged(nameof(NextUpTitle));
             OnPropertyChanged(nameof(NextUpAction));
             OnPropertyChanged(nameof(NextUpWorkedText));

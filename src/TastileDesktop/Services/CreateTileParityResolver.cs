@@ -10,6 +10,9 @@ public static class CreateTileParityResolver
 
     public static int? GetAutoDurationMinutes(CreateTileDraft draft)
     {
+        var manual = GetWorkTargetMinutes(draft);
+        if (manual > 0) return manual;
+
         var isRecurring = string.Equals(draft.ObjectiveMode, "recurring", StringComparison.Ordinal);
         if (isRecurring)
         {
@@ -20,8 +23,7 @@ public static class CreateTileParityResolver
         var bounded = GetBoundedDurationMinutes(draft.StartAt, draft.EndAt);
         if (bounded.HasValue) return bounded.Value;
 
-        var manual = GetWorkTargetMinutes(draft);
-        return manual > 0 ? manual : null;
+        return null;
     }
 
     public static CreateTileManualAdjustGuidance GetManualAdjustGuidance(CreateTileRequest request, bool isJapanese)
