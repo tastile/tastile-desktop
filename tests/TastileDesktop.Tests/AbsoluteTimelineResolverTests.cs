@@ -42,8 +42,19 @@ public sealed class AbsoluteTimelineResolverTests
         Assert.Equal(2, layout.Blocks.Count);
         Assert.All(layout.Blocks, block => Assert.Equal(2, block.TotalLanes));
 
-        var lanesByTileId = layout.Blocks.ToDictionary(block => block.TileId!, block => block.Lane);
-        Assert.Equal(2, lanesByTileId.Values.Distinct().Count());
-        Assert.NotEqual(lanesByTileId["tile-a"], lanesByTileId["tile-b"]);
+        var tileALanes = layout.Blocks
+            .Where(block => string.Equals(block.TileId, "tile-a", StringComparison.Ordinal))
+            .Select(block => block.Lane)
+            .Distinct()
+            .ToArray();
+        var tileBLanes = layout.Blocks
+            .Where(block => string.Equals(block.TileId, "tile-b", StringComparison.Ordinal))
+            .Select(block => block.Lane)
+            .Distinct()
+            .ToArray();
+
+        Assert.NotEmpty(tileALanes);
+        Assert.NotEmpty(tileBLanes);
+        Assert.DoesNotContain(tileALanes, lane => tileBLanes.Contains(lane));
     }
 }
