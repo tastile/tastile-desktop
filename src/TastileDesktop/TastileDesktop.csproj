@@ -35,7 +35,7 @@
 
   <!-- Include app icon -->
   <ItemGroup>
-    <Content Include="..\..\..\docs\tastile-icon.ico">
+    <Content Include="Assets\tastile.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
