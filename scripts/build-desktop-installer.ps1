@@ -1,5 +1,5 @@
 param(
-[Parameter(Mandatory = $false)][string]$Version = "0.2.11"
+[Parameter(Mandatory = $false)][string]$Version = "0.2.16"
 )
 
 Set-StrictMode -Version Latest
@@ -45,6 +45,9 @@ try {
     $installerIconDir = Join-Path $buildOutDir "Assets"
     New-Item -ItemType Directory -Path $installerIconDir -Force | Out-Null
     Copy-Item (Join-Path $repoRoot "src\TastileDesktop\Assets\tastile.ico") (Join-Path $installerIconDir "tastile.ico") -Force
+    Copy-Item (Join-Path $repoRoot "src\TastileDesktop\Assets\tastile-tray.ico") (Join-Path $installerIconDir "tastile-tray.ico") -Force
+    Copy-Item (Join-Path $repoRoot "src\TastileDesktop\Assets\tastile-tray.ico") (Join-Path $buildOutDir "tastile-tray.ico") -Force
+    Copy-Item (Join-Path $repoRoot "src\TastileDesktop\Assets\tastile.ico") (Join-Path $buildOutDir "tastile-icon.ico") -Force
 
     & $iscc "/DSourceDir=$buildOutDir" "/DOutputDir=$installerOut" "/DAppVersion=$Version" $issPath
 
