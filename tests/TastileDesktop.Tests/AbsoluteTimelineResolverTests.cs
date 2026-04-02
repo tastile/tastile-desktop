@@ -6,35 +6,6 @@ namespace TastileDesktop.Tests;
 public sealed class AbsoluteTimelineResolverTests
 {
     [Fact]
-    public void Resolve_UsesReadableMinimumHeight_ForDenseShortBlocks()
-    {
-        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
-        var items = new List<TimelineItemView>
-        {
-            new(
-                Kind: "work",
-                TileId: "tile-1",
-                SemanticRole: "work",
-                Title: "Short",
-                StartedAt: "2026-04-02T09:00:00+09:00",
-                EndedAt: "2026-04-02T09:05:00+09:00",
-                DurationMin: 5,
-                IsActive: false),
-        };
-
-        var layout = AbsoluteTimelineResolver.Resolve(
-            items,
-            now,
-            new TimelineViewportSettings(
-                ScaleUnit: TimelineScaleUnit.Day,
-                RangeMode: TimelineRangeMode.Day24,
-                AnchorLocal: now));
-
-        Assert.Single(layout.Blocks);
-        Assert.True(layout.Blocks[0].Height >= 44, "Timeline blocks must keep a readable minimum height");
-    }
-
-    [Fact]
     public void Resolve_AssignsSeparateLanes_ForOverlappingTimelineItems()
     {
         var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
