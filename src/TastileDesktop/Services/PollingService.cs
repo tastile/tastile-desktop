@@ -33,6 +33,7 @@ public class PollingService : IDisposable
     private TimelineTodayResponse? _pendingTimeline;
     private bool _pendingConnectionState;
     private readonly DispatcherTimer _uiUpdateTimer;
+    private readonly DispatcherTimer _wallClockPollTimer;
     private CancellationTokenSource? _eventStreamCts;
     private Task? _eventStreamTask;
 
@@ -91,6 +92,10 @@ public class PollingService : IDisposable
         _uiUpdateTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _uiUpdateTimer.Tick += OnUIUpdateTick;
         _uiUpdateTimer.Start();
+
+        _wallClockPollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+        _wallClockPollTimer.Tick += OnWallClockPollTick;
+        _wallClockPollTimer.Start();
     }
 
     /// <summary>
@@ -111,6 +116,7 @@ public class PollingService : IDisposable
     {
         _eventStreamCts?.Cancel();
         _uiUpdateTimer.Stop();
+        _wallClockPollTimer.Stop();
     }
 
     private void OnUIUpdateTick(object? sender, object e)
@@ -332,7 +338,13 @@ public class PollingService : IDisposable
     {
         _eventStreamCts?.Cancel();
         _uiUpdateTimer.Stop();
+        _wallClockPollTimer.Stop();
         _daemonManager.Dispose();
+    }
+
+    private void OnWallClockPollTick(object? sender, object e)
+    {
+        _ = PollAsync();
     }
 
     private async Task RunStateEventLoopAsync(CancellationToken cancellationToken)

@@ -17,10 +17,16 @@
     <Compile Include="..\..\src\TastileDesktop\Services\AppUpdateService.cs" Link="AppUpdateService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\StartupRegistrationService.cs" Link="StartupRegistrationService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CreateTileParityResolver.cs" Link="CreateTileParityResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CreateTileWindowContractResolver.cs" Link="CreateTileWindowContractResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\ITilesChangedSource.cs" Link="ITilesChangedSource.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AbsoluteTimelineResolver.cs" Link="AbsoluteTimelineResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\TimelineStatusActionResolver.cs" Link="TimelineStatusActionResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\QuickPanelIconStyleResolver.cs" Link="QuickPanelIconStyleResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\RunningTileSelection.cs" Link="RunningTileSelection.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CountdownTextResolver.cs" Link="CountdownTextResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\TileTimeDisplayResolver.cs" Link="TileTimeDisplayResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TileHashResolver.cs" Link="TileHashResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\TilesWindowLiveUpdateBridge.cs" Link="TilesWindowLiveUpdateBridge.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\CreateTileModels.cs" Link="CreateTileModels.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="ApiModels.cs" />
   </ItemGroup>
