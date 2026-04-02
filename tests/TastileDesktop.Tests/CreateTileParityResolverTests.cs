@@ -27,6 +27,46 @@ public sealed class CreateTileParityResolverTests
     }
 
     [Fact]
+    public void BuildRequest_PreservesManualDuration_WhenFixedWindowIsLonger()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Windowed task",
+            TileKind: "work",
+            ObjectiveMode: "finish_once",
+            UseStartAt: true,
+            UseEndAt: true,
+            StartAt: DateTimeOffset.Parse("2026-04-02T09:00:00+09:00"),
+            EndAt: DateTimeOffset.Parse("2026-04-02T12:00:00+09:00"),
+            WorkHours: 0,
+            WorkMinutes: 25);
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Objective);
+        Assert.Equal(25, request.Objective!.TargetWorkMin);
+    }
+
+    [Fact]
+    public void BuildRequest_PreservesManualDuration_ForRecurringTile_WhenWindowIsWider()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Recurring manual",
+            TileKind: "work",
+            ObjectiveMode: "recurring",
+            RecurrenceUseStartAt: true,
+            RecurrenceUseEndAt: true,
+            RecurrenceStartTime: TimeSpan.FromHours(9),
+            RecurrenceEndTime: TimeSpan.FromHours(11),
+            WorkHours: 0,
+            WorkMinutes: 30);
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Objective);
+        Assert.Equal(30, request.Objective!.TargetWorkMin);
+    }
+
+    [Fact]
     public void GetManualAdjustGuidance_FocusesBothBounds_WhenFixedStartAndEndExist()
     {
         var request = new CreateTileRequest(

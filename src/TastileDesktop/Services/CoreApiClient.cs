@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.IO;
 using TastileDesktop.Models;
@@ -124,6 +125,9 @@ public class CoreApiClient
     public async Task<TileView?> GetTileByIdAsync(string tileId)
         => await _httpClient.GetFromJsonAsync<TileView>($"/read/tile/{tileId}");
 
+    public async Task<EditableTileView?> GetEditableTileByIdAsync(string tileId)
+        => await _httpClient.GetFromJsonAsync<EditableTileView>($"/read/tile/{tileId}/editable");
+
     public async Task<TilesInProgressResponse?> GetTilesInProgressAsync()
         => await _httpClient.GetFromJsonAsync<TilesInProgressResponse>("/read/tiles-in-progress");
 
@@ -138,6 +142,36 @@ public class CoreApiClient
 
     public async Task<TimelineTodayResponse?> GetTodayTimelineAsync()
         => await _httpClient.GetFromJsonAsync<TimelineTodayResponse>("/views/timeline/today");
+
+    public async IAsyncEnumerable<string> StreamStateEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/read/events/state");
+        request.Headers.Accept.ParseAdd("text/event-stream");
+        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        using var reader = new StreamReader(stream);
+        while (!reader.EndOfStream && !cancellationToken.IsCancellationRequested)
+        {
+            var line = await reader.ReadLineAsync(cancellationToken);
+            if (line is null)
+            {
+                yield break;
+            }
+
+            if (!line.StartsWith("data:", StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var payload = line["data:".Length..].Trim();
+            if (!string.IsNullOrWhiteSpace(payload))
+            {
+                yield return payload;
+            }
+        }
+    }
 
     // Returns raw JSON because Event uses serde tagged enum
     public async Task<JsonElement?> GetEventsRawAsync()
@@ -185,6 +219,20 @@ public class CoreApiClient
 
     public async Task<CommandResponse?> DeleteTileAsync(string tileId)
         => await PostCommandAsync("/commands/tile/delete", new { tile_id = tileId });
+
+    public async Task<CommandResponse?> UpdateTileAsync(string tileId, CreateTileRequest request)
+        => await PostCommandAsync("/commands/tile/update", new
+        {
+            tile_id = tileId,
+            title = request.Title,
+            next_action = request.NextAction,
+            done_definition = request.DoneDefinition,
+            temporal = request.Temporal,
+            objective = request.Objective,
+            interruption = request.Interruption,
+            automation = request.Automation,
+            annotation = request.Annotation,
+        });
 
     public async Task<RequestPromptResponse?> RequestPromptAsync(string tileId)
     {

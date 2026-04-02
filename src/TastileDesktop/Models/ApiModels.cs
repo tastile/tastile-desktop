@@ -17,6 +17,7 @@ public record TileView(
     [property: JsonPropertyName("target_rest_min")] int? TargetRestMin,
     [property: JsonPropertyName("done_rule")] string? DoneRule,
     [property: JsonPropertyName("resume_note")] string? ResumeNote,
+    [property: JsonPropertyName("projected_next_start_at")] string? ProjectedNextStartAt,
     [property: JsonPropertyName("temporal")] TemporalConditions? Temporal,
     [property: JsonPropertyName("interruption")] InterruptionConditions? Interruption,
     [property: JsonPropertyName("automation")] AutomationConditions? Automation,
@@ -57,7 +58,9 @@ public record RecurrenceInfo(
 );
 
 public record TilesResponse(
-    [property: JsonPropertyName("tiles")] List<TileView> Tiles
+    [property: JsonPropertyName("tiles")] List<TileView> Tiles,
+    [property: JsonPropertyName("next_actionable_tile_id")] string? NextActionableTileId,
+    [property: JsonPropertyName("next_actionable_start_at")] string? NextActionableStartAt
 );
 
 public record ExecutionView(
@@ -174,6 +177,18 @@ public record CreateTileRequest(
     [property: JsonPropertyName("automation")] CreateTileAutomationRequest? Automation,
     [property: JsonPropertyName("annotation")] CreateTileAnnotationRequest? Annotation,
     [property: JsonPropertyName("conflict_resolution")] string? ConflictResolution
+);
+
+public record EditableTileView(
+    [property: JsonPropertyName("id")] string Id,
+    [property: JsonPropertyName("title")] string Title,
+    [property: JsonPropertyName("next_action")] string? NextAction,
+    [property: JsonPropertyName("done_definition")] string? DoneDefinition,
+    [property: JsonPropertyName("temporal")] CreateTileTemporalRequest Temporal,
+    [property: JsonPropertyName("objective")] CreateTileObjectiveRequest Objective,
+    [property: JsonPropertyName("interruption")] CreateTileInterruptionRequest Interruption,
+    [property: JsonPropertyName("automation")] CreateTileAutomationRequest Automation,
+    [property: JsonPropertyName("annotation")] CreateTileAnnotationRequest Annotation
 );
 
 public record CreateTileTemporalRequest(

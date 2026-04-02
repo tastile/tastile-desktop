@@ -11,6 +11,7 @@ public sealed partial class TilesWindow : Window
 {
     private readonly CoreApiClient _api = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
+    private readonly PollingService? _pollingService;
     public ObservableCollection<TileListItem> ReadyTiles { get; } = new();
     public ObservableCollection<TileListItem> StartedTiles { get; } = new();
     public ObservableCollection<TileListItem> DoneTiles { get; } = new();
@@ -25,12 +26,22 @@ public sealed partial class TilesWindow : Window
     private int _startedTotal = 0;
     private int _doneTotal = 0;
 
-    public TilesWindow()
+    public TilesWindow() : this(null)
+    {
+    }
+
+    public TilesWindow(PollingService? pollingService)
     {
         InitializeComponent();
+        _pollingService = pollingService;
         RootGrid.DataContext = this;
         FloatingWindowHelper.Configure(this, TitleBarArea, 720, 760);
+        if (_pollingService != null)
+        {
+            _pollingService.TilesChanged += OnSharedTilesChanged;
+        }
         _ = RefreshTilesAsync();
+        Closed += OnWindowClosed;
     }
 
     private async Task RefreshTilesAsync()
@@ -92,53 +103,7 @@ public sealed partial class TilesWindow : Window
         }
     }
 
-    private static TileListItem ToTileListItem(TileView tv)
-    {
-        var recFromTemporal = tv.Recurrence;
-        var recFromObjective = tv.Objective?.Recurrence;
-        var effectiveRecurrence = recFromTemporal ?? recFromObjective;
-
-        var recurrenceSettings = effectiveRecurrence != null
-            ? $"every {effectiveRecurrence.StepMin}min ({effectiveRecurrence.WindowStartMin}-{effectiveRecurrence.WindowEndMin})"
-            : null;
-
-        return new TileListItem
-        {
-            Id = tv.Id,
-            Title = tv.Title,
-            Lifecycle = tv.Lifecycle,
-            WorkedMinutes = tv.WorkedMinutes,
-            NextAction = tv.NextAction,
-            DoneDefinition = tv.DoneDefinition,
-            TargetWorkMin = tv.TargetWorkMin,
-            TargetRestMin = tv.TargetRestMin,
-            DoneRule = tv.DoneRule,
-            ObjectiveMode = tv.ObjectiveMode,
-            ProgressPercent = tv.TargetWorkMin.HasValue && tv.TargetWorkMin.Value > 0
-                ? Math.Clamp((double)tv.WorkedMinutes / tv.TargetWorkMin.Value * 100d, 0d, 100d)
-                : 0d,
-            FixedStart = tv.Temporal?.FixedStart,
-            ActiveStart = tv.Temporal?.ActiveStart,
-            FixedEnd = tv.Temporal?.FixedEnd,
-            ActiveEnd = tv.Temporal?.ActiveEnd,
-            ReleaseAt = tv.Temporal?.ReleaseAt,
-            DueAt = tv.Temporal?.DueAt,
-            InterruptPenalty = tv.Interruption?.InterruptPenalty ?? 0,
-            ResumePenalty = tv.Interruption?.ResumePenalty ?? 0,
-            BreakSplitsWork = tv.Interruption?.BreakSplitsWork ?? false,
-            ExternalInterruptOnly = tv.Interruption?.ExternalInterruptOnly ?? false,
-            AutoStart = tv.Automation?.AutoStart ?? false,
-            AutoComplete = tv.Automation?.AutoComplete ?? false,
-            SemanticRole = tv.SemanticRole,
-            Labels = tv.Labels,
-            RecurrenceSettings = recurrenceSettings,
-            RecurrenceFromObjective = recFromObjective,
-            RecurrenceStepMin = effectiveRecurrence?.StepMin,
-            RecurrenceWindowStartMin = effectiveRecurrence?.WindowStartMin,
-            RecurrenceWindowEndMin = effectiveRecurrence?.WindowEndMin,
-            RecurrenceExpression = effectiveRecurrence?.Expression,
-        };
-    }
+    private static TileListItem ToTileListItem(TileView tv) => TileListItemMapper.Map(tv);
 
     private void OnViewByStateClick(object sender, RoutedEventArgs e)
     {
@@ -266,11 +231,24 @@ public sealed partial class TilesWindow : Window
     {
         if (sender is not Button button || button.Tag is not string tileId) return;
 
-        var freshTile = await _api.GetTileByIdAsync(tileId);
+        var freshTile = await _api.GetEditableTileByIdAsync(tileId);
         if (freshTile == null) return;
 
-        var tileListItem = ToTileListItem(freshTile);
-        var createWindow = new CreateTileWindow(tileId, tileListItem);
+        var createWindow = new CreateTileWindow(tileId, freshTile);
         createWindow.Activate();
+    }
+
+    private void OnSharedTilesChanged(object? sender, TilesResponse? e)
+    {
+        _ = RefreshTilesAsync();
+    }
+
+    private void OnWindowClosed(object sender, WindowEventArgs args)
+    {
+        if (_pollingService != null)
+        {
+            _pollingService.TilesChanged -= OnSharedTilesChanged;
+        }
+        Closed -= OnWindowClosed;
     }
 }

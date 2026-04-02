@@ -11,7 +11,6 @@ namespace TastileDesktop.Services;
 public class PollingService : IDisposable
 {
     private readonly CoreApiClient _api;
-    private readonly DispatcherTimer _timer;
     private readonly DaemonManager _daemonManager;
     
     private ExecutionView? _lastExecutionView;
@@ -34,6 +33,8 @@ public class PollingService : IDisposable
     private TimelineTodayResponse? _pendingTimeline;
     private bool _pendingConnectionState;
     private readonly DispatcherTimer _uiUpdateTimer;
+    private CancellationTokenSource? _eventStreamCts;
+    private Task? _eventStreamTask;
 
     /// <summary>
     /// Raised when execution state changes (work/break/idle status, main tile, etc.)
@@ -85,10 +86,7 @@ public class PollingService : IDisposable
     {
         _api = api;
         _daemonManager = daemonManager;
-        // ポーリングは2秒間隔で状態検出のみ
-        _timer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(2) };
-        _timer.Tick += async (_, _) => await PollAsync();
-        
+
         // UI更新は200ms間隔でthrottle（変更があった場合のみ発火）
         _uiUpdateTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _uiUpdateTimer.Tick += OnUIUpdateTick;
@@ -101,8 +99,9 @@ public class PollingService : IDisposable
     public async Task StartAsync()
     {
         await _daemonManager.EnsureRunningAsync();
-        _timer.Start();
-        await PollAsync(); // Initial poll
+        await PollAsync();
+        _eventStreamCts = new CancellationTokenSource();
+        _eventStreamTask = RunStateEventLoopAsync(_eventStreamCts.Token);
     }
 
     /// <summary>
@@ -110,7 +109,7 @@ public class PollingService : IDisposable
     /// </summary>
     public void Stop()
     {
-        _timer.Stop();
+        _eventStreamCts?.Cancel();
         _uiUpdateTimer.Stop();
     }
 
@@ -303,7 +302,7 @@ public class PollingService : IDisposable
     private bool HasTilesChanged(TilesResponse? old, TilesResponse? current)
     {
         if (current?.Tiles == null) return _lastTilesHash != null;
-        var hash = string.Join(",", current.Tiles.Select(t => $"{t.Id}:{t.Lifecycle}:{t.ResumeNote}:{t.WorkedMinutes}:{t.BreakMinutes}"));
+        var hash = TileHashResolver.Build(current);
         if (hash == _lastTilesHash) return false;
         _lastTilesHash = hash;
         return true;
@@ -331,8 +330,34 @@ public class PollingService : IDisposable
 
     public void Dispose()
     {
-        _timer.Stop();
+        _eventStreamCts?.Cancel();
         _uiUpdateTimer.Stop();
         _daemonManager.Dispose();
+    }
+
+    private async Task RunStateEventLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                await foreach (var _ in _api.StreamStateEventsAsync(cancellationToken))
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        return;
+                    }
+                    await PollAsync();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
+            }
+        }
     }
 }

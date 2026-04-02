@@ -53,7 +53,7 @@ public sealed partial class CreateTileWindow : Window
     {
     }
 
-    public CreateTileWindow(string? editTileId, TileListItem? editTile = null)
+    public CreateTileWindow(string? editTileId, EditableTileView? editTile = null)
     {
         _editTileId = editTileId;
         
@@ -105,14 +105,27 @@ public sealed partial class CreateTileWindow : Window
                 Log($"Edit mode: editTileId={_editTileId}");
                 if (editTile != null)
                 {
-                    Log($"Edit tile: Title={editTile.Title}, SemanticRole={editTile.SemanticRole}, ObjectiveMode={editTile.ObjectiveMode}, TargetWorkMin={editTile.TargetWorkMin}, FixedStart={editTile.FixedStart}, FixedEnd={editTile.FixedEnd}, BreakSplitsWork={editTile.BreakSplitsWork}");
+                    var semanticRole = editTile.Annotation.SemanticRole;
+                    var objectiveMode = editTile.Objective.ObjectiveMode;
+                    var targetWorkMin = editTile.Objective.TargetWorkMin;
+                    var breakSplitsWork = editTile.Interruption.BreakSplitsWork;
+                    var fixedStartValue = editTile.Temporal.FixedStart;
+                    var fixedEndValue = editTile.Temporal.FixedEnd;
+                    var activeStartValue = editTile.Temporal.ActiveStart;
+                    var activeEndValue = editTile.Temporal.ActiveEnd;
+                    var releaseAtValue = editTile.Temporal.ReleaseAt;
+                    var dueAtValue = editTile.Temporal.DueAt;
+                    var labels = editTile.Annotation.Labels ?? [];
+                    var recurrence = editTile.Objective.Recurrence;
+
+                    Log($"Edit tile: Title={editTile.Title}, SemanticRole={semanticRole}, ObjectiveMode={objectiveMode}, TargetWorkMin={targetWorkMin}, FixedStart={fixedStartValue}, FixedEnd={fixedEndValue}, BreakSplitsWork={breakSplitsWork}");
 
                     TitleTextBox.Text = editTile.Title;
                     _titleEdited = true;
 
-                    var isLabel = editTile.SemanticRole == "label";
-                    var isRecurring = editTile.ObjectiveMode == "recurring";
-                    var isMaximize = editTile.ObjectiveMode == "maximize_within_interval";
+                    var isLabel = semanticRole == "label";
+                    var isRecurring = objectiveMode == "recurring";
+                    var isMaximize = objectiveMode == "maximize_within_interval";
 
                     Log($"isLabel={isLabel}, isRecurring={isRecurring}, isMaximize={isMaximize}");
 
@@ -148,15 +161,15 @@ public sealed partial class CreateTileWindow : Window
                         Log("Set mode to finish_once");
                     }
 
-                    if (editTile.TargetWorkMin.HasValue)
+                    if (targetWorkMin.HasValue)
                     {
-                        var totalMinutes = editTile.TargetWorkMin.Value;
+                        var totalMinutes = targetWorkMin.Value;
                         WorkHoursBox.Value = totalMinutes / 60;
                         WorkMinutesBox.Value = totalMinutes % 60;
                         _durationManuallyEdited = true;
                     }
 
-                    if (editTile.BreakSplitsWork)
+                    if (breakSplitsWork)
                     {
                         SplitAllowButton.IsChecked = true;
                         SplitKeepButton.IsChecked = false;
@@ -169,11 +182,11 @@ public sealed partial class CreateTileWindow : Window
                         _breakSplitsWork = false;
                     }
 
-                    if (!string.IsNullOrEmpty(editTile.FixedStart))
+                    if (!string.IsNullOrEmpty(fixedStartValue))
                     {
                         try
                         {
-                            var fixedStart = DateTimeOffset.Parse(editTile.FixedStart);
+                            var fixedStart = DateTimeOffset.Parse(fixedStartValue);
                             _useStartAt = true;
                             UseStartAtButton.IsChecked = true;
                             StartDatePicker.Date = fixedStart;
@@ -182,11 +195,11 @@ public sealed partial class CreateTileWindow : Window
                         }
                         catch { }
                     }
-                    else if (!string.IsNullOrEmpty(editTile.ActiveStart))
+                    else if (!string.IsNullOrEmpty(activeStartValue))
                     {
                         try
                         {
-                            var activeStart = DateTimeOffset.Parse(editTile.ActiveStart);
+                            var activeStart = DateTimeOffset.Parse(activeStartValue);
                             _useStartAt = true;
                             UseStartAtButton.IsChecked = true;
                             StartDatePicker.Date = activeStart;
@@ -196,11 +209,11 @@ public sealed partial class CreateTileWindow : Window
                         catch { }
                     }
 
-                    if (!string.IsNullOrEmpty(editTile.FixedEnd))
+                    if (!string.IsNullOrEmpty(fixedEndValue))
                     {
                         try
                         {
-                            var fixedEnd = DateTimeOffset.Parse(editTile.FixedEnd);
+                            var fixedEnd = DateTimeOffset.Parse(fixedEndValue);
                             _useEndAt = true;
                             UseEndAtButton.IsChecked = true;
                             EndDatePicker.Date = fixedEnd;
@@ -209,11 +222,11 @@ public sealed partial class CreateTileWindow : Window
                         }
                         catch { }
                     }
-                    else if (!string.IsNullOrEmpty(editTile.ActiveEnd))
+                    else if (!string.IsNullOrEmpty(activeEndValue))
                     {
                         try
                         {
-                            var activeEnd = DateTimeOffset.Parse(editTile.ActiveEnd);
+                            var activeEnd = DateTimeOffset.Parse(activeEndValue);
                             _useEndAt = true;
                             UseEndAtButton.IsChecked = true;
                             EndDatePicker.Date = activeEnd;
@@ -223,11 +236,11 @@ public sealed partial class CreateTileWindow : Window
                         catch { }
                     }
 
-                    if (!string.IsNullOrEmpty(editTile.ReleaseAt))
+                    if (!string.IsNullOrEmpty(releaseAtValue))
                     {
                         try
                         {
-                            var releaseAt = DateTimeOffset.Parse(editTile.ReleaseAt);
+                            var releaseAt = DateTimeOffset.Parse(releaseAtValue);
                             RecurrenceValidFromButton.IsChecked = true;
                             _recurrenceValidFromActive = true;
                             RecurrenceValidFromDatePicker.Date = releaseAt;
@@ -236,11 +249,11 @@ public sealed partial class CreateTileWindow : Window
                         catch { }
                     }
 
-                    if (!string.IsNullOrEmpty(editTile.DueAt))
+                    if (!string.IsNullOrEmpty(dueAtValue))
                     {
                         try
                         {
-                            var dueAt = DateTimeOffset.Parse(editTile.DueAt);
+                            var dueAt = DateTimeOffset.Parse(dueAtValue);
                             RecurrenceValidToButton.IsChecked = true;
                             _recurrenceValidToActive = true;
                             RecurrenceValidToDatePicker.Date = dueAt;
@@ -249,20 +262,20 @@ public sealed partial class CreateTileWindow : Window
                         catch { }
                     }
 
-                    if (editTile.Labels != null && editTile.Labels.Count > 0)
+                    if (labels.Count > 0)
                     {
-                        ProjectTextBox.Text = editTile.Labels[0];
-                        for (int i = 1; i < editTile.Labels.Count; i++)
+                        ProjectTextBox.Text = labels[0];
+                        for (int i = 1; i < labels.Count; i++)
                         {
-                            AddTag(editTile.Labels[i]);
+                            AddTag(labels[i]);
                         }
                     }
 
                     // MemoTextBox is for user notes, not DoneDefinition - leave empty in edit mode
 
-                    if (editTile.RecurrenceStepMin.HasValue)
+                    if (recurrence?.Generator.StepMin is int recurrenceStepMin)
                     {
-                        var stepMin = editTile.RecurrenceStepMin.Value;
+                        var stepMin = recurrenceStepMin;
                         if (stepMin >= 1440)
                         {
                             RecurrenceIntervalBox.Value = stepMin / 1440;
@@ -277,10 +290,9 @@ public sealed partial class CreateTileWindow : Window
                         }
                     }
 
-                    if (editTile.RecurrenceWindowStartMin.HasValue && editTile.RecurrenceWindowEndMin.HasValue)
+                    if (recurrence?.Window.StartOffsetMin is int windowStart
+                        && recurrence.Window.EndOffsetMin is int windowEnd)
                     {
-                        var windowStart = editTile.RecurrenceWindowStartMin.Value;
-                        var windowEnd = editTile.RecurrenceWindowEndMin.Value;
                         var startHour = windowStart / 60;
                         var startMinute = windowStart % 60;
                         var endHour = windowEnd / 60;
@@ -290,9 +302,9 @@ public sealed partial class CreateTileWindow : Window
                         RecurringWindowGrid.Visibility = Visibility.Visible;
                     }
 
-                    if (!string.IsNullOrEmpty(editTile.RecurrenceExpression))
+                    if (!string.IsNullOrEmpty(recurrence?.Selector.Expression))
                     {
-                        var expr = editTile.RecurrenceExpression;
+                        var expr = recurrence.Selector.Expression;
                         if (expr.Contains("freq=daily"))
                         {
                             FreqSelector.SelectedIndex = 0;
@@ -901,27 +913,31 @@ public sealed partial class CreateTileWindow : Window
     private async void OnCreateClick(object sender, RoutedEventArgs e)
     {
         if (!TryBuildRequest(out var request)) return;
-        if (!string.IsNullOrEmpty(_editTileId))
-        {
-            if (!await EnsureTileQuotaAvailableAsync()) return;
-        }
+            var isEdit = !string.IsNullOrEmpty(_editTileId);
+            if (!isEdit && !await EnsureTileQuotaAvailableAsync()) return;
         try
         {
-            var result = await TryCreateWithConflictResolutionAsync(request);
+            var result = isEdit
+                ? await _api.UpdateTileAsync(_editTileId!, request)
+                : await TryCreateWithConflictResolutionAsync(request);
             if (result == null) { ShowError(_isJapanese ? "Daemon から応答がありません。" : "Daemon did not return a response."); return; }
             if (!result.Ok && string.Equals(result.Error, CreateCanceledErrorCode, StringComparison.Ordinal)) { return; }
-            if (!result.Ok) { ShowError(result.Error ?? (_isJapanese ? "タイルの作成に失敗しました。" : "Failed to create tile.")); return; }
-
-            if (!string.IsNullOrEmpty(_editTileId))
+            if (!result.Ok)
             {
-                await _api.DeleteTileAsync(_editTileId);
+                ShowError(result.Error ?? (_isJapanese
+                    ? (isEdit ? "タイルの更新に失敗しました。" : "タイルの作成に失敗しました。")
+                    : (isEdit ? "Failed to update tile." : "Failed to create tile.")));
+                return;
             }
 
             Close();
         }
         catch (Exception ex)
         {
-            ShowError((_isJapanese ? "タイルの作成に失敗しました: " : "Failed to create tile: ") + ex.Message);
+            var prefix = _editTileId is null
+                ? (_isJapanese ? "タイルの作成に失敗しました: " : "Failed to create tile: ")
+                : (_isJapanese ? "タイルの更新に失敗しました: " : "Failed to update tile: ");
+            ShowError(prefix + ex.Message);
         }
     }
 
