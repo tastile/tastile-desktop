@@ -160,8 +160,8 @@ public class CoreApiClient
     public async Task<CommandResponse?> StartTileAsync(string tileId)
         => await PostCommandAsync("/commands/tile/start", new { tile_id = tileId });
 
-    public async Task<CommandResponse?> CompleteTileAsync(string? nextTileId = null)
-        => await PostCommandAsync("/commands/tile/complete", new { next_tile_id = nextTileId });
+    public async Task<CommandResponse?> CompleteTileAsync(string? tileId = null, string? nextTileId = null)
+        => await PostCommandAsync("/commands/tile/complete", new { tile_id = tileId, next_tile_id = nextTileId });
 
     public async Task<CommandResponse?> DeferTileAsync(string tileId, string? reason = null, int? minutes = null)
         => await PostCommandAsync("/commands/tile/defer", new { tile_id = tileId, reason, minutes });

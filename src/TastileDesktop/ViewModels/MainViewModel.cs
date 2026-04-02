@@ -897,7 +897,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                             case "COMPLETE":
                             case "COMPLETE_AND_START_NEXT":
                                 System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.CompleteTileAsync();
+                                await _api.CompleteTileAsync(prompt.Prompt.TileId);
                                 break;
                             case "END_BREAK":
                                 System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
@@ -1527,7 +1527,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     => await _api.StartTileAsync(PendingPrompt.Prompt.TileId),
                 "DEFER" when !string.IsNullOrWhiteSpace(PendingPrompt.Prompt.TileId)
                     => await _api.DeferTileAsync(PendingPrompt.Prompt.TileId),
-                "COMPLETE_AND_START_NEXT" => await _api.CompleteTileAsync(),
+                "COMPLETE" when !string.IsNullOrWhiteSpace(PendingPrompt.Prompt.TileId)
+                    => await _api.CompleteTileAsync(PendingPrompt.Prompt.TileId),
+                "COMPLETE_AND_START_NEXT" => await _api.CompleteTileAsync(PendingPrompt.Prompt.TileId),
                 "EXTEND" => await _api.ExtendTileAsync(10),
                 "END_BREAK" => await _api.EndBreakAsync(),
                 _ => null,

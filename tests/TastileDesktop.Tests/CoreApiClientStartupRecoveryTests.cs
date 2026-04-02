@@ -72,6 +72,33 @@ public sealed class CoreApiClientStartupRecoveryTests
         Assert.Equal("2026-04-02T00:15:00.0000000Z", root.GetProperty("stop_at").GetString());
     }
 
+    [Fact]
+    public async Task CompleteTileAsync_SendsTileIdWhenProvided()
+    {
+        string? capturedPath = null;
+        string? capturedBody = null;
+        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+        {
+            capturedPath = request.RequestUri?.AbsolutePath;
+            capturedBody = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""{ "ok": true, "events": [], "tile_id": null }"""),
+            };
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        _ = await client.CompleteTileAsync(tileId: "tile-123");
+
+        Assert.Equal("/commands/tile/complete", capturedPath);
+        Assert.NotNull(capturedBody);
+        using var doc = JsonDocument.Parse(capturedBody!);
+        var root = doc.RootElement;
+        Assert.Equal("tile-123", root.GetProperty("tile_id").GetString());
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

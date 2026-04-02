@@ -234,7 +234,7 @@ public sealed partial class TilesWindow : Window
                                 break;
                             case "COMPLETE":
                             case "COMPLETE_AND_START_NEXT":
-                                await api.CompleteTileAsync();
+                                await api.CompleteTileAsync(tileId);
                                 break;
                             case "CONFIRM_CONTINUE":
                             case "CONFIRM_STOP_AT":
