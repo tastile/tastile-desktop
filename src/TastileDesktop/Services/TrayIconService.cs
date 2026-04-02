@@ -38,8 +38,16 @@ public class TrayIconService : IDisposable
             NoLeftClickDelay = true,
         };
         
-        // Set icon from ICO file
-        var iconPath = System.IO.Path.Combine(AppContext.BaseDirectory, "tastile-icon.ico");
+        // Resolve icon path across unpackaged, packaged, and legacy install layouts
+        var iconCandidates = new[]
+        {
+            System.IO.Path.Combine(AppContext.BaseDirectory, "tastile-tray.ico"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "tastile-tray.ico"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "tastile.ico"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "Assets", "tastile.ico"),
+            System.IO.Path.Combine(AppContext.BaseDirectory, "tastile-icon.ico"),
+        };
+        var iconPath = iconCandidates.FirstOrDefault(System.IO.File.Exists);
         if (System.IO.File.Exists(iconPath))
         {
             _trayIcon.Icon = new System.Drawing.Icon(iconPath);
@@ -102,7 +110,7 @@ public class TrayIconService : IDisposable
                 _trayIcon.ToolTipText = "Tastile - Offline";
             }
             
-            // Icon stays the same (tastile-icon.ico), only tooltip changes
+            // Icon stays fixed after initialization; only tooltip text changes
         }
         catch (Exception ex)
         {
