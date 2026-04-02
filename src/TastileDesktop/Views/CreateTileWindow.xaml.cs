@@ -105,18 +105,22 @@ public sealed partial class CreateTileWindow : Window
                 Log($"Edit mode: editTileId={_editTileId}");
                 if (editTile != null)
                 {
-                    var semanticRole = editTile.Annotation.SemanticRole;
-                    var objectiveMode = editTile.Objective.ObjectiveMode;
-                    var targetWorkMin = editTile.Objective.TargetWorkMin;
-                    var breakSplitsWork = editTile.Interruption.BreakSplitsWork;
-                    var fixedStartValue = editTile.Temporal.FixedStart;
-                    var fixedEndValue = editTile.Temporal.FixedEnd;
-                    var activeStartValue = editTile.Temporal.ActiveStart;
-                    var activeEndValue = editTile.Temporal.ActiveEnd;
-                    var releaseAtValue = editTile.Temporal.ReleaseAt;
-                    var dueAtValue = editTile.Temporal.DueAt;
-                    var labels = editTile.Annotation.Labels ?? [];
-                    var recurrence = editTile.Objective.Recurrence;
+                    var annotation = editTile.Annotation;
+                    var objective = editTile.Objective;
+                    var interruption = editTile.Interruption;
+                    var temporal = editTile.Temporal;
+                    var semanticRole = annotation?.SemanticRole ?? "work";
+                    var objectiveMode = objective?.ObjectiveMode ?? "finish_once";
+                    var targetWorkMin = objective?.TargetWorkMin;
+                    var breakSplitsWork = interruption?.BreakSplitsWork ?? true;
+                    var fixedStartValue = temporal?.FixedStart;
+                    var fixedEndValue = temporal?.FixedEnd;
+                    var activeStartValue = temporal?.ActiveStart;
+                    var activeEndValue = temporal?.ActiveEnd;
+                    var releaseAtValue = temporal?.ReleaseAt;
+                    var dueAtValue = temporal?.DueAt;
+                    var labels = annotation?.Labels ?? [];
+                    var recurrence = objective?.Recurrence;
 
                     Log($"Edit tile: Title={editTile.Title}, SemanticRole={semanticRole}, ObjectiveMode={objectiveMode}, TargetWorkMin={targetWorkMin}, FixedStart={fixedStartValue}, FixedEnd={fixedEndValue}, BreakSplitsWork={breakSplitsWork}");
 
@@ -320,7 +324,7 @@ public sealed partial class CreateTileWindow : Window
                     }
 
                     DeleteButton.Visibility = Visibility.Visible;
-                    CreateButton.Content = "保存";
+                    CreateButton.Content = _isJapanese ? "保存" : "Save";
                 }
             }
 

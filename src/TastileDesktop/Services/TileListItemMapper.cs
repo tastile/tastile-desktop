@@ -5,6 +5,19 @@ namespace TastileDesktop.Services;
 
 public static class TileListItemMapper
 {
+    private static string? ResolveNextStartLabel(string? projectedNextStartAt)
+    {
+        if (string.IsNullOrWhiteSpace(projectedNextStartAt))
+        {
+            return null;
+        }
+        if (!DateTimeOffset.TryParse(projectedNextStartAt, out var start))
+        {
+            return null;
+        }
+        return start.ToLocalTime().ToString("MM/dd HH:mm");
+    }
+
     public static TileListItem Map(TileView tv)
     {
         var recFromTemporal = tv.Recurrence;
@@ -31,7 +44,7 @@ public static class TileListItemMapper
                 ? Math.Clamp((double)tv.WorkedMinutes / tv.TargetWorkMin.Value * 100d, 0d, 100d)
                 : 0d,
             ProjectedNextStartAt = tv.ProjectedNextStartAt,
-            NextStartLabel = tv.ProjectedNextStartAt,
+            NextStartLabel = ResolveNextStartLabel(tv.ProjectedNextStartAt),
             FixedStart = tv.Temporal?.FixedStart,
             ActiveStart = tv.Temporal?.ActiveStart,
             FixedEnd = tv.Temporal?.FixedEnd,

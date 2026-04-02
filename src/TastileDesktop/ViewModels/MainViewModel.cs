@@ -636,7 +636,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ? RunningQuickTiles
             : RunningQuickTiles.Where(t => !string.Equals(t.Id, MainRunningTask.Id, StringComparison.OrdinalIgnoreCase)).ToList();
     public IReadOnlyList<TileListItem> NextQuickCandidates =>
-        _allTiles.Where(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase)).Skip(1).Take(5).ToList();
+        _allTiles
+            .Where(t => t.Lifecycle.Equals("Ready", StringComparison.OrdinalIgnoreCase))
+            .Where(t => NextUpTile == null || !string.Equals(t.Id, NextUpTile.Id, StringComparison.OrdinalIgnoreCase))
+            .Take(5)
+            .ToList();
     public string MainCountdownText => CountdownTextResolver.Resolve(
         _executionView?.MainTileEndsAt,
         _nextActionableStartAt,

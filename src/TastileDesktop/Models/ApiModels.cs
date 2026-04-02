@@ -184,11 +184,11 @@ public record EditableTileView(
     [property: JsonPropertyName("title")] string Title,
     [property: JsonPropertyName("next_action")] string? NextAction,
     [property: JsonPropertyName("done_definition")] string? DoneDefinition,
-    [property: JsonPropertyName("temporal")] CreateTileTemporalRequest Temporal,
-    [property: JsonPropertyName("objective")] CreateTileObjectiveRequest Objective,
-    [property: JsonPropertyName("interruption")] CreateTileInterruptionRequest Interruption,
-    [property: JsonPropertyName("automation")] CreateTileAutomationRequest Automation,
-    [property: JsonPropertyName("annotation")] CreateTileAnnotationRequest Annotation
+    [property: JsonPropertyName("temporal")] CreateTileTemporalRequest? Temporal,
+    [property: JsonPropertyName("objective")] CreateTileObjectiveRequest? Objective,
+    [property: JsonPropertyName("interruption")] CreateTileInterruptionRequest? Interruption,
+    [property: JsonPropertyName("automation")] CreateTileAutomationRequest? Automation,
+    [property: JsonPropertyName("annotation")] CreateTileAnnotationRequest? Annotation
 );
 
 public record CreateTileTemporalRequest(
