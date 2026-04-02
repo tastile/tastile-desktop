@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="PollingServiceWallClockBehaviorTests.cs" />
+    <Compile Include="TestAppStub.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PollingService.cs" Link="Services\PollingService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PollingHealthCoordinator.cs" Link="Services\PollingHealthCoordinator.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="Services\CoreApiClient.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\DaemonManager.cs" Link="Services\DaemonManager.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\DaemonCompatibility.cs" Link="Services\DaemonCompatibility.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\RuntimeProfile.cs" Link="Services\RuntimeProfile.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="Services\AuthService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\OAuthCallbackHandoff.cs" Link="Services\OAuthCallbackHandoff.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\TileHashResolver.cs" Link="Services\TileHashResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="Models\ApiModels.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Include="Xunit" />
+  </ItemGroup>
+</Project>
