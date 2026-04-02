@@ -10,8 +10,49 @@ namespace TastileDesktop.Services;
 /// </summary>
 public class PollingService : IDisposable
 {
+    private sealed class DispatcherUiUpdateScheduler : IUiUpdateScheduler
+    {
+        private readonly DispatcherTimer _timer;
+
+        public DispatcherUiUpdateScheduler(TimeSpan interval, Action tick)
+        {
+            _timer = new DispatcherTimer { Interval = interval };
+            _timer.Tick += (_, _) => tick();
+        }
+
+        public void Start() => _timer.Start();
+        public void Stop() => _timer.Stop();
+    }
+
+    private sealed class DispatcherWallClockPollScheduler : IWallClockPollScheduler
+    {
+        private DispatcherTimer? _timer;
+
+        public void Start(TimeSpan interval, Action tick)
+        {
+            _timer = new DispatcherTimer { Interval = interval };
+            _timer.Tick += (_, _) => tick();
+            _timer.Start();
+        }
+
+        public void Stop()
+        {
+            _timer?.Stop();
+            _timer = null;
+        }
+    }
+
+    private sealed class NoOpUiUpdateScheduler : IUiUpdateScheduler
+    {
+        public void Start() { }
+        public void Stop() { }
+    }
+
     private readonly CoreApiClient _api;
     private readonly DaemonManager _daemonManager;
+    private readonly IUiUpdateScheduler _uiUpdateTimer;
+    private readonly IWallClockPollScheduler _wallClockPollTimer;
+    private readonly Func<Task> _pollAction;
     
     private ExecutionView? _lastExecutionView;
     private TilesResponse? _lastTiles;
@@ -32,8 +73,6 @@ public class PollingService : IDisposable
     private PendingPromptResponse? _pendingPrompt;
     private TimelineTodayResponse? _pendingTimeline;
     private bool _pendingConnectionState;
-    private readonly DispatcherTimer _uiUpdateTimer;
-    private readonly DispatcherTimer _wallClockPollTimer;
     private CancellationTokenSource? _eventStreamCts;
     private Task? _eventStreamTask;
 
@@ -84,18 +123,49 @@ public class PollingService : IDisposable
     public bool IsConnected => _lastConnectionState;
 
     public PollingService(CoreApiClient api, DaemonManager daemonManager)
+        : this(
+            api,
+            daemonManager,
+            new DispatcherUiUpdateScheduler(
+                TimeSpan.FromMilliseconds(200),
+                () => { }),
+            new DispatcherWallClockPollScheduler(),
+            pollAction: null)
+    {
+    }
+
+    internal PollingService(
+        CoreApiClient api,
+        DaemonManager daemonManager,
+        IWallClockPollScheduler wallClockPollScheduler,
+        Func<Task> pollAction)
+        : this(api, daemonManager, new NoOpUiUpdateScheduler(), wallClockPollScheduler, pollAction)
+    {
+    }
+
+    private PollingService(
+        CoreApiClient api,
+        DaemonManager daemonManager,
+        IUiUpdateScheduler uiUpdateTimer,
+        IWallClockPollScheduler wallClockPollTimer,
+        Func<Task>? pollAction)
     {
         _api = api;
         _daemonManager = daemonManager;
+        _uiUpdateTimer = uiUpdateTimer;
+        _wallClockPollTimer = wallClockPollTimer;
+        _pollAction = pollAction ?? PollAsync;
 
         // UI更新は200ms間隔でthrottle（変更があった場合のみ発火）
-        _uiUpdateTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
-        _uiUpdateTimer.Tick += OnUIUpdateTick;
+        if (_uiUpdateTimer is DispatcherUiUpdateScheduler)
+        {
+            _uiUpdateTimer = new DispatcherUiUpdateScheduler(
+                TimeSpan.FromMilliseconds(200),
+                () => OnUIUpdateTick(null, null!));
+        }
         _uiUpdateTimer.Start();
 
-        _wallClockPollTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
-        _wallClockPollTimer.Tick += OnWallClockPollTick;
-        _wallClockPollTimer.Start();
+        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), () => _ = _pollAction());
     }
 
     /// <summary>
@@ -342,11 +412,6 @@ public class PollingService : IDisposable
         _daemonManager.Dispose();
     }
 
-    private void OnWallClockPollTick(object? sender, object e)
-    {
-        _ = PollAsync();
-    }
-
     private async Task RunStateEventLoopAsync(CancellationToken cancellationToken)
     {
         while (!cancellationToken.IsCancellationRequested)
@@ -372,4 +437,16 @@ public class PollingService : IDisposable
             }
         }
     }
+}
+
+internal interface IUiUpdateScheduler
+{
+    void Start();
+    void Stop();
+}
+
+internal interface IWallClockPollScheduler
+{
+    void Start(TimeSpan interval, Action tick);
+    void Stop();
 }
