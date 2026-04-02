@@ -321,7 +321,7 @@ public sealed partial class MainWindow : Window
         {
             return;
         }
-        await ViewModel.RespondToPromptAsync(actionId);
+        await ViewModel.RespondToPromptAsync(actionId, null);
     }
 
     private void OnOpenExecuteWindowClick(object sender, RoutedEventArgs e)

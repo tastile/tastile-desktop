@@ -18,7 +18,7 @@ public sealed class PromptToastDisplayService : IDisposable
 
     public PromptToastDisplayService() { }
 
-    public void ShowPrompt(Models.PromptView prompt, int maxActions, Func<string, Task> actionHandler, Func<string, int?, Task>? deferHandler = null)
+    public void ShowPrompt(Models.PromptView prompt, int maxActions, Func<string, DateTimeOffset?, Task> actionHandler, Func<string, int?, Task>? deferHandler = null)
     {
         var now = DateTimeOffset.UtcNow;
         _stackedPrompts[prompt.PromptId] = now;

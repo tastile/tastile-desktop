@@ -337,7 +337,7 @@ public partial class App : Application
             PromptToastDisplayService.Instance.ShowPrompt(
                 prompt,
                 maxActions: 2,
-                async actionId =>
+                async (actionId, _) =>
                 {
                     PromptToastDisplayService.Instance.Hide();
                     if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))

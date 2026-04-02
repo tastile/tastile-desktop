@@ -1,6 +1,5 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Xaml.Input;
 using TastileDesktop.Services;
 using System.Collections.ObjectModel;
 using TastileDesktop.Models;
@@ -11,6 +10,7 @@ namespace TastileDesktop.Views;
 public sealed partial class TilesWindow : Window
 {
     private readonly CoreApiClient _api = new();
+    private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     public ObservableCollection<TileListItem> ReadyTiles { get; } = new();
     public ObservableCollection<TileListItem> StartedTiles { get; } = new();
     public ObservableCollection<TileListItem> DoneTiles { get; } = new();
@@ -193,24 +193,73 @@ public sealed partial class TilesWindow : Window
 
     private async void OnTileStatusClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.Tag is not string tileId) return;
+        if (sender is not Button button || button.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId)) return;
 
         var allTiles = ReadyTiles.Concat(StartedTiles).Concat(DoneTiles);
         var tile = allTiles.FirstOrDefault(t => t.Id == tileId);
         if (tile == null) return;
 
-        var api = new CoreApiClient();
-        switch (tile.Lifecycle?.Trim().ToLowerInvariant())
+        var lifecycle = tile.Lifecycle?.Trim().ToLowerInvariant();
+        if (lifecycle == "ready" || lifecycle == "started")
         {
-            case "ready":
-                await api.StartTileAsync(tileId);
-                break;
-            case "started":
-                await api.CompleteTileAsync();
-                break;
+            await RequestPromptForTileAsync(tileId);
         }
+        else if (lifecycle == "done")
+        {
+            var api = new CoreApiClient();
+            await api.StartTileAsync(tileId);
+            await RefreshTilesAsync();
+        }
+    }
 
-        await RefreshTilesAsync();
+    private async Task RequestPromptForTileAsync(string tileId)
+    {
+        try
+        {
+            var response = await _api.RequestPromptAsync(tileId);
+            if (response?.Ok == true && response.Prompt != null)
+            {
+                _promptToast.ShowPrompt(
+                    response.Prompt,
+                    5,
+                    async (actionId, stopAt) =>
+                    {
+                        _promptToast.Hide();
+                        var api = new CoreApiClient();
+                        switch (actionId.ToUpperInvariant())
+                        {
+                            case "START":
+                            case "START_TILE":
+                                await api.StartTileAsync(tileId);
+                                break;
+                            case "COMPLETE":
+                            case "COMPLETE_AND_START_NEXT":
+                                await api.CompleteTileAsync();
+                                break;
+                            case "CONFIRM_CONTINUE":
+                            case "CONFIRM_STOP_AT":
+                            case "CONFIRM_EXECUTED":
+                            case "CONFIRM_SKIPPED":
+                            case "DISMISS":
+                                if (!string.IsNullOrWhiteSpace(response.Prompt.PromptId) &&
+                                    !string.IsNullOrWhiteSpace(response.Prompt.TileId))
+                                {
+                                    await api.RespondStartupRecoveryPromptAsync(
+                                        response.Prompt.PromptId,
+                                        response.Prompt.TileId!,
+                                        actionId.ToUpperInvariant(),
+                                        stopAt);
+                                }
+                                break;
+                        }
+                        await RefreshTilesAsync();
+                    });
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[TilesWindow] RequestPromptForTileAsync error: {ex.Message}");
+        }
     }
 
     private async void OnTileEditClick(object sender, RoutedEventArgs e)

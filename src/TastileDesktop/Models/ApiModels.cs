@@ -244,3 +244,10 @@ public record RequestPromptResponse(
     [property: JsonPropertyName("prompt")] PromptView? Prompt,
     [property: JsonPropertyName("error")] string? Error
 );
+
+public record RespondStartupRecoveryPromptRequest(
+    [property: JsonPropertyName("prompt_id")] string PromptId,
+    [property: JsonPropertyName("tile_id")] string TileId,
+    [property: JsonPropertyName("action_id")] string ActionId,
+    [property: JsonPropertyName("stop_at")] string? StopAt
+);

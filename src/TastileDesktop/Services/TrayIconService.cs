@@ -148,8 +148,8 @@ public class TrayIconService : IDisposable
         {
             Text = "Complete",
             IsEnabled = _viewModel.IsWorking,
+            Command = _viewModel.CompleteTileCommand,
         };
-        completeItem.Click += async (_, _) => await _viewModel.CompleteTileCommand.ExecuteAsync(null);
         menu.Items.Add(completeItem);
 
         // Break (5 min)
@@ -157,8 +157,8 @@ public class TrayIconService : IDisposable
         {
             Text = "Break (5 min)",
             IsEnabled = _viewModel.IsWorking,
+            Command = _viewModel.StartBreakCommand,
         };
-        breakItem.Click += async (_, _) => await _viewModel.StartBreakCommand.ExecuteAsync(null);
         menu.Items.Add(breakItem);
 
         // End Break
@@ -166,8 +166,8 @@ public class TrayIconService : IDisposable
         {
             Text = "End Break",
             IsEnabled = _viewModel.IsOnBreak,
+            Command = _viewModel.EndBreakCommand,
         };
-        endBreakItem.Click += async (_, _) => await _viewModel.EndBreakCommand.ExecuteAsync(null);
         menu.Items.Add(endBreakItem);
 
         menu.Items.Add(new MenuFlyoutSeparator());

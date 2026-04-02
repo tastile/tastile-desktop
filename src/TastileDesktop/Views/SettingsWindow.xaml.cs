@@ -72,7 +72,7 @@ public sealed partial class SettingsWindow : Window
         PromptToastDisplayService.Instance.ShowPrompt(
             testPrompt,
             Math.Clamp(ViewModel.PromptToastMaxVisible, 1, 5),
-            async actionId =>
+            async (actionId, _) =>
             {
                 System.Diagnostics.Debug.WriteLine($"[Test Toast] Action clicked: {actionId}");
                 App.DebugLog($"[Test Toast] Action clicked: {actionId}");
@@ -291,7 +291,7 @@ public sealed partial class SettingsWindow : Window
         PromptToastDisplayService.Instance.ShowPrompt(
             prompt,
             maxActions: 2,
-            async actionId =>
+            async (actionId, _) =>
             {
                 PromptToastDisplayService.Instance.Hide();
                 if (string.Equals(actionId, "install_update", StringComparison.OrdinalIgnoreCase))

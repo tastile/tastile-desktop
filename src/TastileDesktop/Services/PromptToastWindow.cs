@@ -18,7 +18,7 @@ public sealed class PromptToastWindow : Window
     private readonly Grid _actionsGrid;
     private readonly StackPanel _deferOptionsPanel;
     private readonly Button _deferBackButton;
-    private Func<string, Task>? _actionHandler;
+    private Func<string, DateTimeOffset?, Task>? _actionHandler;
     private Func<string, int?, Task>? _deferHandler;
 
     [DllImport("user32.dll")]
@@ -135,7 +135,7 @@ public sealed class PromptToastWindow : Window
         FloatingWindowHelper.SetAlwaysOnTop(this, true);
     }
 
-    public void ShowPrompt(Models.PromptView prompt, int maxActions, Func<string, Task> actionHandler, Func<string, int?, Task>? deferHandler = null)
+    public void ShowPrompt(Models.PromptView prompt, int maxActions, Func<string, DateTimeOffset?, Task> actionHandler, Func<string, int?, Task>? deferHandler = null)
     {
         _actionHandler = actionHandler;
         _deferHandler = deferHandler;
@@ -198,7 +198,7 @@ public sealed class PromptToastWindow : Window
         }
         else if (_actionHandler != null)
         {
-            await _actionHandler("DEFER");
+            await _actionHandler("DEFER", null);
         }
     }
 
@@ -214,6 +214,10 @@ public sealed class PromptToastWindow : Window
             "BREAK" or "START_BREAK" => "休憩",
             "END_BREAK" => "休憩終了",
             "DISMISS" or "CONTINUE" => "閉じる",
+            "CONFIRM_CONTINUE" => "まだ継続中",
+            "CONFIRM_STOP_AT" => "ここで終了した",
+            "CONFIRM_EXECUTED" => "実施した",
+            "CONFIRM_SKIPPED" => "実施しなかった",
             _ => fallbackLabel,
         };
     }
@@ -296,6 +300,69 @@ public sealed class PromptToastWindow : Window
             return;
         }
 
-        await _actionHandler(actionId);
+        if (id == "CONFIRM_STOP_AT")
+        {
+            var stopAt = await PromptStopAtAsync();
+            if (!stopAt.HasValue)
+            {
+                return;
+            }
+
+            await _actionHandler(actionId, stopAt);
+            return;
+        }
+
+        await _actionHandler(actionId, null);
+    }
+
+    private async Task<DateTimeOffset?> PromptStopAtAsync()
+    {
+        if (Content is not FrameworkElement root || root.XamlRoot == null)
+        {
+            return null;
+        }
+
+        var now = DateTimeOffset.Now;
+        var datePicker = new DatePicker
+        {
+            Date = now,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+        };
+        var timePicker = new TimePicker
+        {
+            Time = now.TimeOfDay,
+            HorizontalAlignment = HorizontalAlignment.Stretch,
+            ClockIdentifier = "24HourClock",
+        };
+
+        var panel = new StackPanel
+        {
+            Spacing = 8,
+            Children =
+            {
+                new TextBlock { Text = "終了した時刻を選択してください" },
+                datePicker,
+                timePicker,
+            },
+        };
+
+        var dialog = new ContentDialog
+        {
+            Title = "終了時刻の確認",
+            Content = panel,
+            PrimaryButtonText = "送信",
+            CloseButtonText = "キャンセル",
+            DefaultButton = ContentDialogButton.Primary,
+            XamlRoot = root.XamlRoot,
+        };
+
+        var result = await dialog.ShowAsync();
+        if (result != ContentDialogResult.Primary)
+        {
+            return null;
+        }
+
+        var local = datePicker.Date.LocalDateTime.Date + timePicker.Time;
+        return new DateTimeOffset(local);
     }
 }

@@ -959,7 +959,7 @@ public sealed partial class CreateTileWindow : Window
         _promptToast.ShowPrompt(
             toastPrompt,
             maxActions: Math.Clamp(toastPrompt.Actions.Count, 1, 5),
-            async actionId =>
+            async (actionId, _) =>
             {
                 _promptToast.Hide();
                 completion.TrySetResult(actionId);
@@ -1017,10 +1017,23 @@ public sealed partial class CreateTileWindow : Window
 
     private async void OnDeleteClick(object sender, RoutedEventArgs e)
     {
-        if (!string.IsNullOrEmpty(_editTileId))
+        if (string.IsNullOrEmpty(_editTileId)) return;
+
+        try
         {
-            await _api.DeleteTileAsync(_editTileId);
-            Close();
+            var result = await _api.DeleteTileAsync(_editTileId);
+            if (result?.Ok == true)
+            {
+                Close();
+            }
+            else
+            {
+                ShowError(_isJapanese ? "タイルの削除に失敗しました。" : "Failed to delete tile.");
+            }
+        }
+        catch (Exception ex)
+        {
+            ShowError((_isJapanese ? "エラー: " : "Error: ") + ex.Message);
         }
     }
 }

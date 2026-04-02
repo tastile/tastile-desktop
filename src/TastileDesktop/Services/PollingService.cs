@@ -122,7 +122,9 @@ public class PollingService : IDisposable
             {
                 _hasConnectionChange = false;
                 _lastConnectionState = _pendingConnectionState;
-                System.Diagnostics.Debug.WriteLine($"[UI Update] Connection: {_pendingConnectionState}");
+                var msg = $"[UI Update] Connection: {_pendingConnectionState}";
+                System.Diagnostics.Debug.WriteLine(msg);
+                App.DebugLog(msg);
                 ConnectionStatusChanged?.Invoke(this, _pendingConnectionState);
             }
 
@@ -130,7 +132,9 @@ public class PollingService : IDisposable
             {
                 _hasExecutionViewChange = false;
                 _lastExecutionView = _pendingExecutionView;
-                System.Diagnostics.Debug.WriteLine($"[UI Update] ExecutionView: isWorking={_pendingExecutionView?.IsWorking}, isOnBreak={_pendingExecutionView?.IsOnBreak}, isIdle={_pendingExecutionView?.IsIdle}, mainTile={_pendingExecutionView?.MainTile?.Title}");
+                var msg = $"[UI Update] ExecutionView: isWorking={_pendingExecutionView?.IsWorking}, isOnBreak={_pendingExecutionView?.IsOnBreak}, isIdle={_pendingExecutionView?.IsIdle}, mainTile={_pendingExecutionView?.MainTile?.Title}, mainTileId={_pendingExecutionView?.MainTile?.Id}";
+                System.Diagnostics.Debug.WriteLine(msg);
+                App.DebugLog(msg);
                 ExecutionViewChanged?.Invoke(this, _pendingExecutionView);
             }
 
@@ -211,20 +215,7 @@ public class PollingService : IDisposable
                 return;
             }
 
-            try
-            {
-                // Avoid spurious "sync failed" when daemon rejects unauthenticated sync endpoints.
-                if (AuthService.Instance.IsAuthenticated)
-                {
-                    await _api.TriggerSyncAsync();
-                }
-            }
-            catch
-            {
-                // Keep serving local state even if background sync trigger fails.
-            }
-
-            // Fetch data in parallel
+            // Fetch data in parallel (no more tick-based auto processing)
             var executionViewTask = _api.GetExecutionViewAsync();
             var tilesTask = _api.GetTilesAsync();
             var promptTask = _api.GetPendingPromptAsync();

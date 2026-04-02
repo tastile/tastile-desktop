@@ -206,6 +206,20 @@ public class CoreApiClient
         }
     }
 
+    public async Task<CommandResponse?> RespondStartupRecoveryPromptAsync(
+        string promptId,
+        string tileId,
+        string actionId,
+        DateTimeOffset? stopAt = null)
+    {
+        var body = new RespondStartupRecoveryPromptRequest(
+            PromptId: promptId,
+            TileId: tileId,
+            ActionId: actionId,
+            StopAt: stopAt?.UtcDateTime.ToString("O"));
+        return await PostCommandAsync("/commands/prompt/respond-startup-recovery", body);
+    }
+
     private async Task<CommandResponse?> PostCommandAsync<T>(string path, T body)
     {
         var response = await _httpClient.PostAsJsonAsync(path, body);
