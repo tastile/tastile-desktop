@@ -160,7 +160,7 @@ public partial class App : Application
             
             // Start or connect to daemon
             Log("Starting daemon...");
-            _daemonManager = new DaemonManager();
+            _daemonManager = DaemonManager.Shared;
             var daemonStarted = await _daemonManager.EnsureRunningAsync();
             if (daemonStarted)
             {

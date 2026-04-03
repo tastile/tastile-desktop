@@ -164,8 +164,6 @@ public class PollingService : IDisposable, ITilesChangedSource
                 () => OnUIUpdateTick(null, null!));
         }
         _uiUpdateTimer.Start();
-
-        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), () => _ = TickAndPollAsync());
     }
 
     /// <summary>
@@ -175,6 +173,7 @@ public class PollingService : IDisposable, ITilesChangedSource
     {
         await _daemonManager.EnsureRunningAsync();
         await PollAsync();
+        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), () => _ = TickAndPollAsync());
         _eventStreamCts = new CancellationTokenSource();
         _eventStreamTask = RunStateEventLoopAsync(_eventStreamCts.Token);
     }
@@ -415,7 +414,6 @@ public class PollingService : IDisposable, ITilesChangedSource
         _eventStreamCts?.Cancel();
         _uiUpdateTimer.Stop();
         _wallClockPollTimer.Stop();
-        _daemonManager.Dispose();
     }
 
     private async Task RunStateEventLoopAsync(CancellationToken cancellationToken)

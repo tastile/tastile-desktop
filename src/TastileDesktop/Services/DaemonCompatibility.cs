@@ -60,13 +60,18 @@ internal static class DaemonCompatibility
         }
     }
 
-    public static void KillStaleDaemonProcesses(int currentProcessId)
+    public static void KillStaleDaemonProcesses(int currentProcessId, int? protectedDaemonProcessId = null)
     {
         foreach (var process in Process.GetProcessesByName("tastile-daemon"))
         {
             try
             {
                 if (process.Id == currentProcessId)
+                {
+                    continue;
+                }
+
+                if (protectedDaemonProcessId.HasValue && process.Id == protectedDaemonProcessId.Value)
                 {
                     continue;
                 }

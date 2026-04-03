@@ -719,7 +719,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public MainViewModel()
     {
         _api = new CoreApiClient();
-        _pollingService = new PollingService(_api, new DaemonManager());
+        _pollingService = new PollingService(_api, DaemonManager.Shared);
         
         // Subscribe to polling events
         _pollingService.ExecutionViewChanged += OnExecutionViewChanged;
