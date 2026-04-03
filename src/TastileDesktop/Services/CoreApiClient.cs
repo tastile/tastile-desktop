@@ -14,6 +14,7 @@ public class CoreApiClient
 {
     private readonly HttpClient _httpClient;
     private static readonly string LogPath = Path.Combine(Path.GetTempPath(), "tastile-desktop-debug.log");
+    public static string DebugLogPath => LogPath;
 
     private static void Log(string message)
     {
@@ -138,6 +139,9 @@ public class CoreApiClient
 
     public async Task<SyncStatusResponse?> GetSyncStatusAsync()
         => await _httpClient.GetFromJsonAsync<SyncStatusResponse>("/sync/status");
+
+    public async Task<RuntimePathsResponse?> GetRuntimePathsAsync()
+        => await _httpClient.GetFromJsonAsync<RuntimePathsResponse>("/read/runtime-paths");
 
     // Read endpoints
     public async Task<TilesResponse?> GetTilesAsync()

@@ -13,12 +13,13 @@ public sealed partial class CreateTileWindow : Window
 {
     private const string CreateCanceledErrorCode = "__create_canceled__";
     private static readonly SolidColorBrush ManualAdjustHighlightBrush = new(Windows.UI.Color.FromArgb(255, 255, 193, 7));
+    public static string DebugLogPath => Path.Combine(Path.GetTempPath(), "tastile-desktop.log");
+
     private static void Log(string msg)
     {
         try
         {
-            var path = Path.Combine(Path.GetTempPath(), "tastile-desktop.log");
-            File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
+            File.AppendAllText(DebugLogPath, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
         }
         catch
         {

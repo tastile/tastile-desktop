@@ -136,6 +136,15 @@ public record RecoveryResetResponse(
     [property: JsonPropertyName("applied")] int Applied
 );
 
+public record RuntimePathsResponse(
+    [property: JsonPropertyName("profile_name")] string ProfileName,
+    [property: JsonPropertyName("app_data_dir")] string AppDataDir,
+    [property: JsonPropertyName("db_path")] string DbPath,
+    [property: JsonPropertyName("session_path")] string SessionPath,
+    [property: JsonPropertyName("daemon_startup_log_path")] string DaemonStartupLogPath,
+    [property: JsonPropertyName("daemon_executable_path")] string DaemonExecutablePath
+);
+
 public record PendingPromptResponse(
     [property: JsonPropertyName("prompt")] PromptView? Prompt
 );

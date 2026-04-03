@@ -402,6 +402,58 @@
                         <Button Grid.Column="0" Content="Clear local data" Click="OnResetLocalSyncDataClick" HorizontalAlignment="Stretch" />
                         <Button Grid.Column="1" Content="Re-download from cloud" Click="OnRedownloadRemoteSyncDataClick" HorizontalAlignment="Stretch" />
                     </Grid>
+
+                    <Border Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Padding="12" CornerRadius="0">
+                        <StackPanel Spacing="8">
+                            <TextBlock Text="Runtime paths" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="These are the actual files and folders currently used by this desktop app and daemon." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Profile" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeProfileTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="App data directory" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeAppDataDirTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="SQLite database" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeDbPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Session file" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeSessionPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Daemon startup log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeDaemonStartupLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Desktop API log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeDesktopApiLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Desktop daemon log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeDesktopDaemonLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Create Tile log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeCreateTileLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+
+                            <StackPanel Spacing="2">
+                                <TextBlock Text="Daemon executable" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Name="RuntimeDaemonExecutablePathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
 
                 <StackPanel Spacing="12">

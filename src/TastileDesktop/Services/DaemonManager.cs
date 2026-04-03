@@ -9,10 +9,11 @@ namespace TastileDesktop.Services;
 // Helper to log to file
 internal static class DaemonLog
 {
+    public static string LogPath => Path.Combine(Path.GetTempPath(), "tastile-daemon.log");
+
     public static void Write(string msg)
     {
-        var path = Path.Combine(Path.GetTempPath(), "tastile-daemon.log");
-        File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
+        File.AppendAllText(LogPath, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
     }
 }
 

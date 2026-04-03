@@ -4,6 +4,7 @@ using Microsoft.UI.Windowing;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
+using System.IO;
 using System.Threading;
 
 namespace TastileDesktop.Views;
@@ -28,6 +29,7 @@ public sealed partial class SettingsWindow : Window
         _appearanceService.AppearanceChanged += OnAppearanceChanged;
         AuthService.Instance.AuthStateChanged += OnAuthStateChanged;
         RefreshAuthStatus();
+        PopulateDesktopRuntimePaths();
         _syncStatusTimer.Tick += OnSyncStatusTimerTick;
         _syncStatusTimer.Start();
         _ = RefreshSyncStatusAsync();
@@ -256,14 +258,17 @@ public sealed partial class SettingsWindow : Window
             var statusTask = _api.GetSyncStatusAsync();
             var executionTask = _api.GetExecutionAsync();
             var quotaTask = _api.GetTileQuotaAsync();
-            await Task.WhenAll(statusTask, executionTask, quotaTask);
+            var runtimePathsTask = _api.GetRuntimePathsAsync();
+            await Task.WhenAll(statusTask, executionTask, quotaTask, runtimePathsTask);
 
             var status = statusTask.Result;
             var execution = executionTask.Result;
             var quota = quotaTask.Result;
+            var runtimePaths = runtimePathsTask.Result;
             if (status == null)
             {
                 SyncStateTextBlock.Text = "Unknown";
+                ApplyDaemonRuntimePaths(runtimePaths);
                 return;
             }
 
@@ -306,6 +311,8 @@ public sealed partial class SettingsWindow : Window
             {
                 SyncLastErrorTextBlock.Text = "Error: -";
             }
+
+            ApplyDaemonRuntimePaths(runtimePaths);
         }
         catch (Exception ex)
         {
@@ -352,6 +359,34 @@ public sealed partial class SettingsWindow : Window
         };
 
         return await dialog.ShowAsync() == ContentDialogResult.Primary;
+    }
+
+    private void PopulateDesktopRuntimePaths()
+    {
+        RuntimeProfileTextBlock.Text = RuntimeProfile.Name;
+        RuntimeAppDataDirTextBlock.Text = RuntimeProfile.GetAppDataDirectory();
+        RuntimeDbPathTextBlock.Text = Path.Combine(RuntimeProfile.GetAppDataDirectory(), "tastile.db");
+        RuntimeSessionPathTextBlock.Text = Path.Combine(RuntimeProfile.GetAppDataDirectory(), "session.json");
+        RuntimeDesktopApiLogPathTextBlock.Text = CoreApiClient.DebugLogPath;
+        RuntimeDesktopDaemonLogPathTextBlock.Text = DaemonLog.LogPath;
+        RuntimeCreateTileLogPathTextBlock.Text = CreateTileWindow.DebugLogPath;
+        RuntimeDaemonStartupLogPathTextBlock.Text = "-";
+        RuntimeDaemonExecutablePathTextBlock.Text = "-";
+    }
+
+    private void ApplyDaemonRuntimePaths(RuntimePathsResponse? runtimePaths)
+    {
+        if (runtimePaths == null)
+        {
+            return;
+        }
+
+        RuntimeProfileTextBlock.Text = runtimePaths.ProfileName;
+        RuntimeAppDataDirTextBlock.Text = runtimePaths.AppDataDir;
+        RuntimeDbPathTextBlock.Text = runtimePaths.DbPath;
+        RuntimeSessionPathTextBlock.Text = runtimePaths.SessionPath;
+        RuntimeDaemonStartupLogPathTextBlock.Text = runtimePaths.DaemonStartupLogPath;
+        RuntimeDaemonExecutablePathTextBlock.Text = runtimePaths.DaemonExecutablePath;
     }
 
     private void ShowUpdateToast(AppUpdateInfo update)
