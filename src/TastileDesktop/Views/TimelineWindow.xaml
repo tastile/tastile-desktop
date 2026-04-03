@@ -106,14 +106,23 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <FontIcon
-                                                    FontFamily="Segoe Fluent Icons"
-                                                    Glyph="{x:Bind StatusIconGlyph}"
-                                                    Foreground="{x:Bind SecondaryForegroundBrush}"
-                                                    FontSize="14"
-                                                    VerticalAlignment="Center"
-                                                    ToolTipService.ToolTip="{x:Bind StatusIconToolTip}"
-                                                    Margin="0,0,4,0" />
+                                                <Button
+                                                    Grid.Column="0"
+                                                    Width="30"
+                                                    Height="30"
+                                                    Padding="0"
+                                                    Margin="0,0,4,0"
+                                                    Background="Transparent"
+                                                    BorderThickness="0"
+                                                    Tag="{x:Bind TileId}"
+                                                    Click="OnTimelineBlockStatusClick">
+                                                    <FontIcon
+                                                        FontFamily="Segoe Fluent Icons"
+                                                        Glyph="{x:Bind StatusIconGlyph}"
+                                                        Foreground="{x:Bind StatusForegroundBrush}"
+                                                        FontSize="14"
+                                                        VerticalAlignment="Center" />
+                                                </Button>
                                                 <StackPanel Grid.Column="1" Spacing="2">
                                                     <TextBlock Text="{x:Bind Title}" Foreground="{x:Bind ForegroundBrush}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                     <TextBlock Text="{x:Bind TimeRangeText}" Foreground="{x:Bind SecondaryForegroundBrush}" FontSize="12" />

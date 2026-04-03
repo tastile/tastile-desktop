@@ -18,3 +18,5 @@ packages/
 target/
 
 AGENTS.md
+
+.worktrees/

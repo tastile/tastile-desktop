@@ -33,10 +33,12 @@ public sealed partial class CreateTileWindow : Window
     private readonly HashSet<int> _recurrenceWeekdays = [];
     private bool _titleEdited;
     private bool _applyingSuggestedTitle;
+    private bool _titleClearedOnFirstFocus;
     private bool _durationManuallyEdited;
     private bool _syncingAutoDuration;
     private bool _projectInputFocused;
     private bool _tagInputFocused;
+    private string _suggestedTitle = string.Empty;
     private string _tileKind = "work";
     private string _objectiveMode = "finish_once";
     private string _recurrenceFrequency = "daily";
@@ -67,13 +69,16 @@ public sealed partial class CreateTileWindow : Window
             WireDynamicHandlers();
             InitTabSelectors();
             Log("CreateTileWindow after InitTabSelectors");
+            ApplyWindowTextContract(isEditMode: false);
 
             var now = DateTime.Now;
             RecurrenceIntervalBox.Value = 1;
             MonthlyWeekBox.Value = 1;
             PopulateMonthlyWeekdayOptions();
+            _syncingAutoDuration = true;
             WorkHoursBox.Value = 0;
             WorkMinutesBox.Value = 25;
+            _syncingAutoDuration = false;
             StartDatePicker.Date = DateTimeOffset.Now;
             StartTimePicker.Time = new TimeSpan(now.Hour, now.Minute, 0);
             EndDatePicker.Date = DateTimeOffset.Now;
@@ -101,7 +106,7 @@ public sealed partial class CreateTileWindow : Window
 
             if (!string.IsNullOrEmpty(_editTileId))
             {
-                Title = "Edit Tile";
+                ApplyWindowTextContract(isEditMode: true);
                 Log($"Edit mode: editTileId={_editTileId}");
                 if (editTile != null)
                 {
@@ -167,9 +172,11 @@ public sealed partial class CreateTileWindow : Window
 
                     if (targetWorkMin.HasValue)
                     {
+                        _syncingAutoDuration = true;
                         var totalMinutes = targetWorkMin.Value;
                         WorkHoursBox.Value = totalMinutes / 60;
                         WorkMinutesBox.Value = totalMinutes % 60;
+                        _syncingAutoDuration = false;
                         _durationManuallyEdited = true;
                     }
 
@@ -324,7 +331,6 @@ public sealed partial class CreateTileWindow : Window
                     }
 
                     DeleteButton.Visibility = Visibility.Visible;
-                    CreateButton.Content = _isJapanese ? "保存" : "Save";
                 }
             }
 
@@ -382,6 +388,7 @@ public sealed partial class CreateTileWindow : Window
     private void WireDynamicHandlers()
     {
         TitleTextBox.TextChanged += OnTitleTextChanged;
+        TitleTextBox.GotFocus += OnTitleTextBoxGotFocus;
         ProjectTextBox.TextChanged += OnProjectTextChanged;
         ProjectTextBox.KeyDown += OnProjectTextBoxKeyDown;
         ProjectTextBox.GotFocus += OnProjectTextBoxGotFocus;
@@ -578,7 +585,9 @@ public sealed partial class CreateTileWindow : Window
         var isRecurring = _objectiveMode == "recurring";
         var showMaximize = !isLabel && !isRecurring && _useEndAt;
 
-        TimingPanel.Visibility = Visibility.Visible;
+        TimingPanel.Visibility = CreateTileWindowContractResolver.ShouldShowBaseTimingPanel(_objectiveMode)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
         StartDatePanel.Visibility = !isRecurring && _useStartAt ? Visibility.Visible : Visibility.Collapsed;
         EndDatePanel.Visibility = !isRecurring && _useEndAt ? Visibility.Visible : Visibility.Collapsed;
         RecurringSchedulePanel.Visibility = isRecurring ? Visibility.Visible : Visibility.Collapsed;
@@ -596,11 +605,33 @@ public sealed partial class CreateTileWindow : Window
     private void RefreshSuggestedTitle()
     {
         var suggestion = CreateTileParityResolver.GetSuggestedTitle(BuildDraft(), _isJapanese);
+        _suggestedTitle = suggestion;
         TitleTextBox.PlaceholderText = suggestion;
         if (_titleEdited) return;
         _applyingSuggestedTitle = true;
         TitleTextBox.Text = suggestion;
         _applyingSuggestedTitle = false;
+        TitleTextBox.SelectAll();
+    }
+
+    private void OnTitleTextBoxGotFocus(object sender, RoutedEventArgs e)
+    {
+        if (!CreateTileWindowContractResolver.ShouldClearSuggestedTitleOnFirstFocus(
+                currentTitle: TitleTextBox.Text,
+                suggestedTitle: _suggestedTitle,
+                titleEdited: _titleEdited,
+                alreadyClearedOnFocus: _titleClearedOnFirstFocus))
+        {
+            return;
+        }
+
+        _applyingSuggestedTitle = true;
+        TitleTextBox.Text = string.Empty;
+        _applyingSuggestedTitle = false;
+        _titleClearedOnFirstFocus = true;
+        _titleEdited = false;
+        TitleTextBox.SelectAll();
+        RefreshTitleSuggestions();
     }
 
     private void RefreshTitleSuggestions()
@@ -703,6 +734,7 @@ public sealed partial class CreateTileWindow : Window
             RecurrenceValidToDate: _recurrenceValidToActive ? RecurrenceValidToDatePicker.Date : null,
             WorkHours: (int)Math.Max(0, WorkHoursBox.Value),
             WorkMinutes: (int)Math.Max(0, WorkMinutesBox.Value),
+            DurationManuallyEdited: _durationManuallyEdited,
             BreakSplitsWork: _breakSplitsWork,
             Project: ProjectTextBox.Text,
             Tags: CurrentTags(),
@@ -806,12 +838,14 @@ public sealed partial class CreateTileWindow : Window
 
     private void SyncAutoDurationFromSchedule()
     {
-        if (_durationManuallyEdited) return;
         var autoDuration = CreateTileParityResolver.GetAutoDurationMinutes(BuildDraft());
-        if (!autoDuration.HasValue || autoDuration.Value <= 0) return;
+        var durationContract = CreateTileWindowContractResolver.ResolveDurationUpdate(
+            autoDurationMinutes: autoDuration,
+            durationManuallyEdited: _durationManuallyEdited);
+        if (!durationContract.Hours.HasValue || !durationContract.Minutes.HasValue) return;
         _syncingAutoDuration = true;
-        WorkHoursBox.Value = autoDuration.Value / 60;
-        WorkMinutesBox.Value = autoDuration.Value % 60;
+        WorkHoursBox.Value = durationContract.Hours.Value;
+        WorkMinutesBox.Value = durationContract.Minutes.Value;
         _syncingAutoDuration = false;
     }
 
@@ -875,7 +909,11 @@ public sealed partial class CreateTileWindow : Window
 
     private void OnWorkDurationChanged(NumberBox sender, NumberBoxValueChangedEventArgs args)
     {
-        if (!_syncingAutoDuration) _durationManuallyEdited = true;
+        if (!_syncingAutoDuration)
+        {
+            var total = (int)Math.Max(0, WorkHoursBox.Value) * 60 + (int)Math.Max(0, WorkMinutesBox.Value);
+            _durationManuallyEdited = total > 0;
+        }
         RefreshSuggestedTitle();
     }
 
@@ -883,6 +921,14 @@ public sealed partial class CreateTileWindow : Window
     {
         SyncAutoDurationFromSchedule();
         RefreshSuggestedTitle();
+    }
+
+    private void ApplyWindowTextContract(bool isEditMode)
+    {
+        var contract = CreateTileWindowContractResolver.ResolveWindowText(isEditMode, _isJapanese);
+        Title = contract.WindowTitle;
+        HeadingTextBlock.Text = contract.HeadingText;
+        CreateButton.Content = contract.PrimaryButtonText;
     }
 
 

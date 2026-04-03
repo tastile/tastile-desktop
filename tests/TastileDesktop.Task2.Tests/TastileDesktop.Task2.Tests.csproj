@@ -12,6 +12,7 @@
     <Compile Include="DispatcherTimerShim.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\PollingService.cs" Link="Services\PollingService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\PollingHealthCoordinator.cs" Link="Services\PollingHealthCoordinator.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\ITilesChangedSource.cs" Link="Services\ITilesChangedSource.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="Services\CoreApiClient.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\DaemonManager.cs" Link="Services\DaemonManager.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\DaemonCompatibility.cs" Link="Services\DaemonCompatibility.cs" />

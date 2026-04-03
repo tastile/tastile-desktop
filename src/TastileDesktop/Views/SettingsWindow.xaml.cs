@@ -1,4 +1,5 @@
 using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Windowing;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
@@ -192,6 +193,52 @@ public sealed partial class SettingsWindow : Window
         await RefreshSyncStatusAsync();
     }
 
+    private async void OnResetLocalSyncDataClick(object sender, RoutedEventArgs e)
+    {
+        if (!await ConfirmRecoveryActionAsync(
+                "Clear local data",
+                "This clears the local event log and local tiles on this device only. Cloud data is not deleted."))
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await _api.ResetLocalSyncDataAsync();
+            SyncLastResultTextBlock.Text = $"Result: {result?.Message ?? "Local sync data cleared."}";
+            SyncLastErrorTextBlock.Text = "Error: -";
+            await RefreshSyncStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
+            App.DebugLog($"[SyncRecovery] Reset local failed: {ex}");
+        }
+    }
+
+    private async void OnRedownloadRemoteSyncDataClick(object sender, RoutedEventArgs e)
+    {
+        if (!await ConfirmRecoveryActionAsync(
+                "Re-download cloud data",
+                "This clears the local data on this device, then downloads the current cloud event log again."))
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await _api.RedownloadRemoteSyncDataAsync();
+            SyncLastResultTextBlock.Text = $"Result: {result?.Message ?? "Cloud data re-downloaded."}";
+            SyncLastErrorTextBlock.Text = "Error: -";
+            await RefreshSyncStatusAsync();
+        }
+        catch (Exception ex)
+        {
+            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
+            App.DebugLog($"[SyncRecovery] Redownload failed: {ex}");
+        }
+    }
+
     private async void OnSyncStatusTimerTick(object? sender, object e)
     {
         await RefreshSyncStatusAsync();
@@ -206,7 +253,14 @@ public sealed partial class SettingsWindow : Window
 
         try
         {
-            var status = await _api.GetSyncStatusAsync();
+            var statusTask = _api.GetSyncStatusAsync();
+            var executionTask = _api.GetExecutionAsync();
+            var quotaTask = _api.GetTileQuotaAsync();
+            await Task.WhenAll(statusTask, executionTask, quotaTask);
+
+            var status = statusTask.Result;
+            var execution = executionTask.Result;
+            var quota = quotaTask.Result;
             if (status == null)
             {
                 SyncStateTextBlock.Text = "Unknown";
@@ -219,6 +273,17 @@ public sealed partial class SettingsWindow : Window
                 : (hasFailedOps || !string.IsNullOrWhiteSpace(status.LastError) ? "Error" : "Idle");
             SyncLastAttemptTextBlock.Text = FormatTimestamp(status.LastAttemptAt);
             SyncLastSuccessTextBlock.Text = FormatTimestamp(status.LastSuccessAt);
+            SyncLocalTilesTextBlock.Text = execution?.TileCount.ToString() ?? "-";
+            SyncLocalEventsTextBlock.Text = execution?.EventCount.ToString() ?? "-";
+            SyncRemoteTilesTextBlock.Text = quota == null
+                ? "-"
+                : $"{quota.TileCount} / {quota.MaxTiles}";
+            SyncRemoteSourceTextBlock.Text = quota?.Source switch
+            {
+                "remote" => "Supabase",
+                "local_fallback" => "Local fallback",
+                _ => "-"
+            };
 
             if (status.LastResult != null)
             {
@@ -267,6 +332,26 @@ public sealed partial class SettingsWindow : Window
         }
 
         return value;
+    }
+
+    private async Task<bool> ConfirmRecoveryActionAsync(string title, string message)
+    {
+        if (Content is not FrameworkElement root)
+        {
+            return false;
+        }
+
+        var dialog = new ContentDialog
+        {
+            Title = title,
+            Content = message,
+            PrimaryButtonText = "Continue",
+            CloseButtonText = "Cancel",
+            DefaultButton = ContentDialogButton.Close,
+            XamlRoot = root.XamlRoot,
+        };
+
+        return await dialog.ShowAsync() == ContentDialogResult.Primary;
     }
 
     private void ShowUpdateToast(AppUpdateInfo update)

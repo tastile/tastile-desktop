@@ -11,6 +11,6 @@ public sealed class PollingServiceWallClockContractTests
             "src", "TastileDesktop", "Services", "PollingService.cs"));
         var source = File.ReadAllText(sourcePath);
 
-        Assert.Contains("private readonly DispatcherTimer _wallClockPollTimer;", source);
+        Assert.Contains("private readonly IWallClockPollScheduler _wallClockPollTimer;", source);
     }
 }

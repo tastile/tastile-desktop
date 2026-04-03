@@ -214,6 +214,119 @@ public sealed class CoreApiClientAuthRestoreTests
         Assert.Equal(1, sessionCalls);
     }
 
+    [Fact]
+    public async Task ResetLocalSyncDataAsync_RestoresSessionAndRetries_WhenDaemonReturnsUnauthorized()
+    {
+        var restoreCalls = 0;
+        var resetCalls = 0;
+
+        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (path == "/auth/session")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "user_id": "user-123",
+                      "email": "user@example.com",
+                      "access_token": "token-123",
+                      "refresh_token": "refresh-123",
+                      "expires_at": "2099-01-01T00:00:00Z"
+                    }
+                    """),
+                };
+            }
+
+            if (path == "/sync/recovery/reset-local")
+            {
+                resetCalls++;
+                if (resetCalls == 1)
+                {
+                    return new HttpResponseMessage(HttpStatusCode.Unauthorized);
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "ok": true,
+                      "message": "Local sync data cleared.",
+                      "applied": 0
+                    }
+                    """),
+                };
+            }
+
+            if (path == "/auth/session/restore")
+            {
+                restoreCalls++;
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "user_id": "user-123",
+                      "email": "user@example.com",
+                      "access_token": "token-123",
+                      "refresh_token": "refresh-123",
+                      "expires_at": "2099-01-01T00:00:00Z"
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        var result = await client.ResetLocalSyncDataAsync();
+
+        Assert.NotNull(result);
+        Assert.True(result!.Ok);
+        Assert.Equal(2, resetCalls);
+        Assert.Equal(1, restoreCalls);
+    }
+
+    [Fact]
+    public async Task RedownloadRemoteSyncDataAsync_PostsToRecoveryEndpoint()
+    {
+        var redownloadCalls = 0;
+
+        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+        {
+            var path = request.RequestUri?.AbsolutePath ?? string.Empty;
+            if (path == "/sync/recovery/redownload-remote")
+            {
+                redownloadCalls++;
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "ok": true,
+                      "message": "Re-downloaded 12 remote event(s).",
+                      "applied": 12
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        var result = await client.RedownloadRemoteSyncDataAsync();
+
+        Assert.NotNull(result);
+        Assert.True(result!.Ok);
+        Assert.Equal(12, result.Applied);
+        Assert.Equal(1, redownloadCalls);
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

@@ -57,4 +57,32 @@ public sealed class AbsoluteTimelineResolverTests
         Assert.NotEmpty(tileBLanes);
         Assert.DoesNotContain(tileALanes, lane => tileBLanes.Contains(lane));
     }
+
+    [Fact]
+    public void Resolve_DayScale_ExpandsCanvasForShortBlocks_ToKeepReadableDensity()
+    {
+        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
+        var items = new List<TimelineItemView>
+        {
+            new(
+                Kind: "scheduled",
+                TileId: "tile-short",
+                SemanticRole: "work",
+                Title: "Short task",
+                StartedAt: "2026-04-02T09:00:00+09:00",
+                EndedAt: "2026-04-02T09:05:00+09:00",
+                DurationMin: 5,
+                IsActive: false),
+        };
+
+        var layout = AbsoluteTimelineResolver.Resolve(
+            items,
+            now,
+            new TimelineViewportSettings(
+                ScaleUnit: TimelineScaleUnit.Day,
+                RangeMode: TimelineRangeMode.Day24,
+                AnchorLocal: now));
+
+        Assert.True(layout.CanvasHeight > (24 * 120));
+    }
 }

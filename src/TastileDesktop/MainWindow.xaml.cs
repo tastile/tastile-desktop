@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
+using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 using TastileDesktop.Views;
@@ -32,12 +33,16 @@ public sealed partial class MainWindow : Window
     private double _runningDragStartOffset;
     private double _nextDragStartX;
     private double _nextDragStartOffset;
+    public SolidColorBrush CreateActionIconForegroundBrush { get; }
+    public SolidColorBrush IntegrationsActionIconForegroundBrush { get; }
 
 
     public MainViewModel ViewModel { get; } = new();
 
     public MainWindow()
     {
+        CreateActionIconForegroundBrush = ResolveThemeBrush(QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.PrimaryCreation).ForegroundBrushKey);
+        IntegrationsActionIconForegroundBrush = ResolveThemeBrush(QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.SecondaryUtility).ForegroundBrushKey);
         InitializeComponent();
         RunningTasksScrollViewer.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnRunningTasksDragStart), true);
         RunningTasksScrollViewer.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnRunningTasksDragMove), true);
@@ -59,6 +64,12 @@ public sealed partial class MainWindow : Window
         UpdateAccountUI();
         UpdateQuickPanelUI();
         UpdateClock();
+    }
+
+    private static SolidColorBrush ResolveThemeBrush(string key)
+    {
+        return Application.Current.Resources[key] as SolidColorBrush
+            ?? (SolidColorBrush)Application.Current.Resources["PrimaryForegroundBrush"];
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -331,7 +342,7 @@ public sealed partial class MainWindow : Window
 
     private void OnOpenTilesWindowClick(object sender, RoutedEventArgs e)
     {
-        OpenOwnedWindow(() => new TilesWindow());
+        OpenOwnedWindow(() => new TilesWindow(ViewModel.PollingService));
     }
 
     private void OnOpenTimelineWindowClick(object sender, RoutedEventArgs e)
@@ -389,7 +400,7 @@ public sealed partial class MainWindow : Window
                 _settings.Update(settings => settings.QuickBarAlwaysOnTop = _isPinned);
                 return;
             case "open-tiles":
-                OpenOwnedWindow(() => new TilesWindow());
+                OpenOwnedWindow(() => new TilesWindow(ViewModel.PollingService));
                 return;
             case "open-timeline":
                 OpenOwnedWindow(() => new TimelineWindow());

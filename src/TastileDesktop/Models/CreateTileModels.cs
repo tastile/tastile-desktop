@@ -24,6 +24,7 @@ public sealed record CreateTileDraft(
     DateTimeOffset? RecurrenceValidToDate = null,
     int? WorkHours = null,
     int? WorkMinutes = null,
+    bool DurationManuallyEdited = false,
     bool BreakSplitsWork = true,
     string? Project = null,
     List<string>? Tags = null,

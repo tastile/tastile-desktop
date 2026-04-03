@@ -187,7 +187,7 @@
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
                         <Button x:Name="IntegrationsButton" Width="34" Height="28" Click="OnOpenIntegrationsWindowClick"
                                 ToolTipService.ToolTip="Integrations" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE774;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{x:Bind IntegrationsActionIconForegroundBrush, Mode=OneWay}" Glyph="&#xE774;" />
                         </Button>
                         <Button x:Name="SettingsButton" Width="34" Height="28" Click="OnOpenSettingsWindowClick"
                                 ToolTipService.ToolTip="Settings" Background="Transparent" BorderThickness="0" Padding="0">
@@ -217,7 +217,7 @@
                         </Button>
                         <Button x:Name="CreateTileButton" Width="34" Height="28" Click="OnOpenCreateTileWindowClick"
                                 ToolTipService.ToolTip="Create Tile" Background="Transparent" BorderThickness="0" Padding="0">
-                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource AccentBrush}" Glyph="&#xE710;" />
+                            <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{x:Bind CreateActionIconForegroundBrush, Mode=OneWay}" Glyph="&#xE710;" />
                         </Button>
                     </StackPanel>
                 </Grid>

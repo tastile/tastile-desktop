@@ -28,7 +28,7 @@ public sealed record TimelineViewportSettings(
     double MinZoomScale = 0.4,
     double MaxZoomScale = 16.0,
     int LaneGap = 4,
-    int MinBlockHeight = 24);
+    int MinBlockHeight = 44);
 
 public sealed class TimelineLayout
 {
@@ -55,6 +55,7 @@ public sealed class TimelineNowIndicator
 
 public sealed class TimelineBlock
 {
+    public string? TileId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string StartLabel { get; set; } = string.Empty;
     public string EndLabel { get; set; } = string.Empty;
@@ -90,10 +91,16 @@ public static class AbsoluteTimelineResolver
     {
         var localNow = now.ToLocalTime();
         var zoomScale = Math.Clamp(settings.ZoomScale, settings.MinZoomScale, settings.MaxZoomScale);
-        var pixelsPerHour = settings.PixelsPerHourBase * zoomScale;
         var (windowStart, windowEnd) = ResolveWindow(settings, localNow);
         var windowDurationMinutes = Math.Max(1, (windowEnd - windowStart).TotalMinutes);
-        var pxPerMinute = pixelsPerHour / 60d;
+        var pxPerMinuteBase = (settings.PixelsPerHourBase * zoomScale) / 60d;
+        var pxPerMinute = ResolveReadablePxPerMinute(
+            items,
+            localNow,
+            windowStart,
+            windowEnd,
+            pxPerMinuteBase,
+            settings.MinBlockHeight);
         var canvasHeight = windowDurationMinutes * pxPerMinute;
 
         var segments = ResolveSegments(items, localNow, windowStart, windowEnd, pxPerMinute, settings.MinBlockHeight);
@@ -109,6 +116,54 @@ public static class AbsoluteTimelineResolver
             WindowStart = windowStart,
             WindowEnd = windowEnd,
         };
+    }
+
+    private static double ResolveReadablePxPerMinute(
+        List<TimelineItemView> items,
+        DateTimeOffset nowLocal,
+        DateTimeOffset windowStart,
+        DateTimeOffset windowEnd,
+        double pxPerMinuteBase,
+        int minBlockHeight)
+    {
+        var minVisibleDurationMinutes = double.MaxValue;
+
+        foreach (var item in items)
+        {
+            if (!DateTimeOffset.TryParse(item.StartedAt, out var start))
+            {
+                continue;
+            }
+
+            var startLocal = start.ToLocalTime();
+            var endLocal = ResolveEnd(item, startLocal, nowLocal);
+            if (endLocal <= startLocal)
+            {
+                continue;
+            }
+
+            var clippedStart = startLocal < windowStart ? windowStart : startLocal;
+            var clippedEnd = endLocal > windowEnd ? windowEnd : endLocal;
+            if (clippedEnd <= clippedStart)
+            {
+                continue;
+            }
+
+            var durationMinutes = (clippedEnd - clippedStart).TotalMinutes;
+            if (durationMinutes > 0)
+            {
+                minVisibleDurationMinutes = Math.Min(minVisibleDurationMinutes, durationMinutes);
+            }
+        }
+
+        if (minVisibleDurationMinutes == double.MaxValue)
+        {
+            return pxPerMinuteBase;
+        }
+
+        var readablePxPerMinute = minBlockHeight / minVisibleDurationMinutes;
+        var cappedReadablePxPerMinute = Math.Min(readablePxPerMinute, pxPerMinuteBase * 1.35d);
+        return Math.Max(pxPerMinuteBase, cappedReadablePxPerMinute);
     }
 
     private static (DateTimeOffset Start, DateTimeOffset End) ResolveWindow(TimelineViewportSettings settings, DateTimeOffset localNow)
@@ -408,6 +463,7 @@ public static class AbsoluteTimelineResolver
 
         return new TimelineBlock
         {
+            TileId = segment.Item.TileId,
             Title = segment.Item.Title,
             StartLabel = segment.Start.ToString("HH:mm"),
             EndLabel = segment.End.ToString("HH:mm"),

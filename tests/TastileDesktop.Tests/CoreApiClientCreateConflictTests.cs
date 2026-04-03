@@ -101,6 +101,67 @@ public sealed class CoreApiClientCreateConflictTests
         Assert.Equal("auto_nearest", json.RootElement.GetProperty("conflict_resolution").GetString());
     }
 
+    [Fact]
+    public async Task CreateTileAsync_ParsesRecurringFixedCreateConflictPrompt()
+    {
+        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsolutePath == "/commands/tile/create")
+            {
+                return new HttpResponseMessage(HttpStatusCode.Conflict)
+                {
+                    Content = new StringContent("""
+                    {
+                      "ok": false,
+                      "events": [],
+                      "prompt": {
+                        "kind": "create_conflict",
+                        "title": "Fixed time conflict detected",
+                        "options": [
+                          { "id": "keep_overlap", "label": "Keep overlap" },
+                          { "id": "auto_nearest", "label": "Move to nearest free slot" },
+                          { "id": "auto_next_day", "label": "Move to next day" },
+                          { "id": "manual_adjust", "label": "Adjust manually" }
+                        ]
+                      },
+                      "error": "fixed-time conflict detected"
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        var response = await client.CreateTileAsync(new CreateTileRequest(
+            Title: "Recurring fixed",
+            NextAction: null,
+            DoneDefinition: null,
+            Temporal: new CreateTileTemporalRequest(null, null, null, null, null, null),
+            Objective: new CreateTileObjectiveRequest(
+                ObjectiveMode: "recurring",
+                TargetWorkMin: 60,
+                TargetRestMin: null,
+                DoneRule: "time_reached",
+                Recurrence: new CreateTileRecurrenceRequest(
+                    Generator: new CreateTileRecurrenceGeneratorRequest(1440, null),
+                    Window: new CreateTileRecurrenceWindowRequest(540, 600),
+                    Selector: new CreateTileRecurrenceSelectorRequest("freq=daily;interval=1"))),
+            Interruption: null,
+            Automation: null,
+            Annotation: null,
+            ConflictResolution: null));
+
+        Assert.NotNull(response);
+        Assert.False(response!.Ok);
+        Assert.Equal("create_conflict", response.Prompt?.Kind);
+        Assert.Contains(response.Prompt!.Options!, option => option.Id == "keep_overlap");
+        Assert.Contains(response.Prompt.Options!, option => option.Id == "manual_adjust");
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

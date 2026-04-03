@@ -11,7 +11,7 @@ public sealed partial class TilesWindow : Window
 {
     private readonly CoreApiClient _api = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
-    private readonly PollingService? _pollingService;
+    private readonly TilesWindowLiveUpdateBridge _liveUpdateBridge;
     public ObservableCollection<TileListItem> ReadyTiles { get; } = new();
     public ObservableCollection<TileListItem> StartedTiles { get; } = new();
     public ObservableCollection<TileListItem> DoneTiles { get; } = new();
@@ -26,20 +26,13 @@ public sealed partial class TilesWindow : Window
     private int _startedTotal = 0;
     private int _doneTotal = 0;
 
-    public TilesWindow() : this(null)
+    public TilesWindow(ITilesChangedSource tilesChangedSource)
     {
-    }
-
-    public TilesWindow(PollingService? pollingService)
-    {
+        ArgumentNullException.ThrowIfNull(tilesChangedSource);
         InitializeComponent();
-        _pollingService = pollingService;
+        _liveUpdateBridge = new TilesWindowLiveUpdateBridge(tilesChangedSource, RefreshTilesAsync);
         RootGrid.DataContext = this;
         FloatingWindowHelper.Configure(this, TitleBarArea, 720, 760);
-        if (_pollingService != null)
-        {
-            _pollingService.TilesChanged += OnSharedTilesChanged;
-        }
         _ = RefreshTilesAsync();
         Closed += OnWindowClosed;
     }
@@ -238,17 +231,9 @@ public sealed partial class TilesWindow : Window
         createWindow.Activate();
     }
 
-    private void OnSharedTilesChanged(object? sender, TilesResponse? e)
-    {
-        _ = RefreshTilesAsync();
-    }
-
     private void OnWindowClosed(object sender, WindowEventArgs args)
     {
-        if (_pollingService != null)
-        {
-            _pollingService.TilesChanged -= OnSharedTilesChanged;
-        }
+        _liveUpdateBridge.Dispose();
         Closed -= OnWindowClosed;
     }
 }

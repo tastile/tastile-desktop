@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <Grid x:Name="TitleBarArea" Height="32" Background="Transparent">
-            <TextBlock Text="Create Tile" Margin="16,0,0,0" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+            <TextBlock x:Name="HeadingTextBlock" Text="Create Tile" Margin="16,0,0,0" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
         </Grid>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">

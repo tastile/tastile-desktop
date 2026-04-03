@@ -8,7 +8,7 @@ namespace TastileDesktop.Services;
 /// <summary>
 /// Polls the daemon API and raises events when state changes.
 /// </summary>
-public class PollingService : IDisposable
+public class PollingService : IDisposable, ITilesChangedSource
 {
     private sealed class DispatcherUiUpdateScheduler : IUiUpdateScheduler
     {
@@ -165,7 +165,7 @@ public class PollingService : IDisposable
         }
         _uiUpdateTimer.Start();
 
-        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), () => _ = _pollAction());
+        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), () => _ = TickAndPollAsync());
     }
 
     /// <summary>
@@ -356,6 +356,12 @@ public class PollingService : IDisposable
         {
             _coordinator.EndPoll();
         }
+    }
+
+    private async Task TickAndPollAsync()
+    {
+        await _api.TriggerTickAsync();
+        await _pollAction();
     }
 
     private static bool HasExecutionViewChanged(ExecutionView? old, ExecutionView? current)

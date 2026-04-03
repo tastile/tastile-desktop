@@ -27,81 +27,81 @@
                 <Border CornerRadius="0" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
                     <StackPanel>
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="App theme" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock Text="Derived from Windows app appearance." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.AppThemeSummary, Mode=OneWay}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.AppThemeSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="System theme" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock Text="Shell theme used by Windows itself." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SystemThemeSummary, Mode=OneWay}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SystemThemeSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="App accent color" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock Text="The accent currently used by Tastile after source selection." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
                                 <Ellipse Width="16" Height="16" Fill="{x:Bind ViewModel.AccentBrush, Mode=OneWay}" Stroke="{StaticResource AppBorderBrush}" />
                                 <TextBlock Text="{x:Bind ViewModel.AccentColorHex, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Windows accent" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock Text="Accent color selected in Personalization > Colors." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
                                 <Ellipse Width="16" Height="16" Fill="{x:Bind ViewModel.WindowsAccentBrush, Mode=OneWay}" Stroke="{StaticResource AppBorderBrush}" />
                                 <TextBlock Text="{x:Bind ViewModel.WindowsAccentColorHex, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Windows UI accent" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                                 <TextBlock Text="Accent exposed by the shell UI APIs. Some devices report a different highlight color here." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
-                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
                                 <Ellipse Width="16" Height="16" Fill="{x:Bind ViewModel.UiAccentBrush, Mode=OneWay}" Stroke="{StaticResource AppBorderBrush}" />
                                 <TextBlock Text="{x:Bind ViewModel.UiAccentColorHex, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                             </StackPanel>
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <TextBlock Text="Transparency effects" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TransparencySummary, Mode=OneWay}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TransparencySummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <TextBlock Text="Animations" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.AnimationsSummary, Mode=OneWay}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.AnimationsSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <TextBlock Text="High contrast" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.HighContrastSummary, Mode=OneWay}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.HighContrastSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <TextBlock Text="Taskbar alignment" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TaskbarAlignmentSummary, Mode=OneWay}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TaskbarAlignmentSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                     </StackPanel>
                 </Border>
@@ -116,7 +116,7 @@
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Accent source" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.AccentColorMode, Mode=TwoWay}">
+                        <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.AccentColorMode, Mode=TwoWay}" HorizontalAlignment="Right">
                             <ComboBoxItem Content="Follow Windows accent" Tag="windows-accent" />
                             <ComboBoxItem Content="Follow Windows UI accent" Tag="windows-ui-accent" />
                             <ComboBoxItem Content="Use Tastile default blue" Tag="default" />
@@ -131,7 +131,7 @@
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Manual accent" VerticalAlignment="Center" />
-                        <TextBox Grid.Column="1" Text="{x:Bind ViewModel.CustomAccentColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="#0078D4" />
+                        <TextBox Grid.Column="1" Width="160" Text="{x:Bind ViewModel.CustomAccentColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="#0078D4" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Accepts #RRGGBB or #AARRGGBB. Invalid values fall back to the Windows accent." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" Visibility="{x:Bind ViewModel.ManualAccentVisibility, Mode=OneWay}" />
                 </StackPanel>
@@ -143,40 +143,40 @@
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Toast reminder" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.ToastNotifyMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.ToastNotifyMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Force intervention" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionMinutes, Mode=TwoWay}" Minimum="1" Maximum="120" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionMinutes, Mode=TwoWay}" Minimum="1" Maximum="120" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Repeat intervention" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionRepeatMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionRepeatMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes after dismissed" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Prompt toast stack" VerticalAlignment="Center" />
-                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastEnabled, Mode=TwoWay}" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Show a stacked prompt notification window near the top-center edge of the primary display" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -186,7 +186,7 @@
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Prompt toast max stack" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastMaxVisible, Mode=TwoWay}" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastMaxVisible, Mode=TwoWay}" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Visible cards at once. New prompts stay on top and older ones wait underneath." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -196,7 +196,7 @@
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Prompt toast display" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastDisplayMode, Mode=TwoWay}">
+                        <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastDisplayMode, Mode=TwoWay}" HorizontalAlignment="Right">
                             <ComboBoxItem Content="Primary display" Tag="primary-display" />
                             <ComboBoxItem Content="Display with active window" Tag="active-window-display" />
                             <ComboBoxItem Content="All displays" Tag="all-displays" />
@@ -210,7 +210,7 @@
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Prompt toast position" VerticalAlignment="Center" />
-                        <ComboBox Grid.Column="1" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastAnchor, Mode=TwoWay}">
+                        <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastAnchor, Mode=TwoWay}" HorizontalAlignment="Right">
                             <ComboBoxItem Content="Top center" Tag="top-center" />
                             <ComboBoxItem Content="Top right" Tag="top-right" />
                             <ComboBoxItem Content="Top left" Tag="top-left" />
@@ -223,20 +223,20 @@
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Mirror simplified notifications" VerticalAlignment="Center" />
-                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastMirrorSecondaryDisplays, Mode=TwoWay}" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastMirrorSecondaryDisplays, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="When enabled with All displays, other monitors show a reduced prompt card with only the title and queue count." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Animate prompt toast" VerticalAlignment="Center" />
-                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastAnimate, Mode=TwoWay}" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastAnimate, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Fade the prompt toast stack in when it appears. Disabled automatically if Windows animations are turned off." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -245,30 +245,30 @@
                     <Grid ColumnSpacing="12" Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Prompt edge overlay" VerticalAlignment="Center" />
-                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptOverlayEnabled, Mode=TwoWay}" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptOverlayEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Show a thin accent border around each display when a new prompt appears" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Overlay duration" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptOverlayDurationSeconds, Mode=TwoWay}" Minimum="1" Maximum="15" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptOverlayDurationSeconds, Mode=TwoWay}" Minimum="1" Maximum="15" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="seconds" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Suppress in fullscreen apps" VerticalAlignment="Center" />
-                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptOverlaySuppressFullscreen, Mode=TwoWay}" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptOverlaySuppressFullscreen, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Skip the overlay when another app occupies the full monitor, such as games or video playback" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
@@ -282,20 +282,20 @@
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Default break time" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.DefaultBreakMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.DefaultBreakMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Idle prompt after" VerticalAlignment="Center" />
-                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.IdlePromptMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="120" HorizontalAlignment="Right" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.IdlePromptMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
                 </StackPanel>
@@ -322,28 +322,64 @@
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="State" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncStateTextBlock" Grid.Column="1" Text="Unknown" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncStateTextBlock" Grid.Column="1" Text="Unknown" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                     </Grid>
 
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Last attempt" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncLastAttemptTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncLastAttemptTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                     </Grid>
 
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Last success" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncLastSuccessTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncLastSuccessTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Local tiles" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncLocalTilesTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Local events" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncLocalEventsTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Remote tiles" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncRemoteTilesTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Remote source" VerticalAlignment="Center" />
+                        <TextBlock x:Name="SyncRemoteSourceTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
                     </Grid>
 
                     <TextBlock x:Name="SyncLastResultTextBlock" Text="Result: -" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
@@ -356,6 +392,15 @@
                         </Grid.ColumnDefinitions>
                         <Button Grid.Column="0" Content="Sync now" Click="OnSyncNowClick" HorizontalAlignment="Stretch" />
                         <Button Grid.Column="1" Content="Refresh status" Click="OnRefreshSyncStatusClick" HorizontalAlignment="Stretch" />
+                    </Grid>
+
+                    <Grid ColumnSpacing="8">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="Clear local data" Click="OnResetLocalSyncDataClick" HorizontalAlignment="Stretch" />
+                        <Button Grid.Column="1" Content="Re-download from cloud" Click="OnRedownloadRemoteSyncDataClick" HorizontalAlignment="Stretch" />
                     </Grid>
                 </StackPanel>
 
@@ -376,10 +421,10 @@
                     <Grid ColumnSpacing="12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="Launch at startup" VerticalAlignment="Center" />
-                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.LaunchAtStartup, Mode=TwoWay}" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.LaunchAtStartup, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
                     <TextBlock Text="Start Tastile when Windows starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
                 </StackPanel>

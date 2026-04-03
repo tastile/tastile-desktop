@@ -5,12 +5,15 @@ using TastileDesktop.Models;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 using Windows.Foundation;
+using System.Linq;
 
 namespace TastileDesktop.Views;
 
 public sealed partial class TimelineWindow : Window
 {
     public MainViewModel ViewModel { get; } = new();
+    private readonly CoreApiClient _api = new();
+    private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private TimelineViewportSettings _viewport = new(
         ScaleUnit: TimelineScaleUnit.Day,
         RangeMode: TimelineRangeMode.Day24,
@@ -147,5 +150,70 @@ public sealed partial class TimelineWindow : Window
 
         var target = Math.Max(0, ViewModel.TimelineNowTop - (TimelineScrollViewer.ViewportHeight * 0.35));
         TimelineScrollViewer.ChangeView(null, target, null, disableAnimation: true);
+    }
+
+    private async void OnTimelineBlockStatusClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
+        {
+            return;
+        }
+
+        var block = button.DataContext as TimelineAbsoluteBlockViewModel;
+        var lifecycle = block?.Lifecycle;
+        var decision = TimelineStatusActionResolver.Resolve(tileId, lifecycle);
+        if (decision.Kind != TimelineStatusActionKind.RequestPrompt || string.IsNullOrWhiteSpace(decision.TileId))
+        {
+            return;
+        }
+        await RequestPromptForTileAsync(decision.TileId);
+    }
+
+    private async Task RequestPromptForTileAsync(string tileId)
+    {
+        try
+        {
+            var response = await _api.RequestPromptAsync(tileId);
+            if (response?.Ok == true && response.Prompt != null)
+            {
+                _promptToast.ShowPrompt(
+                    response.Prompt,
+                    5,
+                    async (actionId, stopAt) =>
+                    {
+                        _promptToast.Hide();
+                        switch (actionId.ToUpperInvariant())
+                        {
+                            case "START":
+                            case "START_TILE":
+                                await _api.StartTileAsync(tileId);
+                                break;
+                            case "COMPLETE":
+                            case "COMPLETE_AND_START_NEXT":
+                                await _api.CompleteTileAsync(tileId);
+                                break;
+                            case "CONFIRM_CONTINUE":
+                            case "CONFIRM_STOP_AT":
+                            case "CONFIRM_EXECUTED":
+                            case "CONFIRM_SKIPPED":
+                            case "DISMISS":
+                                if (!string.IsNullOrWhiteSpace(response.Prompt.PromptId) &&
+                                    !string.IsNullOrWhiteSpace(response.Prompt.TileId))
+                                {
+                                    await _api.RespondStartupRecoveryPromptAsync(
+                                        response.Prompt.PromptId,
+                                        response.Prompt.TileId!,
+                                        actionId.ToUpperInvariant(),
+                                        stopAt);
+                                }
+                                break;
+                        }
+                        await ViewModel.RefreshAsync();
+                    });
+            }
+        }
+        catch
+        {
+        }
     }
 }

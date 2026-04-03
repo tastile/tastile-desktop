@@ -126,7 +126,14 @@ public record TileQuotaResponse(
     [property: JsonPropertyName("tile_count")] int TileCount,
     [property: JsonPropertyName("max_tiles")] int MaxTiles,
     [property: JsonPropertyName("remaining_tiles")] int RemainingTiles,
-    [property: JsonPropertyName("limit_reached")] bool LimitReached
+    [property: JsonPropertyName("limit_reached")] bool LimitReached,
+    [property: JsonPropertyName("source")] string? Source
+);
+
+public record RecoveryResetResponse(
+    [property: JsonPropertyName("ok")] bool Ok,
+    [property: JsonPropertyName("message")] string Message,
+    [property: JsonPropertyName("applied")] int Applied
 );
 
 public record PendingPromptResponse(

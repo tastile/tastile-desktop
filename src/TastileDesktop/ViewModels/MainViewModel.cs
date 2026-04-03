@@ -32,6 +32,8 @@ public sealed class TimelineHourMarkerViewModel : ObservableObject
 
 public sealed class TimelineAbsoluteBlockViewModel : ObservableObject
 {
+    public string? TileId { get; set; }
+    public string Lifecycle { get; set; } = "scheduled";
     public string StatusIconGlyph { get; set; } = "\uE739";
     public string StatusIconToolTip { get; set; } = "scheduled";
     public string KindLabel { get; set; } = "task";
@@ -49,6 +51,9 @@ public sealed class TimelineAbsoluteBlockViewModel : ObservableObject
     public SolidColorBrush BorderBrush { get; set; } = new(Microsoft.UI.Colors.Transparent);
     public SolidColorBrush ForegroundBrush { get; set; } = new(Microsoft.UI.Colors.White);
     public SolidColorBrush SecondaryForegroundBrush { get; set; } = new(Microsoft.UI.Colors.White);
+    public SolidColorBrush StatusFill { get; set; } = new(Microsoft.UI.Colors.Transparent);
+    public SolidColorBrush StatusBorderBrush { get; set; } = new(Microsoft.UI.Colors.Transparent);
+    public SolidColorBrush StatusForegroundBrush { get; set; } = new(Microsoft.UI.Colors.White);
 }
 
 
@@ -127,9 +132,10 @@ public sealed class TileListItem : ObservableObject
     }
 
     public string WorkedText => WorkedMinutes > 0 ? $"{WorkedMinutes}m" : "";
-    public string TargetDurationText => TargetWorkMin.HasValue && TargetWorkMin.Value > 0
-        ? $"{TargetWorkMin.Value}m"
-        : "unspecified";
+    public string TargetDurationText
+    {
+        get => TileDurationResolver.Resolve(SemanticRole, TargetWorkMin, TargetRestMin);
+    }
     public double ProgressPercent
     {
         get => _progressPercent;
@@ -284,7 +290,8 @@ public sealed class TileListItem : ObservableObject
                 }
                 return WorkedMinutes > 0 ? $"{WorkedMinutes}m worked" : "";
             }
-            else if (Lifecycle.Equals("Done", StringComparison.OrdinalIgnoreCase))
+
+            if (Lifecycle.Equals("Done", StringComparison.OrdinalIgnoreCase))
             {
                 if (!string.IsNullOrEmpty(FixedEnd))
                 {
@@ -295,33 +302,31 @@ public sealed class TileListItem : ObservableObject
                 }
                 return WorkedMinutes > 0 ? $"{WorkedMinutes}m total" : "";
             }
-            else
-            {
-            if (!string.IsNullOrEmpty(FixedStart))
-            {
-                if (DateTime.TryParse(FixedStart, out var startTime))
-                {
-                    return $"scheduled {startTime:HH:mm}";
-                }
-            }
-            if (!string.IsNullOrEmpty(ActiveStart))
-            {
-                if (DateTime.TryParse(ActiveStart, out var startTime))
-                {
-                    return $"scheduled {startTime:HH:mm}";
-                }
-            }
-            if (!string.IsNullOrEmpty(ProjectedNextStartAt))
-            {
-                if (DateTimeOffset.TryParse(ProjectedNextStartAt, out var projectedStart))
-                {
-                    return $"scheduled {projectedStart.ToLocalTime():HH:mm}";
-                }
-            }
+
+            return TileTimeDisplayResolver.ResolveScheduledTimeDisplay(
+                FixedStart,
+                ActiveStart,
+                ProjectedNextStartAt);
         }
-        return "";
     }
-    }
+
+    public SolidColorBrush StatusBadgeBackground => Lifecycle.Trim().ToLowerInvariant() switch
+    {
+        _ => new SolidColorBrush(Colors.Transparent),
+    };
+
+    public SolidColorBrush StatusBadgeBorder => Lifecycle.Trim().ToLowerInvariant() switch
+    {
+        _ => new SolidColorBrush(Colors.Transparent),
+    };
+
+    public SolidColorBrush StatusBadgeForeground => Lifecycle.Trim().ToLowerInvariant() switch
+    {
+        "started" => new SolidColorBrush(Colors.White),
+        "ready" => new SolidColorBrush(Colors.White),
+        "done" => new SolidColorBrush(ColorHelper.FromArgb(255, 214, 214, 214)),
+        _ => new SolidColorBrush(ColorHelper.FromArgb(255, 214, 214, 214)),
+    };
 
     public string StatusGlyph => Lifecycle.Trim().ToLowerInvariant() switch
     {
@@ -1022,7 +1027,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     : Math.Max(24, (timelineWidth / Math.Max(1, block.TotalLanes)) - laneGap),
                 Top = block.Top,
                 Height = block.Height,
-                StatusIconGlyph = block.IsDone ? "\uE73E" : block.IsActive ? "\uE945" : "\uE739",
+                TileId = block.TileId,
+                Lifecycle = block.IsDone ? "done" : block.IsActive ? "started" : "ready",
+                StatusIconGlyph = block.IsDone ? "\uE73E" : block.IsActive ? "\uE945" : "\uE768",
                 StatusIconToolTip = block.IsDone ? "done" : block.IsActive ? "active" : "scheduled",
                 Fill = block.IsActive
                     ? (SolidColorBrush)Application.Current.Resources["AppSurface1Brush"]
@@ -1030,6 +1037,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 BorderBrush = (SolidColorBrush)Application.Current.Resources["AppBorderBrush"],
                 ForegroundBrush = (SolidColorBrush)Application.Current.Resources["AppForegroundBrush"],
                 SecondaryForegroundBrush = (SolidColorBrush)Application.Current.Resources["AppForegroundMutedBrush"],
+                StatusFill = ResolveTimelineStatusFill(block),
+                StatusBorderBrush = ResolveTimelineStatusBorder(block),
+                StatusForegroundBrush = ResolveTimelineStatusForeground(block),
             }));
 
         TimelineCanvasHeight = layout.CanvasHeight;
@@ -1080,19 +1090,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             ? nextStart
             : null;
 
-        _allTiles = tiles.Tiles.Select(t => new TileListItem
+        _allTiles = tiles.Tiles.Select(t =>
         {
-            Id = t.Id,
-            Title = t.Title,
-            Lifecycle = NormalizeLifecycle(t.Lifecycle),
-            WorkedMinutes = t.WorkedMinutes,
-            NextAction = t.NextAction,
-            TargetWorkMin = t.TargetWorkMin,
-            ProgressPercent = t.TargetWorkMin.HasValue && t.TargetWorkMin.Value > 0
-                ? Math.Clamp((double)t.WorkedMinutes / t.TargetWorkMin.Value * 100d, 0d, 100d)
-                : 0d,
-            ProjectedNextStartAt = t.ProjectedNextStartAt,
-            NextStartLabel = ResolveNextStartLabel(t.ProjectedNextStartAt),
+            var item = TileListItemMapper.Map(t);
+            item.Lifecycle = NormalizeLifecycle(item.Lifecycle);
+            return item;
         })
         .OrderBy(t => LifecycleSortKey(t.Lifecycle))
         .ThenBy(t => t.Title, StringComparer.OrdinalIgnoreCase)
@@ -1201,15 +1203,32 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private string? ResolveNextStartLabel(string? projectedNextStartAt)
     {
-        if (string.IsNullOrWhiteSpace(projectedNextStartAt))
+        return TileTimeDisplayResolver.ResolveNextStartLabel(projectedNextStartAt);
+    }
+
+    private static SolidColorBrush ResolveTimelineStatusFill(TimelineBlock block)
+    {
+        return new SolidColorBrush(Colors.Transparent);
+    }
+
+    private static SolidColorBrush ResolveTimelineStatusBorder(TimelineBlock block)
+    {
+        return new SolidColorBrush(Colors.Transparent);
+    }
+
+    private static SolidColorBrush ResolveTimelineStatusForeground(TimelineBlock block)
+    {
+        if (block.IsDone)
         {
-            return null;
+            return new SolidColorBrush(ColorHelper.FromArgb(255, 214, 214, 214));
         }
-        if (!DateTimeOffset.TryParse(projectedNextStartAt, out var start))
+
+        if (block.IsActive)
         {
-            return null;
+            return new SolidColorBrush(Colors.White);
         }
-        return start.ToLocalTime().ToString("MM/dd HH:mm");
+
+        return new SolidColorBrush(Colors.White);
     }
 
 

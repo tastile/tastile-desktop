@@ -38,7 +38,8 @@ public sealed class CreateTileParityResolverTests
             StartAt: DateTimeOffset.Parse("2026-04-02T09:00:00+09:00"),
             EndAt: DateTimeOffset.Parse("2026-04-02T12:00:00+09:00"),
             WorkHours: 0,
-            WorkMinutes: 25);
+            WorkMinutes: 25,
+            DurationManuallyEdited: true);
 
         var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
 
@@ -58,12 +59,33 @@ public sealed class CreateTileParityResolverTests
             RecurrenceStartTime: TimeSpan.FromHours(9),
             RecurrenceEndTime: TimeSpan.FromHours(11),
             WorkHours: 0,
-            WorkMinutes: 30);
+            WorkMinutes: 30,
+            DurationManuallyEdited: true);
 
         var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
 
         Assert.NotNull(request.Objective);
         Assert.Equal(30, request.Objective!.TargetWorkMin);
+    }
+
+    [Fact]
+    public void BuildRequest_UsesRecurringWindowDuration_WhenManualDurationIsNotEntered()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Recurring auto",
+            TileKind: "work",
+            ObjectiveMode: "recurring",
+            RecurrenceUseStartAt: true,
+            RecurrenceUseEndAt: true,
+            RecurrenceStartTime: TimeSpan.FromHours(9),
+            RecurrenceEndTime: TimeSpan.FromHours(10),
+            WorkHours: 0,
+            WorkMinutes: 0);
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Objective);
+        Assert.Equal(60, request.Objective!.TargetWorkMin);
     }
 
     [Fact]
@@ -175,6 +197,57 @@ public sealed class CreateTileParityResolverTests
 
         Assert.NotNull(request.Objective);
         Assert.Equal("time_reached", request.Objective!.DoneRule);
+    }
+
+    [Fact]
+    public void BuildRequest_MapsRecurringValidityAndDailyWindow_ToTemporalAndRecurrencePayload()
+    {
+        var validFrom = DateTimeOffset.Parse("2026-04-05T00:00:00+09:00");
+        var validTo = DateTimeOffset.Parse("2026-04-10T00:00:00+09:00");
+        var draft = new CreateTileDraft(
+            Title: "Recurring payload",
+            TileKind: "work",
+            ObjectiveMode: "recurring",
+            RecurrenceFrequency: "daily",
+            RecurrenceInterval: 1,
+            RecurrenceUseStartAt: true,
+            RecurrenceUseEndAt: true,
+            RecurrenceStartTime: TimeSpan.FromHours(8),
+            RecurrenceEndTime: TimeSpan.FromHours(9),
+            RecurrenceValidFromEnabled: true,
+            RecurrenceValidToEnabled: true,
+            RecurrenceValidFromDate: validFrom,
+            RecurrenceValidToDate: validTo,
+            WorkHours: 0,
+            WorkMinutes: 0);
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Temporal);
+        Assert.NotNull(request.Objective?.Recurrence);
+        Assert.NotNull(request.Temporal!.ReleaseAt);
+        Assert.NotNull(request.Temporal.DueAt);
+        Assert.Equal("2026-04-04T15:00:00.0000000+00:00", request.Temporal.ReleaseAt);
+        Assert.Equal("2026-04-10T14:59:00.0000000+00:00", request.Temporal.DueAt);
+        Assert.Equal(1440, request.Objective!.Recurrence!.Generator.StepMin);
+        Assert.NotNull(request.Objective.Recurrence.Generator.AnchorEpochMin);
+        Assert.Equal("freq=daily;interval=1", request.Objective.Recurrence.Selector.Expression);
+        Assert.Equal(8 * 60, request.Objective!.Recurrence!.Window.StartOffsetMin);
+        Assert.Equal(9 * 60, request.Objective.Recurrence.Window.EndOffsetMin);
+    }
+
+    [Fact]
+    public void BuildRequest_DefaultAutomation_EnablesPromptOnStart()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Prompt on start default",
+            TileKind: "work",
+            ObjectiveMode: "finish_once");
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Automation);
+        Assert.True(request.Automation!.PromptOnStart);
     }
 
     [Fact]

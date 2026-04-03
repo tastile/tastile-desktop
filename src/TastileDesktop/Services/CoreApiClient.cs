@@ -100,6 +100,42 @@ public class CoreApiClient
         response.EnsureSuccessStatusCode();
     }
 
+    public async Task<RecoveryResetResponse?> ResetLocalSyncDataAsync()
+        => await PostAuthorizedJsonAsync<RecoveryResetResponse>("/sync/recovery/reset-local");
+
+    public async Task<RecoveryResetResponse?> RedownloadRemoteSyncDataAsync()
+        => await PostAuthorizedJsonAsync<RecoveryResetResponse>("/sync/recovery/redownload-remote");
+
+    public async Task TriggerTickAsync()
+    {
+        try
+        {
+            var response = await _httpClient.PostAsync("/commands/tick", null);
+            if (response.IsSuccessStatusCode)
+            {
+                return;
+            }
+
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
+                if (desktopSession != null)
+                {
+                    await RestoreSessionAsync(desktopSession);
+                    var retry = await _httpClient.PostAsync("/commands/tick", null);
+                    retry.EnsureSuccessStatusCode();
+                    return;
+                }
+            }
+
+            response.EnsureSuccessStatusCode();
+        }
+        catch
+        {
+            // Wall-clock tick is best-effort; regular polling still refreshes state.
+        }
+    }
+
     public async Task<SyncStatusResponse?> GetSyncStatusAsync()
         => await _httpClient.GetFromJsonAsync<SyncStatusResponse>("/sync/status");
 
@@ -272,6 +308,30 @@ public class CoreApiClient
     {
         var response = await _httpClient.PostAsJsonAsync(path, body);
         return await response.Content.ReadFromJsonAsync<CommandResponse>();
+    }
+
+    private async Task<T?> PostAuthorizedJsonAsync<T>(string path)
+    {
+        var response = await _httpClient.PostAsync(path, null);
+        if (response.IsSuccessStatusCode)
+        {
+            return await response.Content.ReadFromJsonAsync<T>();
+        }
+
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
+            if (desktopSession != null)
+            {
+                await RestoreSessionAsync(desktopSession);
+                var retry = await _httpClient.PostAsync(path, null);
+                retry.EnsureSuccessStatusCode();
+                return await retry.Content.ReadFromJsonAsync<T>();
+            }
+        }
+
+        response.EnsureSuccessStatusCode();
+        return default;
     }
 
     // Auth endpoints

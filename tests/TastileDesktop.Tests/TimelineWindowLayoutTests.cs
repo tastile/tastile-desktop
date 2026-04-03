@@ -17,4 +17,25 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("TranslateTransform Y=\"{x:Bind Top}\"", xaml);
         Assert.Contains("TranslateTransform X=\"{x:Bind Left}\" Y=\"{x:Bind Top}\"", xaml);
     }
+
+    [Fact]
+    public void TimelineWindow_UsesButtonStatusAffordance_InsteadOfPassiveIcon()
+    {
+        var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
+        var xaml = File.ReadAllText(xamlPath);
+
+        Assert.Contains("Click=\"OnTimelineBlockStatusClick\"", xaml);
+        Assert.DoesNotContain("ToolTipService.ToolTip=\"{x:Bind StatusIconToolTip}\"", xaml);
+    }
+
+    [Fact]
+    public void TimelineWindow_StatusClick_DelegatesLifecycleDecisionToResolver()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        Assert.Contains("var lifecycle = block?.Lifecycle;", source);
+        Assert.Contains("TimelineStatusActionResolver.Resolve(tileId, lifecycle)", source);
+        Assert.DoesNotContain("if (lifecycle == \"done\")", source);
+    }
 }

@@ -11,7 +11,11 @@ public static class CreateTileParityResolver
     public static int? GetAutoDurationMinutes(CreateTileDraft draft)
     {
         var manual = GetWorkTargetMinutes(draft);
-        if (manual > 0) return manual;
+        var hasScheduledBounds = HasScheduledBounds(draft);
+        if (manual > 0 && (draft.DurationManuallyEdited || !hasScheduledBounds))
+        {
+            return manual;
+        }
 
         var isRecurring = string.Equals(draft.ObjectiveMode, "recurring", StringComparison.Ordinal);
         if (isRecurring)
@@ -24,6 +28,18 @@ public static class CreateTileParityResolver
         if (bounded.HasValue) return bounded.Value;
 
         return null;
+    }
+
+    private static bool HasScheduledBounds(CreateTileDraft draft)
+    {
+        if (string.Equals(draft.ObjectiveMode, "recurring", StringComparison.Ordinal))
+        {
+            return draft.RecurrenceUseStartAt && draft.RecurrenceUseEndAt
+                && draft.RecurrenceStartTime.HasValue
+                && draft.RecurrenceEndTime.HasValue;
+        }
+
+        return draft.UseStartAt && draft.UseEndAt && draft.StartAt.HasValue && draft.EndAt.HasValue;
     }
 
     public static CreateTileManualAdjustGuidance GetManualAdjustGuidance(CreateTileRequest request, bool isJapanese)
@@ -137,7 +153,7 @@ public static class CreateTileParityResolver
             ExternalInterruptOnly: false);
 
         var automation = new CreateTileAutomationRequest(
-            PromptOnStart: false,
+            PromptOnStart: true,
             PromptOnEnd: true,
             AutoStartAllowed: false,
             AutoEndAllowed: false);
