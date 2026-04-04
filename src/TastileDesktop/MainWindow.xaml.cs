@@ -112,7 +112,7 @@ public sealed partial class MainWindow : Window
 
     public void DebugOpenCreateTileWindow()
     {
-        OpenOwnedWindow(() => new CreateTileWindow());
+        OpenCreateTileWindow();
     }
 
     private void RefreshNativePanel()
@@ -145,6 +145,11 @@ public sealed partial class MainWindow : Window
     }
 
     private void OnPinClick(object sender, RoutedEventArgs e)
+    {
+        TogglePin();
+    }
+
+    public void TogglePin()
     {
         ApplyPinnedState(!_isPinned);
         _settings.Update(settings => settings.QuickBarAlwaysOnTop = _isPinned);
@@ -208,7 +213,12 @@ public sealed partial class MainWindow : Window
 
     private async void OnRefreshClick(object sender, RoutedEventArgs e)
     {
-        await ViewModel.RefreshAsync();
+        await RefreshDataAsync();
+    }
+
+    public Task RefreshDataAsync()
+    {
+        return ViewModel.RefreshAsync();
     }
 
     private void OnRunningTasksDragStart(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
@@ -343,35 +353,70 @@ public sealed partial class MainWindow : Window
 
     private void OnOpenExecuteWindowClick(object sender, RoutedEventArgs e)
     {
-        OpenOwnedWindow(() => new ExecuteWindow());
+        OpenExecuteWindow();
     }
 
     private void OnOpenTilesWindowClick(object sender, RoutedEventArgs e)
     {
-        OpenOwnedWindow(() => new TilesWindow(ViewModel.PollingService));
+        OpenTilesWindow();
     }
 
     private void OnOpenTimelineWindowClick(object sender, RoutedEventArgs e)
     {
-        OpenOwnedWindow(() => new TimelineWindow());
+        OpenTimelineWindow();
     }
 
     private void OnOpenCreateTileWindowClick(object sender, RoutedEventArgs e)
     {
-        OpenOwnedWindow(() => new CreateTileWindow());
+        OpenCreateTileWindow();
     }
 
     private void OnOpenIntegrationsWindowClick(object sender, RoutedEventArgs e)
     {
-        OpenOwnedWindow(() => new IntegrationsWindow());
+        OpenIntegrationsWindow();
     }
 
     private void OnOpenSettingsWindowClick(object sender, RoutedEventArgs e)
     {
+        OpenSettingsWindow();
+    }
+
+    public void OpenSettingsWindow()
+    {
         OpenOwnedWindow(() => new SettingsWindow());
     }
 
+    public void OpenExecuteWindow()
+    {
+        OpenOwnedWindow(() => new ExecuteWindow());
+    }
+
+    public void OpenTilesWindow()
+    {
+        OpenOwnedWindow(() => new TilesWindow(ViewModel.PollingService));
+    }
+
+    public void OpenTimelineWindow()
+    {
+        OpenOwnedWindow(() => new TimelineWindow());
+    }
+
+    public void OpenCreateTileWindow()
+    {
+        OpenOwnedWindow(() => new CreateTileWindow());
+    }
+
+    public void OpenIntegrationsWindow()
+    {
+        OpenOwnedWindow(() => new IntegrationsWindow());
+    }
+
     private void OnHidePanelClick(object sender, RoutedEventArgs e)
+    {
+        HidePanel();
+    }
+
+    public void HidePanel()
     {
         _isPanelVisible = false;
         _nativePanel.Hide();
@@ -406,22 +451,22 @@ public sealed partial class MainWindow : Window
                 _settings.Update(settings => settings.QuickBarAlwaysOnTop = _isPinned);
                 return;
             case "open-tiles":
-                OpenOwnedWindow(() => new TilesWindow(ViewModel.PollingService));
+                OpenTilesWindow();
                 return;
             case "open-timeline":
-                OpenOwnedWindow(() => new TimelineWindow());
+                OpenTimelineWindow();
                 return;
             case "open-execute":
-                OpenOwnedWindow(() => new ExecuteWindow());
+                OpenExecuteWindow();
                 return;
             case "open-create":
-                OpenOwnedWindow(() => new CreateTileWindow());
+                OpenCreateTileWindow();
                 return;
             case "open-integrations":
-                OpenOwnedWindow(() => new IntegrationsWindow());
+                OpenIntegrationsWindow();
                 return;
             case "open-settings":
-                OpenOwnedWindow(() => new SettingsWindow());
+                OpenSettingsWindow();
                 return;
         }
     }
