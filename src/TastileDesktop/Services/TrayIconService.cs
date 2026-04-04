@@ -81,6 +81,11 @@ public class TrayIconService : IDisposable
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to create tray icon: {ex.Message}");
+            // Clean up on failure
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _trayIcon?.Dispose();
+            _trayIcon = null;
+            return;
         }
 
         // NOW assign the context flyout AFTER ForceCreate
