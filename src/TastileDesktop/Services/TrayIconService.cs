@@ -13,14 +13,16 @@ public class TrayIconService : IDisposable
     private readonly MainViewModel _viewModel;
     private readonly CoreApiClient _api;
     private readonly Action _quitCallback;
+    private readonly SettingsService _settingsService;
     private TaskbarIcon? _trayIcon;
     private Window? _mainWindow;
 
-    public TrayIconService(MainViewModel viewModel, CoreApiClient api, Action quitCallback)
+    public TrayIconService(MainViewModel viewModel, CoreApiClient api, Action quitCallback, SettingsService settingsService)
     {
         _viewModel = viewModel;
         _api = api;
         _quitCallback = quitCallback;
+        _settingsService = settingsService;
     }
 
     /// <summary>
@@ -34,7 +36,7 @@ public class TrayIconService : IDisposable
         _trayIcon = new TaskbarIcon
         {
             ToolTipText = "Tastile - Initializing...",
-            ContextMenuMode = ContextMenuMode.PopupMenu,
+            ContextMenuMode = ContextMenuMode.SecondWindow,
             NoLeftClickDelay = true,
         };
         
@@ -64,9 +66,6 @@ public class TrayIconService : IDisposable
             };
         }
 
-        // Create the context flyout
-        _trayIcon.ContextFlyout = CreateContextMenu();
-
         // Handle left click to show window
         _trayIcon.LeftClickCommand = new RelayCommand(ShowMainWindow);
 
@@ -76,7 +75,7 @@ public class TrayIconService : IDisposable
         // Set initial connection status
         UpdateTrayIconStatus();
         
-        // Force create the tray icon
+        // Force create the tray icon first, WITHOUT context menu
         try
         {
             _trayIcon.ForceCreate();
@@ -84,6 +83,22 @@ public class TrayIconService : IDisposable
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to create tray icon: {ex.Message}");
+            // Clean up on failure
+            _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            _trayIcon?.Dispose();
+            _trayIcon = null;
+            return;
+        }
+
+        // NOW assign the context flyout AFTER ForceCreate
+        // This is a workaround for H.NotifyIcon WinUI3 issues
+        try
+        {
+            _trayIcon.ContextFlyout = CreateContextMenu();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to assign context flyout: {ex.Message}");
         }
     }
     
@@ -261,6 +276,17 @@ public class TrayIconService : IDisposable
             var settingsWindow = new Views.SettingsWindow();
             settingsWindow.Activate();
         });
+    }
+
+    private void MoveToNextDisplay()
+    {
+        if (_mainWindow is MainWindow panelWindow)
+        {
+            panelWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                FloatingWindowHelper.RotateToNextDisplay(panelWindow, _settingsService.Current);
+            });
+        }
     }
 
     private async Task SignInWithGoogleAsync()

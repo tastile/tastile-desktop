@@ -120,8 +120,8 @@ public static class CreateTileParityResolver
         var title = string.IsNullOrWhiteSpace(draft.Title) ? GetSuggestedTitle(draft, isJapanese) : draft.Title.Trim();
 
         var temporal = new CreateTileTemporalRequest(
-            ReleaseAt: recurrenceValidFrom.HasValue ? ToIsoString(recurrenceValidFrom.Value.Date) : null,
-            DueAt: recurrenceValidTo.HasValue ? ToIsoString(recurrenceValidTo.Value.Date.AddDays(1).AddMinutes(-1)) : null,
+            ReleaseAt: recurrenceValidFrom.HasValue ? ToIsoString(recurrenceValidFrom.Value) : null,
+            DueAt: recurrenceValidTo.HasValue ? ToIsoString(recurrenceValidTo.Value.AddDays(1).AddMinutes(-1)) : null,
             FixedStart: startAt.HasValue ? ToIsoString(startAt.Value) : null,
             FixedEnd: endAt.HasValue ? ToIsoString(endAt.Value) : null,
             ActiveStart: startAt.HasValue ? ToIsoString(startAt.Value) : null,
@@ -131,7 +131,7 @@ public static class CreateTileParityResolver
             ? new CreateTileRecurrenceRequest(
                 Generator: new CreateTileRecurrenceGeneratorRequest(
                     StepMin: string.Equals(draft.RecurrenceFrequency, "weekly", StringComparison.Ordinal) ? 7 * 24 * 60 : 24 * 60,
-                    AnchorEpochMin: recurrenceValidFrom.HasValue ? ToEpochMinutes(recurrenceValidFrom.Value.Date) : null),
+                    AnchorEpochMin: recurrenceValidFrom.HasValue ? ToEpochMinutes(recurrenceValidFrom.Value) : null),
                 Window: new CreateTileRecurrenceWindowRequest(
                     StartOffsetMin: recurrenceStartOffset ?? 0,
                     EndOffsetMin: recurrenceEndOffset ?? 0),

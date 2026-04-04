@@ -301,6 +301,26 @@
                 </StackPanel>
 
                 <StackPanel Spacing="12">
+                    <TextBlock Text="Quick Panel" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Vertical position" VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+                            <Button Content="Top" Click="OnTopClick" Width="80" />
+                            <Button Content="Bottom" Click="OnBottomClick" Width="80" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Button Content="Next Display" Click="OnNextDisplayClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
+                    <TextBlock Text="Move panel to the next display" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                </StackPanel>
+
+                <StackPanel Spacing="12">
                     <TextBlock Text="Account" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 

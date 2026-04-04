@@ -73,6 +73,12 @@ internal static class FloatingWindowHelper
         }
     }
 
+    private static int _displayIndex = -1;
+    private static RectInt32? _lastWorkArea;
+    private static IReadOnlyList<DisplayInfo>? _lastDisplays;
+    private static string? _lastVerticalPosition;
+    private static bool _forcePositionUpdate;
+    
     public static void PlaceQuickPanel(Window window, TastileSettings settings)
     {
         var appWindow = GetAppWindow(window);
@@ -87,20 +93,95 @@ internal static class FloatingWindowHelper
             return;
         }
 
-        // PowerToys方式: Win32 APIで正しいモニターのワークエリアを取得
-        var workArea = GetMonitorWorkArea(hwnd);
+        var displays = PromptToastDisplayEnumerator.GetDisplays();
+        if (displays.Count == 0)
+        {
+            return;
+        }
+
+        // Initialize to first display on first call
+        if (_displayIndex < 0)
+        {
+            _displayIndex = 0;
+        }
+
+        // If displays changed (added/removed), reset to first
+        if (_lastDisplays != null && displays.Count != _lastDisplays.Count)
+        {
+            _displayIndex = 0;
+        }
+
+        var workArea = displays[_displayIndex].WorkArea;
+
+        // Check if we need to move: first time, force update, or vertical position changed
+        var displayChanged = _lastWorkArea == null || _displayIndex != _lastDisplays?.Count;
+        var verticalPositionChanged = _lastVerticalPosition != settings.QuickPanelVerticalPosition;
         
-        // 892×88px、上から24px、水平中央
+        if (_lastWorkArea == null || displayChanged || verticalPositionChanged || _forcePositionUpdate)
+        {
+            var width = 892;
+            var height = 88;
+            var x = workArea.X + (workArea.Width - width) / 2;
+            
+            var y = string.Equals(settings.QuickPanelVerticalPosition, QuickPanelVerticalPositions.Bottom, StringComparison.Ordinal)
+                ? workArea.Y + workArea.Height - height - 24
+                : workArea.Y + 24;
+            
+            System.Diagnostics.Debug.WriteLine($"[PlaceQuickPanel] Display {_displayIndex}: L={workArea.X}, T={workArea.Y}, R={workArea.X + workArea.Width}, B={workArea.Y + workArea.Height}");
+            System.Diagnostics.Debug.WriteLine($"[PlaceQuickPanel] Position: X={x}, Y={y}, W={width}, H={height}");
+            
+            appWindow.Resize(new SizeInt32(width, height));
+            appWindow.Move(new Windows.Graphics.PointInt32(x, y));
+            
+            _lastWorkArea = workArea;
+            _lastDisplays = displays;
+            _lastVerticalPosition = settings.QuickPanelVerticalPosition;
+            _forcePositionUpdate = false;
+        }
+    }
+
+    public static void RotateToNextDisplay(Window window, TastileSettings settings)
+    {
+        _forcePositionUpdate = true;
+        
+        var displays = PromptToastDisplayEnumerator.GetDisplays();
+        if (displays.Count == 0)
+        {
+            return;
+        }
+
+        // Rotate to next display
+        _displayIndex = (_displayIndex + 1) % displays.Count;
+        
+        var appWindow = GetAppWindow(window);
+        if (appWindow is null)
+        {
+            return;
+        }
+
+        var workArea = displays[_displayIndex].WorkArea;
         var width = 892;
         var height = 88;
-        var x = workArea.Left + (workArea.Right - workArea.Left - width) / 2;
-        var y = workArea.Top + 24;
+        var x = workArea.X + (workArea.Width - width) / 2;
         
-        System.Diagnostics.Debug.WriteLine($"[PlaceQuickPanel] Monitor work area: L={workArea.Left}, T={workArea.Top}, R={workArea.Right}, B={workArea.Bottom}");
-        System.Diagnostics.Debug.WriteLine($"[PlaceQuickPanel] Position: X={x}, Y={y}, W={width}, H={height}");
+        var y = string.Equals(settings.QuickPanelVerticalPosition, QuickPanelVerticalPositions.Bottom, StringComparison.Ordinal)
+            ? workArea.Y + workArea.Height - height - 24
+            : workArea.Y + 24;
+        
+        System.Diagnostics.Debug.WriteLine($"[RotateToNextDisplay] Display {_displayIndex}: L={workArea.X}, T={workArea.Y}");
         
         appWindow.Resize(new SizeInt32(width, height));
         appWindow.Move(new Windows.Graphics.PointInt32(x, y));
+        
+        _lastWorkArea = workArea;
+        _lastDisplays = displays;
+        _lastVerticalPosition = settings.QuickPanelVerticalPosition;
+    }
+
+    public static void ForcePositionUpdate(Window window, TastileSettings settings)
+    {
+        _forcePositionUpdate = true;
+        PlaceQuickPanel(window, settings);
     }
     
     // PowerToys方式: GetMonitorInfoを使用してワークエリアを取得

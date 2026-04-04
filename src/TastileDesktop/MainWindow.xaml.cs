@@ -56,7 +56,13 @@ public sealed partial class MainWindow : Window
         _nativePanel = new NativeQuickPanelWindow(HandleNativePanelActionAsync);
         ApplyPinnedState(_settings.Current.QuickBarAlwaysOnTop);
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
-        _settings.SettingsChanged += (_, _) => RefreshNativePanel();
+        _settings.SettingsChanged += (_, _) =>
+        {
+            if (_isPanelVisible)
+            {
+                FloatingWindowHelper.ForcePositionUpdate(this, _settings.Current);
+            }
+        };
         AuthService.Instance.AuthStateChanged += (_, _) => DispatcherQueue.TryEnqueue(UpdateAccountUI);
         _clockTimer.Tick += (_, _) => OnClockTick();
         _clockTimer.Start();
