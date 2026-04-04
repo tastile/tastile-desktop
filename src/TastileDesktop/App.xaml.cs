@@ -196,6 +196,8 @@ public partial class App : Application
             }
 
             Log("MainWindow initialized");
+            await apiClient.TriggerTickAsync();
+            Log("Startup tick triggered");
             ApplyAppearance(_appearanceService.GetCurrentSnapshot());
             
             // Setup tray icon

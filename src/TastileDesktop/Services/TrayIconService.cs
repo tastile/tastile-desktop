@@ -16,6 +16,25 @@ public class TrayIconService : IDisposable
     private readonly SettingsService _settingsService;
     private TaskbarIcon? _trayIcon;
     private Window? _mainWindow;
+    private MenuFlyout? _contextMenu;
+    private MenuFlyoutSubItem? _windowsMenu;
+    private MenuFlyoutSubItem? _actionsMenu;
+    private MenuFlyoutSubItem? _accountMenu;
+    private MenuFlyoutItem? _statusItem;
+    private MenuFlyoutItem? _showPanelItem;
+    private MenuFlyoutItem? _hidePanelItem;
+    private MenuFlyoutItem? _refreshItem;
+    private MenuFlyoutItem? _pinItem;
+    private MenuFlyoutItem? _createTileItem;
+    private MenuFlyoutItem? _executeItem;
+    private MenuFlyoutItem? _tilesItem;
+    private MenuFlyoutItem? _timelineItem;
+    private MenuFlyoutItem? _integrationsItem;
+    private MenuFlyoutItem? _settingsItem;
+    private MenuFlyoutItem? _completeItem;
+    private MenuFlyoutItem? _breakItem;
+    private MenuFlyoutItem? _endBreakItem;
+    private MenuFlyoutItem? _signInItem;
 
     public TrayIconService(MainViewModel viewModel, CoreApiClient api, Action quitCallback, SettingsService settingsService)
     {
@@ -94,7 +113,8 @@ public class TrayIconService : IDisposable
         // This is a workaround for H.NotifyIcon WinUI3 issues
         try
         {
-            _trayIcon.ContextFlyout = CreateContextMenu();
+            _contextMenu = CreateContextMenu();
+            _trayIcon.ContextFlyout = _contextMenu;
         }
         catch (Exception ex)
         {
@@ -137,81 +157,113 @@ public class TrayIconService : IDisposable
     {
         var menu = new MenuFlyout();
 
-        // Show Tastile
-        var showItem = new MenuFlyoutItem
+        _showPanelItem = new MenuFlyoutItem
         {
             Text = "Show panel",
         };
-        showItem.Click += (_, _) => ShowMainWindow();
-        menu.Items.Add(showItem);
+        _showPanelItem.Click += (_, _) => ShowMainWindow();
 
-        menu.Items.Add(new MenuFlyoutSeparator());
-
-        // Quick Create
-        var quickCreateItem = new MenuFlyoutItem
+        _hidePanelItem = new MenuFlyoutItem
         {
-            Text = "Quick Create...",
+            Text = "Hide panel",
         };
-        quickCreateItem.Click += (_, _) => ShowQuickCreateDialog();
-        menu.Items.Add(quickCreateItem);
+        _hidePanelItem.Click += (_, _) => HidePanel();
+
+        _refreshItem = new MenuFlyoutItem
+        {
+            Text = "Refresh",
+        };
+        _refreshItem.Click += (_, _) => RefreshPanel();
+
+        _pinItem = new MenuFlyoutItem
+        {
+            Text = "Pin panel",
+        };
+        _pinItem.Click += (_, _) => TogglePin();
 
         // Current tile status (disabled)
         var currentTile = _viewModel.ActiveTileTitle ?? "No active tile";
-        var statusItem = new MenuFlyoutItem
+        _statusItem = new MenuFlyoutItem
         {
             Text = $"Current: {currentTile}",
             IsEnabled = false,
         };
-        menu.Items.Add(statusItem);
 
-        menu.Items.Add(new MenuFlyoutSeparator());
-
-        // Complete
-        var completeItem = new MenuFlyoutItem
+        _actionsMenu = new MenuFlyoutSubItem
+        {
+            Text = "Actions",
+        };
+        _completeItem = new MenuFlyoutItem
         {
             Text = "Complete",
             IsEnabled = _viewModel.IsWorking,
             Command = _viewModel.CompleteTileCommand,
         };
-        menu.Items.Add(completeItem);
-
-        // Break (5 min)
-        var breakItem = new MenuFlyoutItem
+        _breakItem = new MenuFlyoutItem
         {
             Text = "Break (5 min)",
             IsEnabled = _viewModel.IsWorking,
             Command = _viewModel.StartBreakCommand,
         };
-        menu.Items.Add(breakItem);
-
-        // End Break
-        var endBreakItem = new MenuFlyoutItem
+        _endBreakItem = new MenuFlyoutItem
         {
             Text = "End Break",
             IsEnabled = _viewModel.IsOnBreak,
             Command = _viewModel.EndBreakCommand,
         };
-        menu.Items.Add(endBreakItem);
 
-        menu.Items.Add(new MenuFlyoutSeparator());
+        _createTileItem = new MenuFlyoutItem
+        {
+            Text = "Create Tile",
+        };
+        _createTileItem.Click += (_, _) => OpenCreateTileWindow();
 
-        // Sign in with Google
-        System.Diagnostics.Debug.WriteLine("Adding Google Sign In menu item...");
-        var googleSignInItem = new MenuFlyoutItem
+        _actionsMenu.Items.Add(_createTileItem);
+        _actionsMenu.Items.Add(_completeItem);
+        _actionsMenu.Items.Add(_breakItem);
+        _actionsMenu.Items.Add(_endBreakItem);
+
+        _windowsMenu = new MenuFlyoutSubItem
+        {
+            Text = "Windows",
+        };
+        _executeItem = new MenuFlyoutItem { Text = "Execute" };
+        _executeItem.Click += (_, _) => OpenExecuteWindow();
+        _tilesItem = new MenuFlyoutItem { Text = "Tiles" };
+        _tilesItem.Click += (_, _) => OpenTilesWindow();
+        _timelineItem = new MenuFlyoutItem { Text = "Timeline" };
+        _timelineItem.Click += (_, _) => OpenTimelineWindow();
+        _integrationsItem = new MenuFlyoutItem { Text = "Integrations" };
+        _integrationsItem.Click += (_, _) => OpenIntegrationsWindow();
+        _settingsItem = new MenuFlyoutItem { Text = "Settings" };
+        _settingsItem.Click += (_, _) => ShowSettings();
+        _windowsMenu.Items.Add(_executeItem);
+        _windowsMenu.Items.Add(_tilesItem);
+        _windowsMenu.Items.Add(_timelineItem);
+        _windowsMenu.Items.Add(_integrationsItem);
+        _windowsMenu.Items.Add(_settingsItem);
+
+        _accountMenu = new MenuFlyoutSubItem
+        {
+            Text = "Account",
+        };
+        _signInItem = new MenuFlyoutItem
         {
             Text = "Sign in with Google",
         };
-        googleSignInItem.Click += async (_, _) => await SignInWithGoogleAsync();
-        menu.Items.Add(googleSignInItem);
-        System.Diagnostics.Debug.WriteLine($"Menu items count: {menu.Items.Count}");
+        _signInItem.Click += async (_, _) => await SignInWithGoogleAsync();
+        _accountMenu.Items.Add(_signInItem);
 
-        // Settings
-        var settingsItem = new MenuFlyoutItem
-        {
-            Text = "Settings",
-        };
-        settingsItem.Click += (_, _) => ShowSettings();
-        menu.Items.Add(settingsItem);
+        menu.Items.Add(_showPanelItem);
+        menu.Items.Add(_hidePanelItem);
+        menu.Items.Add(_refreshItem);
+        menu.Items.Add(_pinItem);
+        menu.Items.Add(new MenuFlyoutSeparator());
+        menu.Items.Add(_statusItem);
+        menu.Items.Add(_actionsMenu);
+        menu.Items.Add(_windowsMenu);
+        menu.Items.Add(_accountMenu);
+        menu.Items.Add(new MenuFlyoutSeparator());
 
         // Quit
         var quitItem = new MenuFlyoutItem
@@ -226,17 +278,14 @@ public class TrayIconService : IDisposable
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // Rebuild menu when execution state changes
+        // Keep one flyout instance alive and only update item states
         if (string.IsNullOrEmpty(e.PropertyName) ||
             e.PropertyName == nameof(MainViewModel.IsWorking) ||
             e.PropertyName == nameof(MainViewModel.IsOnBreak) ||
             e.PropertyName == nameof(MainViewModel.ActiveTileTitle) ||
             e.PropertyName == nameof(MainViewModel.NextUpTitle))
         {
-            if (_trayIcon != null)
-            {
-                _trayIcon.ContextFlyout = CreateContextMenu();
-            }
+            RefreshContextMenuState();
         }
         
         // Update icon when connection status changes
@@ -249,6 +298,41 @@ public class TrayIconService : IDisposable
             e.PropertyName == nameof(MainViewModel.IsOnBreak))
         {
             UpdateTrayIconStatus();
+        }
+    }
+
+    private void RefreshContextMenuState()
+    {
+        try
+        {
+            if (_statusItem != null)
+            {
+                _statusItem.Text = $"Current: {_viewModel.ActiveTileTitle ?? "No active tile"}";
+            }
+            if (_pinItem != null)
+            {
+                _pinItem.Text = IsPanelPinned() ? "Unpin panel" : "Pin panel";
+            }
+            if (_completeItem != null)
+            {
+                _completeItem.IsEnabled = _viewModel.IsWorking;
+            }
+            if (_breakItem != null)
+            {
+                _breakItem.IsEnabled = _viewModel.IsWorking;
+            }
+            if (_endBreakItem != null)
+            {
+                _endBreakItem.IsEnabled = _viewModel.IsOnBreak;
+            }
+            if (_signInItem != null)
+            {
+                _signInItem.Text = AuthService.Instance.IsAuthenticated ? "Re-authenticate with Google" : "Sign in with Google";
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to refresh context menu state: {ex.Message}");
         }
     }
 
@@ -273,9 +357,119 @@ public class TrayIconService : IDisposable
     {
         _mainWindow?.DispatcherQueue.TryEnqueue(() =>
         {
-            var settingsWindow = new Views.SettingsWindow();
-            settingsWindow.Activate();
+            ShowMainWindow();
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.OpenSettingsWindow();
+            }
         });
+    }
+
+    private void OpenCreateTileWindow()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            ShowMainWindow();
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.OpenCreateTileWindow();
+            }
+        });
+    }
+
+    private void OpenExecuteWindow()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            ShowMainWindow();
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.OpenExecuteWindow();
+            }
+        });
+    }
+
+    private void OpenTilesWindow()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            ShowMainWindow();
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.OpenTilesWindow();
+            }
+        });
+    }
+
+    private void OpenTimelineWindow()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            ShowMainWindow();
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.OpenTimelineWindow();
+            }
+        });
+    }
+
+    private void OpenIntegrationsWindow()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            ShowMainWindow();
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.OpenIntegrationsWindow();
+            }
+        });
+    }
+
+    private void HidePanel()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.HidePanel();
+            }
+        });
+    }
+
+    private void RefreshPanel()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(async () =>
+        {
+            if (_mainWindow is not MainWindow panelWindow)
+            {
+                return;
+            }
+            try
+            {
+                await panelWindow.RefreshDataAsync();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Failed to refresh from tray menu: {ex.Message}");
+            }
+        });
+    }
+
+    private void TogglePin()
+    {
+        _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+        {
+            if (_mainWindow is MainWindow panelWindow)
+            {
+                panelWindow.TogglePin();
+                RefreshContextMenuState();
+            }
+        });
+    }
+
+    private bool IsPanelPinned()
+    {
+        return _settingsService.Current.QuickBarAlwaysOnTop;
     }
 
     private void MoveToNextDisplay()
@@ -424,6 +618,25 @@ public class TrayIconService : IDisposable
     {
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         _trayIcon?.Dispose();
+        _contextMenu = null;
+        _windowsMenu = null;
+        _actionsMenu = null;
+        _accountMenu = null;
+        _showPanelItem = null;
+        _hidePanelItem = null;
+        _refreshItem = null;
+        _pinItem = null;
+        _createTileItem = null;
+        _executeItem = null;
+        _tilesItem = null;
+        _timelineItem = null;
+        _integrationsItem = null;
+        _settingsItem = null;
+        _signInItem = null;
+        _statusItem = null;
+        _completeItem = null;
+        _breakItem = null;
+        _endBreakItem = null;
     }
 }
 

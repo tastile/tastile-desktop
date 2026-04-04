@@ -714,6 +714,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private PromptToastDisplayService? _promptToastDisplayService;
     private string? _lastHandledPromptId;
     private bool _toastDismissedByAction;
+    private readonly Dictionary<string, DateTimeOffset> _promptCooldownById = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly TimeSpan PromptCooldownWindow = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan PromptAutoExecutionDelay = TimeSpan.FromSeconds(30);
+    private CancellationTokenSource? _promptAutoExecutionCts;
     public PollingService PollingService => _pollingService;
 
     public MainViewModel()
@@ -843,9 +847,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             App.DebugLog($"[OnPromptToastPromptChanged] Prompt is null, hiding toast");
             _lastHandledPromptId = null;
             _toastDismissedByAction = false;
+            CancelPromptAutoExecution();
             _promptToastDisplayService?.Hide();
             return;
         }
+
+        CleanupPromptCooldowns();
 
         System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptId}, Dismissed by action: {_toastDismissedByAction}");
         App.DebugLog($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptId}, Dismissed by action: {_toastDismissedByAction}");
@@ -860,6 +867,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Skipping - already handled");
             App.DebugLog($"[OnPromptToastPromptChanged] Skipping - already handled");
+            return;
+        }
+
+        if (_promptCooldownById.TryGetValue(prompt.Prompt.PromptId, out var blockedUntil)
+            && blockedUntil > DateTimeOffset.UtcNow)
+        {
+            System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Cooldown active for prompt {prompt.Prompt.PromptId} until {blockedUntil:O}");
+            App.DebugLog($"[OnPromptToastPromptChanged] Cooldown active for prompt {prompt.Prompt.PromptId} until {blockedUntil:O}");
             return;
         }
 
@@ -881,6 +896,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         _lastHandledPromptId = prompt.Prompt.PromptId;
         _toastDismissedByAction = false; // リセット
+        StartPromptAutoExecution(prompt.Prompt);
         
         // UI スレッドでトースト表示
         _promptToastDisplayService?.ShowPrompt(
@@ -889,6 +905,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             async (actionId, stopAt) =>
             {
                 _toastDismissedByAction = true;
+                MarkPromptCooldown(prompt.Prompt.PromptId);
+                CancelPromptAutoExecution();
                 System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
                 App.DebugLog($"[Toast] Action clicked: {actionId}");
                 
@@ -962,6 +980,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             async (actionId, minutes) =>
             {
                 _toastDismissedByAction = true;
+                MarkPromptCooldown(prompt.Prompt.PromptId);
+                CancelPromptAutoExecution();
                 System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
                 App.DebugLog($"[Toast] Defer: action={actionId}, minutes={minutes}");
                 
@@ -986,6 +1006,153 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     App.DebugLog($"[Toast] Defer error: {ex.Message}");
                 }
             });
+    }
+
+    private void StartPromptAutoExecution(PromptView prompt)
+    {
+        CancelPromptAutoExecution();
+        var actionId = ResolveAutoActionId(prompt);
+        if (string.IsNullOrWhiteSpace(actionId))
+        {
+            return;
+        }
+
+        var promptId = prompt.PromptId;
+        _promptAutoExecutionCts = new CancellationTokenSource();
+        var token = _promptAutoExecutionCts.Token;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(PromptAutoExecutionDelay, token);
+                if (token.IsCancellationRequested)
+                {
+                    return;
+                }
+
+                if (PendingPrompt?.Prompt?.PromptId != promptId)
+                {
+                    return;
+                }
+
+                _toastDismissedByAction = true;
+                MarkPromptCooldown(promptId);
+                _promptToastDisplayService?.Hide();
+                await ExecutePromptActionAsync(actionId, prompt, null);
+                await _pollingService.PollAsync();
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[Toast] Auto action error: {ex.Message}");
+                App.DebugLog($"[Toast] Auto action error: {ex.Message}");
+            }
+        }, token);
+    }
+
+    private void CancelPromptAutoExecution()
+    {
+        _promptAutoExecutionCts?.Cancel();
+        _promptAutoExecutionCts?.Dispose();
+        _promptAutoExecutionCts = null;
+    }
+
+    private static string? ResolveAutoActionId(PromptView prompt)
+    {
+        var kind = prompt.Kind?.Trim().ToLowerInvariant();
+        switch (kind)
+        {
+            case "start":
+                if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "START", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "START";
+                }
+                if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "START_TILE", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "START_TILE";
+                }
+                return null;
+            case "end":
+                if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "COMPLETE", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "COMPLETE";
+                }
+                if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "COMPLETE_AND_START_NEXT", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "COMPLETE_AND_START_NEXT";
+                }
+                return null;
+            default:
+                return null;
+        }
+    }
+
+    private async Task ExecutePromptActionAsync(string actionId, PromptView prompt, DateTimeOffset? stopAt)
+    {
+        var settings = new SettingsService();
+        var id = actionId.ToUpperInvariant();
+        var handledByStartupRecovery = await TryRespondStartupRecoveryAsync(prompt, id, stopAt);
+        if (handledByStartupRecovery)
+        {
+            return;
+        }
+
+        switch (id)
+        {
+            case "CONTINUE":
+            case "DISMISS":
+                return;
+            case "BREAK":
+            case "START_BREAK":
+                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
+                return;
+            case "COMPLETE":
+            case "COMPLETE_AND_START_NEXT":
+                await _api.CompleteTileAsync(prompt.TileId);
+                return;
+            case "END_BREAK":
+                await _api.EndBreakAsync();
+                return;
+            case "EXTEND":
+                await _api.ExtendTileAsync(10);
+                return;
+            case "START":
+            case "START_TILE":
+                if (!string.IsNullOrWhiteSpace(prompt.TileId))
+                {
+                    await _api.StartTileAsync(prompt.TileId);
+                }
+                return;
+            default:
+                return;
+        }
+    }
+
+    private void MarkPromptCooldown(string? promptId)
+    {
+        if (string.IsNullOrWhiteSpace(promptId))
+        {
+            return;
+        }
+        _promptCooldownById[promptId] = DateTimeOffset.UtcNow + PromptCooldownWindow;
+    }
+
+    private void CleanupPromptCooldowns()
+    {
+        var now = DateTimeOffset.UtcNow;
+        foreach (var key in _promptCooldownById
+                     .Where(kv => kv.Value <= now)
+                     .Select(kv => kv.Key)
+                     .ToList())
+        {
+            _promptCooldownById.Remove(key);
+        }
     }
 
     private void OnTimelineChanged(object? sender, TimelineTodayResponse? timeline)
@@ -1687,6 +1854,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         _interventionEngine?.Dispose();
         _promptAttentionOverlayService?.Dispose();
+        CancelPromptAutoExecution();
         _promptToastDisplayService?.Hide();
         _promptToastDisplayService?.Dispose();
         _pollingService.PendingPromptChanged -= OnPromptToastPromptChanged;
