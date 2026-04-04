@@ -34,7 +34,7 @@ public class TrayIconService : IDisposable
         _trayIcon = new TaskbarIcon
         {
             ToolTipText = "Tastile - Initializing...",
-            ContextMenuMode = ContextMenuMode.PopupMenu,
+            ContextMenuMode = ContextMenuMode.SecondWindow,
             NoLeftClickDelay = true,
         };
         
@@ -64,9 +64,6 @@ public class TrayIconService : IDisposable
             };
         }
 
-        // Create the context flyout
-        _trayIcon.ContextFlyout = CreateContextMenu();
-
         // Handle left click to show window
         _trayIcon.LeftClickCommand = new RelayCommand(ShowMainWindow);
 
@@ -76,7 +73,7 @@ public class TrayIconService : IDisposable
         // Set initial connection status
         UpdateTrayIconStatus();
         
-        // Force create the tray icon
+        // Force create the tray icon first, WITHOUT context menu
         try
         {
             _trayIcon.ForceCreate();
@@ -84,6 +81,17 @@ public class TrayIconService : IDisposable
         catch (Exception ex)
         {
             System.Diagnostics.Debug.WriteLine($"Failed to create tray icon: {ex.Message}");
+        }
+
+        // NOW assign the context flyout AFTER ForceCreate
+        // This is a workaround for H.NotifyIcon WinUI3 issues
+        try
+        {
+            _trayIcon.ContextFlyout = CreateContextMenu();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Failed to assign context flyout: {ex.Message}");
         }
     }
     
@@ -261,6 +269,18 @@ public class TrayIconService : IDisposable
             var settingsWindow = new Views.SettingsWindow();
             settingsWindow.Activate();
         });
+    }
+
+    private void MoveToNextDisplay()
+    {
+        if (_mainWindow is MainWindow panelWindow)
+        {
+            panelWindow.DispatcherQueue.TryEnqueue(() =>
+            {
+                var settings = new SettingsService();
+                FloatingWindowHelper.RotateToNextDisplay(panelWindow, settings.Current);
+            });
+        }
     }
 
     private async Task SignInWithGoogleAsync()
