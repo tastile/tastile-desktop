@@ -13,14 +13,16 @@ public class TrayIconService : IDisposable
     private readonly MainViewModel _viewModel;
     private readonly CoreApiClient _api;
     private readonly Action _quitCallback;
+    private readonly SettingsService _settingsService;
     private TaskbarIcon? _trayIcon;
     private Window? _mainWindow;
 
-    public TrayIconService(MainViewModel viewModel, CoreApiClient api, Action quitCallback)
+    public TrayIconService(MainViewModel viewModel, CoreApiClient api, Action quitCallback, SettingsService settingsService)
     {
         _viewModel = viewModel;
         _api = api;
         _quitCallback = quitCallback;
+        _settingsService = settingsService;
     }
 
     /// <summary>
@@ -282,8 +284,7 @@ public class TrayIconService : IDisposable
         {
             panelWindow.DispatcherQueue.TryEnqueue(() =>
             {
-                var settings = new SettingsService();
-                FloatingWindowHelper.RotateToNextDisplay(panelWindow, settings.Current);
+                FloatingWindowHelper.RotateToNextDisplay(panelWindow, _settingsService.Current);
             });
         }
     }
