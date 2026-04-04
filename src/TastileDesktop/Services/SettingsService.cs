@@ -120,6 +120,7 @@ public record TastileSettings
     public bool QuickBarAlwaysOnTop { get; set; } = true;
     public string QuickPanelAnchor { get; set; } = QuickPanelAnchors.TopCenter;
     public string QuickPanelOrientation { get; set; } = QuickPanelOrientations.Horizontal;
+    public string QuickPanelVerticalPosition { get; set; } = QuickPanelVerticalPositions.Top;
     public bool PromptOverlayEnabled { get; set; } = true;
     public int PromptOverlayDurationSeconds { get; set; } = 4;
     public bool PromptOverlaySuppressFullscreen { get; set; } = true;

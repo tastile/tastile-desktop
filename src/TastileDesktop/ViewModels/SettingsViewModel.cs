@@ -33,6 +33,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private string _customAccentColorHex = "#0078D4";
     private string _windowsAccentColorHex = "#000000";
     private string _uiAccentColorHex = "#000000";
+    private string _quickPanelVerticalPosition = QuickPanelVerticalPositions.Top;
     private string _appThemeSummary = "Unknown";
     private string _systemThemeSummary = "Unknown";
     private string _transparencySummary = "Unknown";
@@ -140,6 +141,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         get => _uiAccentBrush;
         set => SetProperty(ref _uiAccentBrush, value);
+    }
+
+    public string QuickPanelVerticalPosition
+    {
+        get => _quickPanelVerticalPosition;
+        set => SetProperty(ref _quickPanelVerticalPosition, value);
     }
 
     public bool IsManualAccentColor => string.Equals(AccentColorMode, AccentColorModes.Manual, StringComparison.Ordinal);
@@ -270,6 +277,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         IdlePromptMinutes = current.IdlePromptMinutes;
         InterventionRepeatMinutes = current.InterventionRepeatMinutes;
         LaunchAtStartup = current.LaunchAtStartup;
+        QuickPanelVerticalPosition = current.QuickPanelVerticalPosition;
         UpdateSystemAppearance(SystemAppearanceService.Instance.GetCurrentSnapshot());
     }
 
@@ -321,6 +329,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             IdlePromptMinutes = IdlePromptMinutes,
             InterventionRepeatMinutes = InterventionRepeatMinutes,
             LaunchAtStartup = LaunchAtStartup,
+            QuickPanelVerticalPosition = QuickPanelVerticalPosition,
             UpdateManifestUrl = current.UpdateManifestUrl,
         };
         _settingsService.Save(settings);

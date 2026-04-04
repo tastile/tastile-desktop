@@ -51,6 +51,37 @@ public sealed partial class SettingsWindow : Window
         await PromptAttentionOverlayService.Current.ShowTestOverlayAsync(TimeSpan.FromSeconds(seconds));
     }
 
+    private void OnNextDisplayClick(object sender, RoutedEventArgs e)
+    {
+        if (Application.Current is App app && app.MainWindowInstance is MainWindow mainWindow)
+        {
+            var settings = new SettingsService();
+            FloatingWindowHelper.RotateToNextDisplay(mainWindow, settings.Current);
+        }
+    }
+
+    private void OnTopClick(object sender, RoutedEventArgs e)
+    {
+        if (Application.Current is App app && app.MainWindowInstance is MainWindow mainWindow)
+        {
+            var settings = new SettingsService();
+            var newSettings = settings.Current with { QuickPanelVerticalPosition = QuickPanelVerticalPositions.Top };
+            settings.Save(newSettings);
+            FloatingWindowHelper.ForcePositionUpdate(mainWindow, newSettings);
+        }
+    }
+
+    private void OnBottomClick(object sender, RoutedEventArgs e)
+    {
+        if (Application.Current is App app && app.MainWindowInstance is MainWindow mainWindow)
+        {
+            var settings = new SettingsService();
+            var newSettings = settings.Current with { QuickPanelVerticalPosition = QuickPanelVerticalPositions.Bottom };
+            settings.Save(newSettings);
+            FloatingWindowHelper.ForcePositionUpdate(mainWindow, newSettings);
+        }
+    }
+
     private void OnTestPromptToastClick(object sender, RoutedEventArgs e)
     {
         var testPrompt = new Models.PromptView(
