@@ -39,6 +39,12 @@ public class CoreApiClient
             BaseAddress = _baseAddress,
             Timeout = TimeSpan.FromSeconds(4),
         };
+        // Create separate client for SSE with infinite timeout
+        _eventClient = new HttpClient
+        {
+            BaseAddress = _baseAddress,
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
     }
 
     internal CoreApiClient(HttpClient httpClient)
