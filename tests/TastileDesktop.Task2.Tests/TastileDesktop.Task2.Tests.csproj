@@ -7,7 +7,7 @@
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="PollingServiceWallClockBehaviorTests.cs" />
+    <Compile Include="PollingServiceDaemonDrivenBehaviorTests.cs" />
     <Compile Include="TestAppStub.cs" />
     <Compile Include="DispatcherTimerShim.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\PollingService.cs" Link="Services\PollingService.cs" />

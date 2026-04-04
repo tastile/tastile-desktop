@@ -18,7 +18,7 @@ public sealed partial class SettingsWindow : Window
     private readonly SystemAppearanceService _appearanceService = SystemAppearanceService.Instance;
     private readonly CoreApiClient _api = new();
     private readonly AppUpdateService _updateService = new();
-    private readonly DispatcherTimer _syncStatusTimer = new() { Interval = TimeSpan.FromSeconds(3) };
+    private readonly DispatcherTimer _syncStatusTimer = new() { Interval = TimeSpan.FromSeconds(10) };
     private readonly SemaphoreSlim _syncRefreshGate = new(1, 1);
 
     public SettingsWindow()
@@ -257,13 +257,21 @@ public sealed partial class SettingsWindow : Window
         {
             var statusTask = _api.GetSyncStatusAsync();
             var executionTask = _api.GetExecutionAsync();
-            var quotaTask = _api.GetTileQuotaAsync();
             var runtimePathsTask = _api.GetRuntimePathsAsync();
-            await Task.WhenAll(statusTask, executionTask, quotaTask, runtimePathsTask);
+            await Task.WhenAll(statusTask, executionTask, runtimePathsTask);
+
+            TileQuotaResponse? quota = null;
+            try
+            {
+                quota = await _api.GetTileQuotaAsync();
+            }
+            catch (Exception ex)
+            {
+                App.DebugLog($"[SyncStatus] Tile quota refresh skipped: {ex.Message}");
+            }
 
             var status = statusTask.Result;
             var execution = executionTask.Result;
-            var quota = quotaTask.Result;
             var runtimePaths = runtimePathsTask.Result;
             if (status == null)
             {

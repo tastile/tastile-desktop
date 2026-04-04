@@ -13,6 +13,7 @@ using TastileDesktop.Models;
 public class CoreApiClient
 {
     private readonly HttpClient _httpClient;
+    private readonly Uri _baseAddress;
     private static readonly string LogPath = Path.Combine(Path.GetTempPath(), "tastile-desktop-debug.log");
     public static string DebugLogPath => LogPath;
 
@@ -31,9 +32,10 @@ public class CoreApiClient
         var resolvedBaseUrl = string.IsNullOrWhiteSpace(baseUrl)
             ? RuntimeProfile.DaemonBaseUrl
             : baseUrl;
+        _baseAddress = new Uri(resolvedBaseUrl);
         _httpClient = new HttpClient
         {
-            BaseAddress = new Uri(resolvedBaseUrl),
+            BaseAddress = _baseAddress,
             Timeout = TimeSpan.FromSeconds(4),
         };
     }
@@ -41,6 +43,7 @@ public class CoreApiClient
     internal CoreApiClient(HttpClient httpClient)
     {
         _httpClient = httpClient;
+        _baseAddress = _httpClient.BaseAddress ?? new Uri(RuntimeProfile.DaemonBaseUrl);
         if (_httpClient.Timeout == TimeSpan.FromSeconds(100))
         {
             _httpClient.Timeout = TimeSpan.FromSeconds(4);
@@ -185,9 +188,17 @@ public class CoreApiClient
 
     public async IAsyncEnumerable<string> StreamStateEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
+        // SSE must stay connected for the life of the desktop session; the normal
+        // 4s API timeout is appropriate for request/response endpoints but will
+        // churn the event stream and can wedge the daemon with reconnect storms.
+        using var eventClient = new HttpClient
+        {
+            BaseAddress = _baseAddress,
+            Timeout = Timeout.InfiniteTimeSpan,
+        };
         using var request = new HttpRequestMessage(HttpMethod.Get, "/read/events/state");
         request.Headers.Accept.ParseAdd("text/event-stream");
-        using var response = await _httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+        using var response = await eventClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);

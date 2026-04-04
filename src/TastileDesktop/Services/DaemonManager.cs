@@ -140,6 +140,23 @@ public class DaemonManager : IDisposable
         }
     }
 
+    public bool HasRunningDaemonProcess()
+    {
+        try
+        {
+            if (_daemonProcess is { HasExited: false })
+            {
+                return true;
+            }
+
+            return Process.GetProcessesByName("tastile-daemon").Any();
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<bool> IsHealthyAsync()
     {
         try
@@ -188,14 +205,6 @@ public class DaemonManager : IDisposable
         {
             psi.Environment["SUPABASE_PUBLISHABLE_KEY"] = scopedSupabasePublishableKey;
             psi.Environment["SUPABASE_ANON_KEY"] = scopedSupabasePublishableKey;
-        }
-        else
-        {
-            var scopedSupabaseAnonKey = RuntimeProfile.ResolveEnvironmentValue("SUPABASE_ANON_KEY");
-            if (!string.IsNullOrWhiteSpace(scopedSupabaseAnonKey))
-            {
-                psi.Environment["SUPABASE_ANON_KEY"] = scopedSupabaseAnonKey;
-            }
         }
 
         DaemonLog.Write($"Runtime profile={RuntimeProfile.Name}, daemon_base_url={_daemonBaseUrl}, appdata={profileDataDir}");
