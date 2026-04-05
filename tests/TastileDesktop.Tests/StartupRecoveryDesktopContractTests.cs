@@ -15,10 +15,10 @@ public sealed class StartupRecoveryDesktopContractTests
     {
         var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
 
-        Assert.Contains("if (_toastDismissedByAction && prompt.Prompt.PromptId == _lastHandledPromptId)", source);
+        Assert.Contains("if (_toastDismissedByAction && promptFingerprint == _lastHandledPromptFingerprint)", source);
         Assert.DoesNotContain("Skipping - already dismissed by action", source);
         Assert.Contains("_toastDismissedByAction = false;", source);
-        Assert.Contains("_lastHandledPromptId = null;", source);
+        Assert.Contains("_lastHandledPromptFingerprint = null;", source);
     }
 
     [Fact]
