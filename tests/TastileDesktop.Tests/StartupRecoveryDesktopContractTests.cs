@@ -39,15 +39,12 @@ public sealed class StartupRecoveryDesktopContractTests
     }
 
     [Fact]
-    public void MainViewModelSource_MapsAutoActions_ForStartAndEndPrompts()
+    public void MainViewModelSource_DelegatesAutoActionResolution_ToResolver()
     {
         var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
 
         Assert.Contains("ResolveAutoActionId", source);
-        Assert.Contains("case \"start\":", source);
-        Assert.Contains("case \"end\":", source);
-        Assert.Contains("return \"START\";", source);
-        Assert.Contains("return \"COMPLETE\";", source);
+        Assert.Contains("PromptAutoActionResolver.Resolve(prompt)", source);
     }
 
     [Fact]

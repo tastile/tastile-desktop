@@ -102,6 +102,21 @@ public sealed class AbsoluteTimelineResolverTests
     }
 
     [Fact]
+    public void Resolve_WeekScale_CanExpandToTwoWeeks()
+    {
+        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
+        var layout = AbsoluteTimelineResolver.Resolve(
+            [],
+            now,
+            new TimelineViewportSettings(
+                ScaleUnit: TimelineScaleUnit.Week,
+                RangeMode: TimelineRangeMode.Week2,
+                AnchorLocal: now));
+
+        Assert.Equal(TimeSpan.FromDays(14), layout.WindowEnd - layout.WindowStart);
+    }
+
+    [Fact]
     public void Resolve_MonthScale_CanExpandToSixMonths()
     {
         var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");

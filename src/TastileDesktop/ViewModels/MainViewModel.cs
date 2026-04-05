@@ -1079,58 +1079,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private static string? ResolveAutoActionId(PromptView prompt)
     {
-        var kind = prompt.Kind?.Trim().ToLowerInvariant();
-        switch (kind)
-        {
-            case "start":
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "START", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "START";
-                }
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "START_TILE", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "START_TILE";
-                }
-                return null;
-            case "end":
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "START_BREAK_PARALLEL", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "START_BREAK_PARALLEL";
-                }
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "COMPLETE_PHASE", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "COMPLETE_PHASE";
-                }
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "COMPLETE_TILE", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "COMPLETE_TILE";
-                }
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "COMPLETE", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "COMPLETE";
-                }
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "COMPLETE_AND_START_NEXT", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "COMPLETE_AND_START_NEXT";
-                }
-                return null;
-            case "break_end":
-                if (prompt.Actions.Any(action =>
-                        string.Equals(action.Id, "END_BREAK", StringComparison.OrdinalIgnoreCase)))
-                {
-                    return "END_BREAK";
-                }
-                return null;
-            default:
-                return null;
-        }
+        return PromptAutoActionResolver.Resolve(prompt);
     }
 
     private async Task ExecutePromptActionAsync(string actionId, PromptView prompt, DateTimeOffset? stopAt)

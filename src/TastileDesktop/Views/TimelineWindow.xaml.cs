@@ -7,6 +7,7 @@ using TastileDesktop.ViewModels;
 using Windows.Foundation;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace TastileDesktop.Views;
 
@@ -190,7 +191,22 @@ public sealed partial class TimelineWindow : Window
         }
 
         var target = Math.Max(0, ViewModel.TimelineNowTop - (TimelineScrollViewer.ViewportHeight * 0.35));
-        TimelineScrollViewer.ChangeView(null, target, null, disableAnimation: true);
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            if (TimelineScrollViewer == null || ViewModel.TimelineNowVisibility != Visibility.Visible)
+            {
+                return;
+            }
+
+            try
+            {
+                TimelineScrollViewer.ChangeView(null, target, null, disableAnimation: true);
+            }
+            catch (COMException ex)
+            {
+                App.DebugLog($"[TimelineWindow] ChangeView failed while syncing now marker: {ex.Message}");
+            }
+        });
     }
 
     private static IReadOnlyList<RangeOption> ResolveRangeOptions(TimelineScaleUnit scaleUnit)
