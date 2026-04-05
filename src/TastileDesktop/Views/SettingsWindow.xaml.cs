@@ -154,8 +154,10 @@ public sealed partial class SettingsWindow : Window
             PromptToastSoundEnabled = ViewModel.PromptToastSoundEnabled,
             PromptToastSoundSource = ViewModel.PromptToastSoundSource,
             PromptToastSoundFilePath = ViewModel.PromptToastSoundFilePath,
+            PromptToastSoundPlaybackMode = PromptToastSoundPlaybackModes.FixedCount,
             PromptToastSoundDurationSeconds = ViewModel.PromptToastSoundDurationSeconds,
             PromptToastSoundRepeatCount = ViewModel.PromptToastSoundRepeatCount,
+            PromptToastSoundRepeatIntervalSeconds = ViewModel.PromptToastSoundRepeatIntervalSeconds,
         };
 
         await PromptToastSoundService.Instance.PlayAsync(previewSettings);

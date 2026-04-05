@@ -65,6 +65,7 @@ public sealed class PromptToastDisplayService : IDisposable
         _hideCts?.Dispose();
         _hideCts = null;
         StopZOrderGuard();
+        PromptToastSoundService.Instance.Stop();
 
         foreach (var window in _windows)
         {

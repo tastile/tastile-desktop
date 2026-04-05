@@ -24,7 +24,9 @@ public sealed class SettingsLayoutTests
         Assert.Contains("<TextBlock Text=\"Prompt toast sound\" VerticalAlignment=\"Center\" />", xaml);
         Assert.Contains("<ToggleSwitch Grid.Column=\"1\" IsOn=\"{x:Bind ViewModel.PromptToastSoundEnabled, Mode=TwoWay}\" HorizontalAlignment=\"Right\" />", xaml);
         Assert.Contains("<TextBlock Text=\"Prompt toast sound source\" VerticalAlignment=\"Center\" />", xaml);
+        Assert.Contains("<TextBlock Text=\"Prompt toast sound repeat mode\" VerticalAlignment=\"Center\" />", xaml);
         Assert.Contains("<TextBlock Text=\"Prompt toast sound length\" VerticalAlignment=\"Center\" />", xaml);
+        Assert.Contains("<TextBlock Text=\"Prompt toast repeat interval\" VerticalAlignment=\"Center\" />", xaml);
         Assert.Contains("<TextBlock Text=\"Prompt toast repeat\" VerticalAlignment=\"Center\" />", xaml);
 
         Assert.Contains("<TextBlock Text=\"Overlay duration\" VerticalAlignment=\"Center\" />", xaml);

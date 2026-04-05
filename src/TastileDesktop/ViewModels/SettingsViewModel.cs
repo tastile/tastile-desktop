@@ -24,9 +24,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     private bool _promptToastAnimate = true;
     private bool _promptToastSoundEnabled = true;
     private string _promptToastSoundSource = PromptToastSoundSources.SystemBeep;
+    private string _promptToastSoundPlaybackMode = PromptToastSoundPlaybackModes.FixedCount;
     private string _promptToastSoundFilePath = string.Empty;
     private int _promptToastSoundDurationSeconds = 2;
     private int _promptToastSoundRepeatCount = 1;
+    private int _promptToastSoundRepeatIntervalSeconds = 2;
     private bool _promptOverlayEnabled;
     private int _promptOverlayDurationSeconds;
     private bool _promptOverlaySuppressFullscreen;
@@ -219,6 +221,19 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    public string PromptToastSoundPlaybackMode
+    {
+        get => _promptToastSoundPlaybackMode;
+        set
+        {
+            if (SetProperty(ref _promptToastSoundPlaybackMode, value))
+            {
+                OnPropertyChanged(nameof(IsFixedPromptToastSoundPlaybackMode));
+                OnPropertyChanged(nameof(PromptToastFixedCountSettingsVisibility));
+            }
+        }
+    }
+
     public string PromptToastSoundFilePath
     {
         get => _promptToastSoundFilePath;
@@ -237,9 +252,19 @@ public sealed partial class SettingsViewModel : ObservableObject
         set => SetProperty(ref _promptToastSoundRepeatCount, value);
     }
 
+    public int PromptToastSoundRepeatIntervalSeconds
+    {
+        get => _promptToastSoundRepeatIntervalSeconds;
+        set => SetProperty(ref _promptToastSoundRepeatIntervalSeconds, value);
+    }
+
     public bool IsCustomPromptToastSoundSource => string.Equals(PromptToastSoundSource, PromptToastSoundSources.CustomFile, StringComparison.Ordinal);
 
     public Visibility PromptToastCustomSoundFileVisibility => IsCustomPromptToastSoundSource ? Visibility.Visible : Visibility.Collapsed;
+
+    public bool IsFixedPromptToastSoundPlaybackMode => string.Equals(PromptToastSoundPlaybackMode, PromptToastSoundPlaybackModes.FixedCount, StringComparison.Ordinal);
+
+    public Visibility PromptToastFixedCountSettingsVisibility => IsFixedPromptToastSoundPlaybackMode ? Visibility.Visible : Visibility.Collapsed;
 
     public int InterventionMinutes
     {
@@ -318,9 +343,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         PromptToastAnimate = current.PromptToastAnimate;
         PromptToastSoundEnabled = current.PromptToastSoundEnabled;
         PromptToastSoundSource = current.PromptToastSoundSource;
+        PromptToastSoundPlaybackMode = current.PromptToastSoundPlaybackMode;
         PromptToastSoundFilePath = current.PromptToastSoundFilePath;
         PromptToastSoundDurationSeconds = current.PromptToastSoundDurationSeconds;
         PromptToastSoundRepeatCount = current.PromptToastSoundRepeatCount;
+        PromptToastSoundRepeatIntervalSeconds = current.PromptToastSoundRepeatIntervalSeconds;
         PromptOverlayEnabled = current.PromptOverlayEnabled;
         PromptOverlayDurationSeconds = current.PromptOverlayDurationSeconds;
         PromptOverlaySuppressFullscreen = current.PromptOverlaySuppressFullscreen;
@@ -375,9 +402,11 @@ public sealed partial class SettingsViewModel : ObservableObject
             PromptToastAnimate = PromptToastAnimate,
             PromptToastSoundEnabled = PromptToastSoundEnabled,
             PromptToastSoundSource = PromptToastSoundSource,
+            PromptToastSoundPlaybackMode = PromptToastSoundPlaybackMode,
             PromptToastSoundFilePath = PromptToastSoundFilePath,
             PromptToastSoundDurationSeconds = PromptToastSoundDurationSeconds,
             PromptToastSoundRepeatCount = PromptToastSoundRepeatCount,
+            PromptToastSoundRepeatIntervalSeconds = PromptToastSoundRepeatIntervalSeconds,
             PromptOverlayEnabled = PromptOverlayEnabled,
             PromptOverlayDurationSeconds = PromptOverlayDurationSeconds,
             PromptOverlaySuppressFullscreen = PromptOverlaySuppressFullscreen,

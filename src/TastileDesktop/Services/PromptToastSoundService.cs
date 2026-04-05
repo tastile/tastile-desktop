@@ -15,14 +15,21 @@ public sealed class PromptToastSoundService : IDisposable
         _ = PlayAsync(settings);
     }
 
+    public void Stop()
+    {
+        _playbackCts?.Cancel();
+    }
+
     public async Task PlayAsync(TastileSettings settings, CancellationToken cancellationToken = default)
     {
         var plan = PromptToastSoundPlanBuilder.Create(
             settings.PromptToastSoundEnabled,
             settings.PromptToastSoundSource,
             settings.PromptToastSoundFilePath,
+            settings.PromptToastSoundPlaybackMode,
             settings.PromptToastSoundDurationSeconds,
-            settings.PromptToastSoundRepeatCount);
+            settings.PromptToastSoundRepeatCount,
+            settings.PromptToastSoundRepeatIntervalSeconds);
 
         if (!plan.Enabled)
         {
@@ -47,19 +54,25 @@ public sealed class PromptToastSoundService : IDisposable
 
         try
         {
-            for (var i = 0; i < plan.RepeatCount; i++)
+            if (string.Equals(plan.PlaybackMode, PromptToastSoundPlaybackModes.UntilPromptResponse, StringComparison.Ordinal))
             {
-                token.ThrowIfCancellationRequested();
-
-                if (plan.Source == PromptToastSoundSources.CustomFile
-                    && !string.IsNullOrWhiteSpace(plan.FilePath)
-                    && File.Exists(plan.FilePath))
+                while (true)
                 {
-                    await PlayCustomFileAsync(plan.FilePath, plan.DurationSeconds, token);
+                    token.ThrowIfCancellationRequested();
+                    await PlayOnceAsync(plan, token);
+                    await Task.Delay(TimeSpan.FromSeconds(plan.RepeatIntervalSeconds), token);
                 }
-                else
+            }
+            else
+            {
+                for (var i = 0; i < plan.RepeatCount; i++)
                 {
-                    await PlaySystemBeepAsync(plan.DurationSeconds, token);
+                    token.ThrowIfCancellationRequested();
+                    await PlayOnceAsync(plan, token);
+                    if (i + 1 < plan.RepeatCount)
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(plan.RepeatIntervalSeconds), token);
+                    }
                 }
             }
         }
@@ -87,6 +100,18 @@ public sealed class PromptToastSoundService : IDisposable
 
             ctsToDispose.Dispose();
         }
+    }
+
+    private static Task PlayOnceAsync(PromptToastSoundPlan plan, CancellationToken cancellationToken)
+    {
+        if (plan.Source == PromptToastSoundSources.CustomFile
+            && !string.IsNullOrWhiteSpace(plan.FilePath)
+            && File.Exists(plan.FilePath))
+        {
+            return PlayCustomFileAsync(plan.FilePath, plan.DurationSeconds, cancellationToken);
+        }
+
+        return PlaySystemBeepAsync(plan.DurationSeconds, cancellationToken);
     }
 
     private static async Task PlaySystemBeepAsync(int durationSeconds, CancellationToken cancellationToken)
