@@ -266,38 +266,27 @@ public sealed partial class TimelineWindow : Window
                     async (actionId, stopAt) =>
                     {
                         _promptToast.Hide();
-                        switch (actionId.ToUpperInvariant())
+                        var dispatch = await PromptActionDispatcher.ExecuteAsync(
+                            _api,
+                            response.Prompt,
+                            actionId,
+                            stopAt,
+                            fallbackTileId: tileId);
+                        if (!dispatch.IsResolved)
                         {
-                            case "START":
-                            case "START_TILE":
-                                await _api.StartTileAsync(tileId);
-                                break;
-                            case "COMPLETE":
-                            case "COMPLETE_AND_START_NEXT":
-                                await _api.CompleteTileAsync(tileId);
-                                break;
-                            case "CONFIRM_CONTINUE":
-                            case "CONFIRM_STOP_AT":
-                            case "CONFIRM_EXECUTED":
-                            case "CONFIRM_SKIPPED":
-                            case "DISMISS":
-                                if (!string.IsNullOrWhiteSpace(response.Prompt.PromptId) &&
-                                    !string.IsNullOrWhiteSpace(response.Prompt.TileId))
-                                {
-                                    await _api.RespondStartupRecoveryPromptAsync(
-                                        response.Prompt.PromptId,
-                                        response.Prompt.TileId!,
-                                        actionId.ToUpperInvariant(),
-                                        stopAt);
-                                }
-                                break;
+                            App.DebugLog($"[TimelineWindow] Unknown prompt action: {actionId}");
+                        }
+                        else if (!string.IsNullOrWhiteSpace(dispatch.Error))
+                        {
+                            App.DebugLog($"[TimelineWindow] Prompt action failed: {dispatch.ResolvedActionId}, error: {dispatch.Error}");
                         }
                         await ViewModel.RefreshAsync();
                     });
             }
         }
-        catch
+        catch (Exception ex)
         {
+            App.DebugLog($"[TimelineWindow] RequestPromptForTileAsync error: {ex.Message}");
         }
     }
 }

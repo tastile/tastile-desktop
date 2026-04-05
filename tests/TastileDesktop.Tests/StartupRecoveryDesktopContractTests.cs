@@ -22,29 +22,51 @@ public sealed class StartupRecoveryDesktopContractTests
     }
 
     [Fact]
-    public void TilesWindowSource_HandlesConfirmStopAtInStartupRecoverySwitch()
+    public void MainViewModelSource_DoesNotClientSideAutoExecutePromptActions()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
+
+        Assert.DoesNotContain("PromptAutoExecutionDelay", source);
+        Assert.DoesNotContain("StartPromptAutoExecution(", source);
+        Assert.DoesNotContain("PromptAutoActionResolver.Resolve(prompt)", source);
+    }
+
+    [Fact]
+    public void MainViewModelSource_DoesNotSpecialCaseBreakStateInPromptRouting()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
+
+        Assert.DoesNotContain("ShouldSuppressPromptOnBreak(", source);
+        Assert.DoesNotContain("PromptActionSafetyPolicy", source);
+    }
+
+    [Fact]
+    public void MainViewModelSource_UsesUnifiedPromptActionExecutionPath()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
+
+        Assert.Contains("await ExecutePromptActionAsync(id, prompt, stopAt);", source);
+        Assert.DoesNotContain("CommandResponse? result = id switch", source);
+    }
+
+    [Fact]
+    public void TilesWindowSource_UsesPromptActionDispatcher()
     {
         var source = ReadRepoFile("src", "TastileDesktop", "Views", "TilesWindow.xaml.cs");
 
-        Assert.Contains("case \"CONFIRM_STOP_AT\":", source);
+        Assert.Contains("PromptActionDispatcher.ExecuteAsync(", source);
+        Assert.DoesNotContain("switch (actionId.ToUpperInvariant())", source);
     }
 
     [Fact]
-    public void MainViewModelSource_DeclaresThirtySecondPromptAutoExecution()
+    public void TimelineWindowSource_UsesPromptActionDispatcher_AndNoSilentCatch()
     {
-        var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
+        var source = ReadRepoFile("src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs");
 
-        Assert.Contains("PromptAutoExecutionDelay", source);
-        Assert.Contains("TimeSpan.FromSeconds(30)", source);
-    }
-
-    [Fact]
-    public void MainViewModelSource_DelegatesAutoActionResolution_ToResolver()
-    {
-        var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
-
-        Assert.Contains("ResolveAutoActionId", source);
-        Assert.Contains("PromptAutoActionResolver.Resolve(prompt)", source);
+        Assert.Contains("PromptActionDispatcher.ExecuteAsync(", source);
+        Assert.DoesNotContain("switch (actionId.ToUpperInvariant())", source);
+        Assert.Contains("catch (Exception ex)", source);
+        Assert.DoesNotContain("catch\r\n        {\r\n        }", source);
     }
 
     [Fact]

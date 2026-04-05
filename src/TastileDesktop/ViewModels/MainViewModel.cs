@@ -716,8 +716,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private bool _toastDismissedByAction;
     private readonly Dictionary<string, DateTimeOffset> _promptCooldownById = new(StringComparer.OrdinalIgnoreCase);
     private static readonly TimeSpan PromptCooldownWindow = TimeSpan.FromSeconds(20);
-    private static readonly TimeSpan PromptAutoExecutionDelay = TimeSpan.FromSeconds(30);
-    private CancellationTokenSource? _promptAutoExecutionCts;
     public PollingService PollingService => _pollingService;
 
     public MainViewModel()
@@ -847,7 +845,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             App.DebugLog($"[OnPromptToastPromptChanged] Prompt is null, hiding toast");
             _lastHandledPromptFingerprint = null;
             _toastDismissedByAction = false;
-            CancelPromptAutoExecution();
             _promptToastDisplayService?.Hide();
             return;
         }
@@ -897,7 +894,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         _lastHandledPromptFingerprint = promptFingerprint;
         _toastDismissedByAction = false; // リセット
-        StartPromptAutoExecution(prompt.Prompt);
         
         // UI スレッドでトースト表示
         _promptToastDisplayService?.ShowPrompt(
@@ -907,7 +903,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 _toastDismissedByAction = true;
                 MarkPromptCooldown(promptFingerprint);
-                CancelPromptAutoExecution();
                 System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
                 App.DebugLog($"[Toast] Action clicked: {actionId}");
                 
@@ -916,73 +911,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 
                 try
                 {
-                    var id = actionId.ToUpperInvariant();
-                    System.Diagnostics.Debug.WriteLine($"[Toast] Action ID (upper): {id}");
-                    bool handledByStartupRecovery = false;
-                    if (PendingPrompt?.Prompt != null)
-                    {
-                        handledByStartupRecovery = await TryRespondStartupRecoveryAsync(
-                            PendingPrompt.Prompt,
-                            id,
-                            stopAt);
-                    }
-
-                    if (!handledByStartupRecovery)
-                    {
-                        switch (id)
-                        {
-                            case "CONTINUE":
-                            case "DISMISS":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                break;
-                            case "BREAK":
-                            case "START_BREAK":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
-                                break;
-                            case "START_BREAK_PARALLEL":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "parallel");
-                                break;
-                            case "START_BREAK_SPLIT":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split");
-                                break;
-                            case "START_BREAK_SPLIT_EXTEND":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split_and_extend");
-                                break;
-                            case "COMPLETE":
-                            case "COMPLETE_AND_START_NEXT":
-                            case "COMPLETE_TILE":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.CompleteTileAsync(prompt.Prompt.TileId, scope: "tile");
-                                break;
-                            case "COMPLETE_PHASE":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.CompleteTileAsync(prompt.Prompt.TileId, scope: "phase");
-                                break;
-                            case "END_BREAK":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.EndBreakAsync();
-                                break;
-                            case "EXTEND":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.ExtendTileAsync(10);
-                                break;
-                            case "START":
-                            case "START_TILE":
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId))
-                                {
-                                    await _api.StartTileAsync(prompt.Prompt.TileId);
-                                }
-                                break;
-                            default:
-                                System.Diagnostics.Debug.WriteLine($"[Toast] Action NOT matched: {id}");
-                                break;
-                        }
-                    }
+                    await ExecutePromptActionAsync(actionId, prompt.Prompt, stopAt);
                     
                     // アクション実行後、即座にポーリングして状態を更新
                     System.Diagnostics.Debug.WriteLine($"[Toast] Polling after action");
@@ -999,7 +928,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 _toastDismissedByAction = true;
                 MarkPromptCooldown(promptFingerprint);
-                CancelPromptAutoExecution();
                 System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
                 App.DebugLog($"[Toast] Defer: action={actionId}, minutes={minutes}");
                 
@@ -1026,113 +954,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             });
     }
 
-    private void StartPromptAutoExecution(PromptView prompt)
-    {
-        CancelPromptAutoExecution();
-        var actionId = ResolveAutoActionId(prompt);
-        if (string.IsNullOrWhiteSpace(actionId))
-        {
-            return;
-        }
-
-        var promptFingerprint = PromptFingerprint(prompt);
-        _promptAutoExecutionCts = new CancellationTokenSource();
-        var token = _promptAutoExecutionCts.Token;
-        _ = Task.Run(async () =>
-        {
-            try
-            {
-                await Task.Delay(PromptAutoExecutionDelay, token);
-                if (token.IsCancellationRequested)
-                {
-                    return;
-                }
-
-                if (PendingPrompt?.Prompt is null || PromptFingerprint(PendingPrompt.Prompt) != promptFingerprint)
-                {
-                    return;
-                }
-
-                _toastDismissedByAction = true;
-                MarkPromptCooldown(promptFingerprint);
-                _promptToastDisplayService?.Hide();
-                await ExecutePromptActionAsync(actionId, prompt, null);
-                await _pollingService.PollAsync();
-            }
-            catch (OperationCanceledException)
-            {
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"[Toast] Auto action error: {ex.Message}");
-                App.DebugLog($"[Toast] Auto action error: {ex.Message}");
-            }
-        }, token);
-    }
-
-    private void CancelPromptAutoExecution()
-    {
-        _promptAutoExecutionCts?.Cancel();
-        _promptAutoExecutionCts?.Dispose();
-        _promptAutoExecutionCts = null;
-    }
-
-    private static string? ResolveAutoActionId(PromptView prompt)
-    {
-        return PromptAutoActionResolver.Resolve(prompt);
-    }
-
     private async Task ExecutePromptActionAsync(string actionId, PromptView prompt, DateTimeOffset? stopAt)
     {
-        var settings = new SettingsService();
-        var id = actionId.ToUpperInvariant();
-        var handledByStartupRecovery = await TryRespondStartupRecoveryAsync(prompt, id, stopAt);
-        if (handledByStartupRecovery)
+        var dispatchResult = await PromptActionDispatcher.ExecuteAsync(
+            _api,
+            prompt,
+            actionId,
+            stopAt);
+        if (!dispatchResult.IsResolved)
         {
+            System.Diagnostics.Debug.WriteLine($"[Toast] Skipped unknown action: {actionId}");
+            App.DebugLog($"[Toast] Skipped unknown action: {actionId}");
             return;
         }
 
-        switch (id)
+        if (!string.IsNullOrWhiteSpace(dispatchResult.Error))
         {
-            case "CONTINUE":
-            case "DISMISS":
-                return;
-            case "BREAK":
-            case "START_BREAK":
-                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
-                return;
-            case "START_BREAK_PARALLEL":
-                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "parallel");
-                return;
-            case "START_BREAK_SPLIT":
-                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split");
-                return;
-            case "START_BREAK_SPLIT_EXTEND":
-                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split_and_extend");
-                return;
-            case "COMPLETE":
-            case "COMPLETE_AND_START_NEXT":
-            case "COMPLETE_TILE":
-                await _api.CompleteTileAsync(prompt.TileId, scope: "tile");
-                return;
-            case "COMPLETE_PHASE":
-                await _api.CompleteTileAsync(prompt.TileId, scope: "phase");
-                return;
-            case "END_BREAK":
-                await _api.EndBreakAsync();
-                return;
-            case "EXTEND":
-                await _api.ExtendTileAsync(10);
-                return;
-            case "START":
-            case "START_TILE":
-                if (!string.IsNullOrWhiteSpace(prompt.TileId))
-                {
-                    await _api.StartTileAsync(prompt.TileId);
-                }
-                return;
-            default:
-                return;
+            throw new InvalidOperationException(dispatchResult.Error);
         }
     }
 
@@ -1731,36 +1569,16 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            if (await TryRespondStartupRecoveryAsync(PendingPrompt.Prompt, actionId, stopAt))
+            var prompt = PendingPrompt.Prompt;
+            if (!PromptActionSelectionPolicy.TryResolveAction(prompt, actionId, out var resolvedActionId))
             {
-                StatusMessage = $"Prompt action: {actionId}";
-                await _pollingService.PollAsync();
+                StatusMessage = $"Error: unknown prompt action {actionId}";
                 return;
             }
 
-            CommandResponse? result = actionId switch
-            {
-                "START" when !string.IsNullOrWhiteSpace(PendingPrompt.Prompt.TileId)
-                    => await _api.StartTileAsync(PendingPrompt.Prompt.TileId),
-                "DEFER" when !string.IsNullOrWhiteSpace(PendingPrompt.Prompt.TileId)
-                    => await _api.DeferTileAsync(PendingPrompt.Prompt.TileId),
-                "COMPLETE" when !string.IsNullOrWhiteSpace(PendingPrompt.Prompt.TileId)
-                    => await _api.CompleteTileAsync(PendingPrompt.Prompt.TileId),
-                "COMPLETE_AND_START_NEXT" => await _api.CompleteTileAsync(PendingPrompt.Prompt.TileId),
-                "EXTEND" => await _api.ExtendTileAsync(10),
-                "END_BREAK" => await _api.EndBreakAsync(),
-                _ => null,
-            };
-
-            if (result != null && !result.Ok)
-            {
-                StatusMessage = $"Error: {result.Error}";
-            }
-            else
-            {
-                StatusMessage = $"Prompt action: {actionId}";
-            }
-
+            var id = resolvedActionId!.ToUpperInvariant();
+            await ExecutePromptActionAsync(id, prompt, stopAt);
+            StatusMessage = $"Prompt action: {id}";
             await _pollingService.PollAsync();
         }
         catch (Exception ex)
@@ -1768,37 +1586,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             StatusMessage = $"Error: {ex.Message}";
         }
     }
-
-    private async Task<bool> TryRespondStartupRecoveryAsync(PromptView prompt, string actionId, DateTimeOffset? stopAt)
-    {
-        var normalizedAction = actionId.Trim().ToUpperInvariant();
-        if (!IsStartupRecoveryAction(normalizedAction))
-        {
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(prompt.PromptId) || string.IsNullOrWhiteSpace(prompt.TileId))
-        {
-            StatusMessage = "Error: startup recovery prompt is missing required identifiers";
-            return true;
-        }
-
-        var result = await _api.RespondStartupRecoveryPromptAsync(
-            prompt.PromptId,
-            prompt.TileId,
-            normalizedAction,
-            stopAt);
-
-        if (result != null && !result.Ok)
-        {
-            StatusMessage = $"Error: {result.Error}";
-        }
-
-        return true;
-    }
-
-    private static bool IsStartupRecoveryAction(string actionId)
-        => actionId is "CONFIRM_CONTINUE" or "CONFIRM_STOP_AT" or "CONFIRM_EXECUTED" or "CONFIRM_SKIPPED" or "DISMISS";
 
     public void InjectPrompt(PromptView prompt)
     {
@@ -1864,7 +1651,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         _interventionEngine?.Dispose();
         _promptAttentionOverlayService?.Dispose();
-        CancelPromptAutoExecution();
         _promptToastDisplayService?.Hide();
         _promptToastDisplayService?.Dispose();
         _pollingService.PendingPromptChanged -= OnPromptToastPromptChanged;
