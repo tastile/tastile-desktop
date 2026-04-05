@@ -1,5 +1,5 @@
 param(
-[Parameter(Mandatory = $false)][string]$Version = "0.2.25"
+[Parameter(Mandatory = $false)][string]$Version = "0.2.26"
 )
 
 Set-StrictMode -Version Latest
@@ -14,10 +14,15 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $buildOutDir = Join-Path $repoRoot "artifacts\desktop-build"
 $installerOut = Join-Path $repoRoot "artifacts\installer"
 $issPath = Join-Path $repoRoot "installer\TastileDesktop.iss"
-$iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+$isccCandidates = @(
+    "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+    "C:\Program Files\Inno Setup 6\ISCC.exe",
+    (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe")
+)
+$iscc = $isccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-if (!(Test-Path $iscc)) {
-    throw "Inno Setup compiler not found at '$iscc'. Install Inno Setup 6."
+if ([string]::IsNullOrWhiteSpace($iscc)) {
+    throw "Inno Setup compiler not found. Checked: $($isccCandidates -join ', '). Install Inno Setup 6."
 }
 
 New-Item -ItemType Directory -Path $buildOutDir -Force | Out-Null

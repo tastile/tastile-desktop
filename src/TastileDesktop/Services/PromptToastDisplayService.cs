@@ -39,6 +39,8 @@ public sealed class PromptToastDisplayService : IDisposable
         }
 
         StartZOrderGuard();
+        _settings.Load();
+        PromptToastSoundService.Instance.TriggerFromPromptToast(_settings.Current);
     }
 
     public void ShowBackdrop(Models.PromptView prompt, int waitingBehind)

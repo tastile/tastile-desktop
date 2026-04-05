@@ -21,6 +21,11 @@ public sealed class SettingsLayoutTests
 
         Assert.Contains("<TextBlock Text=\"Prompt edge overlay\" VerticalAlignment=\"Center\" />", xaml);
         Assert.Contains("<ToggleSwitch Grid.Column=\"1\" IsOn=\"{x:Bind ViewModel.PromptOverlayEnabled, Mode=TwoWay}\" HorizontalAlignment=\"Right\" />", xaml);
+        Assert.Contains("<TextBlock Text=\"Prompt toast sound\" VerticalAlignment=\"Center\" />", xaml);
+        Assert.Contains("<ToggleSwitch Grid.Column=\"1\" IsOn=\"{x:Bind ViewModel.PromptToastSoundEnabled, Mode=TwoWay}\" HorizontalAlignment=\"Right\" />", xaml);
+        Assert.Contains("<TextBlock Text=\"Prompt toast sound source\" VerticalAlignment=\"Center\" />", xaml);
+        Assert.Contains("<TextBlock Text=\"Prompt toast sound length\" VerticalAlignment=\"Center\" />", xaml);
+        Assert.Contains("<TextBlock Text=\"Prompt toast repeat\" VerticalAlignment=\"Center\" />", xaml);
 
         Assert.Contains("<TextBlock Text=\"Overlay duration\" VerticalAlignment=\"Center\" />", xaml);
         Assert.Contains("<NumberBox Grid.Column=\"1\" Value=\"{x:Bind ViewModel.PromptOverlayDurationSeconds, Mode=TwoWay}\" Minimum=\"1\" Maximum=\"15\" SpinButtonPlacementMode=\"Inline\" Width=\"160\" HorizontalAlignment=\"Right\" />", xaml);

@@ -22,6 +22,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     private string _promptToastAnchor = PromptToastAnchors.TopCenter;
     private bool _promptToastMirrorSecondaryDisplays;
     private bool _promptToastAnimate = true;
+    private bool _promptToastSoundEnabled = true;
+    private string _promptToastSoundSource = PromptToastSoundSources.SystemBeep;
+    private string _promptToastSoundFilePath = string.Empty;
+    private int _promptToastSoundDurationSeconds = 2;
+    private int _promptToastSoundRepeatCount = 1;
     private bool _promptOverlayEnabled;
     private int _promptOverlayDurationSeconds;
     private bool _promptOverlaySuppressFullscreen;
@@ -195,6 +200,47 @@ public sealed partial class SettingsViewModel : ObservableObject
         set => SetProperty(ref _promptToastAnimate, value);
     }
 
+    public bool PromptToastSoundEnabled
+    {
+        get => _promptToastSoundEnabled;
+        set => SetProperty(ref _promptToastSoundEnabled, value);
+    }
+
+    public string PromptToastSoundSource
+    {
+        get => _promptToastSoundSource;
+        set
+        {
+            if (SetProperty(ref _promptToastSoundSource, value))
+            {
+                OnPropertyChanged(nameof(IsCustomPromptToastSoundSource));
+                OnPropertyChanged(nameof(PromptToastCustomSoundFileVisibility));
+            }
+        }
+    }
+
+    public string PromptToastSoundFilePath
+    {
+        get => _promptToastSoundFilePath;
+        set => SetProperty(ref _promptToastSoundFilePath, value);
+    }
+
+    public int PromptToastSoundDurationSeconds
+    {
+        get => _promptToastSoundDurationSeconds;
+        set => SetProperty(ref _promptToastSoundDurationSeconds, value);
+    }
+
+    public int PromptToastSoundRepeatCount
+    {
+        get => _promptToastSoundRepeatCount;
+        set => SetProperty(ref _promptToastSoundRepeatCount, value);
+    }
+
+    public bool IsCustomPromptToastSoundSource => string.Equals(PromptToastSoundSource, PromptToastSoundSources.CustomFile, StringComparison.Ordinal);
+
+    public Visibility PromptToastCustomSoundFileVisibility => IsCustomPromptToastSoundSource ? Visibility.Visible : Visibility.Collapsed;
+
     public int InterventionMinutes
     {
         get => _interventionMinutes;
@@ -270,6 +316,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         PromptToastAnchor = current.PromptToastAnchor;
         PromptToastMirrorSecondaryDisplays = current.PromptToastMirrorSecondaryDisplays;
         PromptToastAnimate = current.PromptToastAnimate;
+        PromptToastSoundEnabled = current.PromptToastSoundEnabled;
+        PromptToastSoundSource = current.PromptToastSoundSource;
+        PromptToastSoundFilePath = current.PromptToastSoundFilePath;
+        PromptToastSoundDurationSeconds = current.PromptToastSoundDurationSeconds;
+        PromptToastSoundRepeatCount = current.PromptToastSoundRepeatCount;
         PromptOverlayEnabled = current.PromptOverlayEnabled;
         PromptOverlayDurationSeconds = current.PromptOverlayDurationSeconds;
         PromptOverlaySuppressFullscreen = current.PromptOverlaySuppressFullscreen;
@@ -322,6 +373,11 @@ public sealed partial class SettingsViewModel : ObservableObject
             PromptToastAnchor = PromptToastAnchor,
             PromptToastMirrorSecondaryDisplays = PromptToastMirrorSecondaryDisplays,
             PromptToastAnimate = PromptToastAnimate,
+            PromptToastSoundEnabled = PromptToastSoundEnabled,
+            PromptToastSoundSource = PromptToastSoundSource,
+            PromptToastSoundFilePath = PromptToastSoundFilePath,
+            PromptToastSoundDurationSeconds = PromptToastSoundDurationSeconds,
+            PromptToastSoundRepeatCount = PromptToastSoundRepeatCount,
             PromptOverlayEnabled = PromptOverlayEnabled,
             PromptOverlayDurationSeconds = PromptOverlayDurationSeconds,
             PromptOverlaySuppressFullscreen = PromptOverlaySuppressFullscreen,

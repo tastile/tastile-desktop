@@ -240,6 +240,65 @@
                     </Grid>
                     <TextBlock Text="Fade the prompt toast stack in when it appears. Disabled automatically if Windows animations are turned off." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Prompt toast sound" VerticalAlignment="Center" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastSoundEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <TextBlock Text="Play a short attention sound whenever a prompt toast appears" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Prompt toast sound source" VerticalAlignment="Center" />
+                        <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastSoundSource, Mode=TwoWay}" HorizontalAlignment="Right">
+                            <ComboBoxItem Content="System beep" Tag="system-beep" />
+                            <ComboBoxItem Content="Custom audio file" Tag="custom-file" />
+                        </ComboBox>
+                    </Grid>
+
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0" Visibility="{x:Bind ViewModel.PromptToastCustomSoundFileVisibility, Mode=OneWay}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Custom sound file" VerticalAlignment="Center" />
+                        <Grid Grid.Column="1" ColumnSpacing="8" HorizontalAlignment="Right">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBox Width="148" Text="{x:Bind ViewModel.PromptToastSoundFilePath, Mode=TwoWay}" PlaceholderText="C:\path\to\sound.mp3" />
+                            <Button Grid.Column="1" Content="Browse" Click="OnBrowsePromptToastSoundFileClick" />
+                        </Grid>
+                    </Grid>
+
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Prompt toast sound length" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastSoundDurationSeconds, Mode=TwoWay}" Minimum="1" Maximum="30" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
+                    </Grid>
+                    <TextBlock Text="seconds per playback" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+
+                    <Grid ColumnSpacing="12" Margin="0,8,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Prompt toast repeat" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastSoundRepeatCount, Mode=TwoWay}" Minimum="1" Maximum="10" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
+                    </Grid>
+                    <TextBlock Text="times per prompt toast event" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+
+                    <Button Content="Test prompt toast sound" Click="OnTestPromptToastSoundClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
                     <Button Content="Test prompt toast" Click="OnTestPromptToastClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,16,0,0">

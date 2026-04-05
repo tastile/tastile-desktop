@@ -6,6 +6,7 @@ using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 using System.IO;
 using System.Threading;
+using Windows.Storage.Pickers;
 
 namespace TastileDesktop.Views;
 
@@ -119,6 +120,45 @@ public sealed partial class SettingsWindow : Window
                 App.DebugLog($"[Test Toast] Defer clicked: {actionId}, minutes: {minutes}");
                 PromptToastDisplayService.Instance.Hide();
             });
+    }
+
+    private async void OnBrowsePromptToastSoundFileClick(object sender, RoutedEventArgs e)
+    {
+        var picker = new FileOpenPicker
+        {
+            SuggestedStartLocation = PickerLocationId.MusicLibrary,
+            ViewMode = PickerViewMode.List,
+        };
+
+        picker.FileTypeFilter.Add(".mp3");
+        picker.FileTypeFilter.Add(".wav");
+        picker.FileTypeFilter.Add(".m4a");
+        picker.FileTypeFilter.Add(".aac");
+        picker.FileTypeFilter.Add(".wma");
+        picker.FileTypeFilter.Add(".flac");
+
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+
+        var file = await picker.PickSingleFileAsync();
+        if (file != null)
+        {
+            ViewModel.PromptToastSoundFilePath = file.Path;
+        }
+    }
+
+    private async void OnTestPromptToastSoundClick(object sender, RoutedEventArgs e)
+    {
+        var previewSettings = new TastileSettings
+        {
+            PromptToastSoundEnabled = ViewModel.PromptToastSoundEnabled,
+            PromptToastSoundSource = ViewModel.PromptToastSoundSource,
+            PromptToastSoundFilePath = ViewModel.PromptToastSoundFilePath,
+            PromptToastSoundDurationSeconds = ViewModel.PromptToastSoundDurationSeconds,
+            PromptToastSoundRepeatCount = ViewModel.PromptToastSoundRepeatCount,
+        };
+
+        await PromptToastSoundService.Instance.PlayAsync(previewSettings);
     }
 
     private void OnAppearanceChanged(object? sender, SystemAppearanceSnapshot snapshot)
