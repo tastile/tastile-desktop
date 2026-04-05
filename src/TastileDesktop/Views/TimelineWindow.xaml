@@ -40,11 +40,7 @@
                             <ComboBoxItem Content="Week" />
                             <ComboBoxItem Content="Month" />
                         </ComboBox>
-                        <ComboBox x:Name="RangeComboBox" Grid.Column="1" SelectionChanged="OnRangeSelectionChanged">
-                            <ComboBoxItem Content="24h" />
-                            <ComboBoxItem Content="±12h" />
-                            <ComboBoxItem Content="Sun" />
-                        </ComboBox>
+                        <ComboBox x:Name="RangeComboBox" Grid.Column="1" SelectionChanged="OnRangeSelectionChanged" />
                         <Button Grid.Column="2" Content="-" MinWidth="32" Click="OnZoomOutClick" />
                         <Button Grid.Column="3" Content="+" MinWidth="32" Click="OnZoomInClick" />
                     </Grid>

@@ -14,6 +14,13 @@ public enum TimelineRangeMode
     Day24,
     AroundNow24,
     SunriseToSunset,
+    Week1,
+    Week2,
+    Week4,
+    Month1,
+    Month3,
+    Month6,
+    Year1,
     Custom,
 }
 
@@ -184,11 +191,24 @@ public static class AbsoluteTimelineResolver
         if (settings.ScaleUnit == TimelineScaleUnit.Week)
         {
             var weekStart = StartOfWeek(anchor);
-            return (weekStart, weekStart.AddDays(7));
+            var days = settings.RangeMode switch
+            {
+                TimelineRangeMode.Week2 => 14,
+                TimelineRangeMode.Week4 => 28,
+                _ => 7,
+            };
+            return (weekStart, weekStart.AddDays(days));
         }
 
         var monthStart = new DateTimeOffset(new DateTime(anchor.Year, anchor.Month, 1, 0, 0, 0), anchor.Offset);
-        return (monthStart, monthStart.AddMonths(1));
+        var months = settings.RangeMode switch
+        {
+            TimelineRangeMode.Month3 => 3,
+            TimelineRangeMode.Month6 => 6,
+            TimelineRangeMode.Year1 => 12,
+            _ => 1,
+        };
+        return (monthStart, monthStart.AddMonths(months));
     }
 
     private static (DateTimeOffset Start, DateTimeOffset End) ResolveDayWindow(DateTimeOffset anchor)
@@ -483,6 +503,15 @@ public static class AbsoluteTimelineResolver
 
     private static string BuildRangeLabel(TimelineScaleUnit scaleUnit, DateTimeOffset start, DateTimeOffset end)
     {
+        var spanDays = (end - start).TotalDays;
+        if (spanDays > 190)
+        {
+            return $"Year range: {start:yyyy/MM/dd} - {end.AddMinutes(-1):yyyy/MM/dd}";
+        }
+        if (spanDays > 35)
+        {
+            return $"Long range: {start:yyyy/MM/dd} - {end.AddMinutes(-1):yyyy/MM/dd}";
+        }
         return scaleUnit switch
         {
             TimelineScaleUnit.Day => $"Day: {start:yyyy/MM/dd HH:mm} - {end:yyyy/MM/dd HH:mm}",

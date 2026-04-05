@@ -85,4 +85,36 @@ public sealed class AbsoluteTimelineResolverTests
 
         Assert.True(layout.CanvasHeight > (24 * 120));
     }
+
+    [Fact]
+    public void Resolve_WeekScale_CanExpandToFourWeeks()
+    {
+        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
+        var layout = AbsoluteTimelineResolver.Resolve(
+            [],
+            now,
+            new TimelineViewportSettings(
+                ScaleUnit: TimelineScaleUnit.Week,
+                RangeMode: TimelineRangeMode.Week4,
+                AnchorLocal: now));
+
+        Assert.Equal(TimeSpan.FromDays(28), layout.WindowEnd - layout.WindowStart);
+    }
+
+    [Fact]
+    public void Resolve_MonthScale_CanExpandToSixMonths()
+    {
+        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
+        var expectedStart = new DateTimeOffset(new DateTime(now.Year, now.Month, 1, 0, 0, 0), now.Offset);
+        var layout = AbsoluteTimelineResolver.Resolve(
+            [],
+            now,
+            new TimelineViewportSettings(
+                ScaleUnit: TimelineScaleUnit.Month,
+                RangeMode: TimelineRangeMode.Month6,
+                AnchorLocal: now));
+
+        Assert.Equal(expectedStart, layout.WindowStart);
+        Assert.Equal(expectedStart.AddMonths(6), layout.WindowEnd);
+    }
 }

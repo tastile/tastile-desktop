@@ -5,12 +5,15 @@ using TastileDesktop.Models;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 using Windows.Foundation;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace TastileDesktop.Views;
 
 public sealed partial class TimelineWindow : Window
 {
+    private sealed record RangeOption(TimelineRangeMode Mode, string Label);
+
     public MainViewModel ViewModel { get; } = new();
     private readonly CoreApiClient _api = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
@@ -18,6 +21,8 @@ public sealed partial class TimelineWindow : Window
         ScaleUnit: TimelineScaleUnit.Day,
         RangeMode: TimelineRangeMode.Day24,
         AnchorLocal: DateTimeOffset.Now.ToLocalTime());
+    private bool _isUpdatingRangeCombo;
+    private IReadOnlyList<RangeOption> _rangeOptions = [];
 
     public TimelineWindow()
     {
@@ -85,12 +90,34 @@ public sealed partial class TimelineWindow : Window
             TimelineScaleUnit.Week => 1,
             _ => 2,
         };
-        RangeComboBox.SelectedIndex = _viewport.RangeMode switch
+
+        _isUpdatingRangeCombo = true;
+        _rangeOptions = ResolveRangeOptions(_viewport.ScaleUnit);
+        RangeComboBox.Items.Clear();
+        foreach (var option in _rangeOptions)
         {
-            TimelineRangeMode.Day24 => 0,
-            TimelineRangeMode.AroundNow24 => 1,
-            _ => 2,
-        };
+            RangeComboBox.Items.Add(new ComboBoxItem
+            {
+                Content = option.Label,
+                Tag = option.Mode,
+            });
+        }
+
+        var selectedIndex = -1;
+        for (var i = 0; i < _rangeOptions.Count; i++)
+        {
+            if (_rangeOptions[i].Mode == _viewport.RangeMode)
+            {
+                selectedIndex = i;
+                break;
+            }
+        }
+        if (selectedIndex < 0 || selectedIndex >= _rangeOptions.Count)
+        {
+            selectedIndex = 0;
+        }
+        RangeComboBox.SelectedIndex = selectedIndex;
+        _isUpdatingRangeCombo = false;
     }
 
     private void OnScaleSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -102,19 +129,33 @@ public sealed partial class TimelineWindow : Window
             1 => TimelineScaleUnit.Week,
             _ => TimelineScaleUnit.Month,
         };
-        if (next != _viewport.ScaleUnit) UpdateViewport(_viewport with { ScaleUnit = next });
+        if (next != _viewport.ScaleUnit)
+        {
+            var nextOptions = ResolveRangeOptions(next);
+            var nextRangeMode = nextOptions.Any(option => option.Mode == _viewport.RangeMode)
+                ? _viewport.RangeMode
+                : nextOptions[0].Mode;
+            UpdateViewport(_viewport with
+            {
+                ScaleUnit = next,
+                RangeMode = nextRangeMode,
+            });
+        }
     }
 
     private void OnRangeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (RangeComboBox.SelectedIndex < 0) return;
-        var next = RangeComboBox.SelectedIndex switch
+        if (_isUpdatingRangeCombo || RangeComboBox.SelectedIndex < 0) return;
+        var selectedMode = RangeComboBox.SelectedItem switch
         {
-            0 => TimelineRangeMode.Day24,
-            1 => TimelineRangeMode.AroundNow24,
-            _ => TimelineRangeMode.SunriseToSunset,
+            ComboBoxItem { Tag: TimelineRangeMode mode } => mode,
+            _ => _rangeOptions.ElementAtOrDefault(RangeComboBox.SelectedIndex)?.Mode ?? TimelineRangeMode.Day24,
         };
-        if (next != _viewport.RangeMode) UpdateViewport(_viewport with { RangeMode = next });
+
+        if (selectedMode != _viewport.RangeMode)
+        {
+            UpdateViewport(_viewport with { RangeMode = selectedMode });
+        }
     }
 
     private void OnApplyCustomRangeClick(object sender, RoutedEventArgs e)
@@ -150,6 +191,33 @@ public sealed partial class TimelineWindow : Window
 
         var target = Math.Max(0, ViewModel.TimelineNowTop - (TimelineScrollViewer.ViewportHeight * 0.35));
         TimelineScrollViewer.ChangeView(null, target, null, disableAnimation: true);
+    }
+
+    private static IReadOnlyList<RangeOption> ResolveRangeOptions(TimelineScaleUnit scaleUnit)
+    {
+        return scaleUnit switch
+        {
+            TimelineScaleUnit.Day =>
+            [
+                new RangeOption(TimelineRangeMode.Day24, "24h"),
+                new RangeOption(TimelineRangeMode.AroundNow24, "±12h"),
+                new RangeOption(TimelineRangeMode.SunriseToSunset, "Sun"),
+                new RangeOption(TimelineRangeMode.Custom, "Custom"),
+            ],
+            TimelineScaleUnit.Week =>
+            [
+                new RangeOption(TimelineRangeMode.Week1, "1w"),
+                new RangeOption(TimelineRangeMode.Week2, "2w"),
+                new RangeOption(TimelineRangeMode.Week4, "4w"),
+            ],
+            _ =>
+            [
+                new RangeOption(TimelineRangeMode.Month1, "1m"),
+                new RangeOption(TimelineRangeMode.Month3, "3m"),
+                new RangeOption(TimelineRangeMode.Month6, "6m"),
+                new RangeOption(TimelineRangeMode.Year1, "1y"),
+            ],
+        };
     }
 
     private async void OnTimelineBlockStatusClick(object sender, RoutedEventArgs e)
