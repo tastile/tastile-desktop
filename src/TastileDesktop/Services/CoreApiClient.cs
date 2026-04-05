@@ -251,16 +251,16 @@ public class CoreApiClient
     public async Task<CommandResponse?> StartTileAsync(string tileId)
         => await PostCommandAsync("/commands/tile/start", new { tile_id = tileId });
 
-    public async Task<CommandResponse?> CompleteTileAsync(string? tileId = null, string? nextTileId = null)
-        => await PostCommandAsync("/commands/tile/complete", new { tile_id = tileId, next_tile_id = nextTileId });
+    public async Task<CommandResponse?> CompleteTileAsync(string? tileId = null, string? nextTileId = null, string? scope = null)
+        => await PostCommandAsync("/commands/tile/complete", new { tile_id = tileId, next_tile_id = nextTileId, scope });
 
     public async Task<CommandResponse?> DeferTileAsync(string tileId, string? reason = null, int? minutes = null)
         => await PostCommandAsync("/commands/tile/defer", new { tile_id = tileId, reason, minutes });
 
-    public async Task<CommandResponse?> StartBreakAsync(int breakMin)
+    public async Task<CommandResponse?> StartBreakAsync(int breakMin, string? insertionMode = null)
     {
         Log($"[StartBreakAsync] Starting break: {breakMin} minutes");
-        var result = await PostCommandAsync("/commands/break/start", new { break_min = breakMin });
+        var result = await PostCommandAsync("/commands/break/start", new { break_min = breakMin, insertion_mode = insertionMode });
         Log($"[StartBreakAsync] Result: ok={result?.Ok}, error={result?.Error}");
         return result;
     }

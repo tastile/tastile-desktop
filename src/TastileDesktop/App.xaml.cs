@@ -331,6 +331,7 @@ public partial class App : Application
                 new Models.PromptActionView("install_update", "Install Update"),
                 new Models.PromptActionView("ignore_update", "Ignore"),
             ],
+            CreatedAt: null,
             ExpiresAt: null,
             Stale: false);
 

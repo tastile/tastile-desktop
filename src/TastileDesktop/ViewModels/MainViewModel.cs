@@ -712,7 +712,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private InterventionEngine? _interventionEngine;
     private PromptAttentionOverlayService? _promptAttentionOverlayService;
     private PromptToastDisplayService? _promptToastDisplayService;
-    private string? _lastHandledPromptId;
+    private string? _lastHandledPromptFingerprint;
     private bool _toastDismissedByAction;
     private readonly Dictionary<string, DateTimeOffset> _promptCooldownById = new(StringComparer.OrdinalIgnoreCase);
     private static readonly TimeSpan PromptCooldownWindow = TimeSpan.FromSeconds(20);
@@ -845,7 +845,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Prompt is null, hiding toast");
             App.DebugLog($"[OnPromptToastPromptChanged] Prompt is null, hiding toast");
-            _lastHandledPromptId = null;
+            _lastHandledPromptFingerprint = null;
             _toastDismissedByAction = false;
             CancelPromptAutoExecution();
             _promptToastDisplayService?.Hide();
@@ -854,27 +854,28 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         CleanupPromptCooldowns();
 
-        System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptId}, Dismissed by action: {_toastDismissedByAction}");
-        App.DebugLog($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptId}, Dismissed by action: {_toastDismissedByAction}");
+        var promptFingerprint = PromptFingerprint(prompt.Prompt);
+        System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptFingerprint}, Dismissed by action: {_toastDismissedByAction}");
+        App.DebugLog($"[OnPromptToastPromptChanged] Prompt ID: {prompt.Prompt.PromptId}, Last handled: {_lastHandledPromptFingerprint}, Dismissed by action: {_toastDismissedByAction}");
 
-        if (_toastDismissedByAction && prompt.Prompt.PromptId == _lastHandledPromptId)
+        if (_toastDismissedByAction && promptFingerprint == _lastHandledPromptFingerprint)
         {
             _toastDismissedByAction = false;
-            _lastHandledPromptId = null;
+            _lastHandledPromptFingerprint = null;
         }
 
-        if (prompt.Prompt.PromptId == _lastHandledPromptId)
+        if (promptFingerprint == _lastHandledPromptFingerprint)
         {
             System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Skipping - already handled");
             App.DebugLog($"[OnPromptToastPromptChanged] Skipping - already handled");
             return;
         }
 
-        if (_promptCooldownById.TryGetValue(prompt.Prompt.PromptId, out var blockedUntil)
+        if (_promptCooldownById.TryGetValue(promptFingerprint, out var blockedUntil)
             && blockedUntil > DateTimeOffset.UtcNow)
         {
-            System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Cooldown active for prompt {prompt.Prompt.PromptId} until {blockedUntil:O}");
-            App.DebugLog($"[OnPromptToastPromptChanged] Cooldown active for prompt {prompt.Prompt.PromptId} until {blockedUntil:O}");
+            System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Cooldown active for prompt {promptFingerprint} until {blockedUntil:O}");
+            App.DebugLog($"[OnPromptToastPromptChanged] Cooldown active for prompt {promptFingerprint} until {blockedUntil:O}");
             return;
         }
 
@@ -894,7 +895,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         System.Diagnostics.Debug.WriteLine($"[Toast] Showing prompt: {prompt.Prompt.Title}, actions: {string.Join(",", prompt.Prompt.Actions.Select(a => a.Id))}, kind: {prompt.Prompt.Kind}");
         App.DebugLog($"[Toast] Showing prompt: {prompt.Prompt.Title}, actions: {string.Join(",", prompt.Prompt.Actions.Select(a => a.Id))}, kind: {prompt.Prompt.Kind}");
 
-        _lastHandledPromptId = prompt.Prompt.PromptId;
+        _lastHandledPromptFingerprint = promptFingerprint;
         _toastDismissedByAction = false; // リセット
         StartPromptAutoExecution(prompt.Prompt);
         
@@ -905,7 +906,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             async (actionId, stopAt) =>
             {
                 _toastDismissedByAction = true;
-                MarkPromptCooldown(prompt.Prompt.PromptId);
+                MarkPromptCooldown(promptFingerprint);
                 CancelPromptAutoExecution();
                 System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
                 App.DebugLog($"[Toast] Action clicked: {actionId}");
@@ -939,10 +940,27 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                                 System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
                                 await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
                                 break;
+                            case "START_BREAK_PARALLEL":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "parallel");
+                                break;
+                            case "START_BREAK_SPLIT":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split");
+                                break;
+                            case "START_BREAK_SPLIT_EXTEND":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split_and_extend");
+                                break;
                             case "COMPLETE":
                             case "COMPLETE_AND_START_NEXT":
+                            case "COMPLETE_TILE":
                                 System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
-                                await _api.CompleteTileAsync(prompt.Prompt.TileId);
+                                await _api.CompleteTileAsync(prompt.Prompt.TileId, scope: "tile");
+                                break;
+                            case "COMPLETE_PHASE":
+                                System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
+                                await _api.CompleteTileAsync(prompt.Prompt.TileId, scope: "phase");
                                 break;
                             case "END_BREAK":
                                 System.Diagnostics.Debug.WriteLine($"[Toast] Action matched: {id}");
@@ -980,7 +998,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             async (actionId, minutes) =>
             {
                 _toastDismissedByAction = true;
-                MarkPromptCooldown(prompt.Prompt.PromptId);
+                MarkPromptCooldown(promptFingerprint);
                 CancelPromptAutoExecution();
                 System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
                 App.DebugLog($"[Toast] Defer: action={actionId}, minutes={minutes}");
@@ -1017,7 +1035,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var promptId = prompt.PromptId;
+        var promptFingerprint = PromptFingerprint(prompt);
         _promptAutoExecutionCts = new CancellationTokenSource();
         var token = _promptAutoExecutionCts.Token;
         _ = Task.Run(async () =>
@@ -1030,13 +1048,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     return;
                 }
 
-                if (PendingPrompt?.Prompt?.PromptId != promptId)
+                if (PendingPrompt?.Prompt is null || PromptFingerprint(PendingPrompt.Prompt) != promptFingerprint)
                 {
                     return;
                 }
 
                 _toastDismissedByAction = true;
-                MarkPromptCooldown(promptId);
+                MarkPromptCooldown(promptFingerprint);
                 _promptToastDisplayService?.Hide();
                 await ExecutePromptActionAsync(actionId, prompt, null);
                 await _pollingService.PollAsync();
@@ -1078,6 +1096,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 return null;
             case "end":
                 if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "START_BREAK_PARALLEL", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "START_BREAK_PARALLEL";
+                }
+                if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "COMPLETE_PHASE", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "COMPLETE_PHASE";
+                }
+                if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "COMPLETE_TILE", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "COMPLETE_TILE";
+                }
+                if (prompt.Actions.Any(action =>
                         string.Equals(action.Id, "COMPLETE", StringComparison.OrdinalIgnoreCase)))
                 {
                     return "COMPLETE";
@@ -1086,6 +1119,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                         string.Equals(action.Id, "COMPLETE_AND_START_NEXT", StringComparison.OrdinalIgnoreCase)))
                 {
                     return "COMPLETE_AND_START_NEXT";
+                }
+                return null;
+            case "break_end":
+                if (prompt.Actions.Any(action =>
+                        string.Equals(action.Id, "END_BREAK", StringComparison.OrdinalIgnoreCase)))
+                {
+                    return "END_BREAK";
                 }
                 return null;
             default:
@@ -1112,9 +1152,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             case "START_BREAK":
                 await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes);
                 return;
+            case "START_BREAK_PARALLEL":
+                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "parallel");
+                return;
+            case "START_BREAK_SPLIT":
+                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split");
+                return;
+            case "START_BREAK_SPLIT_EXTEND":
+                await _api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split_and_extend");
+                return;
             case "COMPLETE":
             case "COMPLETE_AND_START_NEXT":
-                await _api.CompleteTileAsync(prompt.TileId);
+            case "COMPLETE_TILE":
+                await _api.CompleteTileAsync(prompt.TileId, scope: "tile");
+                return;
+            case "COMPLETE_PHASE":
+                await _api.CompleteTileAsync(prompt.TileId, scope: "phase");
                 return;
             case "END_BREAK":
                 await _api.EndBreakAsync();
@@ -1134,13 +1187,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    private void MarkPromptCooldown(string? promptId)
+    private void MarkPromptCooldown(string? promptKey)
     {
-        if (string.IsNullOrWhiteSpace(promptId))
+        if (string.IsNullOrWhiteSpace(promptKey))
         {
             return;
         }
-        _promptCooldownById[promptId] = DateTimeOffset.UtcNow + PromptCooldownWindow;
+        _promptCooldownById[promptKey] = DateTimeOffset.UtcNow + PromptCooldownWindow;
+    }
+
+    private static string PromptFingerprint(PromptView prompt)
+    {
+        var identity = string.IsNullOrWhiteSpace(prompt.CreatedAt)
+            ? prompt.ExpiresAt ?? string.Empty
+            : prompt.CreatedAt;
+        return $"{prompt.PromptId}|{identity}";
     }
 
     private void CleanupPromptCooldowns()

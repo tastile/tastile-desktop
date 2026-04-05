@@ -159,6 +159,7 @@ public record PromptView(
     [property: JsonPropertyName("why")] string Why,
     [property: JsonPropertyName("suggested_minutes")] int? SuggestedMinutes,
     [property: JsonPropertyName("actions")] List<PromptActionView> Actions,
+    [property: JsonPropertyName("created_at")] string? CreatedAt,
     [property: JsonPropertyName("expires_at")] string? ExpiresAt,
     [property: JsonPropertyName("stale")] bool Stale
 );

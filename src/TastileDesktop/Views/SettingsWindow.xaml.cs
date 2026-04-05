@@ -100,6 +100,7 @@ public sealed partial class SettingsWindow : Window
                 new("complete", "完了"),
             },
             null,
+            null,
             false
         );
 
@@ -444,6 +445,7 @@ public sealed partial class SettingsWindow : Window
                 new("install_update", "Install Update"),
                 new("ignore_update", "Ignore"),
             },
+            CreatedAt: null,
             ExpiresAt: null,
             Stale: false);
 
