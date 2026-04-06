@@ -25,18 +25,24 @@ public static class PromptActionDispatcher
         }
 
         var id = resolvedActionId!.ToUpperInvariant();
-        if (IsStartupRecoveryAction(id))
+        if (IsStartupRecoveryPrompt(prompt) && IsStartupRecoveryAction(id))
         {
             if (string.IsNullOrWhiteSpace(prompt.PromptId) || string.IsNullOrWhiteSpace(prompt.TileId))
             {
                 return new PromptActionDispatchResult(true, id, "startup recovery prompt is missing required identifiers");
             }
 
+            var resolvedStopAt = stopAt;
+            if (id == "CONFIRM_STOP_AT" && !resolvedStopAt.HasValue)
+            {
+                resolvedStopAt = DateTimeOffset.Now;
+            }
+
             var response = await api.RespondStartupRecoveryPromptAsync(
                 prompt.PromptId,
                 prompt.TileId,
                 id,
-                stopAt);
+                resolvedStopAt);
             if (response is { Ok: false })
             {
                 return new PromptActionDispatchResult(true, id, response.Error ?? "failed to respond startup recovery prompt");
@@ -48,8 +54,14 @@ public static class PromptActionDispatcher
         var targetTileId = string.IsNullOrWhiteSpace(prompt.TileId)
             ? fallbackTileId
             : prompt.TileId;
+        if (RequiresTileId(id) && string.IsNullOrWhiteSpace(targetTileId))
+        {
+            return new PromptActionDispatchResult(true, id, $"prompt action requires tile id: {id}");
+        }
+
         var settings = new SettingsService();
-        CommandResponse? result = id switch
+        CommandResponse? result;
+        result = id switch
         {
             "CONTINUE" or "DISMISS" => null,
             "BREAK" or "START_BREAK" => await api.StartBreakAsync(settings.Current.DefaultBreakMinutes),
@@ -57,21 +69,21 @@ public static class PromptActionDispatcher
             "START_BREAK_SPLIT" => await api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split"),
             "START_BREAK_SPLIT_EXTEND" => await api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split_and_extend"),
             "COMPLETE" or "COMPLETE_AND_START_NEXT" or "COMPLETE_TILE"
-                when !string.IsNullOrWhiteSpace(targetTileId)
                 => await api.CompleteTileAsync(targetTileId, scope: "tile"),
             "COMPLETE_PHASE"
-                when !string.IsNullOrWhiteSpace(targetTileId)
                 => await api.CompleteTileAsync(targetTileId, scope: "phase"),
             "END_BREAK" => await api.EndBreakAsync(),
-            "EXTEND" => await api.ExtendTileAsync(10),
-            "DEFER"
-                when !string.IsNullOrWhiteSpace(targetTileId)
-                => await api.DeferTileAsync(targetTileId),
+            "EXTEND" or "EXTEND_PHASE" => await api.ExtendTileAsync(10),
+            "DEFER" or "DEFER_TILE"
+                => await api.DeferTileAsync(targetTileId!),
             "START" or "START_TILE"
-                when !string.IsNullOrWhiteSpace(targetTileId)
-                => await api.StartTileAsync(targetTileId),
+                => await api.StartTileAsync(targetTileId!),
             _ => null,
         };
+        if (result is null && id is not "CONTINUE" and not "DISMISS")
+        {
+            return new PromptActionDispatchResult(true, id, $"unsupported prompt action: {id}");
+        }
 
         if (result is { Ok: false })
         {
@@ -80,6 +92,24 @@ public static class PromptActionDispatcher
 
         return new PromptActionDispatchResult(true, id, null);
     }
+
+    private static bool IsStartupRecoveryPrompt(PromptView prompt)
+        => prompt.Actions.Any(action =>
+            action.Id.Equals("confirm_continue", StringComparison.OrdinalIgnoreCase)
+            || action.Id.Equals("confirm_stop_at", StringComparison.OrdinalIgnoreCase)
+            || action.Id.Equals("confirm_executed", StringComparison.OrdinalIgnoreCase)
+            || action.Id.Equals("confirm_skipped", StringComparison.OrdinalIgnoreCase));
+
+    private static bool RequiresTileId(string actionId)
+        => actionId is
+            "COMPLETE"
+            or "COMPLETE_AND_START_NEXT"
+            or "COMPLETE_TILE"
+            or "COMPLETE_PHASE"
+            or "DEFER"
+            or "DEFER_TILE"
+            or "START"
+            or "START_TILE";
 
     private static bool IsStartupRecoveryAction(string actionId)
         => actionId is "CONFIRM_CONTINUE" or "CONFIRM_STOP_AT" or "CONFIRM_EXECUTED" or "CONFIRM_SKIPPED" or "DISMISS";

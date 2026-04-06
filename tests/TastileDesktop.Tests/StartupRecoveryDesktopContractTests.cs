@@ -76,4 +76,39 @@ public sealed class StartupRecoveryDesktopContractTests
 
         Assert.Contains("await apiClient.TriggerTickAsync()", source);
     }
+
+    [Fact]
+    public void PromptToastWindowSource_DoesNotOpenNestedStopAtDialog()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "Services", "PromptToastWindow.cs");
+
+        Assert.DoesNotContain("PromptStopAtAsync(", source);
+        Assert.DoesNotContain("ContentDialog", source);
+        Assert.Contains("DateTimeOffset.Now", source);
+    }
+
+    [Fact]
+    public void PromptActionDispatcherSource_UsesStartupPromptGuard()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "Services", "PromptActionDispatcher.cs");
+
+        Assert.Contains("if (IsStartupRecoveryPrompt(prompt) && IsStartupRecoveryAction(id))", source);
+    }
+
+    [Fact]
+    public void PromptActionDispatcherSource_MapsSnakeCaseActionAliases()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "Services", "PromptActionDispatcher.cs");
+
+        Assert.Contains("\"EXTEND\" or \"EXTEND_PHASE\"", source);
+        Assert.Contains("\"DEFER\" or \"DEFER_TILE\"", source);
+    }
+
+    [Fact]
+    public void PromptActionDispatcherSource_ReportsUnsupportedActions()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "Services", "PromptActionDispatcher.cs");
+
+        Assert.Contains("unsupported prompt action", source);
+    }
 }
