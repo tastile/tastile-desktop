@@ -1,16 +1,24 @@
 param(
-[Parameter(Mandatory = $false)][string]$Version = "0.2.29"
+[Parameter(Mandatory = $false)][string]$Version = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Version = $Version.Trim()
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$Version = ($Version ?? "").Trim()
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    $csprojPath = Join-Path $repoRoot "src\TastileDesktop\TastileDesktop.csproj"
+    [xml]$csproj = Get-Content -Path $csprojPath -Raw
+    $Version = [string]($csproj.Project.PropertyGroup.Version | Select-Object -First 1)
+}
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    throw "Could not determine desktop app version from src\\TastileDesktop\\TastileDesktop.csproj"
+}
 if ($Version.StartsWith("v", [System.StringComparison]::OrdinalIgnoreCase)) {
     $Version = $Version.Substring(1)
 }
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
 $buildOutDir = Join-Path $repoRoot "artifacts\desktop-build"
 $installerOut = Join-Path $repoRoot "artifacts\installer"
 $issPath = Join-Path $repoRoot "installer\TastileDesktop.iss"

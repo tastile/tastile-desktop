@@ -11,12 +11,17 @@ public sealed class PromptToastDisplayService : IDisposable
 
     private readonly List<PromptToastWindow> _windows = new();
     private readonly Dictionary<string, DateTimeOffset> _stackedPrompts = new(StringComparer.OrdinalIgnoreCase);
-    private readonly SettingsService _settings = new();
+    private TastileSettings _currentSettings;
     private CancellationTokenSource? _hideCts;
     private DispatcherTimer? _zOrderTimer;
     private bool _isVisible;
 
-    public PromptToastDisplayService() { }
+    public PromptToastDisplayService()
+    {
+        var settings = new SettingsService();
+        _currentSettings = settings.Current with { };
+        SettingsService.GlobalSettingsChanged += OnGlobalSettingsChanged;
+    }
 
     public void ShowPrompt(Models.PromptView prompt, int maxActions, Func<string, DateTimeOffset?, Task> actionHandler, Func<string, int?, Task>? deferHandler = null)
     {
@@ -39,8 +44,7 @@ public sealed class PromptToastDisplayService : IDisposable
         }
 
         StartZOrderGuard();
-        _settings.Load();
-        PromptToastSoundService.Instance.TriggerFromPromptToast(_settings.Current);
+        PromptToastSoundService.Instance.TriggerFromPromptToast(_currentSettings);
     }
 
     public void ShowBackdrop(Models.PromptView prompt, int waitingBehind)
@@ -115,6 +119,7 @@ public sealed class PromptToastDisplayService : IDisposable
     public void Dispose()
     {
         StopZOrderGuard();
+        SettingsService.GlobalSettingsChanged -= OnGlobalSettingsChanged;
         _hideCts?.Cancel();
         _hideCts?.Dispose();
         foreach (var window in _windows)
@@ -122,5 +127,10 @@ public sealed class PromptToastDisplayService : IDisposable
             window.HidePrompt();
         }
         _windows.Clear();
+    }
+
+    private void OnGlobalSettingsChanged(object? sender, TastileSettings settings)
+    {
+        _currentSettings = settings with { };
     }
 }

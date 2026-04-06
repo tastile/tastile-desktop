@@ -715,6 +715,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private string? _lastHandledPromptFingerprint;
     private bool _toastDismissedByAction;
     private readonly Dictionary<string, DateTimeOffset> _promptCooldownById = new(StringComparer.OrdinalIgnoreCase);
+    private readonly object _promptCooldownGate = new();
     private static readonly TimeSpan PromptCooldownWindow = TimeSpan.FromSeconds(20);
     public PollingService PollingService => _pollingService;
 
@@ -868,16 +869,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        if (_promptCooldownById.TryGetValue(promptFingerprint, out var blockedUntil)
-            && blockedUntil > DateTimeOffset.UtcNow)
+        var isPromptOnCooldown = false;
+        DateTimeOffset blockedUntil = default;
+        lock (_promptCooldownGate)
+        {
+            isPromptOnCooldown = _promptCooldownById.TryGetValue(promptFingerprint, out blockedUntil)
+                && blockedUntil > DateTimeOffset.UtcNow;
+        }
+
+        if (isPromptOnCooldown)
         {
             System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Cooldown active for prompt {promptFingerprint} until {blockedUntil:O}");
             App.DebugLog($"[OnPromptToastPromptChanged] Cooldown active for prompt {promptFingerprint} until {blockedUntil:O}");
             return;
         }
 
-        var settings = new SettingsService();
         var decision = PromptNotificationPolicy.Decide(prompt.Prompt, isFullscreen: false);
+        var settings = new SettingsService();
 
         System.Diagnostics.Debug.WriteLine($"[OnPromptToastPromptChanged] Decision: ShowToast={decision.ShowToast}, ShowIntervention={decision.ShowIntervention}");
         App.DebugLog($"[OnPromptToastPromptChanged] Decision: ShowToast={decision.ShowToast}, ShowIntervention={decision.ShowIntervention}");
@@ -911,7 +919,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 
                 try
                 {
-                    await ExecutePromptActionAsync(actionId, prompt.Prompt, stopAt);
+                    await ExecutePromptActionAsync(actionId, prompt.Prompt, stopAt, settings.Current.DefaultBreakMinutes);
                     
                     // アクション実行後、即座にポーリングして状態を更新
                     System.Diagnostics.Debug.WriteLine($"[Toast] Polling after action");
@@ -954,13 +962,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             });
     }
 
-    private async Task ExecutePromptActionAsync(string actionId, PromptView prompt, DateTimeOffset? stopAt)
+    private async Task ExecutePromptActionAsync(string actionId, PromptView prompt, DateTimeOffset? stopAt, int defaultBreakMinutes)
     {
         var dispatchResult = await PromptActionDispatcher.ExecuteAsync(
             _api,
             prompt,
             actionId,
-            stopAt);
+            stopAt,
+            defaultBreakMinutes: defaultBreakMinutes);
         if (!dispatchResult.IsResolved)
         {
             System.Diagnostics.Debug.WriteLine($"[Toast] Skipped unknown action: {actionId}");
@@ -980,7 +989,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             return;
         }
-        _promptCooldownById[promptKey] = DateTimeOffset.UtcNow + PromptCooldownWindow;
+        lock (_promptCooldownGate)
+        {
+            _promptCooldownById[promptKey] = DateTimeOffset.UtcNow + PromptCooldownWindow;
+        }
     }
 
     private static string PromptFingerprint(PromptView prompt)
@@ -994,12 +1006,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private void CleanupPromptCooldowns()
     {
         var now = DateTimeOffset.UtcNow;
-        foreach (var key in _promptCooldownById
-                     .Where(kv => kv.Value <= now)
-                     .Select(kv => kv.Key)
-                     .ToList())
+        lock (_promptCooldownGate)
         {
-            _promptCooldownById.Remove(key);
+            foreach (var key in _promptCooldownById
+                         .Where(kv => kv.Value <= now)
+                         .Select(kv => kv.Key)
+                         .ToList())
+            {
+                _promptCooldownById.Remove(key);
+            }
         }
     }
 

@@ -14,7 +14,8 @@ public static class PromptActionDispatcher
         PromptView prompt,
         string? requestedActionId,
         DateTimeOffset? stopAt,
-        string? fallbackTileId = null)
+        string? fallbackTileId = null,
+        int defaultBreakMinutes = 5)
     {
         if (!PromptActionSelectionPolicy.TryResolveAction(prompt, requestedActionId, out var resolvedActionId))
         {
@@ -59,15 +60,15 @@ public static class PromptActionDispatcher
             return new PromptActionDispatchResult(true, id, $"prompt action requires tile id: {id}");
         }
 
-        var settings = new SettingsService();
+        var breakMinutes = Math.Max(1, defaultBreakMinutes);
         CommandResponse? result;
         result = id switch
         {
             "CONTINUE" or "DISMISS" => null,
-            "BREAK" or "START_BREAK" => await api.StartBreakAsync(settings.Current.DefaultBreakMinutes),
-            "START_BREAK_PARALLEL" => await api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "parallel"),
-            "START_BREAK_SPLIT" => await api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split"),
-            "START_BREAK_SPLIT_EXTEND" => await api.StartBreakAsync(settings.Current.DefaultBreakMinutes, insertionMode: "split_and_extend"),
+            "BREAK" or "START_BREAK" => await api.StartBreakAsync(breakMinutes),
+            "START_BREAK_PARALLEL" => await api.StartBreakAsync(breakMinutes, insertionMode: "parallel"),
+            "START_BREAK_SPLIT" => await api.StartBreakAsync(breakMinutes, insertionMode: "split"),
+            "START_BREAK_SPLIT_EXTEND" => await api.StartBreakAsync(breakMinutes, insertionMode: "split_and_extend"),
             "COMPLETE" or "COMPLETE_AND_START_NEXT" or "COMPLETE_TILE"
                 => await api.CompleteTileAsync(targetTileId, scope: "tile"),
             "COMPLETE_PHASE"

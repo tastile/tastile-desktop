@@ -12,7 +12,11 @@ public sealed class PromptToastSoundService : IDisposable
 
     public void TriggerFromPromptToast(TastileSettings settings)
     {
-        _ = PlayAsync(settings);
+        var playbackSettings = settings with { };
+        _ = Task.Run(async () =>
+        {
+            await PlayAsync(playbackSettings).ConfigureAwait(false);
+        });
     }
 
     public void Stop()
@@ -138,7 +142,12 @@ public sealed class PromptToastSoundService : IDisposable
     private static async Task PlayCustomFileAsync(string filePath, int durationSeconds, CancellationToken cancellationToken)
     {
         using var player = new MediaPlayer();
-        player.Source = MediaSource.CreateFromUri(new Uri(filePath));
+        var fullPath = Path.GetFullPath(filePath);
+        var fileUri = new UriBuilder(Uri.UriSchemeFile, string.Empty)
+        {
+            Path = fullPath,
+        }.Uri;
+        player.Source = MediaSource.CreateFromUri(fileUri);
         player.Play();
         await Task.Delay(TimeSpan.FromSeconds(durationSeconds), cancellationToken);
         player.Pause();

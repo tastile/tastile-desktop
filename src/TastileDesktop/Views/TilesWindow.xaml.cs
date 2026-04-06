@@ -10,6 +10,7 @@ namespace TastileDesktop.Views;
 public sealed partial class TilesWindow : Window
 {
     private readonly CoreApiClient _api = new();
+    private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly TilesWindowLiveUpdateBridge _liveUpdateBridge;
     public ObservableCollection<TileListItem> ReadyTiles { get; } = new();
@@ -188,7 +189,8 @@ public sealed partial class TilesWindow : Window
                             response.Prompt,
                             actionId,
                             stopAt,
-                            fallbackTileId: tileId);
+                            fallbackTileId: tileId,
+                            defaultBreakMinutes: _settings.Current.DefaultBreakMinutes);
                         if (!dispatch.IsResolved)
                         {
                             App.DebugLog($"[TilesWindow] Unknown prompt action: {actionId}");

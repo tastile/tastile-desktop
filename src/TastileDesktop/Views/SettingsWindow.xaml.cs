@@ -68,6 +68,7 @@ public sealed partial class SettingsWindow : Window
             var settings = new SettingsService();
             var newSettings = settings.Current with { QuickPanelVerticalPosition = QuickPanelVerticalPositions.Top };
             settings.Save(newSettings);
+            ViewModel.QuickPanelVerticalPosition = newSettings.QuickPanelVerticalPosition;
             FloatingWindowHelper.ForcePositionUpdate(mainWindow, newSettings);
         }
     }
@@ -79,6 +80,7 @@ public sealed partial class SettingsWindow : Window
             var settings = new SettingsService();
             var newSettings = settings.Current with { QuickPanelVerticalPosition = QuickPanelVerticalPositions.Bottom };
             settings.Save(newSettings);
+            ViewModel.QuickPanelVerticalPosition = newSettings.QuickPanelVerticalPosition;
             FloatingWindowHelper.ForcePositionUpdate(mainWindow, newSettings);
         }
     }
@@ -124,26 +126,33 @@ public sealed partial class SettingsWindow : Window
 
     private async void OnBrowsePromptToastSoundFileClick(object sender, RoutedEventArgs e)
     {
-        var picker = new FileOpenPicker
+        try
         {
-            SuggestedStartLocation = PickerLocationId.MusicLibrary,
-            ViewMode = PickerViewMode.List,
-        };
+            var picker = new FileOpenPicker
+            {
+                SuggestedStartLocation = PickerLocationId.MusicLibrary,
+                ViewMode = PickerViewMode.List,
+            };
 
-        picker.FileTypeFilter.Add(".mp3");
-        picker.FileTypeFilter.Add(".wav");
-        picker.FileTypeFilter.Add(".m4a");
-        picker.FileTypeFilter.Add(".aac");
-        picker.FileTypeFilter.Add(".wma");
-        picker.FileTypeFilter.Add(".flac");
+            picker.FileTypeFilter.Add(".mp3");
+            picker.FileTypeFilter.Add(".wav");
+            picker.FileTypeFilter.Add(".m4a");
+            picker.FileTypeFilter.Add(".aac");
+            picker.FileTypeFilter.Add(".wma");
+            picker.FileTypeFilter.Add(".flac");
 
-        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
-        WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
+            var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(this);
+            WinRT.Interop.InitializeWithWindow.Initialize(picker, hwnd);
 
-        var file = await picker.PickSingleFileAsync();
-        if (file != null)
+            var file = await picker.PickSingleFileAsync();
+            if (file != null)
+            {
+                ViewModel.PromptToastSoundFilePath = file.Path;
+            }
+        }
+        catch (Exception ex)
         {
-            ViewModel.PromptToastSoundFilePath = file.Path;
+            App.DebugLog($"[SettingsWindow] Prompt toast sound picker failed: {ex}");
         }
     }
 
@@ -160,7 +169,14 @@ public sealed partial class SettingsWindow : Window
             PromptToastSoundRepeatIntervalSeconds = ViewModel.PromptToastSoundRepeatIntervalSeconds,
         };
 
-        await PromptToastSoundService.Instance.PlayAsync(previewSettings);
+        try
+        {
+            await PromptToastSoundService.Instance.PlayAsync(previewSettings);
+        }
+        catch (Exception ex)
+        {
+            App.DebugLog($"[SettingsWindow] Prompt toast sound test failed: {ex}");
+        }
     }
 
     private void OnAppearanceChanged(object? sender, SystemAppearanceSnapshot snapshot)

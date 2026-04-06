@@ -17,6 +17,7 @@ public sealed partial class TimelineWindow : Window
 
     public MainViewModel ViewModel { get; } = new();
     private readonly CoreApiClient _api = new();
+    private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private TimelineViewportSettings _viewport = new(
         ScaleUnit: TimelineScaleUnit.Day,
@@ -271,7 +272,8 @@ public sealed partial class TimelineWindow : Window
                             response.Prompt,
                             actionId,
                             stopAt,
-                            fallbackTileId: tileId);
+                            fallbackTileId: tileId,
+                            defaultBreakMinutes: _settings.Current.DefaultBreakMinutes);
                         if (!dispatch.IsResolved)
                         {
                             App.DebugLog($"[TimelineWindow] Unknown prompt action: {actionId}");
