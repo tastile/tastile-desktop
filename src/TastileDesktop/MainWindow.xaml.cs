@@ -27,6 +27,7 @@ public sealed partial class MainWindow : Window
     private bool _isPanelVisible;
     private int _activatingWindowCount;
     private readonly DispatcherTimer _clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
+    private readonly DispatcherTimer _topMostGuardTimer = new() { Interval = TimeSpan.FromMilliseconds(200) };
     private bool _runningDragActive;
     private bool _nextCandidatesDragActive;
     private double _runningDragStartX;
@@ -66,7 +67,12 @@ public sealed partial class MainWindow : Window
         AuthService.Instance.AuthStateChanged += (_, _) => DispatcherQueue.TryEnqueue(UpdateAccountUI);
         _clockTimer.Tick += (_, _) => OnClockTick();
         _clockTimer.Start();
-        Closed += (_, _) => _nativePanel.Dispose();
+        _topMostGuardTimer.Tick += (_, _) => OnTopMostGuardTick();
+        Closed += (_, _) =>
+        {
+            _topMostGuardTimer.Stop();
+            _nativePanel.Dispose();
+        };
         UpdateAccountUI();
         UpdateQuickPanelUI();
         UpdateClock();
@@ -107,6 +113,7 @@ public sealed partial class MainWindow : Window
         _nativePanel.Hide();
         FloatingWindowHelper.PlaceQuickPanel(this, _settings.Current);
         WindowExtensions.Show(this);
+        UpdateTopMostGuard();
         Activate();
     }
 
@@ -140,6 +147,7 @@ public sealed partial class MainWindow : Window
     private void ApplyPinnedState(bool pinned)
     {
         _isPinned = FloatingWindowHelper.SetAlwaysOnTop(this, pinned);
+        UpdateTopMostGuard();
         // PinIcon.Opacity = _isPinned ? 1.0 : 0.72;
         RefreshNativePanel();
     }
@@ -420,7 +428,43 @@ public sealed partial class MainWindow : Window
     {
         _isPanelVisible = false;
         _nativePanel.Hide();
+        UpdateTopMostGuard();
         WindowExtensions.Hide(this);
+    }
+
+    private void UpdateTopMostGuard()
+    {
+        if (_isPinned && _isPanelVisible)
+        {
+            FloatingWindowHelper.ReassertAlwaysOnTop(this, true);
+            if (!_topMostGuardTimer.IsEnabled)
+            {
+                _topMostGuardTimer.Start();
+            }
+            return;
+        }
+
+        if (_topMostGuardTimer.IsEnabled)
+        {
+            _topMostGuardTimer.Stop();
+        }
+    }
+
+    private void OnTopMostGuardTick()
+    {
+        if (!_isPinned || !_isPanelVisible)
+        {
+            if (_topMostGuardTimer.IsEnabled)
+            {
+                _topMostGuardTimer.Stop();
+            }
+            return;
+        }
+
+        if (!FloatingWindowHelper.IsTopMost(this))
+        {
+            FloatingWindowHelper.ReassertAlwaysOnTop(this, true);
+        }
     }
 
     private void UpdateClock()
