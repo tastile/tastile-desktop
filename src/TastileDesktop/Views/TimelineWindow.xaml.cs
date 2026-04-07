@@ -71,7 +71,14 @@ public sealed partial class TimelineWindow : Window
 
             var newCanvasHeight = ViewModel.TimelineCanvasHeight;
             var targetOffset = Math.Max(0, (newCanvasHeight * anchorRatio) - point.Position.Y);
-            scrollViewer.ChangeView(null, targetOffset, null, disableAnimation: true);
+            try
+            {
+                scrollViewer.ChangeView(null, targetOffset, null, disableAnimation: true);
+            }
+            catch (COMException ex)
+            {
+                App.DebugLog($"[TimelineWindow] ChangeView failed in wheel zoom: {ex.Message}");
+            }
             e.Handled = true;
         }
     }

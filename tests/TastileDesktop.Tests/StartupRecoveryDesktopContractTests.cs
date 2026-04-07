@@ -22,13 +22,13 @@ public sealed class StartupRecoveryDesktopContractTests
     }
 
     [Fact]
-    public void MainViewModelSource_DoesNotClientSideAutoExecutePromptActions()
+    public void MainViewModelSource_AutoExecutesOnlyFixedSchedulePrompts()
     {
         var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
 
-        Assert.DoesNotContain("PromptAutoExecutionDelay", source);
-        Assert.DoesNotContain("StartPromptAutoExecution(", source);
-        Assert.DoesNotContain("PromptAutoActionResolver.Resolve(prompt)", source);
+        Assert.Contains("PromptAutoActionPolicy.Resolve(", source);
+        Assert.Contains("PromptAutoExecutionDelay", source);
+        Assert.Contains("autoActionId", source);
     }
 
     [Fact]
@@ -67,6 +67,8 @@ public sealed class StartupRecoveryDesktopContractTests
         Assert.DoesNotContain("switch (actionId.ToUpperInvariant())", source);
         Assert.Contains("catch (Exception ex)", source);
         Assert.DoesNotContain("catch\r\n        {\r\n        }", source);
+        Assert.Contains("catch (COMException ex)", source);
+        Assert.Contains("[TimelineWindow] ChangeView failed in wheel zoom", source);
     }
 
     [Fact]

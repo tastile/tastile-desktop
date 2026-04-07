@@ -717,6 +717,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly Dictionary<string, DateTimeOffset> _promptCooldownById = new(StringComparer.OrdinalIgnoreCase);
     private readonly object _promptCooldownGate = new();
     private static readonly TimeSpan PromptCooldownWindow = TimeSpan.FromSeconds(20);
+    private static readonly TimeSpan PromptAutoExecutionDelay = TimeSpan.FromSeconds(30);
     public PollingService PollingService => _pollingService;
 
     public MainViewModel()
@@ -960,6 +961,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     App.DebugLog($"[Toast] Defer error: {ex.Message}");
                 }
             });
+
+        var promptTile = ResolvePromptTile(prompt.Prompt.TileId);
+        var autoActionId = PromptAutoActionPolicy.Resolve(
+            prompt.Prompt,
+            isFixedScheduleTile: IsFixedScheduleExecutionCandidate(promptTile));
+        if (!string.IsNullOrWhiteSpace(autoActionId))
+        {
+            _ = AutoExecutePromptActionAsync(
+                promptFingerprint,
+                autoActionId,
+                prompt.Prompt,
+                settings.Current.DefaultBreakMinutes);
+        }
     }
 
     private async Task ExecutePromptActionAsync(string actionId, PromptView prompt, DateTimeOffset? stopAt, int defaultBreakMinutes)
@@ -1015,6 +1029,71 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             {
                 _promptCooldownById.Remove(key);
             }
+        }
+    }
+
+    private TileListItem? ResolvePromptTile(string? tileId)
+    {
+        if (string.IsNullOrWhiteSpace(tileId))
+        {
+            return null;
+        }
+
+        return _allTiles.FirstOrDefault(tile =>
+            string.Equals(tile.Id, tileId, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsFixedScheduleExecutionCandidate(TileListItem? tile)
+    {
+        if (tile is null)
+        {
+            return false;
+        }
+
+        var isLabel = string.Equals(tile.SemanticRole, "label", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(tile.ObjectiveMode, "label_only", StringComparison.OrdinalIgnoreCase);
+        if (isLabel)
+        {
+            return false;
+        }
+
+        return !string.IsNullOrWhiteSpace(tile.FixedStart) || !string.IsNullOrWhiteSpace(tile.FixedEnd);
+    }
+
+    private async Task AutoExecutePromptActionAsync(
+        string promptFingerprint,
+        string autoActionId,
+        PromptView prompt,
+        int defaultBreakMinutes)
+    {
+        await Task.Delay(PromptAutoExecutionDelay);
+
+        if (_toastDismissedByAction || _lastHandledPromptFingerprint != promptFingerprint)
+        {
+            return;
+        }
+
+        var pendingPrompt = PendingPrompt?.Prompt;
+        var pendingFingerprint = pendingPrompt is null ? null : PromptFingerprint(pendingPrompt);
+        if (!string.Equals(pendingFingerprint, promptFingerprint, StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        _toastDismissedByAction = true;
+        MarkPromptCooldown(promptFingerprint);
+        _promptToastDisplayService?.Hide();
+        App.DebugLog($"[Toast] Auto executing fixed schedule action: {autoActionId}");
+
+        try
+        {
+            await ExecutePromptActionAsync(autoActionId, prompt, null, defaultBreakMinutes);
+            await _pollingService.PollAsync();
+        }
+        catch (Exception ex)
+        {
+            App.DebugLog($"[Toast] Auto action error: {ex.Message}");
+            _toastDismissedByAction = false;
         }
     }
 
