@@ -44,8 +44,11 @@ public sealed partial class TimelineWindow : Window
         _ = ViewModel.InitializeAsync();
     }
 
-    private void OnZoomInClick(object sender, RoutedEventArgs e) => UpdateViewport(_viewport with { ZoomScale = Math.Min(_viewport.MaxZoomScale, _viewport.ZoomScale + 0.1) });
-    private void OnZoomOutClick(object sender, RoutedEventArgs e) => UpdateViewport(_viewport with { ZoomScale = Math.Max(_viewport.MinZoomScale, _viewport.ZoomScale - 0.1) });
+    private void OnZoomInClick(object sender, RoutedEventArgs e)
+        => SafeUpdateViewport(_viewport with { ZoomScale = Math.Min(_viewport.MaxZoomScale, _viewport.ZoomScale + 0.1) });
+
+    private void OnZoomOutClick(object sender, RoutedEventArgs e)
+        => SafeUpdateViewport(_viewport with { ZoomScale = Math.Max(_viewport.MinZoomScale, _viewport.ZoomScale - 0.1) });
 
     private void OnTimelineWheelChanged(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
@@ -63,11 +66,20 @@ public sealed partial class TimelineWindow : Window
             }
 
             var oldCanvasHeight = ViewModel.TimelineCanvasHeight;
-            var anchorOffset = scrollViewer.VerticalOffset + point.Position.Y;
+            double anchorOffset;
+            try
+            {
+                anchorOffset = scrollViewer.VerticalOffset + point.Position.Y;
+            }
+            catch (COMException ex)
+            {
+                App.DebugLog($"[TimelineWindow] Failed to read vertical offset in wheel zoom: {ex.Message}");
+                return;
+            }
             var anchorRatio = oldCanvasHeight > 1 ? anchorOffset / oldCanvasHeight : 0.5;
             anchorRatio = Math.Clamp(anchorRatio, 0.0, 1.0);
 
-            UpdateViewport(_viewport with { ZoomScale = newZoom });
+            SafeUpdateViewport(_viewport with { ZoomScale = newZoom });
 
             var newCanvasHeight = ViewModel.TimelineCanvasHeight;
             var targetOffset = Math.Max(0, (newCanvasHeight * anchorRatio) - point.Position.Y);
