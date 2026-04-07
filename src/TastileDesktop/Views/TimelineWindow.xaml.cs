@@ -144,7 +144,7 @@ public sealed partial class TimelineWindow : Window
             var nextRangeMode = nextOptions.Any(option => option.Mode == _viewport.RangeMode)
                 ? _viewport.RangeMode
                 : nextOptions[0].Mode;
-            UpdateViewport(_viewport with
+            SafeUpdateViewport(_viewport with
             {
                 ScaleUnit = next,
                 RangeMode = nextRangeMode,
@@ -163,7 +163,7 @@ public sealed partial class TimelineWindow : Window
 
         if (selectedMode != _viewport.RangeMode)
         {
-            UpdateViewport(_viewport with { RangeMode = selectedMode });
+            SafeUpdateViewport(_viewport with { RangeMode = selectedMode });
         }
     }
 
@@ -173,7 +173,7 @@ public sealed partial class TimelineWindow : Window
         var endDate = CustomEndDatePicker.Date.LocalDateTime.Date + CustomEndTimePicker.Time;
         var start = new DateTimeOffset(startDate, TimeZoneInfo.Local.GetUtcOffset(startDate));
         var end = new DateTimeOffset(endDate, TimeZoneInfo.Local.GetUtcOffset(endDate));
-        UpdateViewport(_viewport with
+        SafeUpdateViewport(_viewport with
         {
             ScaleUnit = TimelineScaleUnit.Day,
             RangeMode = TimelineRangeMode.Custom,
@@ -187,8 +187,19 @@ public sealed partial class TimelineWindow : Window
         var width = Math.Max(280d, e.NewSize.Width);
         if (Math.Abs(width - ViewModel.TimelineCanvasWidth) < 0.5) return;
         ViewModel.TimelineCanvasWidth = width;
-        ViewModel.UpdateTimelineViewport(_viewport);
-        ScrollTimelineToNow();
+        SafeUpdateViewport(_viewport);
+    }
+
+    private void SafeUpdateViewport(TimelineViewportSettings viewport)
+    {
+        try
+        {
+            UpdateViewport(viewport);
+        }
+        catch (COMException ex)
+        {
+            App.DebugLog($"[TimelineWindow] Scope update failed: {ex.Message}");
+        }
     }
 
     private void ScrollTimelineToNow()
@@ -198,7 +209,17 @@ public sealed partial class TimelineWindow : Window
             return;
         }
 
-        var target = Math.Max(0, ViewModel.TimelineNowTop - (TimelineScrollViewer.ViewportHeight * 0.35));
+        double target;
+        try
+        {
+            target = Math.Max(0, ViewModel.TimelineNowTop - (TimelineScrollViewer.ViewportHeight * 0.35));
+        }
+        catch (COMException ex)
+        {
+            App.DebugLog($"[TimelineWindow] Failed to read viewport during scope sync: {ex.Message}");
+            return;
+        }
+
         DispatcherQueue.TryEnqueue(() =>
         {
             if (TimelineScrollViewer == null || ViewModel.TimelineNowVisibility != Visibility.Visible)

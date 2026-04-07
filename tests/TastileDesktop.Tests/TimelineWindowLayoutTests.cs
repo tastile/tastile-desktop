@@ -38,4 +38,16 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("TimelineStatusActionResolver.Resolve(tileId, lifecycle)", source);
         Assert.DoesNotContain("if (lifecycle == \"done\")", source);
     }
+
+    [Fact]
+    public void TimelineWindow_ScopeControls_UseSafeUpdatePath_WithComGuard()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        Assert.Contains("SafeUpdateViewport(_viewport with", source);
+        Assert.Contains("private void SafeUpdateViewport(TimelineViewportSettings viewport)", source);
+        Assert.Contains("[TimelineWindow] Scope update failed:", source);
+        Assert.Contains("[TimelineWindow] Failed to read viewport during scope sync:", source);
+    }
 }
