@@ -120,7 +120,6 @@ public sealed class AbsoluteTimelineResolverTests
     public void Resolve_MonthScale_CanExpandToSixMonths()
     {
         var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
-        var expectedStart = new DateTimeOffset(new DateTime(now.Year, now.Month, 1, 0, 0, 0), now.Offset);
         var layout = AbsoluteTimelineResolver.Resolve(
             [],
             now,
@@ -129,6 +128,15 @@ public sealed class AbsoluteTimelineResolverTests
                 RangeMode: TimelineRangeMode.Month6,
                 AnchorLocal: now));
 
+        var localNow = now.ToOffset(layout.WindowStart.Offset);
+        var expectedStart = new DateTimeOffset(
+            localNow.Year,
+            localNow.Month,
+            1,
+            0,
+            0,
+            0,
+            layout.WindowStart.Offset);
         Assert.Equal(expectedStart, layout.WindowStart);
         Assert.Equal(expectedStart.AddMonths(6), layout.WindowEnd);
     }
