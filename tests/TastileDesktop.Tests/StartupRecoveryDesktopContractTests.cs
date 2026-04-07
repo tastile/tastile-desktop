@@ -45,7 +45,7 @@ public sealed class StartupRecoveryDesktopContractTests
     {
         var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
 
-        Assert.Contains("await ExecutePromptActionAsync(id, prompt, stopAt);", source);
+        Assert.Contains("await ExecutePromptActionAsync(id, prompt, stopAt, settings.Current.DefaultBreakMinutes);", source);
         Assert.DoesNotContain("CommandResponse? result = id switch", source);
     }
 

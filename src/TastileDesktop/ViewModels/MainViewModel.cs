@@ -1592,7 +1592,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
 
             var id = resolvedActionId!.ToUpperInvariant();
-            await ExecutePromptActionAsync(id, prompt, stopAt);
+            var settings = new SettingsService();
+            await ExecutePromptActionAsync(id, prompt, stopAt, settings.Current.DefaultBreakMinutes);
             StatusMessage = $"Prompt action: {id}";
             await _pollingService.PollAsync();
         }
