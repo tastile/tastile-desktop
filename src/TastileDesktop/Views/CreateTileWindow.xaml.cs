@@ -586,6 +586,7 @@ public sealed partial class CreateTileWindow : Window
         var isRecurring = _objectiveMode == "recurring";
         var showMaximize = !isLabel && !isRecurring && _useEndAt;
 
+        ObjectivePanel.Visibility = Visibility.Visible;
         TimingPanel.Visibility = CreateTileWindowContractResolver.ShouldShowBaseTimingPanel(_objectiveMode)
             ? Visibility.Visible
             : Visibility.Collapsed;

@@ -7,6 +7,56 @@ namespace TastileDesktop.Tests;
 public sealed class CreateTileParityResolverTests
 {
     [Fact]
+    public void BuildRequest_MapsLabelKind_ToSelectedObjectiveMode()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Label tile",
+            TileKind: "label",
+            ObjectiveMode: "finish_once",
+            UseStartAt: true,
+            UseEndAt: true,
+            StartAt: DateTimeOffset.Parse("2026-04-07T09:00:00+09:00"),
+            EndAt: DateTimeOffset.Parse("2026-04-07T10:00:00+09:00"));
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Objective);
+        Assert.Equal("finish_once", request.Objective!.ObjectiveMode);
+        Assert.Equal("manual", request.Objective.DoneRule);
+        Assert.Null(request.Objective.TargetWorkMin);
+        Assert.NotNull(request.Temporal);
+        Assert.NotNull(request.Temporal!.ActiveStart);
+        Assert.NotNull(request.Temporal.ActiveEnd);
+        Assert.NotNull(request.Annotation);
+        Assert.Equal("label", request.Annotation!.SemanticRole);
+    }
+
+    [Fact]
+    public void BuildRequest_MapsRecurringLabel_ToRecurringObjective()
+    {
+        var draft = new CreateTileDraft(
+            Title: "Recurring label",
+            TileKind: "label",
+            ObjectiveMode: "recurring",
+            RecurrenceFrequency: "daily",
+            RecurrenceInterval: 1,
+            RecurrenceUseStartAt: true,
+            RecurrenceUseEndAt: true,
+            RecurrenceStartTime: TimeSpan.FromHours(9),
+            RecurrenceEndTime: TimeSpan.FromHours(10));
+
+        var request = CreateTileParityResolver.BuildRequest(draft, isJapanese: true);
+
+        Assert.NotNull(request.Objective);
+        Assert.Equal("recurring", request.Objective!.ObjectiveMode);
+        Assert.NotNull(request.Objective.Recurrence);
+        Assert.Equal(9 * 60, request.Objective.Recurrence!.Window.StartOffsetMin);
+        Assert.Equal(10 * 60, request.Objective.Recurrence.Window.EndOffsetMin);
+        Assert.NotNull(request.Annotation);
+        Assert.Equal("label", request.Annotation!.SemanticRole);
+    }
+
+    [Fact]
     public void BuildRequest_UsesManualDuration_ForNonRecurringTile_EvenIfRecurringWindowDefaultsExist()
     {
         var draft = new CreateTileDraft(
