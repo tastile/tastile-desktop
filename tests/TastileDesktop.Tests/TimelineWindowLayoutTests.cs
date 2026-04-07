@@ -49,5 +49,9 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("private void SafeUpdateViewport(TimelineViewportSettings viewport)", source);
         Assert.Contains("[TimelineWindow] Scope update failed:", source);
         Assert.Contains("[TimelineWindow] Failed to read viewport during scope sync:", source);
+        Assert.Contains("OnZoomInClick", source);
+        Assert.Contains("OnZoomOutClick", source);
+        Assert.Contains("SafeUpdateViewport(_viewport with { ZoomScale", source);
+        Assert.Contains("[TimelineWindow] Failed to read vertical offset in wheel zoom:", source);
     }
 }
