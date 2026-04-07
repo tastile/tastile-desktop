@@ -1,7 +1,5 @@
 # Tastile Desktop Bug Fix Plan
 
-> **For Claude:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task.
-
 **Goal:** Fix two bugs in tastile-desktop:
 1. Tile deletion from Edit screen (CreateTileWindow) is not working
 2. Active tile recognition after app restart is broken
@@ -10,7 +8,7 @@
 - Issue 1: CreateTileWindow's DeleteButton click handler exists but API call may fail silently
 - Issue 2: Desktop app may not properly initialize polling service on startup to fetch active execution state from daemon
 
-**Tech Stack:** C# / WinUI 3 / .NET 10
+**Tech Stack:** C# / WinUI 3 / .NET 9 (net9.0-windows10.0.26100.0)
 
 ---
 

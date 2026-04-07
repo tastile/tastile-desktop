@@ -339,7 +339,38 @@ internal static class FloatingWindowHelper
         }
 
         presenter.IsAlwaysOnTop = alwaysOnTop;
+        ReassertAlwaysOnTop(window, alwaysOnTop);
         return presenter.IsAlwaysOnTop;
+    }
+
+    public static void ReassertAlwaysOnTop(Window window, bool alwaysOnTop)
+    {
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        if (hwnd == IntPtr.Zero)
+        {
+            return;
+        }
+
+        _ = SetWindowPos(
+            hwnd,
+            alwaysOnTop ? HwndTopMost : HwndNoTopMost,
+            0,
+            0,
+            0,
+            0,
+            SwpNoMove | SwpNoSize | SwpNoActivate);
+    }
+
+    public static bool IsTopMost(Window window)
+    {
+        var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
+        if (hwnd == IntPtr.Zero)
+        {
+            return false;
+        }
+
+        var exStyle = GetWindowLongPtrCompat(hwnd, GwlExStyle).ToInt64();
+        return (exStyle & WsExTopMost) != 0;
     }
 
     private static AppWindow? GetAppWindow(Window window)
@@ -494,6 +525,7 @@ internal static class FloatingWindowHelper
     private const long WsExWindowEdge = 0x00000100L;
     private const long WsExClientEdge = 0x00000200L;
     private const long WsExNoRedirectionBitmap = 0x00200000L;
+    private const long WsExTopMost = 0x00000008L;
     private const long WsExToolWindow = 0x00000080L;
     private const long WsExAppWindow = 0x00040000L;
     private const uint SwpNoSize = 0x0001;
@@ -501,6 +533,8 @@ internal static class FloatingWindowHelper
     private const uint SwpNoZOrder = 0x0004;
     private const uint SwpFrameChanged = 0x0020;
     private const uint SwpNoActivate = 0x0010;
+    private static readonly IntPtr HwndTopMost = new(-1);
+    private static readonly IntPtr HwndNoTopMost = new(-2);
     private const int SwRestore = 9;
 
     [DllImport("dwmapi.dll", PreserveSig = true)]

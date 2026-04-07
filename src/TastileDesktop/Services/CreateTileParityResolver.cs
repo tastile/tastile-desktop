@@ -101,6 +101,7 @@ public static class CreateTileParityResolver
             Why: message!,
             SuggestedMinutes: null,
             Actions: actions,
+            CreatedAt: null,
             ExpiresAt: null,
             Stale: false);
     }

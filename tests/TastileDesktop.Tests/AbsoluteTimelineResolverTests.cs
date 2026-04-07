@@ -85,4 +85,59 @@ public sealed class AbsoluteTimelineResolverTests
 
         Assert.True(layout.CanvasHeight > (24 * 120));
     }
+
+    [Fact]
+    public void Resolve_WeekScale_CanExpandToFourWeeks()
+    {
+        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
+        var layout = AbsoluteTimelineResolver.Resolve(
+            [],
+            now,
+            new TimelineViewportSettings(
+                ScaleUnit: TimelineScaleUnit.Week,
+                RangeMode: TimelineRangeMode.Week4,
+                AnchorLocal: now));
+
+        Assert.Equal(TimeSpan.FromDays(28), layout.WindowEnd - layout.WindowStart);
+    }
+
+    [Fact]
+    public void Resolve_WeekScale_CanExpandToTwoWeeks()
+    {
+        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
+        var layout = AbsoluteTimelineResolver.Resolve(
+            [],
+            now,
+            new TimelineViewportSettings(
+                ScaleUnit: TimelineScaleUnit.Week,
+                RangeMode: TimelineRangeMode.Week2,
+                AnchorLocal: now));
+
+        Assert.Equal(TimeSpan.FromDays(14), layout.WindowEnd - layout.WindowStart);
+    }
+
+    [Fact]
+    public void Resolve_MonthScale_CanExpandToSixMonths()
+    {
+        var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
+        var layout = AbsoluteTimelineResolver.Resolve(
+            [],
+            now,
+            new TimelineViewportSettings(
+                ScaleUnit: TimelineScaleUnit.Month,
+                RangeMode: TimelineRangeMode.Month6,
+                AnchorLocal: now));
+
+        var localNow = now.ToOffset(layout.WindowStart.Offset);
+        var expectedStart = new DateTimeOffset(
+            localNow.Year,
+            localNow.Month,
+            1,
+            0,
+            0,
+            0,
+            layout.WindowStart.Offset);
+        Assert.Equal(expectedStart, layout.WindowStart);
+        Assert.Equal(expectedStart.AddMonths(6), layout.WindowEnd);
+    }
 }

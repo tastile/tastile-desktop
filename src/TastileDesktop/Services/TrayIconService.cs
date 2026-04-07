@@ -90,6 +90,7 @@ public class TrayIconService : IDisposable
 
         // Subscribe to VM changes to update menu and icon
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
+        AuthService.Instance.AuthStateChanged += OnAuthStateChanged;
         
         // Set initial connection status
         UpdateTrayIconStatus();
@@ -104,6 +105,7 @@ public class TrayIconService : IDisposable
             System.Diagnostics.Debug.WriteLine($"Failed to create tray icon: {ex.Message}");
             // Clean up on failure
             _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+            AuthService.Instance.AuthStateChanged -= OnAuthStateChanged;
             _trayIcon?.Dispose();
             _trayIcon = null;
             return;
@@ -334,6 +336,17 @@ public class TrayIconService : IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"Failed to refresh context menu state: {ex.Message}");
         }
+    }
+
+    private void OnAuthStateChanged(object? sender, EventArgs e)
+    {
+        if (_mainWindow?.DispatcherQueue != null)
+        {
+            _mainWindow.DispatcherQueue.TryEnqueue(RefreshContextMenuState);
+            return;
+        }
+
+        RefreshContextMenuState();
     }
 
     private void ShowMainWindow()
@@ -617,6 +630,7 @@ public class TrayIconService : IDisposable
     public void Dispose()
     {
         _viewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        AuthService.Instance.AuthStateChanged -= OnAuthStateChanged;
         _trayIcon?.Dispose();
         _contextMenu = null;
         _windowsMenu = null;

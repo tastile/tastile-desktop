@@ -300,69 +300,7 @@ public sealed class PromptToastWindow : Window
             return;
         }
 
-        if (id == "CONFIRM_STOP_AT")
-        {
-            var stopAt = await PromptStopAtAsync();
-            if (!stopAt.HasValue)
-            {
-                return;
-            }
-
-            await _actionHandler(actionId, stopAt);
-            return;
-        }
-
-        await _actionHandler(actionId, null);
-    }
-
-    private async Task<DateTimeOffset?> PromptStopAtAsync()
-    {
-        if (Content is not FrameworkElement root || root.XamlRoot == null)
-        {
-            return null;
-        }
-
-        var now = DateTimeOffset.Now;
-        var datePicker = new DatePicker
-        {
-            Date = now,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-        };
-        var timePicker = new TimePicker
-        {
-            Time = now.TimeOfDay,
-            HorizontalAlignment = HorizontalAlignment.Stretch,
-            ClockIdentifier = "24HourClock",
-        };
-
-        var panel = new StackPanel
-        {
-            Spacing = 8,
-            Children =
-            {
-                new TextBlock { Text = "終了した時刻を選択してください" },
-                datePicker,
-                timePicker,
-            },
-        };
-
-        var dialog = new ContentDialog
-        {
-            Title = "終了時刻の確認",
-            Content = panel,
-            PrimaryButtonText = "送信",
-            CloseButtonText = "キャンセル",
-            DefaultButton = ContentDialogButton.Primary,
-            XamlRoot = root.XamlRoot,
-        };
-
-        var result = await dialog.ShowAsync();
-        if (result != ContentDialogResult.Primary)
-        {
-            return null;
-        }
-
-        var local = datePicker.Date.LocalDateTime.Date + timePicker.Time;
-        return new DateTimeOffset(local);
+        var stopAt = id == "CONFIRM_STOP_AT" ? DateTimeOffset.Now : (DateTimeOffset?)null;
+        await _actionHandler(actionId, stopAt);
     }
 }

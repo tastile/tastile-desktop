@@ -10,6 +10,7 @@ namespace TastileDesktop.Views;
 public sealed partial class TilesWindow : Window
 {
     private readonly CoreApiClient _api = new();
+    private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly TilesWindowLiveUpdateBridge _liveUpdateBridge;
     public ObservableCollection<TileListItem> ReadyTiles { get; } = new();
@@ -183,32 +184,20 @@ public sealed partial class TilesWindow : Window
                     async (actionId, stopAt) =>
                     {
                         _promptToast.Hide();
-                        var api = new CoreApiClient();
-                        switch (actionId.ToUpperInvariant())
+                        var dispatch = await PromptActionDispatcher.ExecuteAsync(
+                            _api,
+                            response.Prompt,
+                            actionId,
+                            stopAt,
+                            fallbackTileId: tileId,
+                            defaultBreakMinutes: _settings.Current.DefaultBreakMinutes);
+                        if (!dispatch.IsResolved)
                         {
-                            case "START":
-                            case "START_TILE":
-                                await api.StartTileAsync(tileId);
-                                break;
-                            case "COMPLETE":
-                            case "COMPLETE_AND_START_NEXT":
-                                await api.CompleteTileAsync(tileId);
-                                break;
-                            case "CONFIRM_CONTINUE":
-                            case "CONFIRM_STOP_AT":
-                            case "CONFIRM_EXECUTED":
-                            case "CONFIRM_SKIPPED":
-                            case "DISMISS":
-                                if (!string.IsNullOrWhiteSpace(response.Prompt.PromptId) &&
-                                    !string.IsNullOrWhiteSpace(response.Prompt.TileId))
-                                {
-                                    await api.RespondStartupRecoveryPromptAsync(
-                                        response.Prompt.PromptId,
-                                        response.Prompt.TileId!,
-                                        actionId.ToUpperInvariant(),
-                                        stopAt);
-                                }
-                                break;
+                            App.DebugLog($"[TilesWindow] Unknown prompt action: {actionId}");
+                        }
+                        else if (!string.IsNullOrWhiteSpace(dispatch.Error))
+                        {
+                            App.DebugLog($"[TilesWindow] Prompt action failed: {dispatch.ResolvedActionId}, error: {dispatch.Error}");
                         }
                         await RefreshTilesAsync();
                     });

@@ -43,9 +43,9 @@ public class SettingsService
 
     public void Save(TastileSettings settings)
     {
-        Current = settings;
+        Current = NormalizePromptSettings(settings);
         Directory.CreateDirectory(SettingsDir);
-        var json = JsonSerializer.Serialize(settings, new JsonSerializerOptions { WriteIndented = true });
+        var json = JsonSerializer.Serialize(Current, new JsonSerializerOptions { WriteIndented = true });
         File.WriteAllText(SettingsFile, json);
         SettingsChanged?.Invoke(this, EventArgs.Empty);
         GlobalSettingsChanged?.Invoke(this, Current);
@@ -62,6 +62,12 @@ public class SettingsService
     {
         settings.PromptToastAnchor = NormalizeAnchor(settings.PromptToastAnchor);
         settings.PromptToastDisplayMode = NormalizeDisplayMode(settings.PromptToastDisplayMode);
+        settings.PromptToastSoundSource = PromptToastSoundPlanBuilder.NormalizeSource(settings.PromptToastSoundSource);
+        settings.PromptToastSoundPlaybackMode = PromptToastSoundPlanBuilder.NormalizePlaybackMode(settings.PromptToastSoundPlaybackMode);
+        settings.PromptToastSoundDurationSeconds = Math.Clamp(settings.PromptToastSoundDurationSeconds, 1, 30);
+        settings.PromptToastSoundRepeatCount = Math.Clamp(settings.PromptToastSoundRepeatCount, 1, 10);
+        settings.PromptToastSoundRepeatIntervalSeconds = Math.Clamp(settings.PromptToastSoundRepeatIntervalSeconds, 1, 30);
+        settings.PromptToastSoundFilePath = (settings.PromptToastSoundFilePath ?? string.Empty).Trim();
         return settings;
     }
 
@@ -117,6 +123,13 @@ public record TastileSettings
     public string PromptToastAnchor { get; set; } = PromptToastAnchors.TopCenter;
     public bool PromptToastMirrorSecondaryDisplays { get; set; } = false;
     public bool PromptToastAnimate { get; set; } = true;
+    public bool PromptToastSoundEnabled { get; set; } = true;
+    public string PromptToastSoundSource { get; set; } = PromptToastSoundSources.SystemBeep;
+    public string PromptToastSoundPlaybackMode { get; set; } = PromptToastSoundPlaybackModes.FixedCount;
+    public string PromptToastSoundFilePath { get; set; } = string.Empty;
+    public int PromptToastSoundDurationSeconds { get; set; } = 2;
+    public int PromptToastSoundRepeatCount { get; set; } = 1;
+    public int PromptToastSoundRepeatIntervalSeconds { get; set; } = 2;
     public bool QuickBarAlwaysOnTop { get; set; } = true;
     public string QuickPanelAnchor { get; set; } = QuickPanelAnchors.TopCenter;
     public string QuickPanelOrientation { get; set; } = QuickPanelOrientations.Horizontal;

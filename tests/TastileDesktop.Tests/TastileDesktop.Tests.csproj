@@ -27,6 +27,9 @@
     <Compile Include="..\..\src\TastileDesktop\Services\TileTimeDisplayResolver.cs" Link="TileTimeDisplayResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TileDurationResolver.cs" Link="TileDurationResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TileHashResolver.cs" Link="TileHashResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptActionSelectionPolicy.cs" Link="PromptActionSelectionPolicy.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptActionDispatcher.cs" Link="PromptActionDispatcher.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\PromptToastSoundPlanBuilder.cs" Link="PromptToastSoundPlanBuilder.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TilesWindowLiveUpdateBridge.cs" Link="TilesWindowLiveUpdateBridge.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\CreateTileModels.cs" Link="CreateTileModels.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="ApiModels.cs" />

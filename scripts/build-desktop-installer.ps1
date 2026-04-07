@@ -1,23 +1,36 @@
 param(
-[Parameter(Mandatory = $false)][string]$Version = "0.2.16"
+[Parameter(Mandatory = $false)][string]$Version = ""
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-$Version = $Version.Trim()
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$Version = ($Version ?? "").Trim()
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    $csprojPath = Join-Path $repoRoot "src\TastileDesktop\TastileDesktop.csproj"
+    [xml]$csproj = Get-Content -Path $csprojPath -Raw
+    $Version = [string]($csproj.Project.PropertyGroup.Version | Select-Object -First 1)
+}
+if ([string]::IsNullOrWhiteSpace($Version)) {
+    throw "Could not determine desktop app version from src\\TastileDesktop\\TastileDesktop.csproj"
+}
 if ($Version.StartsWith("v", [System.StringComparison]::OrdinalIgnoreCase)) {
     $Version = $Version.Substring(1)
 }
 
-$repoRoot = Split-Path -Parent $PSScriptRoot
 $buildOutDir = Join-Path $repoRoot "artifacts\desktop-build"
 $installerOut = Join-Path $repoRoot "artifacts\installer"
 $issPath = Join-Path $repoRoot "installer\TastileDesktop.iss"
-$iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+$isccCandidates = @(
+    "C:\Program Files (x86)\Inno Setup 6\ISCC.exe",
+    "C:\Program Files\Inno Setup 6\ISCC.exe",
+    (Join-Path $env:LOCALAPPDATA "Programs\Inno Setup 6\ISCC.exe")
+)
+$iscc = $isccCandidates | Where-Object { Test-Path $_ } | Select-Object -First 1
 
-if (!(Test-Path $iscc)) {
-    throw "Inno Setup compiler not found at '$iscc'. Install Inno Setup 6."
+if ([string]::IsNullOrWhiteSpace($iscc)) {
+    throw "Inno Setup compiler not found. Checked: $($isccCandidates -join ', '). Install Inno Setup 6."
 }
 
 New-Item -ItemType Directory -Path $buildOutDir -Force | Out-Null
