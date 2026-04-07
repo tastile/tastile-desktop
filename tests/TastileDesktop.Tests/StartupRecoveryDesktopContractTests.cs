@@ -111,4 +111,33 @@ public sealed class StartupRecoveryDesktopContractTests
 
         Assert.Contains("unsupported prompt action", source);
     }
+
+    [Fact]
+    public void MainViewModelSource_DeclaresThirtySecondPromptAutoExecution()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
+
+        Assert.Contains("PromptAutoExecutionDelay", source);
+        Assert.Contains("TimeSpan.FromSeconds(30)", source);
+    }
+
+    [Fact]
+    public void MainViewModelSource_MapsAutoActions_ForStartAndEndPrompts()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
+
+        Assert.Contains("ResolveAutoActionId", source);
+        Assert.Contains("case \"start\":", source);
+        Assert.Contains("case \"end\":", source);
+        Assert.Contains("return \"START\";", source);
+        Assert.Contains("return \"COMPLETE\";", source);
+    }
+
+    [Fact]
+    public void AppSource_TriggersStartupTickAfterMainWindowInitialization()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "App.xaml.cs");
+
+        Assert.Contains("await apiClient.TriggerTickAsync()", source);
+    }
 }
