@@ -40,4 +40,16 @@ public sealed class DesktopUiLayoutTests
         Assert.Contains("Content=\"Refresh status\" Click=\"OnRefreshSyncStatusClick\" HorizontalAlignment=\"Stretch\"", xaml);
         Assert.Contains("Content=\"Check for updates\" Click=\"OnCheckUpdateClick\" HorizontalAlignment=\"Stretch\"", xaml);
     }
+
+    [Fact]
+    public void IntegrationsWindow_ExposesSyncModeAndTargetCalendarControls()
+    {
+        var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Views\IntegrationsWindow.xaml"));
+        var xaml = File.ReadAllText(xamlPath);
+
+        Assert.Contains("x:Name=\"SyncModeComboBox\"", xaml);
+        Assert.Contains("x:Name=\"TargetCalendarTextBox\"", xaml);
+        Assert.Contains("x:Name=\"SavePolicyButton\"", xaml);
+        Assert.Contains("x:Name=\"SyncPlanTextBlock\"", xaml);
+    }
 }

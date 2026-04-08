@@ -127,7 +127,6 @@ public sealed partial class CreateTileWindow : Window
                     var dueAtValue = temporal?.DueAt;
                     var labels = annotation?.Labels ?? [];
                     var recurrence = objective?.Recurrence;
-
                     Log($"Edit tile: Title={editTile.Title}, SemanticRole={semanticRole}, ObjectiveMode={objectiveMode}, TargetWorkMin={targetWorkMin}, FixedStart={fixedStartValue}, FixedEnd={fixedEndValue}, BreakSplitsWork={breakSplitsWork}");
 
                     TitleTextBox.Text = editTile.Title;

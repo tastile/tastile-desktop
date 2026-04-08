@@ -8,6 +8,7 @@ using System.Text.Json.Serialization;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
 using System.IO;
+using System.Globalization;
 using TastileDesktop.Models;
 
 public class CoreApiClient
@@ -194,6 +195,41 @@ public class CoreApiClient
 
     public async Task<TimelineTodayResponse?> GetTodayTimelineAsync()
         => await _httpClient.GetFromJsonAsync<TimelineTodayResponse>("/views/timeline/today");
+
+    public async Task<CalendarProjectionResponse?> GetCalendarProjectionAsync(string viewPath, DateTimeOffset anchorLocal)
+    {
+        var anchor = Uri.EscapeDataString(anchorLocal.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
+        return await _httpClient.GetFromJsonAsync<CalendarProjectionResponse>($"{viewPath}?anchor={anchor}");
+    }
+
+    public async Task<TimelineTodayResponse?> GetTimelineForViewportAsync(TimelineViewportSettings viewport)
+    {
+        var request = CalendarViewportResolver.Resolve(viewport, DateTimeOffset.Now.ToLocalTime());
+        var projection = await GetCalendarProjectionAsync(request.ViewPath, request.AnchorLocal);
+        if (projection is null)
+        {
+            return null;
+        }
+
+        var items = projection.AllDaySpans
+            .Concat(projection.Blocks)
+            .OrderBy(block => block.StartAt, StringComparer.Ordinal)
+            .Select(block => new TimelineItemView(
+                Kind: "scheduled",
+                TileId: block.TileId,
+                SemanticRole: block.SemanticRole,
+                Title: block.Title,
+                StartedAt: block.StartAt,
+                EndedAt: block.EndAt,
+                DurationMin: ResolveDurationMinutes(block.StartAt, block.EndAt),
+                IsActive: false))
+            .ToList();
+
+        return new TimelineTodayResponse(
+            Items: items,
+            RangeStart: projection.RangeStart,
+            RangeEnd: projection.RangeEnd);
+    }
 
     public async IAsyncEnumerable<string> StreamStateEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
@@ -401,6 +437,11 @@ public class CoreApiClient
         bool? canRead = null,
         bool? canWrite = null,
         string? accountEmail = null,
+        string? selectedCalendarId = null,
+        string? syncMode = null,
+        string? readPolicy = null,
+        string? writePolicy = null,
+        List<string>? grantedScopes = null,
         string? lastSyncedAt = null)
     {
         var payload = new Dictionary<string, object?>();
@@ -408,6 +449,11 @@ public class CoreApiClient
         if (canRead.HasValue) payload["can_read"] = canRead.Value;
         if (canWrite.HasValue) payload["can_write"] = canWrite.Value;
         if (accountEmail is not null || (connected.HasValue && !connected.Value)) payload["account_email"] = accountEmail;
+        if (selectedCalendarId is not null || (connected.HasValue && !connected.Value)) payload["selected_calendar_id"] = selectedCalendarId;
+        if (!string.IsNullOrWhiteSpace(syncMode)) payload["sync_mode"] = syncMode;
+        if (!string.IsNullOrWhiteSpace(readPolicy)) payload["read_policy"] = readPolicy;
+        if (!string.IsNullOrWhiteSpace(writePolicy)) payload["write_policy"] = writePolicy;
+        if (grantedScopes is not null) payload["granted_scopes"] = grantedScopes;
         if (lastSyncedAt is not null) payload["last_synced_at"] = lastSyncedAt;
 
         var response = await _httpClient.PostAsJsonAsync("/auth/integrations/settings", new
@@ -428,6 +474,22 @@ public class CoreApiClient
         }
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<IntegrationSettingsResponse>();
+    }
+
+    public async Task<CalendarSyncPlanPreviewResponse?> GetCalendarSyncPlanPreviewAsync()
+    {
+        var response = await _httpClient.GetAsync("/auth/integrations/calendar/sync-plan");
+        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        {
+            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
+            if (desktopSession != null)
+            {
+                await RestoreSessionAsync(desktopSession);
+                response = await _httpClient.GetAsync("/auth/integrations/calendar/sync-plan");
+            }
+        }
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CalendarSyncPlanPreviewResponse>();
     }
 
     public async Task<AuthSession?> GetSessionAsync()
@@ -537,6 +599,17 @@ public class CoreApiClient
             return false;
         }
     }
+
+    private static long ResolveDurationMinutes(string? startAt, string? endAt)
+    {
+        if (!DateTimeOffset.TryParse(startAt, out var start) || !DateTimeOffset.TryParse(endAt, out var end))
+        {
+            return 0;
+        }
+
+        var minutes = (long)(end - start).TotalMinutes;
+        return minutes > 0 ? minutes : 0;
+    }
 }
 
 /// <summary>
@@ -637,9 +710,93 @@ public class GoogleCalendarIntegrationResponse
     [JsonPropertyName("can_write")]
     public bool CanWrite { get; set; } = true;
 
+    [JsonPropertyName("provider_status")]
+    public string ProviderStatus { get; set; } = "disconnected";
+
     [JsonPropertyName("account_email")]
     public string? AccountEmail { get; set; }
 
+    [JsonPropertyName("selected_calendar_id")]
+    public string? SelectedCalendarId { get; set; }
+
+    [JsonPropertyName("granted_scopes")]
+    public List<string> GrantedScopes { get; set; } = [];
+
+    [JsonPropertyName("sync_mode")]
+    public string SyncMode { get; set; } = "push_only";
+
+    [JsonPropertyName("read_policy")]
+    public string ReadPolicy { get; set; } = "import_and_block_scheduling";
+
+    [JsonPropertyName("write_policy")]
+    public string WritePolicy { get; set; } = "tastile_owned_only";
+
     [JsonPropertyName("last_synced_at")]
     public string? LastSyncedAt { get; set; }
+
+    [JsonPropertyName("last_full_sync_at")]
+    public string? LastFullSyncAt { get; set; }
+}
+
+public class CalendarSyncPlanPreviewResponse
+{
+    [JsonPropertyName("provider")]
+    public string Provider { get; set; } = "google_calendar";
+
+    [JsonPropertyName("selected_calendar_id")]
+    public string? SelectedCalendarId { get; set; }
+
+    [JsonPropertyName("sync_mode")]
+    public string SyncMode { get; set; } = "push_only";
+
+    [JsonPropertyName("read_policy")]
+    public string ReadPolicy { get; set; } = "import_and_block_scheduling";
+
+    [JsonPropertyName("write_policy")]
+    public string WritePolicy { get; set; } = "tastile_owned_only";
+}
+
+public class CalendarProjectionResponse
+{
+    [JsonPropertyName("view")]
+    public string View { get; set; } = "day";
+
+    [JsonPropertyName("range_start")]
+    public string RangeStart { get; set; } = string.Empty;
+
+    [JsonPropertyName("range_end")]
+    public string RangeEnd { get; set; } = string.Empty;
+
+    [JsonPropertyName("grid_start")]
+    public string GridStart { get; set; } = string.Empty;
+
+    [JsonPropertyName("grid_end")]
+    public string GridEnd { get; set; } = string.Empty;
+
+    [JsonPropertyName("blocks")]
+    public List<CalendarProjectionBlockResponse> Blocks { get; set; } = [];
+
+    [JsonPropertyName("all_day_spans")]
+    public List<CalendarProjectionBlockResponse> AllDaySpans { get; set; } = [];
+}
+
+public class CalendarProjectionBlockResponse
+{
+    [JsonPropertyName("tile_id")]
+    public string? TileId { get; set; }
+
+    [JsonPropertyName("title")]
+    public string Title { get; set; } = string.Empty;
+
+    [JsonPropertyName("start_at")]
+    public string StartAt { get; set; } = string.Empty;
+
+    [JsonPropertyName("end_at")]
+    public string EndAt { get; set; } = string.Empty;
+
+    [JsonPropertyName("semantic_role")]
+    public string? SemanticRole { get; set; }
+
+    [JsonPropertyName("all_day")]
+    public bool AllDay { get; set; }
 }

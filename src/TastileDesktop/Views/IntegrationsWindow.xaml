@@ -30,7 +30,19 @@
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" Margin="0,8,0,8" />
                         <TextBlock x:Name="ReadWriteTextBlock" Text="Read/Write: -" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         <TextBlock x:Name="AccountTextBlock" Text="Account: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
+                        <TextBlock x:Name="SyncModeTextBlock" Text="Sync mode: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
+                        <TextBlock x:Name="TargetCalendarTextBlock" Text="Target calendar: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
                         <TextBlock x:Name="SyncedTextBlock" Text="Last synced: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
+                        <TextBlock x:Name="SyncPlanTextBlock" Text="Sync plan: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" Spacing="8">
+                            <ComboBox x:Name="SyncModeComboBox" Width="160">
+                                <ComboBoxItem Content="push_only" />
+                                <ComboBoxItem Content="pull_only" />
+                                <ComboBoxItem Content="bidirectional" />
+                            </ComboBox>
+                            <TextBox x:Name="TargetCalendarTextBox" Width="240" PlaceholderText="calendar id or primary" />
+                            <Button x:Name="SavePolicyButton" Content="Save policy" Click="OnSavePolicyClick" />
+                        </StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
                             <Button x:Name="ConnectButton" Content="Connect" Click="OnConnectClick" Margin="0,0,8,0" />
                             <Button x:Name="DisconnectButton" Content="Disconnect" Click="OnDisconnectClick" Margin="0,0,8,0" />

@@ -94,11 +94,12 @@ internal sealed class RawTimelineSegment
 
 public static class AbsoluteTimelineResolver
 {
-    public static TimelineLayout Resolve(List<TimelineItemView> items, DateTimeOffset now, TimelineViewportSettings settings)
+    public static TimelineLayout Resolve(TimelineTodayResponse? timeline, DateTimeOffset now, TimelineViewportSettings settings)
     {
+        var items = timeline?.Items ?? [];
         var localNow = now.ToLocalTime();
         var zoomScale = Math.Clamp(settings.ZoomScale, settings.MinZoomScale, settings.MaxZoomScale);
-        var (windowStart, windowEnd) = ResolveWindow(settings, localNow);
+        var (windowStart, windowEnd) = ResolveWindow(timeline, settings, localNow);
         var windowDurationMinutes = Math.Max(1, (windowEnd - windowStart).TotalMinutes);
         var pxPerMinuteBase = (settings.PixelsPerHourBase * zoomScale) / 60d;
         var pxPerMinute = ResolveReadablePxPerMinute(
@@ -173,8 +174,21 @@ public static class AbsoluteTimelineResolver
         return Math.Max(pxPerMinuteBase, cappedReadablePxPerMinute);
     }
 
-    private static (DateTimeOffset Start, DateTimeOffset End) ResolveWindow(TimelineViewportSettings settings, DateTimeOffset localNow)
+    private static (DateTimeOffset Start, DateTimeOffset End) ResolveWindow(TimelineTodayResponse? timeline, TimelineViewportSettings settings, DateTimeOffset localNow)
     {
+        if (!string.IsNullOrWhiteSpace(timeline?.RangeStart)
+            && !string.IsNullOrWhiteSpace(timeline?.RangeEnd)
+            && DateTimeOffset.TryParse(timeline.RangeStart, out var rangeStart)
+            && DateTimeOffset.TryParse(timeline.RangeEnd, out var rangeEnd))
+        {
+            var localStart = rangeStart.ToLocalTime();
+            var localEnd = rangeEnd.ToLocalTime();
+            if (localEnd > localStart)
+            {
+                return (localStart, localEnd);
+            }
+        }
+
         var anchor = settings.AnchorLocal.ToLocalTime();
         if (settings.ScaleUnit == TimelineScaleUnit.Day)
         {
@@ -248,8 +262,9 @@ public static class AbsoluteTimelineResolver
         var markers = new List<TimelineHourMarker>();
         var step = ResolveMarkerStep(scaleUnit, zoomScale);
         var cursor = AlignCursor(windowStart, step);
+        const int maxMarkers = 10000; // Prevent infinite loops or excessive rendering
 
-        while (cursor <= windowEnd.AddMinutes(0.1))
+        while (cursor <= windowEnd.AddMinutes(0.1) && markers.Count < maxMarkers)
         {
             var top = (cursor - windowStart).TotalMinutes * pxPerMinute;
             markers.Add(new TimelineHourMarker
@@ -336,8 +351,12 @@ public static class AbsoluteTimelineResolver
         int minBlockHeight)
     {
         var result = new List<RawTimelineSegment>();
+        const int maxSegments = 1000; // Prevent excessive rendering
+
         foreach (var item in items)
         {
+            if (result.Count >= maxSegments) break; // Safety limit
+
             if (!DateTimeOffset.TryParse(item.StartedAt, out var start)) continue;
             var startLocal = start.ToLocalTime();
             var endLocal = ResolveEnd(item, startLocal, now);
@@ -476,7 +495,8 @@ public static class AbsoluteTimelineResolver
         var durationLabel = durationMinutes >= 60
             ? $"{durationMinutes / 60}h {durationMinutes % 60}m"
             : $"{durationMinutes}m";
-        var isBreak = string.Equals(segment.Item.Kind, "break", StringComparison.OrdinalIgnoreCase);
+        var isBreak = string.Equals(segment.Item.Kind, "break", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(segment.Item.SemanticRole, "break", StringComparison.OrdinalIgnoreCase);
         var isLabel = string.Equals(segment.Item.Kind, "label", StringComparison.OrdinalIgnoreCase)
             || string.Equals(segment.Item.SemanticRole, "label", StringComparison.OrdinalIgnoreCase)
             || segment.Item.Title.Contains("ラベル", StringComparison.OrdinalIgnoreCase);

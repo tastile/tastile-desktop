@@ -75,6 +75,10 @@ public class PollingService : IDisposable, ITilesChangedSource
     private bool _pendingConnectionState;
     private CancellationTokenSource? _eventStreamCts;
     private Task? _eventStreamTask;
+    private TimelineViewportSettings _timelineViewport = new(
+        ScaleUnit: TimelineScaleUnit.Day,
+        RangeMode: TimelineRangeMode.Day24,
+        AnchorLocal: DateTimeOffset.Now.ToLocalTime());
 
     /// <summary>
     /// Raised when execution state changes (work/break/idle status, main tile, etc.)
@@ -121,6 +125,11 @@ public class PollingService : IDisposable, ITilesChangedSource
     /// Whether the daemon is currently connected.
     /// </summary>
     public bool IsConnected => _lastConnectionState;
+
+    public void SetTimelineViewport(TimelineViewportSettings viewport)
+    {
+        _timelineViewport = viewport;
+    }
 
     public PollingService(CoreApiClient api, DaemonManager daemonManager)
         : this(
@@ -293,7 +302,7 @@ public class PollingService : IDisposable, ITilesChangedSource
             var executionViewTask = _api.GetExecutionViewAsync();
             var tilesTask = _api.GetTilesAsync();
             var promptTask = _api.GetPendingPromptAsync();
-            var timelineTask = _api.GetTodayTimelineAsync();
+            var timelineTask = _api.GetTimelineForViewportAsync(_timelineViewport);
             await Task.WhenAll(executionViewTask, tilesTask, promptTask, timelineTask);
 
             var executionView = executionViewTask.Result;
@@ -396,10 +405,10 @@ public class PollingService : IDisposable, ITilesChangedSource
     {
         var oldHash = old == null
             ? null
-            : string.Join(",", old.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"));
+            : $"{old.RangeStart}|{old.RangeEnd}|{string.Join(",", old.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"))}";
         var currentHash = current == null
             ? null
-            : string.Join(",", current.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"));
+            : $"{current.RangeStart}|{current.RangeEnd}|{string.Join(",", current.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"))}";
         return oldHash != currentHash;
     }
 

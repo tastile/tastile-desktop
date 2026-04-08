@@ -32,7 +32,7 @@ public sealed class AbsoluteTimelineResolverTests
         };
 
         var layout = AbsoluteTimelineResolver.Resolve(
-            items,
+            new TimelineTodayResponse(items),
             now,
             new TimelineViewportSettings(
                 ScaleUnit: TimelineScaleUnit.Day,
@@ -76,7 +76,7 @@ public sealed class AbsoluteTimelineResolverTests
         };
 
         var layout = AbsoluteTimelineResolver.Resolve(
-            items,
+            new TimelineTodayResponse(items),
             now,
             new TimelineViewportSettings(
                 ScaleUnit: TimelineScaleUnit.Day,
@@ -91,7 +91,7 @@ public sealed class AbsoluteTimelineResolverTests
     {
         var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
         var layout = AbsoluteTimelineResolver.Resolve(
-            [],
+            new TimelineTodayResponse([]),
             now,
             new TimelineViewportSettings(
                 ScaleUnit: TimelineScaleUnit.Week,
@@ -106,7 +106,7 @@ public sealed class AbsoluteTimelineResolverTests
     {
         var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
         var layout = AbsoluteTimelineResolver.Resolve(
-            [],
+            new TimelineTodayResponse([]),
             now,
             new TimelineViewportSettings(
                 ScaleUnit: TimelineScaleUnit.Week,
@@ -121,7 +121,7 @@ public sealed class AbsoluteTimelineResolverTests
     {
         var now = DateTimeOffset.Parse("2026-04-02T09:00:00+09:00");
         var layout = AbsoluteTimelineResolver.Resolve(
-            [],
+            new TimelineTodayResponse([]),
             now,
             new TimelineViewportSettings(
                 ScaleUnit: TimelineScaleUnit.Month,
