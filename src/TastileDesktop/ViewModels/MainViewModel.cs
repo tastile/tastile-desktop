@@ -1537,7 +1537,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         return new SolidColorBrush(Colors.White);
     }
 
-    private static SolidColorBrush TryGetResourceBrush(Application app, string key, Color fallbackColor)
+    private static SolidColorBrush TryGetResourceBrush(Application app, string key, Windows.UI.Color fallbackColor)
     {
         if (app?.Resources == null)
         {
