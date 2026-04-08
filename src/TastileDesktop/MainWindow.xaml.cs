@@ -485,7 +485,7 @@ public sealed partial class MainWindow : Window
         ((App)Application.Current).Shutdown();
     }
 
-    private async Task HandleNativePanelActionAsync(string actionId)
+    private Task HandleNativePanelActionAsync(string actionId)
     {
         Log($"HandleNativePanelActionAsync -> {actionId}");
         switch (actionId)
@@ -493,26 +493,27 @@ public sealed partial class MainWindow : Window
             case "toggle-pin":
                 ApplyPinnedState(!_isPinned);
                 _settings.Update(settings => settings.QuickBarAlwaysOnTop = _isPinned);
-                return;
+                return Task.CompletedTask;
             case "open-tiles":
                 OpenTilesWindow();
-                return;
+                return Task.CompletedTask;
             case "open-timeline":
                 OpenTimelineWindow();
-                return;
+                return Task.CompletedTask;
             case "open-execute":
                 OpenExecuteWindow();
-                return;
+                return Task.CompletedTask;
             case "open-create":
                 OpenCreateTileWindow();
-                return;
+                return Task.CompletedTask;
             case "open-integrations":
                 OpenIntegrationsWindow();
-                return;
+                return Task.CompletedTask;
             case "open-settings":
                 OpenSettingsWindow();
-                return;
+                return Task.CompletedTask;
         }
+        return Task.CompletedTask;
     }
 
     private NativeQuickPanelSnapshot CreateSnapshot()

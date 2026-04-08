@@ -224,6 +224,12 @@ public partial class App : Application
                     Log("Debug opening Create Tile...");
                     _mainWindow.DebugOpenCreateTileWindow();
                 }
+
+                if (cmdArgs.Contains("--debug-open-timeline"))
+                {
+                    Log("Debug opening Timeline...");
+                    _mainWindow.OpenTimelineWindow();
+                }
             }
             else
             {
@@ -238,13 +244,13 @@ public partial class App : Application
         }
     }
     
-    private async Task HandleOAuthCallbackAsync(string callbackUrl)
+    private Task HandleOAuthCallbackAsync(string callbackUrl)
     {
         var result = ProtocolHandler.ParseOAuthCallback(callbackUrl);
         if (result == null)
         {
             Log("Invalid OAuth callback URL");
-            return;
+            return Task.CompletedTask;
         }
         
         var (code, state) = result.Value;
@@ -253,7 +259,7 @@ public partial class App : Application
         if (!OAuthCallbackHandoff.MatchesExpectedState(state))
         {
             Log("Ignoring OAuth callback because state did not match the expected value.");
-            return;
+            return Task.CompletedTask;
         }
 
         try
@@ -267,6 +273,7 @@ public partial class App : Application
 
         OAuthCallbackHandoff.Store(callbackUrl);
         Log("OAuth callback stored for handoff fallback");
+        return Task.CompletedTask;
     }
 
     public async Task<bool> EnsureAuthenticatedAsync(CoreApiClient apiClient, string reason)

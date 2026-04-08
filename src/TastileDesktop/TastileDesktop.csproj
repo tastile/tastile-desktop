@@ -56,6 +56,21 @@
       WorkingDirectory="$(MSBuildThisFileDirectory)..\..\..\tastile-core" />
   </Target>
 
+  <Target Name="DeduplicateCompileItems" BeforeTargets="CoreCompile">
+    <RemoveDuplicates Inputs="@(Compile)">
+      <Output TaskParameter="Filtered" ItemName="_DistinctCompileItems" />
+    </RemoveDuplicates>
+    <ItemGroup>
+      <Compile Remove="@(Compile)" />
+      <Compile Include="@(_DistinctCompileItems)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="MirrorEmbeddedXbfFiles" BeforeTargets="_CopyFilesMarkedCopyLocal">
+    <Exec
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$root = Join-Path '$(MSBuildProjectDirectory)' '$(IntermediateOutputPath)embed'; if (!(Test-Path $root)) { exit 0 }; Get-ChildItem -Path $root -Recurse -File -Filter *.xbf | ForEach-Object { $dest = $_.FullName.Replace('\embed\', '\'); $destDir = [System.IO.Path]::GetDirectoryName($dest); if (!(Test-Path $destDir)) { [System.IO.Directory]::CreateDirectory($destDir) | Out-Null }; Copy-Item -Path $_.FullName -Destination $dest -Force }; exit 0&quot;" />
+  </Target>
+
   <Target Name="BundleDaemonBinary" BeforeTargets="CopyFilesToOutputDirectory">
     <Message Text="Copying tastile-daemon.exe into desktop output..." Importance="high" />
     <Error

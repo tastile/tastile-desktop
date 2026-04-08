@@ -100,6 +100,58 @@ public sealed class CoreApiClientTests
         Assert.Contains("projection_only", received[0], StringComparison.Ordinal);
     }
 
+    [Fact]
+    public async Task GetTimelineForViewportAsync_UsesYearEndpoint_ForYearRange()
+    {
+        string? capturedPathAndQuery = null;
+        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
+        {
+            capturedPathAndQuery = request.RequestUri?.PathAndQuery;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""
+                {
+                  "view": "year",
+                  "range_start": "2026-01-01T00:00:00Z",
+                  "range_end": "2027-01-01T00:00:00Z",
+                  "grid_start": "2026-01-01T00:00:00Z",
+                  "grid_end": "2027-01-01T00:00:00Z",
+                  "blocks": [
+                    {
+                      "tile_id": "tile-1",
+                      "title": "Planning",
+                      "start_at": "2026-04-08T01:00:00Z",
+                      "end_at": "2026-04-08T02:00:00Z",
+                      "semantic_role": "work",
+                      "all_day": false,
+                      "ownership": "tastile_owned",
+                      "editable": true,
+                      "source_label": "tastile"
+                    }
+                  ],
+                  "all_day_spans": [],
+                  "overflow_counters": {},
+                  "month_summaries": []
+                }
+                """),
+            };
+        }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        var viewport = new TimelineViewportSettings(
+            ScaleUnit: TimelineScaleUnit.Month,
+            RangeMode: TimelineRangeMode.Year1,
+            AnchorLocal: new DateTimeOffset(2026, 4, 8, 9, 0, 0, TimeSpan.FromHours(9)));
+        var timeline = await client.GetTimelineForViewportAsync(viewport);
+
+        Assert.NotNull(timeline);
+        Assert.Equal("/views/calendar/year?anchor=2026-04-08T00%3A00%3A00.0000000Z", capturedPathAndQuery);
+        Assert.Single(timeline!.Items);
+        Assert.Equal("tile-1", timeline.Items[0].TileId);
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

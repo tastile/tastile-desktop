@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net10.0-windows10.0.26100.0</TargetFramework>
+    <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
@@ -20,6 +20,9 @@
     <Compile Include="..\..\src\TastileDesktop\Services\CreateTileWindowContractResolver.cs" Link="CreateTileWindowContractResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\ITilesChangedSource.cs" Link="ITilesChangedSource.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AbsoluteTimelineResolver.cs" Link="AbsoluteTimelineResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\TimelineRangeComboResolver.cs" Link="TimelineRangeComboResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\MonthCalendarResolver.cs" Link="MonthCalendarResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CalendarViewportResolver.cs" Link="CalendarViewportResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TimelineStatusActionResolver.cs" Link="TimelineStatusActionResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\QuickPanelIconStyleResolver.cs" Link="QuickPanelIconStyleResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\RunningTileSelection.cs" Link="RunningTileSelection.cs" />

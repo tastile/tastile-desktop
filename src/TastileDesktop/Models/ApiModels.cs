@@ -170,7 +170,9 @@ public record PromptActionView(
 );
 
 public record TimelineTodayResponse(
-    [property: JsonPropertyName("items")] List<TimelineItemView> Items
+    [property: JsonPropertyName("items")] List<TimelineItemView> Items,
+    [property: JsonPropertyName("range_start")] string? RangeStart = null,
+    [property: JsonPropertyName("range_end")] string? RangeEnd = null
 );
 
 public record TimelineItemView(

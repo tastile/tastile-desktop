@@ -110,17 +110,19 @@ public sealed partial class SettingsWindow : Window
         PromptToastDisplayService.Instance.ShowPrompt(
             testPrompt,
             Math.Clamp(ViewModel.PromptToastMaxVisible, 1, 5),
-            async (actionId, _) =>
+            (actionId, _) =>
             {
                 System.Diagnostics.Debug.WriteLine($"[Test Toast] Action clicked: {actionId}");
                 App.DebugLog($"[Test Toast] Action clicked: {actionId}");
                 PromptToastDisplayService.Instance.Hide();
+                return Task.CompletedTask;
             },
-            async (actionId, minutes) =>
+            (actionId, minutes) =>
             {
                 System.Diagnostics.Debug.WriteLine($"[Test Toast] Defer clicked: {actionId}, minutes: {minutes}");
                 App.DebugLog($"[Test Toast] Defer clicked: {actionId}, minutes: {minutes}");
                 PromptToastDisplayService.Instance.Hide();
+                return Task.CompletedTask;
             });
     }
 
