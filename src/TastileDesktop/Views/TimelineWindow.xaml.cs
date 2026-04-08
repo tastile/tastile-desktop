@@ -27,6 +27,13 @@ public sealed partial class TimelineWindow : Window
     private bool _isUpdatingRangeCombo;
     private IReadOnlyList<TimelineRangeMode> _configuredModes = [];
     private readonly DispatcherQueueTimer _resizeDebounceTimer;
+    private double _lastMonthCellWidth;
+    private double _lastMonthCellHeight;
+    private double _lastWeekCellWidth;
+    private double _lastWeekCellHeight;
+    private double _lastYearMonthWidth;
+    private double _lastYearMonthHeight;
+    private double _lastYearDayWidth;
 
     public TimelineWindow()
     {
@@ -405,38 +412,66 @@ public sealed partial class TimelineWindow : Window
         var weekCellHeight = WeekCalendarHost.ActualHeight > 0 ? Math.Max(140d, WeekCalendarHost.ActualHeight - 56d) : 0d;
         var yearMonthWidth = YearCalendarHost.ActualWidth > 0 ? Math.Max(210d, (YearCalendarHost.ActualWidth - (10d * 3d)) / 4d) : 0d;
         var yearMonthHeight = YearCalendarHost.ActualHeight > 0 ? Math.Max(170d, (YearCalendarHost.ActualHeight - (10d * 2d)) / 3d) : 0d;
-        var yearDayWidth = yearMonthWidth > 0 ? Math.Max(24d, (yearMonthWidth - 28d) / 7d) : 0d;
+        var yearDayWidth = yearMonthWidth > 0 ? Math.Max(24d, (yearMonthWidth - 16d - (2d * 6d)) / 7d) : 0d;
 
-        foreach (var border in EnumerateDescendantBorders(MonthCalendarHost))
+        if (Math.Abs(monthCellWidth - _lastMonthCellWidth) < 0.5
+            && Math.Abs(monthCellHeight - _lastMonthCellHeight) < 0.5
+            && Math.Abs(weekCellWidth - _lastWeekCellWidth) < 0.5
+            && Math.Abs(weekCellHeight - _lastWeekCellHeight) < 0.5
+            && Math.Abs(yearMonthWidth - _lastYearMonthWidth) < 0.5
+            && Math.Abs(yearMonthHeight - _lastYearMonthHeight) < 0.5
+            && Math.Abs(yearDayWidth - _lastYearDayWidth) < 0.5)
         {
-            if (border.Tag is string tag && string.Equals(tag, "MonthCell", StringComparison.Ordinal))
+            return;
+        }
+
+        _lastMonthCellWidth = monthCellWidth;
+        _lastMonthCellHeight = monthCellHeight;
+        _lastWeekCellWidth = weekCellWidth;
+        _lastWeekCellHeight = weekCellHeight;
+        _lastYearMonthWidth = yearMonthWidth;
+        _lastYearMonthHeight = yearMonthHeight;
+        _lastYearDayWidth = yearDayWidth;
+
+        if (ViewModel.MonthCalendarVisibility == Visibility.Visible)
+        {
+            foreach (var border in EnumerateDescendantBorders(MonthCalendarHost))
             {
-                border.Width = monthCellWidth;
-                border.Height = monthCellHeight;
+                if (border.Tag is string tag && string.Equals(tag, "MonthCell", StringComparison.Ordinal))
+                {
+                    border.Width = monthCellWidth;
+                    border.Height = monthCellHeight;
+                }
             }
         }
 
-        foreach (var border in EnumerateDescendantBorders(WeekCalendarHost))
+        if (ViewModel.WeekCalendarVisibility == Visibility.Visible)
         {
-            if (border.Tag is string tag && string.Equals(tag, "WeekCell", StringComparison.Ordinal))
+            foreach (var border in EnumerateDescendantBorders(WeekCalendarHost))
             {
-                border.Width = weekCellWidth;
-                border.Height = weekCellHeight;
+                if (border.Tag is string tag && string.Equals(tag, "WeekCell", StringComparison.Ordinal))
+                {
+                    border.Width = weekCellWidth;
+                    border.Height = weekCellHeight;
+                }
             }
         }
 
-        foreach (var border in EnumerateDescendantBorders(YearCalendarHost))
+        if (ViewModel.YearCalendarVisibility == Visibility.Visible)
         {
-            if (border.Tag is string tag && string.Equals(tag, "YearMonthCard", StringComparison.Ordinal))
+            foreach (var border in EnumerateDescendantBorders(YearCalendarHost))
             {
-                border.Width = yearMonthWidth;
-                border.Height = yearMonthHeight;
-                continue;
-            }
+                if (border.Tag is string tag && string.Equals(tag, "YearMonthCard", StringComparison.Ordinal))
+                {
+                    border.Width = yearMonthWidth;
+                    border.Height = yearMonthHeight;
+                    continue;
+                }
 
-            if (border.Tag is string dayTag && string.Equals(dayTag, "YearDayCell", StringComparison.Ordinal))
-            {
-                border.Width = yearDayWidth;
+                if (border.Tag is string dayTag && string.Equals(dayTag, "YearDayCell", StringComparison.Ordinal))
+                {
+                    border.Width = yearDayWidth;
+                }
             }
         }
     }

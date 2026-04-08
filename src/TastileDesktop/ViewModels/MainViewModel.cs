@@ -10,8 +10,6 @@ using TastileDesktop.Models;
 using TastileDesktop.Services;
 using System.Collections.Generic;
 using System.Linq;
-using Windows.UI;
-using Microsoft;
 
 namespace TastileDesktop.ViewModels;
 
@@ -1371,7 +1369,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(TimelineCanvasVisibility));
         _pollingService.SetTimelineViewport(viewport);
         _ = _pollingService.PollAsync();
-        OnTimelineChanged(this, _pollingService.CurrentTimeline);
     }
 
     private void OnTilesChanged(object? sender, TilesResponse? tiles)

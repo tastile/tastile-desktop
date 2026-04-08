@@ -110,7 +110,7 @@ public sealed partial class IntegrationsWindow : Window
             ErrorTextBlock.Text = string.Empty;
             var selectedMode = (SyncModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString() ?? "push_only";
             var targetCalendar = string.IsNullOrWhiteSpace(TargetCalendarTextBox.Text)
-                ? null
+                ? "primary"
                 : TargetCalendarTextBox.Text.Trim();
             await _api.UpdateGoogleCalendarIntegrationAsync(
                 syncMode: selectedMode,

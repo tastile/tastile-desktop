@@ -405,10 +405,10 @@ public class PollingService : IDisposable, ITilesChangedSource
     {
         var oldHash = old == null
             ? null
-            : string.Join(",", old.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"));
+            : $"{old.RangeStart}|{old.RangeEnd}|{string.Join(",", old.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"))}";
         var currentHash = current == null
             ? null
-            : string.Join(",", current.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"));
+            : $"{current.RangeStart}|{current.RangeEnd}|{string.Join(",", current.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"))}";
         return oldHash != currentHash;
     }
 
