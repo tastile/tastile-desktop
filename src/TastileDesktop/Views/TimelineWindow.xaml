@@ -97,7 +97,7 @@
                                                     <ColumnDefinition Width="Auto" />
                                                     <ColumnDefinition Width="Auto" />
                                                 </Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Width="28" Height="28" Padding="0" Margin="0,0,2,0" Background="Transparent" BorderThickness="0" Tag="{Binding TileId}" Click="OnTimelineBlockStatusClick">
+                                                <Button Grid.Column="0" Width="28" Height="28" Padding="0" Margin="0,0,2,0" Background="Transparent" BorderThickness="0" Command="{Binding StatusCommand}">
                                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{Binding StatusIconGlyph}" Foreground="{Binding StatusForegroundBrush}" FontSize="14" VerticalAlignment="Center" />
                                                 </Button>
                                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
@@ -105,7 +105,7 @@
                                                     <TextBlock Text="{Binding TimeRangeText}" Foreground="{Binding SecondaryForegroundBrush}" FontSize="12" />
                                                     <TextBlock Text="{Binding KindLabel}" Foreground="{Binding SecondaryForegroundBrush}" FontSize="11" Visibility="{Binding KindLabelVisibility}" />
                                                 </StackPanel>
-                                                <Button Grid.Column="2" Width="28" Height="28" Padding="0" Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Tag="{Binding TileId}" Click="OnTimelineBlockEditClick">
+                                                <Button Grid.Column="2" Width="28" Height="28" Padding="0" Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Command="{Binding EditCommand}">
                                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70F;" Foreground="{Binding SecondaryForegroundBrush}" FontSize="13" VerticalAlignment="Center" />
                                                 </Button>
                                                 <TextBlock Grid.Column="3" Text="{Binding DurationText}" Foreground="{Binding SecondaryForegroundBrush}" VerticalAlignment="Center" />
@@ -162,14 +162,39 @@
                                     </ItemsControl.ItemsPanel>
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Tag="MonthCell" Margin="0,0,0,8" Padding="8" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="8" Opacity="{Binding CellOpacity}">
-                                                <StackPanel Spacing="2">
-                                                    <TextBlock Text="{Binding DayNumber}" Foreground="{StaticResource AppForegroundBrush}" FontWeight="SemiBold" />
-                                                    <TextBlock Text="{Binding Line1}" Style="{StaticResource SectionBodyTextStyle}" />
-                                                    <TextBlock Text="{Binding Line2}" Style="{StaticResource SectionBodyTextStyle}" />
-                                                    <TextBlock Text="{Binding Line3}" Style="{StaticResource SectionBodyTextStyle}" />
-                                                    <TextBlock Text="{Binding OverflowText}" Visibility="{Binding OverflowVisibility}" Style="{StaticResource SectionBodyTextStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                                                </StackPanel>
+                                            <Border Tag="MonthCell" Margin="0,0,0,8" Padding="8" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="8" Opacity="{Binding CellOpacity}" VerticalAlignment="Stretch">
+                                                <Grid RowSpacing="6">
+                                                    <Grid.RowDefinitions>
+                                                        <RowDefinition Height="Auto" />
+                                                        <RowDefinition Height="*" />
+                                                    </Grid.RowDefinitions>
+                                                    <TextBlock Grid.Row="0" Text="{Binding DayNumber}" Foreground="{StaticResource AppForegroundBrush}" FontWeight="SemiBold" />
+                                                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                                                        <ItemsControl ItemsSource="{Binding Entries}">
+                                                            <ItemsControl.ItemContainerStyle>
+                                                                <Style TargetType="ContentPresenter">
+                                                                    <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                                                </Style>
+                                                            </ItemsControl.ItemContainerStyle>
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <Grid Margin="0,0,0,2" Height="24" HorizontalAlignment="Stretch">
+                                                                        <Grid.ColumnDefinitions>
+                                                                            <ColumnDefinition Width="24" />
+                                                                            <ColumnDefinition Width="*" />
+                                                                            <ColumnDefinition Width="Auto" />
+                                                                        </Grid.ColumnDefinitions>
+                                                                        <Button Grid.Column="0" Width="24" Height="24" Padding="0" Background="Transparent" BorderThickness="0" Command="{Binding StatusCommand}">
+                                                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{Binding StatusIconGlyph}" Foreground="{Binding StatusForegroundBrush}" FontSize="11" />
+                                                                        </Button>
+                                                                        <TextBlock Grid.Column="1" Margin="0,0,4,0" Text="{Binding Title}" Foreground="{StaticResource AppForegroundBrush}" FontSize="11" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                                        <TextBlock Grid.Column="2" Margin="0,0,2,0" Text="{Binding DurationText}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="10" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding DurationVisibility}" />
+                                                                    </Grid>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+                                                    </ScrollViewer>
+                                                </Grid>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -260,7 +285,7 @@
                                                                     <ColumnDefinition Width="*" />
                                                                     <ColumnDefinition Width="Auto" />
                                                                 </Grid.ColumnDefinitions>
-                                                                <Button Grid.Column="0" Width="28" Height="28" Padding="0" Margin="0,0,2,0" Background="Transparent" BorderThickness="0" Tag="{Binding TileId}" Click="OnTimelineBlockStatusClick">
+                                                                <Button Grid.Column="0" Width="28" Height="28" Padding="0" Margin="0,0,2,0" Background="Transparent" BorderThickness="0" Command="{Binding StatusCommand}">
                                                                     <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{Binding StatusIconGlyph}" Foreground="{Binding StatusForegroundBrush}" FontSize="14" VerticalAlignment="Center" />
                                                                 </Button>
                                                                 <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">

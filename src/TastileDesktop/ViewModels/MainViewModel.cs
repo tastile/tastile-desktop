@@ -54,6 +54,8 @@ public sealed class TimelineAbsoluteBlockViewModel : ObservableObject
     public SolidColorBrush StatusFill { get; set; } = new(Microsoft.UI.Colors.Transparent);
     public SolidColorBrush StatusBorderBrush { get; set; } = new(Microsoft.UI.Colors.Transparent);
     public SolidColorBrush StatusForegroundBrush { get; set; } = new(Microsoft.UI.Colors.White);
+    public IAsyncRelayCommand? StatusCommand { get; init; }
+    public IAsyncRelayCommand? EditCommand { get; init; }
     public Visibility KindLabelVisibility =>
         string.IsNullOrWhiteSpace(KindLabel) ? Visibility.Collapsed : Visibility.Visible;
 }
@@ -62,6 +64,7 @@ public sealed class MonthCalendarCellViewModel : ObservableObject
 {
     public string DayNumber { get; set; } = string.Empty;
     public bool IsCurrentMonth { get; set; } = true;
+    public IReadOnlyList<MonthCalendarEntryViewModel> Entries { get; set; } = [];
     public string Line1 { get; set; } = string.Empty;
     public string Line2 { get; set; } = string.Empty;
     public string Line3 { get; set; } = string.Empty;
@@ -69,6 +72,29 @@ public sealed class MonthCalendarCellViewModel : ObservableObject
     public Visibility OverflowVisibility =>
         string.IsNullOrWhiteSpace(OverflowText) ? Visibility.Collapsed : Visibility.Visible;
     public double CellOpacity => IsCurrentMonth ? 1d : 0.55d;
+}
+
+public sealed class MonthCalendarEntryViewModel : ObservableObject
+{
+    public string? TileId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string DurationText { get; set; } = string.Empty;
+    public string Lifecycle { get; set; } = "ready";
+    public string StatusIconGlyph { get; set; } = "\uE768";
+    public string StatusIconToolTip { get; set; } = "ready";
+    public Visibility DurationVisibility =>
+        string.IsNullOrWhiteSpace(DurationText) ? Visibility.Collapsed : Visibility.Visible;
+
+    /// <summary>ステータスアイコンの前景色</summary>
+    public SolidColorBrush StatusForegroundBrush => Lifecycle.Trim().ToLowerInvariant() switch
+    {
+        "started" => new SolidColorBrush(ColorHelper.FromArgb(255, 16, 200, 16)),
+        "done"    => new SolidColorBrush(ColorHelper.FromArgb(255, 160, 160, 160)),
+        "ready"   => new SolidColorBrush(ColorHelper.FromArgb(255, 100, 180, 255)),
+        _         => new SolidColorBrush(ColorHelper.FromArgb(255, 160, 160, 160)),
+    };
+    public IAsyncRelayCommand? StatusCommand { get; init; }
+
 }
 
 public sealed class MonthCalendarRowViewModel : ObservableObject
@@ -415,6 +441,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly CoreApiClient _api;
     
     public CoreApiClient ApiClient => _api;
+    public event Action<string>? TimelineBlockEditRequested;
+    public event Action<string>? TimelinePromptRequested;
+
     private readonly PollingService _pollingService;
     private List<TileListItem> _allTiles = new();
     private ObservableCollection<TileListItem> _tiles = new();
@@ -1322,6 +1351,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     StatusFill = ResolveTimelineStatusFill(block),
                     StatusBorderBrush = ResolveTimelineStatusBorder(block),
                     StatusForegroundBrush = ResolveTimelineStatusForeground(block),
+                    StatusCommand = new AsyncRelayCommand(async () =>
+                    {
+                        await ExecuteTimelineStatusPromptAsync(block.TileId, block.IsDone ? "done" : block.IsActive ? "started" : "ready");
+                    }),
+                    EditCommand = new AsyncRelayCommand(async () =>
+                    {
+                        if (!string.IsNullOrWhiteSpace(block.TileId))
+                        {
+                            TimelineBlockEditRequested?.Invoke(block.TileId);
+                        }
+
+                        await Task.CompletedTask;
+                    }),
                 }));
 
             var monthRows = TimelineViewport.ScaleUnit == TimelineScaleUnit.Month
@@ -1334,6 +1376,24 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     {
                         DayNumber = cell.DayNumber,
                         IsCurrentMonth = cell.IsCurrentMonth,
+                        Entries = cell.Entries.Select(entry =>
+                        {
+                            var tileId = entry.TileId;
+                            var lifecycle = entry.Lifecycle;
+                            return new MonthCalendarEntryViewModel
+                            {
+                                TileId = tileId,
+                                Title = entry.Title,
+                                DurationText = entry.DurationLabel,
+                                Lifecycle = lifecycle,
+                                StatusIconGlyph = entry.StatusIconGlyph,
+                                StatusIconToolTip = entry.StatusIconToolTip,
+                                StatusCommand = new AsyncRelayCommand(async () =>
+                                {
+                                    await ExecuteTimelineStatusPromptAsync(tileId, lifecycle);
+                                }),
+                            };
+                        }).ToArray(),
                         Line1 = cell.Line1,
                         Line2 = cell.Line2,
                         Line3 = cell.Line3,
@@ -1414,6 +1474,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                             StatusFill = ResolveTimelineStatusFill(block),
                             StatusBorderBrush = ResolveTimelineStatusBorder(block),
                             StatusForegroundBrush = ResolveTimelineStatusForeground(block),
+                            StatusCommand = new AsyncRelayCommand(async () =>
+                            {
+                                await ExecuteTimelineStatusPromptAsync(block.TileId, block.IsDone ? "done" : block.IsActive ? "started" : "ready");
+                            }),
                         };
                     }).ToArray(),
                 }));
@@ -2125,6 +2189,19 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         
         // トースト通知も直接トリガー
         OnPromptToastPromptChanged(this, response);
+    }
+
+    private async Task ExecuteTimelineStatusPromptAsync(string? tileId, string? lifecycle)
+    {
+        if (string.IsNullOrWhiteSpace(tileId))
+        {
+            App.DebugLog($"[TimelineStatus] Ignored click due to empty tileId lifecycle={lifecycle}");
+            return;
+        }
+
+        App.DebugLog($"[TimelineStatus] Dispatching prompt request tileId={tileId} lifecycle={lifecycle}");
+        TimelinePromptRequested?.Invoke(tileId);
+        await Task.CompletedTask;
     }
 
     // DeferTile command - Core に defer を送るだけ（UI側で判断しない）

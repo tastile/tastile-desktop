@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace TastileDesktop.Views;
 
@@ -36,6 +37,11 @@ public sealed partial class TimelineWindow : Window
     private double _lastYearMonthWidth;
     private double _lastYearMonthHeight;
     private double _lastYearDayWidth;
+    private double _lastLoggedMonthCellWidth = -1d;
+    private double _lastLoggedMonthCellHeight = -1d;
+    private int _monthInitLogCount;
+    private bool _initialLayoutApplied;
+    private bool _needsMonthInitialSizing;
 
     public TimelineWindow()
     {
@@ -56,10 +62,16 @@ public sealed partial class TimelineWindow : Window
         };
         TimelineCanvasHost.SizeChanged += OnTimelineCanvasHostSizeChanged;
         MonthCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();
+        MonthCalendarHost.LayoutUpdated += OnMonthCalendarHostLayoutUpdated;
         WeekTimelineScrollViewer.SizeChanged += (_, _) => ApplyWeekDayColumnWidths();
         YearCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += (_, _) => ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
+        ViewModel.TimelineBlockEditRequested += OnTimelineBlockEditRequested;
+        ViewModel.TimelinePromptRequested += OnTimelinePromptRequested;
+        Closed += (_, _) => ViewModel.TimelineBlockEditRequested -= OnTimelineBlockEditRequested;
+        Closed += (_, _) => ViewModel.TimelinePromptRequested -= OnTimelinePromptRequested;
+        Closed += (_, _) => MonthCalendarHost.LayoutUpdated -= OnMonthCalendarHostLayoutUpdated;
 
         ViewModel.TimelineCanvasWidth = Math.Max(320d, TimelineCanvasHost.ActualWidth);
         UpdateSelectionButtons();
@@ -74,6 +86,33 @@ public sealed partial class TimelineWindow : Window
 
         ViewModel.UpdateTimelineViewport(_viewport);
         _ = ViewModel.InitializeAsync();
+        TimelineRootGrid.Loaded += OnWindowLoaded;
+        Closed += (_, _) => TimelineRootGrid.Loaded -= OnWindowLoaded;
+    }
+
+    private void OnWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        if (_initialLayoutApplied)
+        {
+            return;
+        }
+
+        _initialLayoutApplied = true;
+        EnsureInitialLayoutApplied();
+        ScheduleCalendarReflow();
+    }
+
+    private void EnsureInitialLayoutApplied()
+    {
+        var width = Math.Max(320d, TimelineCanvasHost.ActualWidth);
+        if (Math.Abs(width - ViewModel.TimelineCanvasWidth) > 0.5d)
+        {
+            ViewModel.TimelineCanvasWidth = width;
+            ViewModel.UpdateTimelineViewport(_viewport);
+        }
+
+        ApplyCalendarCellDimensions();
+        ApplyWeekDayColumnWidths();
     }
 
     private void EnsureNamedElementsBound()
@@ -104,6 +143,17 @@ public sealed partial class TimelineWindow : Window
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(MainViewModel.MonthCalendarRows) or nameof(MainViewModel.MonthCalendarVisibility))
+        {
+            _needsMonthInitialSizing = ViewModel.MonthCalendarVisibility == Visibility.Visible;
+            if (_needsMonthInitialSizing)
+            {
+                _lastMonthCellWidth = -1d;
+                _lastMonthCellHeight = -1d;
+                App.DebugLog("[TimelineWindow][MonthInit] Pending sizing requested by ViewModel update");
+            }
+        }
+
         if (e.PropertyName is nameof(MainViewModel.TimelineHourMarkers)
             or nameof(MainViewModel.TimelineBlocks)
             or nameof(MainViewModel.TimelineCanvasHeight)
@@ -112,10 +162,16 @@ public sealed partial class TimelineWindow : Window
             or nameof(MainViewModel.WeekTimelineColumns)
             or nameof(MainViewModel.WeekTimelineHourMarkers)
             or nameof(MainViewModel.WeekCanvasHeight)
-            or nameof(MainViewModel.YearCalendarRows))
+            or nameof(MainViewModel.YearCalendarRows)
+            or nameof(MainViewModel.MonthCalendarVisibility)
+            or nameof(MainViewModel.WeekCalendarVisibility)
+            or nameof(MainViewModel.YearCalendarVisibility)
+            or nameof(MainViewModel.TimelineCanvasVisibility)
+            or nameof(MainViewModel.TimelineViewport))
         {
             ApplyCalendarCellDimensions();
             ApplyWeekDayColumnWidths();
+            ScheduleCalendarReflow();
             SetLoading(false);
         }
     }
@@ -190,7 +246,12 @@ public sealed partial class TimelineWindow : Window
     private void OnViewMonthClick(object sender, RoutedEventArgs e)
     {
         App.DebugLog("[TimelineWindow] OnViewMonthClick called");
+        _needsMonthInitialSizing = true;
+        _lastMonthCellWidth = -1d;
+        _lastMonthCellHeight = -1d;
+        App.DebugLog("[TimelineWindow][MonthInit] Pending sizing requested by Month tab click");
         SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Month, RangeMode = TimelineRangeMode.Month1 });
+        ScheduleCalendarReflow();
     }
 
     private void OnViewYearClick(object sender, RoutedEventArgs e)
@@ -347,27 +408,15 @@ public sealed partial class TimelineWindow : Window
         e.Handled = true;
     }
 
-    private async void OnTimelineBlockStatusClick(object sender, RoutedEventArgs e)
+    private async void OnTimelineBlockEditRequested(string tileId)
+        => await OpenEditTileAsync(tileId);
+
+    private async void OnTimelinePromptRequested(string tileId)
+        => await RequestPromptForTileAsync(tileId);
+
+    private async Task OpenEditTileAsync(string tileId)
     {
-        if (sender is not Button button || button.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
-        {
-            return;
-        }
-
-        var block = button.DataContext as TimelineAbsoluteBlockViewModel;
-        var lifecycle = block?.Lifecycle;
-        var decision = TimelineStatusActionResolver.Resolve(tileId, lifecycle);
-        if (decision.Kind != TimelineStatusActionKind.RequestPrompt || string.IsNullOrWhiteSpace(decision.TileId))
-        {
-            return;
-        }
-
-        await RequestPromptForTileAsync(decision.TileId);
-    }
-
-    private async void OnTimelineBlockEditClick(object sender, RoutedEventArgs e)
-    {
-        if (sender is not Button button || button.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId))
+        if (string.IsNullOrWhiteSpace(tileId))
         {
             return;
         }
@@ -452,7 +501,18 @@ public sealed partial class TimelineWindow : Window
         UpdateSelectionButtons();
         ViewModel.UpdateTimelineViewport(_viewport);
         ApplyCalendarCellDimensions();
+        ScheduleCalendarReflow();
         ScrollTimelineToNow();
+    }
+
+    private void ScheduleCalendarReflow()
+    {
+        DispatcherQueue.TryEnqueue(() =>
+        {
+            TimelineRootGrid?.UpdateLayout();
+            ApplyCalendarCellDimensions();
+            ApplyWeekDayColumnWidths();
+        });
     }
 
     private void ScrollTimelineToNow()
@@ -517,26 +577,73 @@ public sealed partial class TimelineWindow : Window
         LoadingOverlay.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
     }
 
+    private void OnMonthCalendarHostLayoutUpdated(object? sender, object e)
+    {
+        if (!_needsMonthInitialSizing || ViewModel.MonthCalendarVisibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        var hasRealizedMonthCell = EnumerateDescendantBorders(MonthCalendarHost)
+            .Any(border => border.Tag is string tag && string.Equals(tag, "MonthCell", StringComparison.Ordinal));
+        if (!hasRealizedMonthCell)
+        {
+            return;
+        }
+
+        App.DebugLog($"[TimelineWindow][MonthInit] LayoutUpdated apply: host={MonthCalendarHost.ActualWidth:F1}x{MonthCalendarHost.ActualHeight:F1}");
+        ApplyCalendarCellDimensions();
+        _needsMonthInitialSizing = false;
+        App.DebugLog("[TimelineWindow][MonthInit] Initial sizing completed");
+    }
+
     private void ApplyCalendarCellDimensions()
     {
-        var monthCellWidth = MonthCalendarHost.ActualWidth > 0 ? Math.Max(110d, (MonthCalendarHost.ActualWidth - (8d * 6d)) / 7d) : 0d;
-        var monthCellHeight = MonthCalendarHost.ActualHeight > 0 ? Math.Max(80d, (MonthCalendarHost.ActualHeight - 80d) / 6d) : 0d;
+        var monthHostWidth = MonthCalendarHost.Parent is FrameworkElement monthParent && monthParent.ActualWidth > 0
+            ? monthParent.ActualWidth
+            : MonthCalendarHost.ActualWidth;
+        var monthHostHeight = MonthCalendarHost.Parent is FrameworkElement monthParentForHeight && monthParentForHeight.ActualHeight > 0
+            ? monthParentForHeight.ActualHeight
+            : MonthCalendarHost.ActualHeight;
+        var monthCellWidth = monthHostWidth > 0 ? Math.Max(110d, (monthHostWidth - (8d * 6d)) / 7d) : 0d;
+        var monthCellHeight = monthHostHeight > 0 ? Math.Max(48d, (monthHostHeight - 80d) / 6d) : 0d;
+        var monthCellBorders = ViewModel.MonthCalendarVisibility == Visibility.Visible
+            ? EnumerateDescendantBorders(MonthCalendarHost)
+                .Where(border => border.Tag is string tag && string.Equals(tag, "MonthCell", StringComparison.Ordinal))
+                .ToArray()
+            : [];
+        var monthCellsRealized = monthCellBorders.Length > 0;
+
         // var weekCellWidth = WeekCalendarHost.ActualWidth > 0 ? Math.Max(110d, (WeekCalendarHost.ActualWidth - (8d * 6d)) / 7d) : 0d; // Removed - week uses unified timeline
         // var weekCellHeight = Math.Max(180d, ViewModel.WeekCanvasHeight + 48d); // Removed - week uses unified timeline
         var yearMonthWidth = YearCalendarHost.ActualWidth > 0 ? Math.Max(210d, (YearCalendarHost.ActualWidth - (10d * 3d)) / 4d) : 0d;
         var yearMonthHeight = YearCalendarHost.ActualHeight > 0 ? Math.Max(170d, (YearCalendarHost.ActualHeight - (10d * 2d)) / 3d) : 0d;
         var yearDayWidth = yearMonthWidth > 0 ? Math.Max(24d, (yearMonthWidth - 16d - (2d * 6d)) / 7d) : 0d;
 
-        // Week calendar now uses unified timeline - no cell dimension comparison needed
+        if (ViewModel.MonthCalendarVisibility == Visibility.Visible && (!monthCellsRealized || monthCellWidth <= 0d || monthCellHeight <= 0d))
+        {
+            App.DebugLog(
+                $"[TimelineWindow][MonthInit] Skip apply before month cells ready: host={monthHostWidth:F1}x{monthHostHeight:F1}, cell={monthCellWidth:F1}x{monthCellHeight:F1}, cells={monthCellBorders.Length}");
+            return;
+        }
+
         if (Math.Abs(monthCellWidth - _lastMonthCellWidth) < 0.5
             && Math.Abs(monthCellHeight - _lastMonthCellHeight) < 0.5
-            // && Math.Abs(weekCellWidth - _lastWeekCellWidth) < 0.5 // Removed - week uses unified timeline
-            // && Math.Abs(weekCellHeight - _lastWeekCellHeight) < 0.5 // Removed - week uses unified timeline
             && Math.Abs(yearMonthWidth - _lastYearMonthWidth) < 0.5
             && Math.Abs(yearMonthHeight - _lastYearMonthHeight) < 0.5
             && Math.Abs(yearDayWidth - _lastYearDayWidth) < 0.5)
         {
             return;
+        }
+
+        if (ViewModel.MonthCalendarVisibility == Visibility.Visible
+            && (Math.Abs(monthCellWidth - _lastLoggedMonthCellWidth) >= 0.5 || Math.Abs(monthCellHeight - _lastLoggedMonthCellHeight) >= 0.5 || _monthInitLogCount < 3))
+        {
+            _monthInitLogCount++;
+            _lastLoggedMonthCellWidth = monthCellWidth;
+            _lastLoggedMonthCellHeight = monthCellHeight;
+            App.DebugLog(
+                $"[TimelineWindow][MonthInit] Metrics#{_monthInitLogCount}: host={monthHostWidth:F1}x{monthHostHeight:F1}, cell={monthCellWidth:F1}x{monthCellHeight:F1}, cells={monthCellBorders.Length}, pending={_needsMonthInitialSizing}");
         }
 
         _lastMonthCellWidth = monthCellWidth;
@@ -547,15 +654,12 @@ public sealed partial class TimelineWindow : Window
         _lastYearMonthHeight = yearMonthHeight;
         _lastYearDayWidth = yearDayWidth;
 
-        if (ViewModel.MonthCalendarVisibility == Visibility.Visible)
+        if (ViewModel.MonthCalendarVisibility == Visibility.Visible && monthCellWidth > 0d && monthCellHeight > 0d)
         {
-            foreach (var border in EnumerateDescendantBorders(MonthCalendarHost))
+            foreach (var border in monthCellBorders)
             {
-                if (border.Tag is string tag && string.Equals(tag, "MonthCell", StringComparison.Ordinal))
-                {
-                    border.Width = monthCellWidth;
-                    border.Height = monthCellHeight;
-                }
+                border.Width = monthCellWidth;
+                border.Height = monthCellHeight;
             }
         }
 

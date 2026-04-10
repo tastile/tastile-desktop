@@ -37,8 +37,10 @@ public sealed class TimelineWindowLayoutTests
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("Click=\"OnTimelineBlockStatusClick\"", xaml);
-        Assert.Contains("Click=\"OnTimelineBlockEditClick\"", xaml);
+        Assert.Contains("Command=\"{Binding StatusCommand}\"", xaml);
+        Assert.Contains("Command=\"{Binding EditCommand}\"", xaml);
+        Assert.DoesNotContain("Click=\"OnTimelineBlockStatusClick\"", xaml);
+        Assert.DoesNotContain("Click=\"OnTimelineBlockEditClick\"", xaml);
         Assert.DoesNotContain("ToolTipService.ToolTip=\"{x:Bind StatusIconToolTip}\"", xaml);
     }
 
@@ -48,11 +50,10 @@ public sealed class TimelineWindowLayoutTests
         var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs"));
         var source = File.ReadAllText(sourcePath);
 
-        Assert.Contains("var lifecycle = block?.Lifecycle;", source);
-        Assert.Contains("TimelineStatusActionResolver.Resolve(tileId, lifecycle)", source);
-        Assert.Contains("private async void OnTimelineBlockEditClick", source);
+        Assert.Contains("TimelineBlockEditRequested += OnTimelineBlockEditRequested", source);
+        Assert.Contains("OnTimelineBlockEditRequested", source);
+        Assert.Contains("OpenEditTileAsync", source);
         Assert.Contains("new CreateTileWindow(tileId, freshTile)", source);
-        Assert.DoesNotContain("if (lifecycle == \"done\")", source);
     }
 
     [Fact]
@@ -64,6 +65,31 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("StackPanel Grid.Column=\"1\" Spacing=\"2\" VerticalAlignment=\"Center\"", xaml);
         Assert.Contains("Text=\"{Binding DurationText}\" Foreground=\"{Binding SecondaryForegroundBrush}\" VerticalAlignment=\"Center\"", xaml);
         Assert.Contains("Visibility=\"{Binding KindLabelVisibility}\"", xaml);
+    }
+
+    [Fact]
+    public void TimelineWindow_MonthEntry_ShowsTitleAndDurationOnSingleLine()
+    {
+        var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
+        var xaml = File.ReadAllText(xamlPath);
+
+        Assert.Contains("Text=\"{Binding Title}\"", xaml);
+        Assert.Contains("Grid.Column=\"2\" Margin=\"0,0,2,0\" Text=\"{Binding DurationText}\"", xaml);
+        Assert.Contains("HorizontalAlignment=\"Right\"", xaml);
+        Assert.Contains("<Setter Property=\"HorizontalAlignment\" Value=\"Stretch\" />", xaml);
+        Assert.Contains("Command=\"{Binding StatusCommand}\"", xaml);
+    }
+
+    [Fact]
+    public void TimelineWindow_AppliesInitialLayoutWithoutManualResize()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        Assert.Contains("TimelineRootGrid.Loaded += OnWindowLoaded;", source);
+        Assert.Contains("EnsureInitialLayoutApplied();", source);
+        Assert.Contains("ScheduleCalendarReflow();", source);
+        Assert.Contains("ViewModel.UpdateTimelineViewport(_viewport);", source);
     }
 
     [Fact]
@@ -113,6 +139,7 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("Content=\"Month\"", xaml);
         Assert.Contains("Content=\"Year\"", xaml);
         Assert.Contains("ItemsSource=\"{Binding MonthCalendarRows, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{Binding Cells}\"", xaml);
         Assert.DoesNotContain("ItemsSource=\"{x:Bind ViewModel.MonthCalendarRows, Mode=OneWay}\"", xaml);
         Assert.Contains("Text=\"Mon\"", xaml);
         Assert.Contains("Text=\"Tue\"", xaml);
@@ -168,7 +195,14 @@ public sealed class TimelineWindowLayoutTests
 
         Assert.Contains("Tag=\"MonthCell\"", xaml);
         Assert.DoesNotContain("Width=\"150\"", xaml);
-        Assert.Contains("ApplyCalendarCellDimensions()", source);
+        Assert.Contains("ItemsSource=\"{Binding MonthCalendarRows, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{Binding Cells}\"", xaml);
+        Assert.Contains("<RowDefinition Height=\"*\" />", xaml);
+        Assert.Contains("MonthCalendarHost.LayoutUpdated += OnMonthCalendarHostLayoutUpdated;", source);
+        Assert.Contains("MonthCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();", source);
+        Assert.Contains("_lastMonthCellWidth = -1d;", source);
+        Assert.Contains("_lastMonthCellHeight = -1d;", source);
+        Assert.Contains("Skip apply before month cells ready", source);
         Assert.Contains("border.Width = monthCellWidth;", source);
     }
 
@@ -301,12 +335,16 @@ public sealed class TimelineWindowLayoutTests
     public void TimelineWindow_CalendarCells_ExpandInBothWidthAndHeight()
     {
         var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs"));
+        var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var source = File.ReadAllText(sourcePath);
+        var xaml = File.ReadAllText(xamlPath);
 
         Assert.Contains("ApplyCalendarCellDimensions()", source);
         Assert.Contains("border.Width =", source);
         Assert.Contains("border.Height =", source);
         Assert.Contains("MonthCalendarHost.ActualHeight", source);
+        Assert.Contains("MonthCalendarHost.ActualWidth", source);
+        Assert.Contains("ItemsSource=\"{Binding MonthCalendarRows, Mode=OneWay}\"", xaml);
         Assert.DoesNotContain("WeekCalendarHost.ActualHeight", source);
         Assert.Contains("Week calendar now uses unified timeline", source);
         Assert.Contains("YearCalendarHost.ActualHeight", source);

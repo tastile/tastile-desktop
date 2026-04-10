@@ -8,10 +8,21 @@ public sealed class MonthCalendarCell
     public DateTime Date { get; init; }
     public bool IsCurrentMonth { get; init; }
     public string DayNumber { get; init; } = string.Empty;
+    public IReadOnlyList<MonthCalendarEntry> Entries { get; init; } = [];
     public string Line1 { get; init; } = string.Empty;
     public string Line2 { get; init; } = string.Empty;
     public string Line3 { get; init; } = string.Empty;
     public string OverflowText { get; init; } = string.Empty;
+}
+
+public sealed class MonthCalendarEntry
+{
+    public string? TileId { get; init; }
+    public string Title { get; init; } = string.Empty;
+    public string DurationLabel { get; init; } = string.Empty;
+    public string Lifecycle { get; init; } = "ready";
+    public string StatusIconGlyph { get; init; } = "\uE768";
+    public string StatusIconToolTip { get; init; } = "ready";
 }
 
 public sealed class MonthCalendarRow
@@ -40,16 +51,16 @@ public static class MonthCalendarResolver
         IReadOnlyList<TimelineItemView> items,
         DateTimeOffset anchorLocal)
     {
-        var titlesByDate = BuildTitlesByDate(items);
+        var entriesByDate = BuildEntriesByDate(items);
         var monthStart = new DateTime(anchorLocal.Year, anchorLocal.Month, 1, 0, 0, 0, DateTimeKind.Local);
-        return BuildRowsForMonth(titlesByDate, monthStart);
+        return BuildRowsForMonth(entriesByDate, monthStart);
     }
 
     public static IReadOnlyList<MonthCalendarCell> BuildWeekRow(
         IReadOnlyList<TimelineItemView> items,
         DateTimeOffset anchorLocal)
     {
-        var titlesByDate = BuildTitlesByDate(items);
+        var entriesByDate = BuildEntriesByDate(items);
         var anchorDate = anchorLocal.LocalDateTime.Date;
         var weekdayOffset = ((int)anchorDate.DayOfWeek + 6) % 7; // Monday-first
         var weekStart = anchorDate.AddDays(-weekdayOffset);
@@ -57,8 +68,8 @@ public static class MonthCalendarResolver
         for (var col = 0; col < 7; col++)
         {
             var date = weekStart.AddDays(col);
-            var titles = titlesByDate.TryGetValue(date, out var list) ? list : [];
-            cells.Add(CreateCell(date, true, titles));
+            var entries = entriesByDate.TryGetValue(date, out var list) ? list : [];
+            cells.Add(CreateCell(date, true, entries));
         }
 
         return cells;
@@ -99,8 +110,8 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
         IReadOnlyList<TimelineItemView> items,
         DateTimeOffset anchorLocal)
     {
-        var titlesByDate = BuildTitlesByDate(items);
-        var months = BuildYearMonths(titlesByDate, anchorLocal).ToList();
+        var entriesByDate = BuildEntriesByDate(items);
+        var months = BuildYearMonths(entriesByDate, anchorLocal).ToList();
         var rows = new List<IReadOnlyList<YearCalendarMonth>>(3);
         for (var index = 0; index < months.Count; index += 4)
         {
@@ -111,7 +122,7 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
     }
 
     private static IReadOnlyList<YearCalendarMonth> BuildYearMonths(
-        Dictionary<DateTime, List<string>> titlesByDate,
+        Dictionary<DateTime, List<MonthCalendarEntry>> entriesByDate,
         DateTimeOffset anchorLocal)
     {
         var year = anchorLocal.Year;
@@ -122,7 +133,7 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
             months.Add(new YearCalendarMonth
             {
                 Title = monthStart.ToString("yyyy MMM"),
-                Rows = BuildRowsForMonth(titlesByDate, monthStart),
+                Rows = BuildRowsForMonth(entriesByDate, monthStart),
             });
         }
 
@@ -130,7 +141,7 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
     }
 
     private static IReadOnlyList<MonthCalendarRow> BuildRowsForMonth(
-        Dictionary<DateTime, List<string>> titlesByDate,
+        Dictionary<DateTime, List<MonthCalendarEntry>> entriesByDate,
         DateTime monthStart)
     {
         var weekdayOffset = ((int)monthStart.DayOfWeek + 6) % 7; // Monday-first
@@ -142,11 +153,11 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
             for (var col = 0; col < 7; col++)
             {
                 var date = gridStart.AddDays(row * 7 + col);
-                var titles = titlesByDate.TryGetValue(date.Date, out var list) ? list : [];
+                var entries = entriesByDate.TryGetValue(date.Date, out var list) ? list : [];
                 cells.Add(CreateCell(
                     date.Date,
                     date.Month == monthStart.Month && date.Year == monthStart.Year,
-                    titles));
+                    entries));
             }
 
             rows.Add(new MonthCalendarRow { Cells = cells });
@@ -155,21 +166,23 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
         return rows;
     }
 
-    private static MonthCalendarCell CreateCell(DateTime date, bool isCurrentMonth, IReadOnlyList<string> titles)
+    private static MonthCalendarCell CreateCell(DateTime date, bool isCurrentMonth, IReadOnlyList<MonthCalendarEntry> entries)
         => new()
         {
             Date = date,
             IsCurrentMonth = isCurrentMonth,
             DayNumber = date.Day.ToString(),
-            Line1 = titles.ElementAtOrDefault(0) ?? string.Empty,
-            Line2 = titles.ElementAtOrDefault(1) ?? string.Empty,
-            Line3 = titles.ElementAtOrDefault(2) ?? string.Empty,
-            OverflowText = titles.Count > 3 ? $"+{titles.Count - 3} more" : string.Empty,
+            Entries = entries,
+            Line1 = entries.ElementAtOrDefault(0)?.Title ?? string.Empty,
+            Line2 = entries.ElementAtOrDefault(1)?.Title ?? string.Empty,
+            Line3 = entries.ElementAtOrDefault(2)?.Title ?? string.Empty,
+            OverflowText = string.Empty,
         };
 
-    private static Dictionary<DateTime, List<string>> BuildTitlesByDate(IReadOnlyList<TimelineItemView> items)
+    private static Dictionary<DateTime, List<MonthCalendarEntry>> BuildEntriesByDate(IReadOnlyList<TimelineItemView> items)
     {
-        var map = new Dictionary<DateTime, List<string>>();
+        var map = new Dictionary<DateTime, List<MonthCalendarEntry>>();
+        var nowLocal = DateTimeOffset.Now.ToLocalTime();
         foreach (var item in items.OrderBy(value => value.StartedAt, StringComparer.Ordinal))
         {
             if (!DateTimeOffset.TryParse(item.StartedAt, out var start))
@@ -177,30 +190,73 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
                 continue;
             }
 
-            var end = DateTimeOffset.TryParse(item.EndedAt, out var parsedEnd)
-                ? parsedEnd
-                : start;
-            if (end < start)
-            {
-                end = start;
-            }
+            var hasExplicitEnd = !string.IsNullOrWhiteSpace(item.EndedAt) && DateTimeOffset.TryParse(item.EndedAt, out _);
+            var end = ResolveEnd(item, start.ToLocalTime(), nowLocal);
+            var entry = CreateEntry(item, start.ToLocalTime(), end, hasExplicitEnd);
 
             var dayCursor = start.LocalDateTime.Date;
             var lastDay = end.LocalDateTime.Date;
             while (dayCursor <= lastDay)
             {
-                if (!map.TryGetValue(dayCursor, out var titles))
+                if (!map.TryGetValue(dayCursor, out var entries))
                 {
-                    titles = [];
-                    map[dayCursor] = titles;
+                    entries = [];
+                    map[dayCursor] = entries;
                 }
-                titles.Add(item.Title);
+                entries.Add(entry);
                 dayCursor = dayCursor.AddDays(1);
             }
         }
 
         return map;
     }
+
+    private static MonthCalendarEntry CreateEntry(
+        TimelineItemView item,
+        DateTimeOffset startLocal,
+        DateTimeOffset endLocal,
+        bool hasExplicitEnd)
+    {
+        var lifecycle = ResolveLifecycle(item, hasExplicitEnd);
+        return new MonthCalendarEntry
+        {
+            TileId = item.TileId,
+            Title = item.Title,
+            DurationLabel = ResolveDurationLabel(startLocal, endLocal),
+            Lifecycle = lifecycle,
+            StatusIconGlyph = ResolveStatusIconGlyph(lifecycle),
+            StatusIconToolTip = lifecycle,
+        };
+    }
+
+    private static string ResolveLifecycle(TimelineItemView item, bool hasExplicitEnd)
+    {
+        if (item.IsActive)
+        {
+            return "started";
+        }
+
+        if (hasExplicitEnd)
+        {
+            return "done";
+        }
+
+        return "ready";
+    }
+
+    private static string ResolveDurationLabel(DateTimeOffset startLocal, DateTimeOffset endLocal)
+    {
+        var durationMinutes = Math.Max(1, (int)Math.Round((endLocal - startLocal).TotalMinutes));
+        return $"{durationMinutes}m";
+    }
+
+    private static string ResolveStatusIconGlyph(string lifecycle)
+        => lifecycle switch
+        {
+            "started" => "\uE945",
+            "done" => "\uE73E",
+            _ => "\uE768",
+        };
 
     private static bool IsItemOnDate(TimelineItemView item, DateTimeOffset targetDate)
     {

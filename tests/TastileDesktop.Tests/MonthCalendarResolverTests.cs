@@ -29,7 +29,7 @@ public sealed class MonthCalendarResolverTests
     }
 
     [Fact]
-    public void BuildRows_ShowsOverflowAsMoreLabel()
+    public void BuildRows_ExposesAllDayEntriesWithoutOverflowLimit()
     {
         var items = Enumerable.Range(1, 5)
             .Select(index => new TimelineItemView(
@@ -48,10 +48,11 @@ public sealed class MonthCalendarResolverTests
             new DateTimeOffset(2026, 4, 8, 9, 0, 0, TimeSpan.FromHours(9)));
 
         var dayCell = rows.SelectMany(row => row.Cells).First(cell => cell.DayNumber == "8" && cell.IsCurrentMonth);
-        Assert.Contains("Task 1", dayCell.Line1);
-        Assert.Contains("Task 2", dayCell.Line2);
-        Assert.Contains("Task 3", dayCell.Line3);
-        Assert.Equal("+2 more", dayCell.OverflowText);
+        Assert.Equal(5, dayCell.Entries.Count);
+        Assert.Equal("Task 1", dayCell.Entries[0].Title);
+        Assert.Equal("30m", dayCell.Entries[0].DurationLabel);
+        Assert.Equal("\uE73E", dayCell.Entries[0].StatusIconGlyph);
+        Assert.Equal(string.Empty, dayCell.OverflowText);
     }
 
     [Fact]
