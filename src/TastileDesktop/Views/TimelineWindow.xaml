@@ -178,50 +178,104 @@
                     </ItemsControl>
                 </Grid>
 
-                <Grid x:Name="WeekCalendarHost" Visibility="{Binding WeekCalendarVisibility, Mode=OneWay}" RowSpacing="10">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Mon" HorizontalAlignment="Center" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock Grid.Column="1" Text="Tue" HorizontalAlignment="Center" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock Grid.Column="2" Text="Wed" HorizontalAlignment="Center" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock Grid.Column="3" Text="Thu" HorizontalAlignment="Center" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock Grid.Column="4" Text="Fri" HorizontalAlignment="Center" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock Grid.Column="5" Text="Sat" HorizontalAlignment="Center" Style="{StaticResource SectionBodyTextStyle}" />
-                        <TextBlock Grid.Column="6" Text="Sun" HorizontalAlignment="Center" Style="{StaticResource SectionBodyTextStyle}" />
-                    </Grid>
-                    <ItemsControl Grid.Row="1" ItemsSource="{x:Bind ViewModel.WeekCalendarDays, Mode=OneWay}">
+                <!-- Week Timeline View -->
+                <ScrollViewer x:Name="WeekTimelineScrollViewer" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="{Binding WeekCalendarVisibility, Mode=OneWay}">
+                    <ItemsControl x:Name="WeekTimelineRoot" ItemsSource="{x:Bind ViewModel.WeekTimelineColumns, Mode=OneWay}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
-                                <StackPanel Orientation="Horizontal" Spacing="8" />
+                                <StackPanel Orientation="Horizontal" />
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Border Tag="WeekCell" Margin="0,0,0,8" Padding="10" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="8">
-                                    <StackPanel Spacing="4">
-                                        <TextBlock Text="{Binding DayNumber}" Foreground="{StaticResource AppForegroundBrush}" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding Line1}" Style="{StaticResource SectionBodyTextStyle}" />
-                                        <TextBlock Text="{Binding Line2}" Style="{StaticResource SectionBodyTextStyle}" />
-                                        <TextBlock Text="{Binding Line3}" Style="{StaticResource SectionBodyTextStyle}" />
-                                        <TextBlock Text="{Binding OverflowText}" Visibility="{Binding OverflowVisibility}" Style="{StaticResource SectionBodyTextStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                                    </StackPanel>
-                                </Border>
+                            <DataTemplate x:DataType="viewModels:TimelineWeekColumnViewModel">
+                                <Grid Width="180" MinWidth="180" MaxWidth="300" Margin="0,0,8,0">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Column Header -->
+                                    <Border Grid.Row="0" Padding="8" Background="{StaticResource AppSurface1Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="8,8,0,0">
+                                        <StackPanel Spacing="2">
+                                            <TextBlock Text="{Binding DayNumber}" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource AppForegroundBrush}" HorizontalAlignment="Center" />
+                                            <TextBlock Text="{Binding DayLabel}" FontSize="11" Foreground="{StaticResource AppForegroundMutedBrush}" HorizontalAlignment="Center" />
+                                        </StackPanel>
+                                    </Border>
+
+                                    <!-- Timeline with Hour Markers and Blocks -->
+                                    <Grid Grid.Row="1" Background="{StaticResource AppSurface0Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1,0,1,1" CornerRadius="0,0,8,8"
+                                          Height="{x:Bind ViewModel.WeekCanvasHeight, Mode=OneWay}">
+                                        <ItemsControl ItemsSource="{Binding HourMarkers}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Canvas />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="viewModels:TimelineHourMarkerViewModel">
+                                                    <Grid Width="180">
+                                                        <Grid.RenderTransform>
+                                                            <TranslateTransform Y="{Binding Top}" />
+                                                        </Grid.RenderTransform>
+                                                        <Rectangle Width="180" Height="1" Fill="{StaticResource AppBorderBrush}" />
+                                                        <TextBlock Text="{Binding Label}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="10" Margin="4,-14,0,0" />
+                                                    </Grid>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <ItemsControl ItemsSource="{Binding Blocks}">
+                                            <ItemsControl.ItemsPanel>
+                                                <ItemsPanelTemplate>
+                                                    <Canvas />
+                                                </ItemsPanelTemplate>
+                                            </ItemsControl.ItemsPanel>
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate x:DataType="viewModels:TimelineAbsoluteBlockViewModel">
+                                                    <Border Width="{Binding Width}" Height="{Binding Height}" Padding="10,6" CornerRadius="6" Background="{Binding Fill}" BorderBrush="{Binding BorderBrush}" BorderThickness="1">
+                                                        <Border.RenderTransform>
+                                                            <TranslateTransform X="{Binding Left}" Y="{Binding Top}" />
+                                                        </Border.RenderTransform>
+                                                        <Grid ColumnSpacing="12">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <Button Grid.Column="0" Width="28" Height="28" Padding="0" Margin="0,0,2,0" Background="Transparent" BorderThickness="0" Tag="{Binding TileId}" Click="OnTimelineBlockStatusClick">
+                                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="{Binding StatusIconGlyph}" Foreground="{Binding StatusForegroundBrush}" FontSize="14" VerticalAlignment="Center" />
+                                                            </Button>
+                                                            <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+                                                                <TextBlock Text="{Binding Title}" Foreground="{Binding ForegroundBrush}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                                <TextBlock Text="{Binding TimeRangeText}" Foreground="{Binding SecondaryForegroundBrush}" FontSize="12" />
+                                                                <TextBlock Text="{Binding KindLabel}" Foreground="{Binding SecondaryForegroundBrush}" FontSize="11" Visibility="{Binding KindLabelVisibility}" />
+                                                            </StackPanel>
+                                                            <Button Grid.Column="2" Width="28" Height="28" Padding="0" Margin="0,0,4,0" Background="Transparent" BorderThickness="0" Tag="{Binding TileId}" Click="OnTimelineBlockEditClick">
+                                                                <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70F;" Foreground="{Binding SecondaryForegroundBrush}" FontSize="13" VerticalAlignment="Center" />
+                                                            </Button>
+                                                            <TextBlock Grid.Column="3" Text="{Binding DurationText}" Foreground="{Binding SecondaryForegroundBrush}" VerticalAlignment="Center" />
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+
+                                        <!-- Now Indicator (only shows in today's column) -->
+                                        <Canvas Width="180" Visibility="{x:Bind IsToday, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
+                                            <Canvas.RenderTransform>
+                                                <TranslateTransform Y="{x:Bind ViewModel.TimelineNowTop, Mode=OneWay}" />
+                                            </Canvas.RenderTransform>
+                                            <Rectangle Canvas.Top="0" Width="180" Height="2" Fill="{StaticResource AppPrimaryBrush}" />
+                                            <Ellipse Canvas.Left="-4" Canvas.Top="-3" Width="8" Height="8" Fill="{StaticResource AppPrimaryBrush}" />
+                                            <TextBlock Canvas.Top="-14" Width="180" TextAlignment="Right" Padding="0,0,4,0" Text="{x:Bind ViewModel.TimelineNowLabel, Mode=OneWay}" Foreground="{StaticResource AppPrimaryBrush}" FontSize="11" />
+                                        </Canvas>
+                                    </Grid>
+                                </Grid>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </Grid>
+                </ScrollViewer>
 
                 <ItemsControl x:Name="YearCalendarHost" Visibility="{Binding YearCalendarVisibility, Mode=OneWay}" ItemsSource="{x:Bind ViewModel.YearCalendarRows, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
