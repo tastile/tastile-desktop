@@ -432,6 +432,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private ObservableCollection<TimelineAbsoluteBlockViewModel> _timelineBlocks = new();
     private ObservableCollection<MonthCalendarRowViewModel> _monthCalendarRows = new();
     private ObservableCollection<MonthCalendarCellViewModel> _weekCalendarDays = new();
+    private ObservableCollection<TimelineHourMarkerViewModel> _weekTimelineHourMarkers = new();
     private ObservableCollection<TimelineWeekColumnViewModel> _weekTimelineColumns = new(
         Enumerable.Range(0, 7).Select(i => new TimelineWeekColumnViewModel
         {
@@ -452,6 +453,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private double _timelineNowTop;
     private string _timelineNowLabel = string.Empty;
     private Visibility _timelineNowVisibility = Visibility.Collapsed;
+    private double _weekDayColumnWidth = 180d;
     private string? _focusedRunningTileId;
     private string? _nextActionableTileId;
     private DateTimeOffset? _nextActionableStartAt;
@@ -601,6 +603,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _weekTimelineColumns, value);
     }
 
+    public ObservableCollection<TimelineHourMarkerViewModel> WeekTimelineHourMarkers
+    {
+        get => _weekTimelineHourMarkers;
+        set => SetProperty(ref _weekTimelineHourMarkers, value);
+    }
+
     public ObservableCollection<YearCalendarRowViewModel> YearCalendarRows
     {
         get => _yearCalendarRows;
@@ -609,6 +617,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public double TimelineCanvasHeight { get; private set; } = 24 * 120;
     public double WeekCanvasHeight { get; private set; } = 24 * 120;
+    public double WeekDayColumnWidth
+    {
+        get => _weekDayColumnWidth;
+        set => SetProperty(ref _weekDayColumnWidth, value);
+    }
     public double TimelineCanvasWidth
     {
         get => _timelineCanvasWidth;
@@ -1351,7 +1364,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 TimelineViewport.AnchorLocal,
                 hoursPerPixel);
 
-            // Build hour markers for week view (0-23 hours)
+            // Build hour markers for shared 24h axis in week view (all day lanes aligned on same Y)
             var hourMarkers = new List<TimelineHourMarkerViewModel>();
             for (int hour = 0; hour <= 24; hour++)
             {
@@ -1363,6 +1376,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             }
 
             WeekCanvasHeight = 24 * hoursPerPixel;
+            WeekTimelineHourMarkers = new ObservableCollection<TimelineHourMarkerViewModel>(hourMarkers);
             WeekTimelineColumns = new ObservableCollection<TimelineWeekColumnViewModel>(
                 weekTimelineColumns.Select(col => new TimelineWeekColumnViewModel
                 {
@@ -1373,30 +1387,34 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     TimelineNowTop = TimelineNowTop,
                     TimelineNowLabel = TimelineNowLabel,
                     HourMarkers = hourMarkers,
-                    Blocks = col.Blocks.Select(block => new TimelineAbsoluteBlockViewModel
+                    Blocks = col.Blocks.Select(block =>
                     {
-                        Title = block.Title,
-                        TimeRangeText = $"{block.StartLabel} - {block.EndLabel}",
-                        DurationText = block.DurationLabel,
-                        KindLabel = NormalizeTimelineKindLabel(block.Kind),
-                        Lane = block.Lane,
-                        TotalLanes = block.TotalLanes,
-                        IsFullWidth = block.IsFullWidth,
-                        Left = 0,
-                        Width = 100,
-                        Top = block.Top,
-                        Height = block.Height,
-                        TileId = block.TileId,
-                        Lifecycle = block.IsDone ? "done" : block.IsActive ? "started" : "ready",
-                        StatusIconGlyph = block.IsDone ? "\uE73E" : block.IsActive ? "\uE945" : "\uE768",
-                        StatusIconToolTip = block.IsDone ? "done" : block.IsActive ? "active" : "scheduled",
-                        Fill = block.IsActive ? surface1Brush : surfaceElevatedBrush,
-                        BorderBrush = borderBrush,
-                        ForegroundBrush = foregroundBrush,
-                        SecondaryForegroundBrush = foregroundMutedBrush,
-                        StatusFill = ResolveTimelineStatusFill(block),
-                        StatusBorderBrush = ResolveTimelineStatusBorder(block),
-                        StatusForegroundBrush = ResolveTimelineStatusForeground(block),
+                        var laneGeometry = ResolveWeekLaneGeometry(block.Lane, block.TotalLanes, WeekDayColumnWidth);
+                        return new TimelineAbsoluteBlockViewModel
+                        {
+                            Title = block.Title,
+                            TimeRangeText = $"{block.StartLabel} - {block.EndLabel}",
+                            DurationText = block.DurationLabel,
+                            KindLabel = NormalizeTimelineKindLabel(block.Kind),
+                            Lane = block.Lane,
+                            TotalLanes = block.TotalLanes,
+                            IsFullWidth = block.IsFullWidth,
+                            Left = laneGeometry.Left,
+                            Width = laneGeometry.Width,
+                            Top = block.Top,
+                            Height = block.Height,
+                            TileId = block.TileId,
+                            Lifecycle = block.IsDone ? "done" : block.IsActive ? "started" : "ready",
+                            StatusIconGlyph = block.IsDone ? "\uE73E" : block.IsActive ? "\uE945" : "\uE768",
+                            StatusIconToolTip = block.IsDone ? "done" : block.IsActive ? "active" : "scheduled",
+                            Fill = block.IsActive ? surface1Brush : surfaceElevatedBrush,
+                            BorderBrush = borderBrush,
+                            ForegroundBrush = foregroundBrush,
+                            SecondaryForegroundBrush = foregroundMutedBrush,
+                            StatusFill = ResolveTimelineStatusFill(block),
+                            StatusBorderBrush = ResolveTimelineStatusBorder(block),
+                            StatusForegroundBrush = ResolveTimelineStatusForeground(block),
+                        };
                     }).ToArray(),
                 }));
 
@@ -1447,7 +1465,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(MonthCalendarRows));
             OnPropertyChanged(nameof(WeekCalendarDays));
             OnPropertyChanged(nameof(WeekTimelineColumns));
+            OnPropertyChanged(nameof(WeekTimelineHourMarkers));
             OnPropertyChanged(nameof(WeekCanvasHeight));
+            OnPropertyChanged(nameof(WeekDayColumnWidth));
             OnPropertyChanged(nameof(YearCalendarRows));
             OnPropertyChanged(nameof(MonthCalendarVisibility));
             OnPropertyChanged(nameof(WeekCalendarVisibility));
@@ -1482,6 +1502,66 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // Adjust so Monday = 0, Sunday = 6
         var adjustedDay = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
         return date.Date.AddDays(-adjustedDay);
+    }
+
+    private static (double Left, double Width) ResolveWeekLaneGeometry(int lane, int totalLanes, double laneContainerWidth)
+    {
+        var laneCount = Math.Max(1, totalLanes);
+        var laneIndex = Math.Max(0, Math.Min(lane, laneCount - 1));
+        const double gap = 4d;
+        var totalGap = (laneCount - 1) * gap;
+        var width = Math.Max(56d, (laneContainerWidth - totalGap) / laneCount);
+        var left = laneIndex * (width + gap);
+        return (left, width);
+    }
+
+    public void ReflowWeekTimelineColumnsForWidth()
+    {
+        if (_weekTimelineColumns.Count == 0)
+        {
+            return;
+        }
+
+        WeekTimelineColumns = new ObservableCollection<TimelineWeekColumnViewModel>(
+            _weekTimelineColumns.Select(column => new TimelineWeekColumnViewModel
+            {
+                DayOfWeekIndex = column.DayOfWeekIndex,
+                DayLabel = column.DayLabel,
+                DayNumber = column.DayNumber,
+                IsToday = column.IsToday,
+                TimelineNowTop = column.TimelineNowTop,
+                TimelineNowLabel = column.TimelineNowLabel,
+                HourMarkers = column.HourMarkers,
+                Blocks = column.Blocks.Select(block =>
+                {
+                    var laneGeometry = ResolveWeekLaneGeometry(block.Lane, block.TotalLanes, WeekDayColumnWidth);
+                    return new TimelineAbsoluteBlockViewModel
+                    {
+                        TileId = block.TileId,
+                        Lifecycle = block.Lifecycle,
+                        StatusIconGlyph = block.StatusIconGlyph,
+                        StatusIconToolTip = block.StatusIconToolTip,
+                        KindLabel = block.KindLabel,
+                        Title = block.Title,
+                        TimeRangeText = block.TimeRangeText,
+                        DurationText = block.DurationText,
+                        Lane = block.Lane,
+                        TotalLanes = block.TotalLanes,
+                        IsFullWidth = block.IsFullWidth,
+                        Left = laneGeometry.Left,
+                        Width = laneGeometry.Width,
+                        Top = block.Top,
+                        Height = block.Height,
+                        Fill = block.Fill,
+                        BorderBrush = block.BorderBrush,
+                        ForegroundBrush = block.ForegroundBrush,
+                        SecondaryForegroundBrush = block.SecondaryForegroundBrush,
+                        StatusFill = block.StatusFill,
+                        StatusBorderBrush = block.StatusBorderBrush,
+                        StatusForegroundBrush = block.StatusForegroundBrush,
+                    };
+                }).ToArray(),
+            }).ToArray());
     }
 
     public void UpdateTimelineViewport(TimelineViewportSettings viewport)

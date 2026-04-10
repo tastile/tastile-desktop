@@ -221,17 +221,19 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
         double hoursPerPixel)
     {
         var blocks = new List<TimelineBlock>();
+        var nowLocal = DateTimeOffset.Now.ToLocalTime();
 
         // Group overlapping items into lanes
         var lanes = new List<List<TimelineBlock>>();
         foreach (var item in dayItems)
         {
-            if (string.IsNullOrWhiteSpace(item.StartedAt) || string.IsNullOrWhiteSpace(item.EndedAt))
+            if (string.IsNullOrWhiteSpace(item.StartedAt))
                 continue;
 
-            if (!DateTimeOffset.TryParse(item.StartedAt, out var startAt) ||
-                !DateTimeOffset.TryParse(item.EndedAt, out var endAt))
+            if (!DateTimeOffset.TryParse(item.StartedAt, out var startAt))
                 continue;
+
+            var endAt = ResolveEnd(item, startAt.ToLocalTime(), nowLocal);
 
             var startMinutes = (startAt.LocalDateTime - dayDate.LocalDateTime.Date).TotalMinutes;
             var endMinutes = (endAt.LocalDateTime - dayDate.LocalDateTime.Date).TotalMinutes;
@@ -288,6 +290,26 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
         }
 
         return blocks;
+    }
+
+    private static DateTimeOffset ResolveEnd(TimelineItemView item, DateTimeOffset startLocal, DateTimeOffset nowLocal)
+    {
+        if (!string.IsNullOrWhiteSpace(item.EndedAt) && DateTimeOffset.TryParse(item.EndedAt, out var ended))
+        {
+            return ended.ToLocalTime();
+        }
+
+        if (item.DurationMin > 0)
+        {
+            return startLocal.AddMinutes(item.DurationMin);
+        }
+
+        if (item.IsActive)
+        {
+            return nowLocal;
+        }
+
+        return startLocal.AddMinutes(25);
     }
 
     private static DateTimeOffset GetWeekStart(DateTimeOffset date)

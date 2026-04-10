@@ -16,6 +16,7 @@ namespace TastileDesktop.Views;
 public sealed partial class TimelineWindow : Window
 {
     public MainViewModel ViewModel { get; } = new();
+    private ComboBox? RangeComboBox;
     private readonly CoreApiClient _api = new();
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
@@ -40,6 +41,7 @@ public sealed partial class TimelineWindow : Window
     {
         InitializeComponent();
         EnsureNamedElementsBound();
+        WireToolbarControls();
         FloatingWindowHelper.Configure(this, TitleBarArea, 1100, 760);
         TimelineRootGrid.DataContext = ViewModel;
         _resizeDebounceTimer = DispatcherQueue.CreateTimer();
@@ -54,14 +56,13 @@ public sealed partial class TimelineWindow : Window
         };
         TimelineCanvasHost.SizeChanged += OnTimelineCanvasHostSizeChanged;
         MonthCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();
-        // WeekCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions(); // Removed - replaced by WeekTimelineRoot
+        WeekTimelineScrollViewer.SizeChanged += (_, _) => ApplyWeekDayColumnWidths();
         YearCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += (_, _) => ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
         ViewModel.TimelineCanvasWidth = Math.Max(320d, TimelineCanvasHost.ActualWidth);
         UpdateSelectionButtons();
-        SyncTimelineItemsBindings();
         SetLoading(true);
 
         App.DebugLog($"[TimelineWindow] Initial viewport: ScaleUnit={_viewport.ScaleUnit}, RangeMode={_viewport.RangeMode}");
@@ -94,13 +95,6 @@ public sealed partial class TimelineWindow : Window
             YearCalendarHost ??= root.FindName("YearCalendarHost") as ItemsControl;
             LoadingOverlay ??= root.FindName("LoadingOverlay") as Grid;
             TimelineCanvasHost ??= root.FindName("TimelineCanvasHost") as Grid;
-            HourMarkersItemsControl ??= root.FindName("HourMarkersItemsControl") as ItemsControl;
-            TimelineBlocksItemsControl ??= root.FindName("TimelineBlocksItemsControl") as ItemsControl;
-            DayViewToggle ??= root.FindName("DayViewToggle") as ToggleButton;
-            WeekViewToggle ??= root.FindName("WeekViewToggle") as ToggleButton;
-            MonthViewToggle ??= root.FindName("MonthViewToggle") as ToggleButton;
-            YearViewToggle ??= root.FindName("YearViewToggle") as ToggleButton;
-            RangeComboBox ??= root.FindName("RangeComboBox") as ComboBox;
         }
         catch (COMException ex)
         {
@@ -115,32 +109,26 @@ public sealed partial class TimelineWindow : Window
             or nameof(MainViewModel.TimelineCanvasHeight)
             or nameof(MainViewModel.MonthCalendarRows)
             or nameof(MainViewModel.WeekCalendarDays)
+            or nameof(MainViewModel.WeekTimelineColumns)
+            or nameof(MainViewModel.WeekTimelineHourMarkers)
+            or nameof(MainViewModel.WeekCanvasHeight)
             or nameof(MainViewModel.YearCalendarRows))
         {
-            SyncTimelineItemsBindings();
             ApplyCalendarCellDimensions();
+            ApplyWeekDayColumnWidths();
             SetLoading(false);
         }
     }
 
-    private void SyncTimelineItemsBindings()
-    {
-        HourMarkersItemsControl.ItemsSource = ViewModel.TimelineHourMarkers;
-        TimelineBlocksItemsControl.ItemsSource = ViewModel.TimelineBlocks;
-        HourMarkersItemsControl.Height = ViewModel.TimelineCanvasHeight;
-        TimelineBlocksItemsControl.Height = ViewModel.TimelineCanvasHeight;
-    }
-
     private void UpdateSelectionButtons()
     {
-        DayViewToggle.IsChecked = _viewport.ScaleUnit == TimelineScaleUnit.Day;
-        WeekViewToggle.IsChecked = _viewport.ScaleUnit == TimelineScaleUnit.Week;
-        MonthViewToggle.IsChecked = _viewport.ScaleUnit == TimelineScaleUnit.Month && _viewport.RangeMode != TimelineRangeMode.Year1;
-        YearViewToggle.IsChecked = _viewport.RangeMode == TimelineRangeMode.Year1;
-
-        App.DebugLog($"[TimelineWindow] UpdateSelectionButtons: Day={DayViewToggle.IsChecked}, Week={WeekViewToggle.IsChecked}, Month={MonthViewToggle.IsChecked}, Year={YearViewToggle.IsChecked}");
+        App.DebugLog($"[TimelineWindow] UpdateSelectionButtons: Scale={_viewport.ScaleUnit}, Range={_viewport.RangeMode}");
 
         var syncPlan = TimelineRangeComboResolver.ResolvePlan(_viewport.ScaleUnit, _viewport.RangeMode, _configuredModes);
+        if (RangeComboBox == null)
+        {
+            return;
+        }
         if (syncPlan.ShouldRebuildOptions)
         {
             _isUpdatingRangeCombo = true;
@@ -213,7 +201,7 @@ public sealed partial class TimelineWindow : Window
 
     private void OnRangeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isUpdatingRangeCombo || RangeComboBox.SelectedItem is not ComboBoxItem { Tag: TimelineRangeMode selectedMode })
+        if (_isUpdatingRangeCombo || sender is not ComboBox comboBox || comboBox.SelectedItem is not ComboBoxItem { Tag: TimelineRangeMode selectedMode })
         {
             return;
         }
@@ -230,6 +218,55 @@ public sealed partial class TimelineWindow : Window
             ScaleUnit = nextScale,
             RangeMode = selectedMode,
         });
+    }
+
+    private void WireToolbarControls()
+    {
+        if (ToolbarPanel?.Child is not Grid toolbarGrid)
+        {
+            return;
+        }
+
+        foreach (var button in EnumerateDescendants<Button>(toolbarGrid))
+        {
+            var column = Grid.GetColumn(button);
+            switch (column)
+            {
+                case 0:
+                    button.Click += OnNavigatePreviousClick;
+                    break;
+                case 1:
+                    button.Click += OnNavigateTodayClick;
+                    break;
+                case 2:
+                    button.Click += OnNavigateNextClick;
+                    break;
+                case 4:
+                    button.Click += OnViewDayClick;
+                    break;
+                case 5:
+                    button.Click += OnViewWeekClick;
+                    break;
+                case 6:
+                    button.Click += OnViewMonthClick;
+                    break;
+                case 7:
+                    button.Click += OnViewYearClick;
+                    break;
+                case 10:
+                    button.Click += OnZoomOutClick;
+                    break;
+                case 11:
+                    button.Click += OnZoomInClick;
+                    break;
+            }
+        }
+
+        RangeComboBox = EnumerateDescendants<ComboBox>(toolbarGrid).FirstOrDefault(combo => Grid.GetColumn(combo) == 9);
+        if (RangeComboBox != null)
+        {
+            RangeComboBox.SelectionChanged += OnRangeSelectionChanged;
+        }
     }
 
     private void OnZoomInClick(object sender, RoutedEventArgs e)
@@ -276,7 +313,9 @@ public sealed partial class TimelineWindow : Window
             return;
         }
 
-        var oldCanvasHeight = ViewModel.WeekCanvasHeight;
+        var oldCanvasHeight = scrollViewer == TimelineScrollViewer
+            ? ViewModel.TimelineCanvasHeight
+            : ViewModel.WeekCanvasHeight;
         double anchorOffset;
         try
         {
@@ -292,7 +331,9 @@ public sealed partial class TimelineWindow : Window
         anchorRatio = Math.Clamp(anchorRatio, 0.0, 1.0);
         SafeUpdateViewport(_viewport with { ZoomScale = newZoom });
 
-        var newCanvasHeight = ViewModel.WeekCanvasHeight;
+        var newCanvasHeight = scrollViewer == TimelineScrollViewer
+            ? ViewModel.TimelineCanvasHeight
+            : ViewModel.WeekCanvasHeight;
         var targetOffset = Math.Max(0, (newCanvasHeight * anchorRatio) - point.Position.Y);
         try
         {
@@ -410,7 +451,6 @@ public sealed partial class TimelineWindow : Window
         App.DebugLog($"[TimelineWindow] UpdateViewport: ScaleUnit={viewport.ScaleUnit}, RangeMode={viewport.RangeMode}");
         UpdateSelectionButtons();
         ViewModel.UpdateTimelineViewport(_viewport);
-        SyncTimelineItemsBindings();
         ApplyCalendarCellDimensions();
         ScrollTimelineToNow();
     }
@@ -551,6 +591,32 @@ public sealed partial class TimelineWindow : Window
                 }
             }
         }
+
+        ApplyWeekDayColumnWidths();
+    }
+
+    private void ApplyWeekDayColumnWidths()
+    {
+        if (WeekTimelineScrollViewer is null || ViewModel.WeekCalendarVisibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        var availableWidth = WeekTimelineScrollViewer.ActualWidth;
+        if (availableWidth <= 0)
+        {
+            return;
+        }
+
+        const int dayCount = 7;
+        const double gap = 8d;
+        var totalGap = (dayCount - 1) * gap;
+        var width = Math.Max(110d, (availableWidth - totalGap) / dayCount);
+        if (Math.Abs(ViewModel.WeekDayColumnWidth - width) > 0.5d)
+        {
+            ViewModel.WeekDayColumnWidth = width;
+            ViewModel.ReflowWeekTimelineColumnsForWidth();
+        }
     }
 
     private static IEnumerable<Border> EnumerateDescendantBorders(DependencyObject root)
@@ -567,6 +633,24 @@ public sealed partial class TimelineWindow : Window
             foreach (var descendant in EnumerateDescendantBorders(child))
             {
                 yield return descendant;
+            }
+        }
+    }
+
+    private static IEnumerable<TControl> EnumerateDescendants<TControl>(DependencyObject root) where TControl : DependencyObject
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is TControl control)
+            {
+                yield return control;
+            }
+
+            foreach (var nested in EnumerateDescendants<TControl>(child))
+            {
+                yield return nested;
             }
         }
     }

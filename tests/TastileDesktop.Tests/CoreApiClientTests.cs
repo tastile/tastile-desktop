@@ -152,6 +152,59 @@ public sealed class CoreApiClientTests
         Assert.Equal("tile-1", timeline.Items[0].TileId);
     }
 
+    [Fact]
+    public async Task GetTimelineForViewportAsync_WeekView_ExcludesAllDaySpans()
+    {
+        var client = new CoreApiClient(new HttpClient(new StubHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("""
+                {
+                  "view": "week",
+                  "range_start": "2026-04-06T00:00:00Z",
+                  "range_end": "2026-04-13T00:00:00Z",
+                  "grid_start": "2026-04-06T00:00:00Z",
+                  "grid_end": "2026-04-13T00:00:00Z",
+                  "blocks": [
+                    {
+                      "tile_id": "tile-foreground",
+                      "title": "Foreground card",
+                      "start_at": "2026-04-08T01:00:00Z",
+                      "end_at": "2026-04-08T02:00:00Z",
+                      "semantic_role": "work",
+                      "all_day": false
+                    }
+                  ],
+                  "all_day_spans": [
+                    {
+                      "tile_id": "tile-background",
+                      "title": "All day background",
+                      "start_at": "2026-04-08T00:00:00Z",
+                      "end_at": "2026-04-09T00:00:00Z",
+                      "semantic_role": "work",
+                      "all_day": true
+                    }
+                  ]
+                }
+                """),
+            }))
+        {
+            BaseAddress = new Uri("http://localhost:3140"),
+        });
+
+        var viewport = new TimelineViewportSettings(
+            ScaleUnit: TimelineScaleUnit.Week,
+            RangeMode: TimelineRangeMode.Week1,
+            AnchorLocal: new DateTimeOffset(2026, 4, 8, 9, 0, 0, TimeSpan.FromHours(9)));
+
+        var timeline = await client.GetTimelineForViewportAsync(viewport);
+
+        Assert.NotNull(timeline);
+        Assert.Single(timeline!.Items);
+        Assert.Equal("tile-foreground", timeline.Items[0].TileId);
+        Assert.DoesNotContain(timeline.Items, item => item.TileId == "tile-background");
+    }
+
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)

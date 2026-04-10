@@ -11,9 +11,6 @@
                 <ResourceDictionary Source="Styles/Button.xaml" />
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- Converters -->
-            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
                     <!-- Quick Panel chrome -->
@@ -79,6 +76,9 @@
                     <SolidColorBrush x:Key="AppPrimaryHoverBrush"      Color="#FF1A88DE"/>
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Converters -->
+            <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
 
             <!-- Layout Tokens -->
             <Thickness x:Key="WindowPagePadding">32,24,32,24</Thickness>

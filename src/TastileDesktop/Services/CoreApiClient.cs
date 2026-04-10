@@ -211,8 +211,11 @@ public class CoreApiClient
             return null;
         }
 
-        var items = projection.AllDaySpans
-            .Concat(projection.Blocks)
+        var projectedBlocks = viewport.ScaleUnit == TimelineScaleUnit.Week
+            ? projection.Blocks
+            : projection.AllDaySpans.Concat(projection.Blocks).ToList();
+
+        var items = projectedBlocks
             .OrderBy(block => block.StartAt, StringComparer.Ordinal)
             .Select(block => new TimelineItemView(
                 Kind: "scheduled",

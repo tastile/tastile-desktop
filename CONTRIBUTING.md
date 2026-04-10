@@ -23,6 +23,8 @@ Run the shared validation script before pushing changes:
 .\scripts\check.ps1
 ```
 
+The validation script is strict by default and includes unit tests dual desktop builds (default and `win-x64`) after cleaning desktop `obj/bin` and generated connector safety checks for `TimelineWindow`
+
 If you do not have a sibling `tastile-core` checkout, run unit tests only:
 
 ```powershell

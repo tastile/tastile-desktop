@@ -53,4 +53,40 @@ public sealed class MonthCalendarResolverTests
         Assert.Contains("Task 3", dayCell.Line3);
         Assert.Equal("+2 more", dayCell.OverflowText);
     }
+
+    [Fact]
+    public void BuildWeekTimelineColumns_ReturnsSevenColumns_WhenThereAreNoItems()
+    {
+        var columns = MonthCalendarResolver.BuildWeekTimelineColumns(
+            [],
+            new DateTimeOffset(2026, 4, 8, 9, 0, 0, TimeSpan.FromHours(9)),
+            120d);
+
+        Assert.Equal(7, columns.Count);
+        Assert.Equal(["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], columns.Select(column => column.DayLabel));
+        Assert.All(columns, column => Assert.Empty(column.Blocks));
+    }
+
+    [Fact]
+    public void BuildWeekTimelineColumns_UsesDurationFallback_WhenEndedAtIsMissing()
+    {
+        var columns = MonthCalendarResolver.BuildWeekTimelineColumns(
+            [
+                new TimelineItemView(
+                    Kind: "scheduled",
+                    TileId: "tile-1",
+                    SemanticRole: "work",
+                    Title: "Duration fallback",
+                    StartedAt: "2026-04-08T01:00:00Z",
+                    EndedAt: null,
+                    DurationMin: 60,
+                    IsActive: false),
+            ],
+            new DateTimeOffset(2026, 4, 8, 9, 0, 0, TimeSpan.FromHours(9)),
+            120d);
+
+        var wed = columns.Single(column => column.DayLabel == "Wed");
+        Assert.Single(wed.Blocks);
+        Assert.Equal("60m", wed.Blocks[0].DurationLabel);
+    }
 }

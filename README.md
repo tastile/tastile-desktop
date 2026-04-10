@@ -46,6 +46,14 @@ Run the standard local validation suite:
 .\scripts\check.ps1
 ```
 
+`check.ps1` runs unit tests and then validates both desktop build targets after cleaning stale build artifacts
+
+- default output build (same path used by `dotnet run`)
+- `-r win-x64` build (packaging/runtime parity)
+- generated `TimelineWindow.g.cs` connector safety check so toolbar handlers are not rewired into XAML connector casts
+
+The same connector safety check is also enforced directly in `src/TastileDesktop/TastileDesktop.csproj` during normal desktop builds
+
 Build the desktop app directly:
 
 ```powershell
