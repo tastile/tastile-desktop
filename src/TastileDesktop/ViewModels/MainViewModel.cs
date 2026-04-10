@@ -1498,10 +1498,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     private static DateTimeOffset GetWeekStart(DateTimeOffset date)
     {
-        var dayOfWeek = (int)date.DayOfWeek;
+        var localDate = date.ToLocalTime().Date;
+        var dayOfWeek = (int)localDate.DayOfWeek;
         // Adjust so Monday = 0, Sunday = 6
         var adjustedDay = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
-        return date.Date.AddDays(-adjustedDay);
+        var weekStartLocal = localDate.AddDays(-adjustedDay);
+        var offset = TimeZoneInfo.Local.GetUtcOffset(weekStartLocal);
+        return new DateTimeOffset(weekStartLocal, offset);
     }
 
     private static (double Left, double Width) ResolveWeekLaneGeometry(int lane, int totalLanes, double laneContainerWidth)
