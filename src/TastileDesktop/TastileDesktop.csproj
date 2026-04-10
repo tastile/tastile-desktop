@@ -1,5 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <Platform Condition="'$(Platform)' == '' or '$(Platform)' == 'AnyCPU'">x64</Platform>
+    <PlatformTarget Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCPU'">x64</PlatformTarget>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
     <RootNamespace>TastileDesktop</RootNamespace>
@@ -21,6 +23,7 @@
     <ApplicationIcon>Assets\tastile.ico</ApplicationIcon>
     <DaemonRustTarget>x86_64-pc-windows-msvc</DaemonRustTarget>
     <DaemonBinaryPath>..\..\..\tastile-core\target\$(DaemonRustTarget)\release\tastile-daemon.exe</DaemonBinaryPath>
+    <EnableTimelineConnectorValidation>true</EnableTimelineConnectorValidation>
   </PropertyGroup>
 
   <ItemGroup>
@@ -47,6 +50,17 @@
     <Exec
       Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$p = Get-Process TastileDesktop,tastile-daemon -ErrorAction SilentlyContinue; if ($p) { $p | Stop-Process -Force }; exit 0&quot;"
       ContinueOnError="true" />
+  </Target>
+
+  <Target Name="CleanLegacyAnyCpuOutputs" BeforeTargets="PrepareForBuild" Condition="'$(Platform)' == 'x64'">
+    <PropertyGroup>
+      <_LegacyBinDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\\bin\\$(Configuration)\\$(TargetFramework)\\'))</_LegacyBinDir>
+      <_LegacyObjDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\\obj\\$(Configuration)\\$(TargetFramework)\\'))</_LegacyObjDir>
+      <_ResolvedTargetDir>$([System.IO.Path]::GetFullPath('$(TargetDir)'))</_ResolvedTargetDir>
+      <_ResolvedIntermediateDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\\$(IntermediateOutputPath)'))</_ResolvedIntermediateDir>
+    </PropertyGroup>
+    <RemoveDir Directories="$(_LegacyBinDir)" Condition="Exists('$(_LegacyBinDir)') and '$(_LegacyBinDir)' != '$(_ResolvedTargetDir)'" />
+    <RemoveDir Directories="$(_LegacyObjDir)" Condition="Exists('$(_LegacyObjDir)') and '$(_LegacyObjDir)' != '$(_ResolvedIntermediateDir)'" />
   </Target>
 
   <Target Name="BuildBundledDaemon" BeforeTargets="PrepareForBuild">
@@ -86,5 +100,13 @@
     <Message Text="Verifying bundled tastile-daemon matches latest release build..." Importance="high" />
     <Exec
       Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$release = [System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)$(DaemonBinaryPath)'); $bundled = [System.IO.Path]::GetFullPath('$(TargetDir)tastile-daemon.exe'); if (!(Test-Path $release)) { throw ('release tastile-daemon.exe is missing: ' + $release) }; if (!(Test-Path $bundled)) { throw ('bundled tastile-daemon.exe is missing: ' + $bundled) }; $sha = [System.Security.Cryptography.SHA256]::Create(); try { $releaseHash = [System.BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes($release))).Replace('-', ''); $bundledHash = [System.BitConverter]::ToString($sha.ComputeHash([System.IO.File]::ReadAllBytes($bundled))).Replace('-', ''); } finally { $sha.Dispose() }; if ($releaseHash -ne $bundledHash) { throw ('bundled tastile-daemon.exe is stale: release=' + $releaseHash + ' bundled=' + $bundledHash) }; exit 0&quot;" />
+  </Target>
+
+  <Target
+    Name="ValidateTimelineGeneratedConnectorWiring"
+    AfterTargets="MarkupCompilePass2"
+    Condition="'$(DesignTimeBuild)' != 'true' and '$(EnableTimelineConnectorValidation)' == 'true'">
+    <Exec
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$obj = [System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)'); if (!(Test-Path $obj)) { throw ('Intermediate output folder not found: ' + $obj) }; $generated = Join-Path $obj 'Views\TimelineWindow.g.cs'; if (!(Test-Path $generated)) { throw ('TimelineWindow.g.cs not found: ' + $generated) }; $files = @(Get-Item -Path $generated); $forbidden = @('OnNavigatePreviousClick','OnNavigateTodayClick','OnNavigateNextClick','OnViewDayClick','OnViewWeekClick','OnViewMonthClick','OnViewYearClick','OnRangeSelectionChanged','OnZoomOutClick','OnZoomInClick','this.HourMarkersItemsControl =','this.TimelineBlocksItemsControl =','this.WeekHourMarkersItemsControl ='); $allowedAssignedFields = @('TitleBarArea','TimelineRootGrid','ToolbarPanel','TimelineScrollViewer','MonthCalendarHost','WeekTimelineScrollViewer','YearCalendarHost','LoadingOverlay','WeekTimelineColumnsHost','TimelineCanvasHost'); foreach ($f in $files) { $c = Get-Content -Raw -Path $f.FullName; foreach ($m in $forbidden) { if ($c.Contains($m)) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': ' + $m) } }; $assignments = [System.Text.RegularExpressions.Regex]::Matches($c, 'this\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*global::WinRT\.CastExtensions\.As&lt;') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique; $unexpected = @($assignments | Where-Object { $_ -notin $allowedAssignedFields }); if ($unexpected.Count -gt 0) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': unexpected assignments [' + ($unexpected -join ', ') + ']') } }; exit 0&quot;" />
   </Target>
 </Project>

@@ -1,4 +1,5 @@
 using TastileDesktop.Models;
+using TastileDesktop.Services;
 
 namespace TastileDesktop.Services;
 
@@ -22,6 +23,15 @@ public sealed class YearCalendarMonth
 {
     public string Title { get; init; } = string.Empty;
     public IReadOnlyList<MonthCalendarRow> Rows { get; init; } = [];
+}
+
+public sealed class WeekTimelineColumn
+{
+    public int DayOfWeekIndex { get; init; }
+    public string DayLabel { get; init; } = string.Empty;
+    public string DayNumber { get; init; } = string.Empty;
+    public bool IsToday { get; init; }
+    public IReadOnlyList<TimelineBlock> Blocks { get; init; } = [];
 }
 
 public static class MonthCalendarResolver
@@ -54,7 +64,38 @@ public static class MonthCalendarResolver
         return cells;
     }
 
-    public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows(
+    public static IReadOnlyList<WeekTimelineColumn> BuildWeekTimelineColumns(
+    IReadOnlyList<TimelineItemView> items,
+    DateTimeOffset anchorLocal,
+    double hoursPerPixel)
+{
+    var todayLocal = DateTimeOffset.Now.ToLocalTime();
+    var weekStart = GetWeekStart(anchorLocal);
+    var columns = new List<WeekTimelineColumn>(7);
+
+    for (int i = 0; i < 7; i++)
+    {
+        var dayDate = weekStart.AddDays(i);
+        var dayItems = items
+            .Where(item => IsItemOnDate(item, dayDate))
+            .ToList();
+
+        var blocks = ResolveDayBlocks(dayItems, dayDate, hoursPerPixel);
+
+        columns.Add(new WeekTimelineColumn
+        {
+            DayOfWeekIndex = i,
+            DayLabel = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }[i],
+            DayNumber = $"{dayDate.Month}/{dayDate.Day}",
+            IsToday = dayDate.Date == todayLocal.Date,
+            Blocks = blocks
+        });
+    }
+
+    return columns;
+}
+
+public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows(
         IReadOnlyList<TimelineItemView> items,
         DateTimeOffset anchorLocal)
     {
@@ -159,5 +200,126 @@ public static class MonthCalendarResolver
         }
 
         return map;
+    }
+
+    private static bool IsItemOnDate(TimelineItemView item, DateTimeOffset targetDate)
+    {
+        if (string.IsNullOrWhiteSpace(item.StartedAt))
+            return false;
+
+        if (DateTimeOffset.TryParse(item.StartedAt, out var startAt))
+        {
+            return startAt.LocalDateTime.Date == targetDate.LocalDateTime.Date;
+        }
+
+        return false;
+    }
+
+    private static List<TimelineBlock> ResolveDayBlocks(
+        List<TimelineItemView> dayItems,
+        DateTimeOffset dayDate,
+        double hoursPerPixel)
+    {
+        var blocks = new List<TimelineBlock>();
+        var nowLocal = DateTimeOffset.Now.ToLocalTime();
+
+        // Group overlapping items into lanes
+        var lanes = new List<List<TimelineBlock>>();
+        foreach (var item in dayItems)
+        {
+            if (string.IsNullOrWhiteSpace(item.StartedAt))
+                continue;
+
+            if (!DateTimeOffset.TryParse(item.StartedAt, out var startAt))
+                continue;
+
+            var endAt = ResolveEnd(item, startAt.ToLocalTime(), nowLocal);
+
+            var startMinutes = (startAt.LocalDateTime - dayDate.LocalDateTime.Date).TotalMinutes;
+            var endMinutes = (endAt.LocalDateTime - dayDate.LocalDateTime.Date).TotalMinutes;
+            var durationMinutes = endAt - startAt;
+
+            var top = startMinutes / 60.0 * hoursPerPixel;
+            var height = durationMinutes.TotalMinutes / 60.0 * hoursPerPixel;
+
+            // Find a lane that doesn't overlap
+            int laneIndex = 0;
+            for (; laneIndex < lanes.Count; laneIndex++)
+            {
+                var lane = lanes[laneIndex];
+                var lastBlock = lane.LastOrDefault();
+                if (lastBlock == null || lastBlock.Top + lastBlock.Height <= top)
+                {
+                    break;
+                }
+            }
+
+            // Add new lane if needed
+            while (laneIndex >= lanes.Count)
+            {
+                lanes.Add(new List<TimelineBlock>());
+            }
+
+            var block = new TimelineBlock
+            {
+                TileId = item.TileId,
+                Title = item.Title,
+                StartLabel = startAt.LocalDateTime.ToString("HH:mm"),
+                EndLabel = endAt.LocalDateTime.ToString("HH:mm"),
+                DurationLabel = $"{(int)durationMinutes.TotalMinutes}m",
+                Kind = item.Kind ?? "task",
+                IsActive = item.IsActive,
+                IsDone = false, // Will be calculated based on end date
+                Top = top,
+                Height = Math.Max(24, height),
+                Lane = laneIndex,
+                TotalLanes = lanes.Count,
+                IsFullWidth = false,
+                IsBreak = string.Equals(item.Kind, "break", StringComparison.OrdinalIgnoreCase),
+                IsLabelTile = string.Equals(item.SemanticRole, "label", StringComparison.OrdinalIgnoreCase),
+            };
+
+            lanes[laneIndex].Add(block);
+            blocks.Add(block);
+        }
+
+        // Update lane counts after all items placed
+        foreach (var block in blocks)
+        {
+            block.TotalLanes = lanes.Count;
+        }
+
+        return blocks;
+    }
+
+    private static DateTimeOffset ResolveEnd(TimelineItemView item, DateTimeOffset startLocal, DateTimeOffset nowLocal)
+    {
+        if (!string.IsNullOrWhiteSpace(item.EndedAt) && DateTimeOffset.TryParse(item.EndedAt, out var ended))
+        {
+            return ended.ToLocalTime();
+        }
+
+        if (item.DurationMin > 0)
+        {
+            return startLocal.AddMinutes(item.DurationMin);
+        }
+
+        if (item.IsActive)
+        {
+            return nowLocal;
+        }
+
+        return startLocal.AddMinutes(25);
+    }
+
+    private static DateTimeOffset GetWeekStart(DateTimeOffset date)
+    {
+        var localDate = date.ToLocalTime().Date;
+        var dayOfWeek = (int)localDate.DayOfWeek;
+        // Adjust so Monday = 0, Sunday = 6
+        var adjustedDay = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
+        var weekStartLocal = localDate.AddDays(-adjustedDay);
+        var offset = TimeZoneInfo.Local.GetUtcOffset(weekStartLocal);
+        return new DateTimeOffset(weekStartLocal, offset);
     }
 }

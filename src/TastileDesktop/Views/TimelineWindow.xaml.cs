@@ -2,6 +2,7 @@ using Microsoft.UI.Input;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
@@ -15,13 +16,14 @@ namespace TastileDesktop.Views;
 public sealed partial class TimelineWindow : Window
 {
     public MainViewModel ViewModel { get; } = new();
+    private ComboBox? RangeComboBox;
     private readonly CoreApiClient _api = new();
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
 
     private TimelineViewportSettings _viewport = new(
-        ScaleUnit: TimelineScaleUnit.Month,
-        RangeMode: TimelineRangeMode.Month1,
+        ScaleUnit: TimelineScaleUnit.Day,
+        RangeMode: TimelineRangeMode.Day24,
         AnchorLocal: DateTimeOffset.Now.ToLocalTime());
 
     private bool _isUpdatingRangeCombo;
@@ -29,8 +31,8 @@ public sealed partial class TimelineWindow : Window
     private readonly DispatcherQueueTimer _resizeDebounceTimer;
     private double _lastMonthCellWidth;
     private double _lastMonthCellHeight;
-    private double _lastWeekCellWidth;
-    private double _lastWeekCellHeight;
+    // private double _lastWeekCellWidth; // Removed - week uses unified timeline
+    // private double _lastWeekCellHeight; // Removed - week uses unified timeline
     private double _lastYearMonthWidth;
     private double _lastYearMonthHeight;
     private double _lastYearDayWidth;
@@ -38,6 +40,8 @@ public sealed partial class TimelineWindow : Window
     public TimelineWindow()
     {
         InitializeComponent();
+        EnsureNamedElementsBound();
+        WireToolbarControls();
         FloatingWindowHelper.Configure(this, TitleBarArea, 1100, 760);
         TimelineRootGrid.DataContext = ViewModel;
         _resizeDebounceTimer = DispatcherQueue.CreateTimer();
@@ -52,17 +56,50 @@ public sealed partial class TimelineWindow : Window
         };
         TimelineCanvasHost.SizeChanged += OnTimelineCanvasHostSizeChanged;
         MonthCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();
-        WeekCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();
+        WeekTimelineScrollViewer.SizeChanged += (_, _) => ApplyWeekDayColumnWidths();
         YearCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();
         ViewModel.PropertyChanged += OnViewModelPropertyChanged;
         Closed += (_, _) => ViewModel.PropertyChanged -= OnViewModelPropertyChanged;
 
         ViewModel.TimelineCanvasWidth = Math.Max(320d, TimelineCanvasHost.ActualWidth);
         UpdateSelectionButtons();
-        SyncTimelineItemsBindings();
         SetLoading(true);
+
+        App.DebugLog($"[TimelineWindow] Initial viewport: ScaleUnit={_viewport.ScaleUnit}, RangeMode={_viewport.RangeMode}");
+        App.DebugLog($"[TimelineWindow] TimelineCanvasVisibility={ViewModel.TimelineCanvasVisibility}");
+        App.DebugLog($"[TimelineWindow] MonthCalendarVisibility={ViewModel.MonthCalendarVisibility}");
+        App.DebugLog($"[TimelineWindow] WeekCalendarVisibility={ViewModel.WeekCalendarVisibility}");
+        App.DebugLog($"[TimelineWindow] YearCalendarVisibility={ViewModel.YearCalendarVisibility}");
+        App.DebugLog($"[TimelineWindow] TimelineBlocks count={ViewModel.TimelineBlocks.Count}");
+
         ViewModel.UpdateTimelineViewport(_viewport);
         _ = ViewModel.InitializeAsync();
+    }
+
+    private void EnsureNamedElementsBound()
+    {
+        if (Content is not FrameworkElement root)
+        {
+            return;
+        }
+
+        try
+        {
+            TitleBarArea ??= root.FindName("TitleBarArea") as Grid;
+            TimelineRootGrid ??= root.FindName("TimelineRootGrid") as Grid;
+            ToolbarPanel ??= root.FindName("ToolbarPanel") as Border;
+            TimelineScrollViewer ??= root.FindName("TimelineScrollViewer") as ScrollViewer;
+            MonthCalendarHost ??= root.FindName("MonthCalendarHost") as Grid;
+            // WeekCalendarHost ??= root.FindName("WeekCalendarHost") as Grid; // Removed - replaced by WeekTimelineRoot
+            WeekTimelineScrollViewer ??= root.FindName("WeekTimelineScrollViewer") as ScrollViewer;
+            YearCalendarHost ??= root.FindName("YearCalendarHost") as ItemsControl;
+            LoadingOverlay ??= root.FindName("LoadingOverlay") as Grid;
+            TimelineCanvasHost ??= root.FindName("TimelineCanvasHost") as Grid;
+        }
+        catch (COMException ex)
+        {
+            App.DebugLog($"[TimelineWindow] EnsureNamedElementsBound skipped: {ex.Message}");
+        }
     }
 
     private void OnViewModelPropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -72,30 +109,26 @@ public sealed partial class TimelineWindow : Window
             or nameof(MainViewModel.TimelineCanvasHeight)
             or nameof(MainViewModel.MonthCalendarRows)
             or nameof(MainViewModel.WeekCalendarDays)
+            or nameof(MainViewModel.WeekTimelineColumns)
+            or nameof(MainViewModel.WeekTimelineHourMarkers)
+            or nameof(MainViewModel.WeekCanvasHeight)
             or nameof(MainViewModel.YearCalendarRows))
         {
-            SyncTimelineItemsBindings();
             ApplyCalendarCellDimensions();
+            ApplyWeekDayColumnWidths();
             SetLoading(false);
         }
     }
 
-    private void SyncTimelineItemsBindings()
-    {
-        HourMarkersItemsControl.ItemsSource = ViewModel.TimelineHourMarkers;
-        TimelineBlocksItemsControl.ItemsSource = ViewModel.TimelineBlocks;
-        HourMarkersItemsControl.Height = ViewModel.TimelineCanvasHeight;
-        TimelineBlocksItemsControl.Height = ViewModel.TimelineCanvasHeight;
-    }
-
     private void UpdateSelectionButtons()
     {
-        DayViewToggle.IsChecked = _viewport.ScaleUnit == TimelineScaleUnit.Day;
-        WeekViewToggle.IsChecked = _viewport.ScaleUnit == TimelineScaleUnit.Week;
-        MonthViewToggle.IsChecked = _viewport.ScaleUnit == TimelineScaleUnit.Month && _viewport.RangeMode != TimelineRangeMode.Year1;
-        YearViewToggle.IsChecked = _viewport.RangeMode == TimelineRangeMode.Year1;
+        App.DebugLog($"[TimelineWindow] UpdateSelectionButtons: Scale={_viewport.ScaleUnit}, Range={_viewport.RangeMode}");
 
         var syncPlan = TimelineRangeComboResolver.ResolvePlan(_viewport.ScaleUnit, _viewport.RangeMode, _configuredModes);
+        if (RangeComboBox == null)
+        {
+            return;
+        }
         if (syncPlan.ShouldRebuildOptions)
         {
             _isUpdatingRangeCombo = true;
@@ -143,20 +176,32 @@ public sealed partial class TimelineWindow : Window
         => SafeUpdateViewport(_viewport with { AnchorLocal = ShiftAnchor(_viewport, 1) });
 
     private void OnViewDayClick(object sender, RoutedEventArgs e)
-        => SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Day, RangeMode = TimelineRangeMode.Day24 });
+    {
+        App.DebugLog("[TimelineWindow] OnViewDayClick called");
+        SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Day, RangeMode = TimelineRangeMode.Day24 });
+    }
 
     private void OnViewWeekClick(object sender, RoutedEventArgs e)
-        => SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Week, RangeMode = TimelineRangeMode.Week1 });
+    {
+        App.DebugLog("[TimelineWindow] OnViewWeekClick called");
+        SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Week, RangeMode = TimelineRangeMode.Week1 });
+    }
 
     private void OnViewMonthClick(object sender, RoutedEventArgs e)
-        => SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Month, RangeMode = TimelineRangeMode.Month1 });
+    {
+        App.DebugLog("[TimelineWindow] OnViewMonthClick called");
+        SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Month, RangeMode = TimelineRangeMode.Month1 });
+    }
 
     private void OnViewYearClick(object sender, RoutedEventArgs e)
-        => SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Month, RangeMode = TimelineRangeMode.Year1 });
+    {
+        App.DebugLog("[TimelineWindow] OnViewYearClick called");
+        SafeUpdateViewport(_viewport with { ScaleUnit = TimelineScaleUnit.Month, RangeMode = TimelineRangeMode.Year1 });
+    }
 
     private void OnRangeSelectionChanged(object sender, SelectionChangedEventArgs e)
     {
-        if (_isUpdatingRangeCombo || RangeComboBox.SelectedItem is not ComboBoxItem { Tag: TimelineRangeMode selectedMode })
+        if (_isUpdatingRangeCombo || sender is not ComboBox comboBox || comboBox.SelectedItem is not ComboBoxItem { Tag: TimelineRangeMode selectedMode })
         {
             return;
         }
@@ -175,6 +220,55 @@ public sealed partial class TimelineWindow : Window
         });
     }
 
+    private void WireToolbarControls()
+    {
+        if (ToolbarPanel?.Child is not Grid toolbarGrid)
+        {
+            return;
+        }
+
+        foreach (var button in EnumerateDescendants<Button>(toolbarGrid))
+        {
+            var column = Grid.GetColumn(button);
+            switch (column)
+            {
+                case 0:
+                    button.Click += OnNavigatePreviousClick;
+                    break;
+                case 1:
+                    button.Click += OnNavigateTodayClick;
+                    break;
+                case 2:
+                    button.Click += OnNavigateNextClick;
+                    break;
+                case 4:
+                    button.Click += OnViewDayClick;
+                    break;
+                case 5:
+                    button.Click += OnViewWeekClick;
+                    break;
+                case 6:
+                    button.Click += OnViewMonthClick;
+                    break;
+                case 7:
+                    button.Click += OnViewYearClick;
+                    break;
+                case 10:
+                    button.Click += OnZoomOutClick;
+                    break;
+                case 11:
+                    button.Click += OnZoomInClick;
+                    break;
+            }
+        }
+
+        RangeComboBox = EnumerateDescendants<ComboBox>(toolbarGrid).FirstOrDefault(combo => Grid.GetColumn(combo) == 9);
+        if (RangeComboBox != null)
+        {
+            RangeComboBox.SelectionChanged += OnRangeSelectionChanged;
+        }
+    }
+
     private void OnZoomInClick(object sender, RoutedEventArgs e)
         => SafeUpdateViewport(_viewport with { ZoomScale = Math.Min(_viewport.MaxZoomScale, _viewport.ZoomScale + 0.1) });
 
@@ -183,7 +277,22 @@ public sealed partial class TimelineWindow : Window
 
     private void OnTimelineWheelChanged(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        if (sender is not ScrollViewer scrollViewer)
+        ScrollViewer? scrollViewer = null;
+
+        if (sender is ScrollViewer sv)
+        {
+            scrollViewer = sv;
+        }
+        else if (TimelineScrollViewer != null && ViewModel.TimelineCanvasVisibility == Visibility.Visible)
+        {
+            scrollViewer = TimelineScrollViewer;
+        }
+        else if (WeekTimelineScrollViewer != null && ViewModel.WeekCalendarVisibility == Visibility.Visible)
+        {
+            scrollViewer = WeekTimelineScrollViewer;
+        }
+
+        if (scrollViewer == null)
         {
             return;
         }
@@ -204,7 +313,9 @@ public sealed partial class TimelineWindow : Window
             return;
         }
 
-        var oldCanvasHeight = ViewModel.TimelineCanvasHeight;
+        var oldCanvasHeight = scrollViewer == TimelineScrollViewer
+            ? ViewModel.TimelineCanvasHeight
+            : ViewModel.WeekCanvasHeight;
         double anchorOffset;
         try
         {
@@ -220,7 +331,9 @@ public sealed partial class TimelineWindow : Window
         anchorRatio = Math.Clamp(anchorRatio, 0.0, 1.0);
         SafeUpdateViewport(_viewport with { ZoomScale = newZoom });
 
-        var newCanvasHeight = ViewModel.TimelineCanvasHeight;
+        var newCanvasHeight = scrollViewer == TimelineScrollViewer
+            ? ViewModel.TimelineCanvasHeight
+            : ViewModel.WeekCanvasHeight;
         var targetOffset = Math.Max(0, (newCanvasHeight * anchorRatio) - point.Position.Y);
         try
         {
@@ -335,9 +448,9 @@ public sealed partial class TimelineWindow : Window
     private void UpdateViewport(TimelineViewportSettings viewport)
     {
         _viewport = viewport;
+        App.DebugLog($"[TimelineWindow] UpdateViewport: ScaleUnit={viewport.ScaleUnit}, RangeMode={viewport.RangeMode}");
         UpdateSelectionButtons();
         ViewModel.UpdateTimelineViewport(_viewport);
-        SyncTimelineItemsBindings();
         ApplyCalendarCellDimensions();
         ScrollTimelineToNow();
     }
@@ -408,16 +521,17 @@ public sealed partial class TimelineWindow : Window
     {
         var monthCellWidth = MonthCalendarHost.ActualWidth > 0 ? Math.Max(110d, (MonthCalendarHost.ActualWidth - (8d * 6d)) / 7d) : 0d;
         var monthCellHeight = MonthCalendarHost.ActualHeight > 0 ? Math.Max(80d, (MonthCalendarHost.ActualHeight - 80d) / 6d) : 0d;
-        var weekCellWidth = WeekCalendarHost.ActualWidth > 0 ? Math.Max(110d, (WeekCalendarHost.ActualWidth - (8d * 6d)) / 7d) : 0d;
-        var weekCellHeight = WeekCalendarHost.ActualHeight > 0 ? Math.Max(140d, WeekCalendarHost.ActualHeight - 56d) : 0d;
+        // var weekCellWidth = WeekCalendarHost.ActualWidth > 0 ? Math.Max(110d, (WeekCalendarHost.ActualWidth - (8d * 6d)) / 7d) : 0d; // Removed - week uses unified timeline
+        // var weekCellHeight = Math.Max(180d, ViewModel.WeekCanvasHeight + 48d); // Removed - week uses unified timeline
         var yearMonthWidth = YearCalendarHost.ActualWidth > 0 ? Math.Max(210d, (YearCalendarHost.ActualWidth - (10d * 3d)) / 4d) : 0d;
         var yearMonthHeight = YearCalendarHost.ActualHeight > 0 ? Math.Max(170d, (YearCalendarHost.ActualHeight - (10d * 2d)) / 3d) : 0d;
         var yearDayWidth = yearMonthWidth > 0 ? Math.Max(24d, (yearMonthWidth - 16d - (2d * 6d)) / 7d) : 0d;
 
+        // Week calendar now uses unified timeline - no cell dimension comparison needed
         if (Math.Abs(monthCellWidth - _lastMonthCellWidth) < 0.5
             && Math.Abs(monthCellHeight - _lastMonthCellHeight) < 0.5
-            && Math.Abs(weekCellWidth - _lastWeekCellWidth) < 0.5
-            && Math.Abs(weekCellHeight - _lastWeekCellHeight) < 0.5
+            // && Math.Abs(weekCellWidth - _lastWeekCellWidth) < 0.5 // Removed - week uses unified timeline
+            // && Math.Abs(weekCellHeight - _lastWeekCellHeight) < 0.5 // Removed - week uses unified timeline
             && Math.Abs(yearMonthWidth - _lastYearMonthWidth) < 0.5
             && Math.Abs(yearMonthHeight - _lastYearMonthHeight) < 0.5
             && Math.Abs(yearDayWidth - _lastYearDayWidth) < 0.5)
@@ -427,8 +541,8 @@ public sealed partial class TimelineWindow : Window
 
         _lastMonthCellWidth = monthCellWidth;
         _lastMonthCellHeight = monthCellHeight;
-        _lastWeekCellWidth = weekCellWidth;
-        _lastWeekCellHeight = weekCellHeight;
+        // _lastWeekCellWidth = weekCellWidth; // Removed - week uses unified timeline
+        // _lastWeekCellHeight = weekCellHeight; // Removed - week uses unified timeline
         _lastYearMonthWidth = yearMonthWidth;
         _lastYearMonthHeight = yearMonthHeight;
         _lastYearDayWidth = yearDayWidth;
@@ -445,17 +559,20 @@ public sealed partial class TimelineWindow : Window
             }
         }
 
+        // Week calendar now uses unified timeline - no cell dimension adjustment needed
+        /*
         if (ViewModel.WeekCalendarVisibility == Visibility.Visible)
         {
             foreach (var border in EnumerateDescendantBorders(WeekCalendarHost))
             {
-                if (border.Tag is string tag && string.Equals(tag, "WeekCell", StringComparison.Ordinal))
+                if (border.Tag is string tag && string.Equals(tag, "WeekTimelineDayColumn", StringComparison.Ordinal))
                 {
                     border.Width = weekCellWidth;
                     border.Height = weekCellHeight;
                 }
             }
         }
+        */
 
         if (ViewModel.YearCalendarVisibility == Visibility.Visible)
         {
@@ -474,6 +591,32 @@ public sealed partial class TimelineWindow : Window
                 }
             }
         }
+
+        ApplyWeekDayColumnWidths();
+    }
+
+    private void ApplyWeekDayColumnWidths()
+    {
+        if (WeekTimelineScrollViewer is null || ViewModel.WeekCalendarVisibility != Visibility.Visible)
+        {
+            return;
+        }
+
+        var availableWidth = WeekTimelineScrollViewer.ActualWidth;
+        if (availableWidth <= 0)
+        {
+            return;
+        }
+
+        const int dayCount = 7;
+        const double gap = 8d;
+        var totalGap = (dayCount - 1) * gap;
+        var width = Math.Max(110d, (availableWidth - totalGap) / dayCount);
+        if (Math.Abs(ViewModel.WeekDayColumnWidth - width) > 0.5d)
+        {
+            ViewModel.WeekDayColumnWidth = width;
+            ViewModel.ReflowWeekTimelineColumnsForWidth();
+        }
     }
 
     private static IEnumerable<Border> EnumerateDescendantBorders(DependencyObject root)
@@ -490,6 +633,24 @@ public sealed partial class TimelineWindow : Window
             foreach (var descendant in EnumerateDescendantBorders(child))
             {
                 yield return descendant;
+            }
+        }
+    }
+
+    private static IEnumerable<TControl> EnumerateDescendants<TControl>(DependencyObject root) where TControl : DependencyObject
+    {
+        var count = VisualTreeHelper.GetChildrenCount(root);
+        for (var i = 0; i < count; i++)
+        {
+            var child = VisualTreeHelper.GetChild(root, i);
+            if (child is TControl control)
+            {
+                yield return control;
+            }
+
+            foreach (var nested in EnumerateDescendants<TControl>(child))
+            {
+                yield return nested;
             }
         }
     }
