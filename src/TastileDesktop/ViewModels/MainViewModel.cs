@@ -101,6 +101,9 @@ public sealed class TimelineWeekColumnViewModel : ObservableObject
     public string DayLabel { get; set; } = string.Empty;
     public string DayNumber { get; set; } = string.Empty;
     public bool IsToday { get; set; }
+    public double TimelineNowTop { get; set; }
+    public string TimelineNowLabel { get; set; } = string.Empty;
+    public IReadOnlyList<TimelineHourMarkerViewModel> HourMarkers { get; set; } = [];
     public IReadOnlyList<TimelineAbsoluteBlockViewModel> Blocks { get; set; } = [];
 }
 
@@ -1347,6 +1350,18 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 timeline?.Items ?? [],
                 TimelineViewport.AnchorLocal,
                 hoursPerPixel);
+
+            // Build hour markers for week view (0-23 hours)
+            var hourMarkers = new List<TimelineHourMarkerViewModel>();
+            for (int hour = 0; hour <= 24; hour++)
+            {
+                hourMarkers.Add(new TimelineHourMarkerViewModel
+                {
+                    Label = $"{hour}:00",
+                    Top = hour * hoursPerPixel,
+                });
+            }
+
             WeekCanvasHeight = 24 * hoursPerPixel;
             WeekTimelineColumns = new ObservableCollection<TimelineWeekColumnViewModel>(
                 weekTimelineColumns.Select(col => new TimelineWeekColumnViewModel
@@ -1355,6 +1370,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     DayLabel = col.DayLabel,
                     DayNumber = weekCells.ElementAtOrDefault(col.DayOfWeekIndex)?.DayNumber ?? string.Empty,
                     IsToday = IsTodayColumn(col.DayOfWeekIndex, TimelineViewport.AnchorLocal, todayLocal),
+                    TimelineNowTop = TimelineNowTop,
+                    TimelineNowLabel = TimelineNowLabel,
+                    HourMarkers = hourMarkers,
                     Blocks = col.Blocks.Select(block => new TimelineAbsoluteBlockViewModel
                     {
                         Title = block.Title,

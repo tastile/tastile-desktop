@@ -264,11 +264,11 @@
                                         <!-- Now Indicator (only shows in today's column) -->
                                         <Canvas Width="180" Visibility="{x:Bind IsToday, Mode=OneWay, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <Canvas.RenderTransform>
-                                                <TranslateTransform Y="{x:Bind ViewModel.TimelineNowTop, Mode=OneWay}" />
+                                                <TranslateTransform Y="{x:Bind TimelineNowTop, Mode=OneWay}" />
                                             </Canvas.RenderTransform>
                                             <Rectangle Canvas.Top="0" Width="180" Height="2" Fill="{StaticResource AppPrimaryBrush}" />
                                             <Ellipse Canvas.Left="-4" Canvas.Top="-3" Width="8" Height="8" Fill="{StaticResource AppPrimaryBrush}" />
-                                            <TextBlock Canvas.Top="-14" Width="180" TextAlignment="Right" Padding="0,0,4,0" Text="{x:Bind ViewModel.TimelineNowLabel, Mode=OneWay}" Foreground="{StaticResource AppPrimaryBrush}" FontSize="11" />
+                                            <TextBlock Canvas.Top="-14" Width="180" TextAlignment="Right" Padding="0,0,4,0" Text="{x:Bind TimelineNowLabel, Mode=OneWay}" Foreground="{StaticResource AppPrimaryBrush}" FontSize="11" />
                                         </Canvas>
                                     </Grid>
                                 </Grid>
