@@ -95,6 +95,14 @@ public sealed class YearCalendarRowViewModel : ObservableObject
     public IReadOnlyList<YearCalendarMonthViewModel> Months { get; set; } = [];
 }
 
+public sealed class TimelineWeekColumnViewModel : ObservableObject
+{
+    public int DayOfWeekIndex { get; set; }
+    public string DayLabel { get; set; } = string.Empty;
+    public string DayNumber { get; set; } = string.Empty;
+    public bool IsToday { get; set; }
+    public IReadOnlyList<TimelineAbsoluteBlockViewModel> Blocks { get; set; } = [];
+}
 
 public sealed class PromptActionButtonViewModel : ObservableObject
 {
@@ -421,6 +429,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private ObservableCollection<TimelineAbsoluteBlockViewModel> _timelineBlocks = new();
     private ObservableCollection<MonthCalendarRowViewModel> _monthCalendarRows = new();
     private ObservableCollection<MonthCalendarCellViewModel> _weekCalendarDays = new();
+    private ObservableCollection<TimelineWeekColumnViewModel> _weekTimelineColumns = new(
+        Enumerable.Range(0, 7).Select(i => new TimelineWeekColumnViewModel
+        {
+            DayOfWeekIndex = i,
+            DayLabel = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }[i],
+            DayNumber = string.Empty,
+            Blocks = [],
+        }).ToList()
+    );
     private ObservableCollection<YearCalendarRowViewModel> _yearCalendarRows = new();
     private ObservableCollection<PromptActionButtonViewModel> _promptActions = new();
     private double _timelineCanvasWidth = 620d;
@@ -575,14 +592,20 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         set => SetProperty(ref _weekCalendarDays, value);
     }
 
+    public ObservableCollection<TimelineWeekColumnViewModel> WeekTimelineColumns
+    {
+        get => _weekTimelineColumns;
+        set => SetProperty(ref _weekTimelineColumns, value);
+    }
+
     public ObservableCollection<YearCalendarRowViewModel> YearCalendarRows
     {
         get => _yearCalendarRows;
         set => SetProperty(ref _yearCalendarRows, value);
     }
 
-
     public double TimelineCanvasHeight { get; private set; } = 24 * 120;
+    public double WeekCanvasHeight { get; private set; } = 24 * 120;
     public double TimelineCanvasWidth
     {
         get => _timelineCanvasWidth;
@@ -621,6 +644,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     public bool HasNoTimelineSegments => TimelineBlocks.Count == 0;
+
+    // ToggleButton IsChecked bindings for view switching
+    public bool IsDayView => TimelineViewport.ScaleUnit == TimelineScaleUnit.Day;
+    public bool IsWeekView => TimelineViewport.ScaleUnit == TimelineScaleUnit.Week;
+    public bool IsMonthView => TimelineViewport.ScaleUnit == TimelineScaleUnit.Month && TimelineViewport.RangeMode != TimelineRangeMode.Year1;
+    public bool IsYearView => TimelineViewport.RangeMode == TimelineRangeMode.Year1;
+
     public Visibility MonthCalendarVisibility =>
         TimelineViewport.ScaleUnit == TimelineScaleUnit.Month && TimelineViewport.RangeMode != TimelineRangeMode.Year1 ? Visibility.Visible : Visibility.Collapsed;
     public Visibility WeekCalendarVisibility =>
@@ -799,7 +829,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _api = new CoreApiClient();
         _pollingService = new PollingService(_api, DaemonManager.Shared);
         _pollingService.SetTimelineViewport(_timelineViewport);
-        
+
+        // Notify initial visibility state
+        OnPropertyChanged(nameof(IsDayView));
+        OnPropertyChanged(nameof(IsWeekView));
+        OnPropertyChanged(nameof(IsMonthView));
+        OnPropertyChanged(nameof(IsYearView));
+        OnPropertyChanged(nameof(MonthCalendarVisibility));
+        OnPropertyChanged(nameof(WeekCalendarVisibility));
+        OnPropertyChanged(nameof(YearCalendarVisibility));
+        OnPropertyChanged(nameof(TimelineCanvasVisibility));
+
         // Subscribe to polling events
         _pollingService.ExecutionViewChanged += OnExecutionViewChanged;
         _pollingService.TilesChanged += OnTilesChanged;
@@ -1204,6 +1244,12 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 return;
             }
 
+            App.DebugLog($"[MainViewModel] OnTimelineChanged called, timeline is null: {timeline == null}");
+            if (timeline?.Items != null)
+            {
+                App.DebugLog($"[MainViewModel] Timeline items count: {timeline.Items.Count}");
+            }
+
             foreach (var tile in _allTiles)
             {
                 tile.NextStartLabel = ResolveNextStartLabel(tile.ProjectedNextStartAt);
@@ -1293,6 +1339,49 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     OverflowText = cell.OverflowText,
                 }));
 
+            var hoursPerPixel = TimelineViewport.ScaleUnit == TimelineScaleUnit.Week
+                ? (TimelineViewport.PixelsPerHourBase * TimelineViewport.ZoomScale)
+                : 120d;
+            var todayLocal = DateTimeOffset.Now.ToLocalTime();
+            var weekTimelineColumns = MonthCalendarResolver.BuildWeekTimelineColumns(
+                timeline?.Items ?? [],
+                TimelineViewport.AnchorLocal,
+                hoursPerPixel);
+            WeekCanvasHeight = 24 * hoursPerPixel;
+            WeekTimelineColumns = new ObservableCollection<TimelineWeekColumnViewModel>(
+                weekTimelineColumns.Select(col => new TimelineWeekColumnViewModel
+                {
+                    DayOfWeekIndex = col.DayOfWeekIndex,
+                    DayLabel = col.DayLabel,
+                    DayNumber = weekCells.ElementAtOrDefault(col.DayOfWeekIndex)?.DayNumber ?? string.Empty,
+                    IsToday = IsTodayColumn(col.DayOfWeekIndex, TimelineViewport.AnchorLocal, todayLocal),
+                    Blocks = col.Blocks.Select(block => new TimelineAbsoluteBlockViewModel
+                    {
+                        Title = block.Title,
+                        TimeRangeText = $"{block.StartLabel} - {block.EndLabel}",
+                        DurationText = block.DurationLabel,
+                        KindLabel = NormalizeTimelineKindLabel(block.Kind),
+                        Lane = block.Lane,
+                        TotalLanes = block.TotalLanes,
+                        IsFullWidth = block.IsFullWidth,
+                        Left = 0,
+                        Width = 100,
+                        Top = block.Top,
+                        Height = block.Height,
+                        TileId = block.TileId,
+                        Lifecycle = block.IsDone ? "done" : block.IsActive ? "started" : "ready",
+                        StatusIconGlyph = block.IsDone ? "\uE73E" : block.IsActive ? "\uE945" : "\uE768",
+                        StatusIconToolTip = block.IsDone ? "done" : block.IsActive ? "active" : "scheduled",
+                        Fill = block.IsActive ? surface1Brush : surfaceElevatedBrush,
+                        BorderBrush = borderBrush,
+                        ForegroundBrush = foregroundBrush,
+                        SecondaryForegroundBrush = foregroundMutedBrush,
+                        StatusFill = ResolveTimelineStatusFill(block),
+                        StatusBorderBrush = ResolveTimelineStatusBorder(block),
+                        StatusForegroundBrush = ResolveTimelineStatusForeground(block),
+                    }).ToArray(),
+                }));
+
             var yearRows = TimelineViewport.RangeMode == TimelineRangeMode.Year1
                 ? MonthCalendarResolver.BuildYearMonthRows(timeline?.Items ?? [], TimelineViewport.AnchorLocal)
                 : [];
@@ -1339,6 +1428,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(TimelineBlocks));
             OnPropertyChanged(nameof(MonthCalendarRows));
             OnPropertyChanged(nameof(WeekCalendarDays));
+            OnPropertyChanged(nameof(WeekTimelineColumns));
+            OnPropertyChanged(nameof(WeekCanvasHeight));
             OnPropertyChanged(nameof(YearCalendarRows));
             OnPropertyChanged(nameof(MonthCalendarVisibility));
             OnPropertyChanged(nameof(WeekCalendarVisibility));
@@ -1360,9 +1451,28 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private static bool IsTodayColumn(int dayOfWeekIndex, DateTimeOffset anchorLocal, DateTimeOffset todayLocal)
+    {
+        var weekStart = GetWeekStart(anchorLocal);
+        var columnDate = weekStart.AddDays(dayOfWeekIndex);
+        return columnDate.Date == todayLocal.Date;
+    }
+
+    private static DateTimeOffset GetWeekStart(DateTimeOffset date)
+    {
+        var dayOfWeek = (int)date.DayOfWeek;
+        // Adjust so Monday = 0, Sunday = 6
+        var adjustedDay = dayOfWeek == 0 ? 6 : dayOfWeek - 1;
+        return date.Date.AddDays(-adjustedDay);
+    }
+
     public void UpdateTimelineViewport(TimelineViewportSettings viewport)
     {
         TimelineViewport = viewport;
+        OnPropertyChanged(nameof(IsDayView));
+        OnPropertyChanged(nameof(IsWeekView));
+        OnPropertyChanged(nameof(IsMonthView));
+        OnPropertyChanged(nameof(IsYearView));
         OnPropertyChanged(nameof(MonthCalendarVisibility));
         OnPropertyChanged(nameof(WeekCalendarVisibility));
         OnPropertyChanged(nameof(YearCalendarVisibility));
