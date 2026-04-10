@@ -240,7 +240,22 @@ public sealed partial class TimelineWindow : Window
 
     private void OnTimelineWheelChanged(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e)
     {
-        if (sender is not ScrollViewer scrollViewer)
+        ScrollViewer? scrollViewer = null;
+
+        if (sender is ScrollViewer sv)
+        {
+            scrollViewer = sv;
+        }
+        else if (TimelineScrollViewer != null && ViewModel.TimelineCanvasVisibility == Visibility.Visible)
+        {
+            scrollViewer = TimelineScrollViewer;
+        }
+        else if (WeekTimelineScrollViewer != null && ViewModel.WeekCalendarVisibility == Visibility.Visible)
+        {
+            scrollViewer = WeekTimelineScrollViewer;
+        }
+
+        if (scrollViewer == null)
         {
             return;
         }
@@ -261,7 +276,7 @@ public sealed partial class TimelineWindow : Window
             return;
         }
 
-        var oldCanvasHeight = ViewModel.TimelineCanvasHeight;
+        var oldCanvasHeight = ViewModel.WeekCanvasHeight;
         double anchorOffset;
         try
         {
@@ -277,7 +292,7 @@ public sealed partial class TimelineWindow : Window
         anchorRatio = Math.Clamp(anchorRatio, 0.0, 1.0);
         SafeUpdateViewport(_viewport with { ZoomScale = newZoom });
 
-        var newCanvasHeight = ViewModel.TimelineCanvasHeight;
+        var newCanvasHeight = ViewModel.WeekCanvasHeight;
         var targetOffset = Math.Max(0, (newCanvasHeight * anchorRatio) - point.Position.Y);
         try
         {
