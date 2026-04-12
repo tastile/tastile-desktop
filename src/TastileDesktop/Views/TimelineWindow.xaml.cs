@@ -429,7 +429,9 @@ public sealed partial class TimelineWindow : Window
                 return;
             }
 
-            var createWindow = new CreateTileWindow(tileId, freshTile);
+            var editTileId = freshTile.Id;
+            var createWindow = new CreateTileWindow(editTileId, freshTile);
+            createWindow.Closed += (_, _) => _ = ViewModel.RefreshAsync(forcePublish: true);
             FloatingWindowHelper.CenterOnQuickPanelDisplay(createWindow, _settings.Current);
             createWindow.Activate();
         }

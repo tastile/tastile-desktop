@@ -120,11 +120,20 @@ public static class CreateTileParityResolver
         var labels = BuildLabels(project, draft.Tags ?? []);
         var title = string.IsNullOrWhiteSpace(draft.Title) ? GetSuggestedTitle(draft, isJapanese) : draft.Title.Trim();
 
+        var nonRecurringWindowMinutes = startAt.HasValue && endAt.HasValue
+            ? (int)Math.Max(0, (endAt.Value - startAt.Value).TotalMinutes)
+            : 0;
+        var fixedWindowShouldBeAbsolute = startAt.HasValue
+            && endAt.HasValue
+            && workMinutes.HasValue
+            && workMinutes.Value > 0
+            && workMinutes.Value >= nonRecurringWindowMinutes;
+
         var temporal = new CreateTileTemporalRequest(
             ReleaseAt: recurrenceValidFrom.HasValue ? ToIsoString(recurrenceValidFrom.Value) : null,
             DueAt: recurrenceValidTo.HasValue ? ToIsoString(recurrenceValidTo.Value.AddDays(1).AddMinutes(-1)) : null,
-            FixedStart: startAt.HasValue ? ToIsoString(startAt.Value) : null,
-            FixedEnd: endAt.HasValue ? ToIsoString(endAt.Value) : null,
+            FixedStart: fixedWindowShouldBeAbsolute ? ToIsoString(startAt!.Value) : null,
+            FixedEnd: fixedWindowShouldBeAbsolute ? ToIsoString(endAt!.Value) : null,
             ActiveStart: startAt.HasValue ? ToIsoString(startAt.Value) : null,
             ActiveEnd: endAt.HasValue ? ToIsoString(endAt.Value) : null);
 
@@ -310,6 +319,37 @@ public static class CreateTileParityResolver
             }
         }
         return labels;
+    }
+
+    public static (string Project, List<string> Tags) SplitProjectAndTags(IEnumerable<string> labels)
+    {
+        var project = string.Empty;
+        var tags = new List<string>();
+        foreach (var raw in labels ?? [])
+        {
+            if (string.IsNullOrWhiteSpace(raw))
+            {
+                continue;
+            }
+
+            var normalized = raw.Trim();
+            if (normalized.StartsWith("project:", StringComparison.OrdinalIgnoreCase))
+            {
+                var parsed = normalized["project:".Length..].Trim();
+                if (!string.IsNullOrWhiteSpace(parsed) && string.IsNullOrWhiteSpace(project))
+                {
+                    project = parsed;
+                }
+                continue;
+            }
+
+            if (!tags.Any(existing => string.Equals(existing, normalized, StringComparison.CurrentCultureIgnoreCase)))
+            {
+                tags.Add(normalized);
+            }
+        }
+
+        return (project, tags);
     }
 
     private static string ResolveDoneDefinition(CreateTileDraft draft, bool isJapanese)

@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -661,6 +662,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         get => _timelineRangeLabel;
         set => SetProperty(ref _timelineRangeLabel, value);
     }
+    public string TimelineAnchorLabel => FormatTimelineAnchorLabel(TimelineViewport);
+    public string TimelineCompactRangeLabel => FormatTimelineCompactRangeLabel(TimelineViewport);
     public TimelineViewportSettings TimelineViewport
     {
         get => _timelineViewport;
@@ -817,6 +820,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             return running.ProgressPercent;
         }
     }
+
 
     public string NextUpStartText => NextUpTile?.NextStartLabel ?? "unscheduled";
     
@@ -1539,6 +1543,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             OnPropertyChanged(nameof(TimelineCanvasVisibility));
             OnPropertyChanged(nameof(TimelineCanvasHeight));
             OnPropertyChanged(nameof(TimelineRangeLabel));
+            OnPropertyChanged(nameof(TimelineAnchorLabel));
+            OnPropertyChanged(nameof(TimelineCompactRangeLabel));
             OnPropertyChanged(nameof(TimelineNowTop));
             OnPropertyChanged(nameof(TimelineNowLabel));
             OnPropertyChanged(nameof(TimelineNowVisibility));
@@ -1570,6 +1576,62 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var offset = TimeZoneInfo.Local.GetUtcOffset(weekStartLocal);
         return new DateTimeOffset(weekStartLocal, offset);
     }
+
+    private static string FormatTimelineAnchorLabel(TimelineViewportSettings viewport)
+    {
+        var anchor = ResolveAnchorLocal(viewport);
+        return anchor.ToString("yyyy/MM/dd ddd", CultureInfo.InvariantCulture);
+    }
+
+    private static string FormatTimelineCompactRangeLabel(TimelineViewportSettings viewport)
+    {
+        var anchor = ResolveAnchorLocal(viewport);
+        return viewport.RangeMode switch
+        {
+            TimelineRangeMode.Day24 or TimelineRangeMode.AroundNow24 or TimelineRangeMode.SunriseToSunset
+                => anchor.ToString("M/d", CultureInfo.InvariantCulture),
+            TimelineRangeMode.Custom when viewport.CustomStartLocal.HasValue && viewport.CustomEndLocal.HasValue
+                => $"{viewport.CustomStartLocal.Value.ToLocalTime():M/d}-{viewport.CustomEndLocal.Value.ToLocalTime():M/d}",
+            TimelineRangeMode.Week1 or TimelineRangeMode.Week2 or TimelineRangeMode.Week4
+                => FormatWeekRange(anchor, viewport.RangeMode),
+            TimelineRangeMode.Month1
+                => anchor.ToString("yyyy/M", CultureInfo.InvariantCulture),
+            TimelineRangeMode.Month3 or TimelineRangeMode.Month6
+                => FormatMonthRange(anchor, viewport.RangeMode),
+            TimelineRangeMode.Year1
+                => anchor.ToString("yyyy", CultureInfo.InvariantCulture),
+            _ => TimelineRangeLabelFallback(anchor),
+        };
+    }
+
+    private static string FormatWeekRange(DateTimeOffset anchor, TimelineRangeMode rangeMode)
+    {
+        var start = GetWeekStart(anchor);
+        var spanDays = rangeMode switch
+        {
+            TimelineRangeMode.Week2 => 14,
+            TimelineRangeMode.Week4 => 28,
+            _ => 7,
+        };
+        var end = start.AddDays(spanDays - 1);
+        return $"{start:M/d}-{end:M/d}";
+    }
+
+    private static string FormatMonthRange(DateTimeOffset anchor, TimelineRangeMode rangeMode)
+    {
+        var start = new DateTimeOffset(anchor.Year, anchor.Month, 1, 0, 0, 0, anchor.Offset);
+        var monthCount = rangeMode == TimelineRangeMode.Month6 ? 6 : 3;
+        var end = start.AddMonths(monthCount - 1);
+        return $"{start:yyyy/M}-{end:yyyy/M}";
+    }
+
+    private static DateTimeOffset ResolveAnchorLocal(TimelineViewportSettings viewport)
+        => viewport.AnchorLocal == default
+            ? DateTimeOffset.Now.ToLocalTime()
+            : viewport.AnchorLocal.ToLocalTime();
+
+    private static string TimelineRangeLabelFallback(DateTimeOffset anchor)
+        => anchor.ToString("M/d", CultureInfo.InvariantCulture);
 
     private static (double Left, double Width) ResolveWeekLaneGeometry(int lane, int totalLanes, double laneContainerWidth)
     {
@@ -1642,8 +1704,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(WeekCalendarVisibility));
         OnPropertyChanged(nameof(YearCalendarVisibility));
         OnPropertyChanged(nameof(TimelineCanvasVisibility));
+        OnPropertyChanged(nameof(TimelineAnchorLabel));
+        OnPropertyChanged(nameof(TimelineCompactRangeLabel));
         _pollingService.SetTimelineViewport(viewport);
-        _ = _pollingService.PollAsync();
+        _ = _pollingService.PollAsync(forcePublish: true);
     }
 
     private void OnTilesChanged(object? sender, TilesResponse? tiles)
@@ -1873,7 +1937,25 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             var nextAction = string.IsNullOrWhiteSpace(NewTileNextAction) ? null : NewTileNextAction.Trim();
             var doneDef = string.IsNullOrWhiteSpace(NewTileDoneDefinition) ? null : NewTileDoneDefinition.Trim();
             
-            var result = await _api.CreateTileAsync(title, nextAction, doneDef);
+            var result = await _api.CreateTileAsync(new CreateTileRequest(
+                Title: title,
+                NextAction: nextAction,
+                DoneDefinition: doneDef,
+                Temporal: null,
+                Objective: new CreateTileObjectiveRequest(
+                    ObjectiveMode: "finish_once",
+                    TargetWorkMin: 25,
+                    TargetRestMin: null,
+                    DoneRule: null,
+                    Recurrence: null),
+                Interruption: new CreateTileInterruptionRequest(
+                    InterruptPenalty: 3,
+                    ResumePenalty: 3,
+                    BreakSplitsWork: true,
+                    ExternalInterruptOnly: false),
+                Automation: null,
+                Annotation: null,
+                ConflictResolution: null));
             if (result != null && !result.Ok)
                 StatusMessage = $"Error: {result.Error}";
             else
@@ -2038,7 +2120,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    public Task RefreshAsync() => _pollingService.PollAsync();
+    public Task RefreshAsync(bool forcePublish = false) => _pollingService.PollAsync(forcePublish);
 
     public void NotifyTimeAdvanced()
     {

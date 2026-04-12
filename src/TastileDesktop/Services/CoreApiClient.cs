@@ -218,14 +218,14 @@ public class CoreApiClient
         var items = projectedBlocks
             .OrderBy(block => block.StartAt, StringComparer.Ordinal)
             .Select(block => new TimelineItemView(
-                Kind: "scheduled",
+                Kind: string.IsNullOrWhiteSpace(block.Kind) ? "scheduled" : block.Kind,
                 TileId: block.TileId,
                 SemanticRole: block.SemanticRole,
                 Title: block.Title,
                 StartedAt: block.StartAt,
                 EndedAt: block.EndAt,
                 DurationMin: ResolveDurationMinutes(block.StartAt, block.EndAt),
-                IsActive: false))
+                IsActive: block.IsActive))
             .ToList();
 
         return new TimelineTodayResponse(
@@ -532,6 +532,8 @@ public class CoreApiClient
             email = session.Email,
             access_token = session.AccessToken,
             refresh_token = session.RefreshToken,
+            provider_token = session.ProviderToken,
+            provider_refresh_token = session.ProviderRefreshToken,
             expires_at = session.ExpiresAt,
         });
 
@@ -566,11 +568,19 @@ public class CoreApiClient
     /// Desktop app asks daemon to start OAuth flow.
     /// Returns the auth URL for the desktop app to open in browser.
     /// </summary>
-    public async Task<string?> StartBrowserAuthAsync(string provider = "google")
+    public async Task<string?> StartBrowserAuthAsync(
+        string provider = "google",
+        string? scopes = null,
+        Dictionary<string, string>? queryParams = null)
     {
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/start", new { provider });
+            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/start", new
+            {
+                provider,
+                scopes,
+                query_params = queryParams,
+            });
             response.EnsureSuccessStatusCode();
             var result = await response.Content.ReadFromJsonAsync<OAuthInitResult>();
             return result?.AuthUrl;
@@ -578,6 +588,43 @@ public class CoreApiClient
         catch (Exception ex)
         {
             Log($"Failed to start browser auth: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<OAuthInitResult?> StartBrowserAuthFlowAsync(
+        string provider = "google",
+        string? scopes = null,
+        Dictionary<string, string>? queryParams = null)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/start", new
+            {
+                provider,
+                scopes,
+                query_params = queryParams,
+            });
+            response.EnsureSuccessStatusCode();
+            return await response.Content.ReadFromJsonAsync<OAuthInitResult>();
+        }
+        catch (Exception ex)
+        {
+            Log($"Failed to start browser auth flow: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<OAuthFlowStatusResponse?> GetOAuthFlowStatusAsync(string flowId)
+    {
+        try
+        {
+            return await _httpClient.GetFromJsonAsync<OAuthFlowStatusResponse>(
+                $"/auth/oauth/status?flow_id={Uri.EscapeDataString(flowId)}");
+        }
+        catch (Exception ex)
+        {
+            Log($"Failed to get oauth flow status: {ex.Message}");
             return null;
         }
     }
@@ -646,6 +693,18 @@ public class OAuthTokenResponse
     
     [JsonPropertyName("user")]
     public OAuthUser? User { get; set; }
+}
+
+public class OAuthFlowStatusResponse
+{
+    [JsonPropertyName("flow_id")]
+    public string FlowId { get; set; } = "";
+
+    [JsonPropertyName("completed")]
+    public bool Completed { get; set; }
+
+    [JsonPropertyName("error")]
+    public string? Error { get; set; }
 }
 
 public class OAuthUser
@@ -790,6 +849,12 @@ public class CalendarProjectionBlockResponse
 
     [JsonPropertyName("title")]
     public string Title { get; set; } = string.Empty;
+
+    [JsonPropertyName("kind")]
+    public string Kind { get; set; } = "scheduled";
+
+    [JsonPropertyName("is_active")]
+    public bool IsActive { get; set; }
 
     [JsonPropertyName("start_at")]
     public string StartAt { get; set; } = string.Empty;

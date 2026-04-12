@@ -216,7 +216,9 @@ public sealed partial class TilesWindow : Window
         var freshTile = await _api.GetEditableTileByIdAsync(tileId);
         if (freshTile == null) return;
 
-        var createWindow = new CreateTileWindow(tileId, freshTile);
+        var editTileId = freshTile.Id;
+        var createWindow = new CreateTileWindow(editTileId, freshTile);
+        createWindow.Closed += async (_, _) => await RefreshTilesAsync();
         createWindow.Activate();
     }
 

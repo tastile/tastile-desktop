@@ -53,7 +53,9 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("TimelineBlockEditRequested += OnTimelineBlockEditRequested", source);
         Assert.Contains("OnTimelineBlockEditRequested", source);
         Assert.Contains("OpenEditTileAsync", source);
-        Assert.Contains("new CreateTileWindow(tileId, freshTile)", source);
+        Assert.Contains("var editTileId = freshTile.Id;", source);
+        Assert.Contains("new CreateTileWindow(editTileId, freshTile)", source);
+        Assert.Contains("createWindow.Closed += (_, _) => _ = ViewModel.RefreshAsync(forcePublish: true);", source);
     }
 
     [Fact]
@@ -132,12 +134,14 @@ public sealed class TimelineWindowLayoutTests
 
         Assert.Contains("x:Name=\"ToolbarPanel\"", xaml);
         Assert.Contains("Content=\"←\"", xaml);
-        Assert.Contains("Content=\"Today\"", xaml);
+        Assert.Contains("Content=\"{Binding TimelineAnchorLabel, Mode=OneWay}\"", xaml);
+        Assert.Contains("ToolTipService.ToolTip=\"現在時点へ戻る\"", xaml);
         Assert.Contains("Content=\"→\"", xaml);
         Assert.Contains("Content=\"Day\"", xaml);
         Assert.Contains("Content=\"Week\"", xaml);
         Assert.Contains("Content=\"Month\"", xaml);
         Assert.Contains("Content=\"Year\"", xaml);
+        Assert.Contains("Text=\"{Binding TimelineCompactRangeLabel, Mode=OneWay}\"", xaml);
         Assert.Contains("ItemsSource=\"{Binding MonthCalendarRows, Mode=OneWay}\"", xaml);
         Assert.Contains("ItemsSource=\"{Binding Cells}\"", xaml);
         Assert.DoesNotContain("ItemsSource=\"{x:Bind ViewModel.MonthCalendarRows, Mode=OneWay}\"", xaml);
@@ -299,6 +303,17 @@ public sealed class TimelineWindowLayoutTests
     }
 
     [Fact]
+    public void TimelineWindow_WeekView_ShowsCurrentTimeBar()
+    {
+        var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
+        var xaml = File.ReadAllText(xamlPath);
+
+        Assert.Contains("Width=\"{Binding ActualWidth, ElementName=WeekTimelineColumnsHost}\" Visibility=\"{Binding TimelineNowVisibility, Mode=OneWay}\"", xaml);
+        Assert.Contains("TranslateTransform Y=\"{Binding TimelineNowTop, Mode=OneWay}\"", xaml);
+        Assert.Contains("Text=\"{Binding TimelineNowLabel, Mode=OneWay}\"", xaml);
+    }
+
+    [Fact]
     public void TimelineWindow_RebindsNamedElements_WhenXamlConnectorLeavesFieldsNull()
     {
         var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs"));
@@ -348,5 +363,15 @@ public sealed class TimelineWindowLayoutTests
         Assert.DoesNotContain("WeekCalendarHost.ActualHeight", source);
         Assert.Contains("Week calendar now uses unified timeline", source);
         Assert.Contains("YearCalendarHost.ActualHeight", source);
+    }
+
+    [Fact]
+    public void MainViewModel_ViewportUpdate_ForcesTimelineRepublish()
+    {
+        var sourceVmPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "ViewModels", "MainViewModel.cs"));
+        var sourceVm = File.ReadAllText(sourceVmPath);
+
+        Assert.Contains("public void UpdateTimelineViewport(TimelineViewportSettings viewport)", sourceVm);
+        Assert.Contains("_ = _pollingService.PollAsync(forcePublish: true);", sourceVm);
     }
 }

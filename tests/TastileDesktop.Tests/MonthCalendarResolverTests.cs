@@ -90,4 +90,51 @@ public sealed class MonthCalendarResolverTests
         Assert.Single(wed.Blocks);
         Assert.Equal("60m", wed.Blocks[0].DurationLabel);
     }
+
+    [Fact]
+    public void BuildWeekTimelineColumns_UsesLocalOverlapGroupLaneCount_InsteadOfDayWideMax()
+    {
+        var columns = MonthCalendarResolver.BuildWeekTimelineColumns(
+            [
+                new TimelineItemView(
+                    Kind: "scheduled",
+                    TileId: "tile-a",
+                    SemanticRole: "work",
+                    Title: "Overlap A",
+                    StartedAt: "2026-04-08T09:00:00+09:00",
+                    EndedAt: "2026-04-08T10:00:00+09:00",
+                    DurationMin: 60,
+                    IsActive: false),
+                new TimelineItemView(
+                    Kind: "scheduled",
+                    TileId: "tile-b",
+                    SemanticRole: "work",
+                    Title: "Overlap B",
+                    StartedAt: "2026-04-08T09:30:00+09:00",
+                    EndedAt: "2026-04-08T10:30:00+09:00",
+                    DurationMin: 60,
+                    IsActive: false),
+                new TimelineItemView(
+                    Kind: "scheduled",
+                    TileId: "tile-c",
+                    SemanticRole: "work",
+                    Title: "Solo Later",
+                    StartedAt: "2026-04-08T14:00:00+09:00",
+                    EndedAt: "2026-04-08T15:00:00+09:00",
+                    DurationMin: 60,
+                    IsActive: false),
+            ],
+            new DateTimeOffset(2026, 4, 8, 9, 0, 0, TimeSpan.FromHours(9)),
+            120d);
+
+        var allBlocks = columns.SelectMany(column => column.Blocks).ToList();
+        var overlapA = allBlocks.Single(block => block.Title == "Overlap A");
+        var overlapB = allBlocks.Single(block => block.Title == "Overlap B");
+        var soloLater = allBlocks.Single(block => block.Title == "Solo Later");
+
+        Assert.Equal(2, overlapA.TotalLanes);
+        Assert.Equal(2, overlapB.TotalLanes);
+        Assert.Equal(1, soloLater.TotalLanes);
+        Assert.Equal(0, soloLater.Lane);
+    }
 }

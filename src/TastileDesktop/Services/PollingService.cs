@@ -163,7 +163,7 @@ public class PollingService : IDisposable, ITilesChangedSource
         _daemonManager = daemonManager;
         _uiUpdateTimer = uiUpdateTimer;
         _wallClockPollTimer = wallClockPollTimer;
-        _pollAction = pollAction ?? PollAsync;
+        _pollAction = pollAction ?? (() => PollAsync());
 
         // UI更新は200ms間隔でthrottle（変更があった場合のみ発火）
         if (_uiUpdateTimer is DispatcherUiUpdateScheduler)
@@ -259,7 +259,7 @@ public class PollingService : IDisposable, ITilesChangedSource
     /// <summary>
     /// Force an immediate poll.
     /// </summary>
-    public async Task PollAsync()
+    public async Task PollAsync(bool forcePublish = false)
     {
         if (!_coordinator.TryBeginPoll())
         {
@@ -312,7 +312,7 @@ public class PollingService : IDisposable, ITilesChangedSource
 
             // Check for changes and mark pending (UI更新は別スレッドで throttle)
             // ExecutionView comes from Core - UI should use it directly without calculation
-            if (executionView != null && HasExecutionViewChanged(_lastExecutionView, executionView))
+            if (executionView != null && (forcePublish || HasExecutionViewChanged(_lastExecutionView, executionView)))
             {
                 lock (_pendingChangesLock)
                 {
@@ -321,7 +321,7 @@ public class PollingService : IDisposable, ITilesChangedSource
                 }
             }
 
-            if (tiles != null && HasTilesChanged(_lastTiles, tiles))
+            if (tiles != null && (forcePublish || HasTilesChanged(_lastTiles, tiles)))
             {
                 lock (_pendingChangesLock)
                 {
@@ -330,7 +330,7 @@ public class PollingService : IDisposable, ITilesChangedSource
                 }
             }
 
-            if (prompt != null && HasPromptChanged(_lastPrompt, prompt))
+            if (prompt != null && (forcePublish || HasPromptChanged(_lastPrompt, prompt)))
             {
                 lock (_pendingChangesLock)
                 {
@@ -339,7 +339,7 @@ public class PollingService : IDisposable, ITilesChangedSource
                 }
             }
 
-            if (timeline != null && HasTimelineChanged(_lastTimeline, timeline))
+            if (timeline != null && (forcePublish || HasTimelineChanged(_lastTimeline, timeline)))
             {
                 lock (_pendingChangesLock)
                 {
@@ -403,13 +403,7 @@ public class PollingService : IDisposable, ITilesChangedSource
 
     private static bool HasTimelineChanged(TimelineTodayResponse? old, TimelineTodayResponse? current)
     {
-        var oldHash = old == null
-            ? null
-            : $"{old.RangeStart}|{old.RangeEnd}|{string.Join(",", old.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"))}";
-        var currentHash = current == null
-            ? null
-            : $"{current.RangeStart}|{current.RangeEnd}|{string.Join(",", current.Items.Select(i => $"{i.Kind}:{i.TileId}:{i.StartedAt}:{i.EndedAt}:{i.IsActive}:{i.DurationMin}"))}";
-        return oldHash != currentHash;
+        return TimelineDiffResolver.HasTimelineChanged(old, current);
     }
 
     public void Dispose()

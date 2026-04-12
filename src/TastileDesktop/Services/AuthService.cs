@@ -23,6 +23,12 @@ public class AuthSession
     [JsonPropertyName("refresh_token")]
     public string RefreshToken { get; set; } = "";
 
+    [JsonPropertyName("provider_token")]
+    public string? ProviderToken { get; set; }
+
+    [JsonPropertyName("provider_refresh_token")]
+    public string? ProviderRefreshToken { get; set; }
+
     [JsonPropertyName("expires_at")]
     public string ExpiresAt { get; set; } = "";
 }
@@ -261,6 +267,8 @@ public class AuthService
             && left.Email == right.Email
             && left.AccessToken == right.AccessToken
             && left.RefreshToken == right.RefreshToken
+            && left.ProviderToken == right.ProviderToken
+            && left.ProviderRefreshToken == right.ProviderRefreshToken
             && left.ExpiresAt == right.ExpiresAt;
     }
 

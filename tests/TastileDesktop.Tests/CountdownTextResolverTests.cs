@@ -33,4 +33,5 @@ public sealed class CountdownTextResolverTests
         var text = CountdownTextResolver.Format(TimeSpan.FromSeconds(-1));
         Assert.Equal("00:00", text);
     }
+
 }

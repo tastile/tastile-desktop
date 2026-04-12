@@ -281,7 +281,7 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
 
         // Group overlapping items into lanes
         var lanes = new List<List<TimelineBlock>>();
-        foreach (var item in dayItems)
+        foreach (var item in dayItems.OrderBy(item => item.StartedAt))
         {
             if (string.IsNullOrWhiteSpace(item.StartedAt))
                 continue;
@@ -339,10 +339,58 @@ public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows
             blocks.Add(block);
         }
 
-        // Update lane counts after all items placed
-        foreach (var block in blocks)
+        static bool Overlaps(TimelineBlock a, TimelineBlock b)
         {
-            block.TotalLanes = lanes.Count;
+            var aBottom = a.Top + a.Height;
+            var bBottom = b.Top + b.Height;
+            return a.Top < bBottom && aBottom > b.Top;
+        }
+
+        var groupByIndex = Enumerable.Repeat(-1, blocks.Count).ToArray();
+        var groupId = 0;
+        for (var index = 0; index < blocks.Count; index++)
+        {
+            if (groupByIndex[index] != -1)
+            {
+                continue;
+            }
+
+            var stack = new Stack<int>();
+            stack.Push(index);
+            groupByIndex[index] = groupId;
+            var maxLane = blocks[index].Lane;
+
+            while (stack.Count > 0)
+            {
+                var current = stack.Pop();
+                for (var candidate = 0; candidate < blocks.Count; candidate++)
+                {
+                    if (groupByIndex[candidate] != -1)
+                    {
+                        continue;
+                    }
+
+                    if (!Overlaps(blocks[current], blocks[candidate]))
+                    {
+                        continue;
+                    }
+
+                    groupByIndex[candidate] = groupId;
+                    maxLane = Math.Max(maxLane, blocks[candidate].Lane);
+                    stack.Push(candidate);
+                }
+            }
+
+            var laneCount = Math.Max(1, maxLane + 1);
+            for (var i = 0; i < blocks.Count; i++)
+            {
+                if (groupByIndex[i] == groupId)
+                {
+                    blocks[i].TotalLanes = laneCount;
+                }
+            }
+
+            groupId++;
         }
 
         return blocks;

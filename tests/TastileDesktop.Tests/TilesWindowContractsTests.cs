@@ -45,4 +45,12 @@ public sealed class TilesWindowContractsTests
         Assert.Contains("Text=\"{Binding TargetDurationText}\"", xaml);
         Assert.Contains("Text=\"{Binding ScheduledTimeDisplay}\"", xaml);
     }
+
+    [Fact]
+    public void TilesWindowSource_EditWindowClose_RefreshesTiles()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "Views", "TilesWindow.xaml.cs");
+
+        Assert.Contains("createWindow.Closed += async (_, _) => await RefreshTilesAsync();", source);
+    }
 }

@@ -39,7 +39,7 @@
                     </Grid.ColumnDefinitions>
 
                     <Button Grid.Column="0" Content="←" MinWidth="36" />
-                    <Button Grid.Column="1" Content="Today" MinWidth="64" />
+                    <Button Grid.Column="1" Content="{Binding TimelineAnchorLabel, Mode=OneWay}" ToolTipService.ToolTip="現在時点へ戻る" MinWidth="128" />
                     <Button Grid.Column="2" Content="→" MinWidth="36" />
 
                     <Button Grid.Column="4" Content="Day" />
@@ -51,7 +51,7 @@
                     <Button Grid.Column="10" Content="-" MinWidth="32" />
                     <Button Grid.Column="11" Content="+" MinWidth="32" />
 
-                    <TextBlock Grid.Column="12" Text="{Binding TimelineRangeLabel, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Style="{StaticResource SectionBodyTextStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                    <TextBlock Grid.Column="12" Text="{Binding TimelineCompactRangeLabel, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Style="{StaticResource SectionBodyTextStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" />
                 </Grid>
             </Border>
 
@@ -303,6 +303,15 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
+
+                            <Canvas Width="{Binding ActualWidth, ElementName=WeekTimelineColumnsHost}" Visibility="{Binding TimelineNowVisibility, Mode=OneWay}" IsHitTestVisible="False">
+                                <Canvas.RenderTransform>
+                                    <TranslateTransform Y="{Binding TimelineNowTop, Mode=OneWay}" />
+                                </Canvas.RenderTransform>
+                                <Rectangle Canvas.Top="0" Width="{Binding ActualWidth, ElementName=WeekTimelineColumnsHost}" Height="2" Fill="{StaticResource AppPrimaryBrush}" />
+                                <Ellipse Canvas.Left="-4" Canvas.Top="-3" Width="8" Height="8" Fill="{StaticResource AppPrimaryBrush}" />
+                                <TextBlock Canvas.Top="-14" Width="{Binding ActualWidth, ElementName=WeekTimelineColumnsHost}" TextAlignment="Right" Padding="0,0,4,0" Text="{Binding TimelineNowLabel, Mode=OneWay}" Foreground="{StaticResource AppPrimaryBrush}" FontSize="11" />
+                            </Canvas>
                         </Grid>
                     </Grid>
                 </ScrollViewer>

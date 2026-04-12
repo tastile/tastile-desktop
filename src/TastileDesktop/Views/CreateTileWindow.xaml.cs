@@ -275,10 +275,11 @@ public sealed partial class CreateTileWindow : Window
 
                     if (labels.Count > 0)
                     {
-                        ProjectTextBox.Text = labels[0];
-                        for (int i = 1; i < labels.Count; i++)
+                        var split = CreateTileParityResolver.SplitProjectAndTags(labels);
+                        ProjectTextBox.Text = split.Project;
+                        foreach (var tag in split.Tags)
                         {
-                            AddTag(labels[i]);
+                            AddTag(tag);
                         }
                     }
 
@@ -979,6 +980,11 @@ public sealed partial class CreateTileWindow : Window
                     ? (isEdit ? "タイルの更新に失敗しました。" : "タイルの作成に失敗しました。")
                     : (isEdit ? "Failed to update tile." : "Failed to create tile.")));
                 return;
+            }
+
+            if (isEdit)
+            {
+                await _api.TriggerTickAsync();
             }
 
             Close();

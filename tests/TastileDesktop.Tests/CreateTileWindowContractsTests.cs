@@ -96,4 +96,13 @@ public sealed class CreateTileWindowContractsTests
         Assert.Contains("if (result?.Prompt?.Kind != \"create_conflict\")", source);
         Assert.Contains("ShowConflictResolutionToastAsync(result.Prompt)", source);
     }
+
+    [Fact]
+    public void CreateTileWindowSource_EditSave_TriggersTickBeforeClose()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "Views", "CreateTileWindow.xaml.cs");
+
+        Assert.Contains("if (isEdit)", source);
+        Assert.Contains("await _api.TriggerTickAsync();", source);
+    }
 }

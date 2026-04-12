@@ -63,6 +63,14 @@
     <RemoveDir Directories="$(_LegacyObjDir)" Condition="Exists('$(_LegacyObjDir)') and '$(_LegacyObjDir)' != '$(_ResolvedIntermediateDir)'" />
   </Target>
 
+  <Target Name="InvalidateCompiledXbfFiles" BeforeTargets="MarkupCompilePass1" Condition="'$(DesignTimeBuild)' != 'true'">
+    <ItemGroup>
+      <_CompiledXbf Include="$(MSBuildProjectDirectory)\$(IntermediateOutputPath)**\*.xbf" />
+      <_OutputXbf Include="$(TargetDir)**\*.xbf" Condition="Exists('$(TargetDir)')" />
+    </ItemGroup>
+    <Delete Files="@(_CompiledXbf);@(_OutputXbf)" TreatErrorsAsWarnings="true" />
+  </Target>
+
   <Target Name="BuildBundledDaemon" BeforeTargets="PrepareForBuild">
     <Message Text="Ensuring latest tastile-daemon release build is bundled..." Importance="high" />
     <Exec
@@ -108,5 +116,21 @@
     Condition="'$(DesignTimeBuild)' != 'true' and '$(EnableTimelineConnectorValidation)' == 'true'">
     <Exec
       Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$obj = [System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)'); if (!(Test-Path $obj)) { throw ('Intermediate output folder not found: ' + $obj) }; $generated = Join-Path $obj 'Views\TimelineWindow.g.cs'; if (!(Test-Path $generated)) { throw ('TimelineWindow.g.cs not found: ' + $generated) }; $files = @(Get-Item -Path $generated); $forbidden = @('OnNavigatePreviousClick','OnNavigateTodayClick','OnNavigateNextClick','OnViewDayClick','OnViewWeekClick','OnViewMonthClick','OnViewYearClick','OnRangeSelectionChanged','OnZoomOutClick','OnZoomInClick','this.HourMarkersItemsControl =','this.TimelineBlocksItemsControl =','this.WeekHourMarkersItemsControl ='); $allowedAssignedFields = @('TitleBarArea','TimelineRootGrid','ToolbarPanel','TimelineScrollViewer','MonthCalendarHost','WeekTimelineScrollViewer','YearCalendarHost','LoadingOverlay','WeekTimelineColumnsHost','TimelineCanvasHost'); foreach ($f in $files) { $c = Get-Content -Raw -Path $f.FullName; foreach ($m in $forbidden) { if ($c.Contains($m)) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': ' + $m) } }; $assignments = [System.Text.RegularExpressions.Regex]::Matches($c, 'this\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*global::WinRT\.CastExtensions\.As&lt;') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique; $unexpected = @($assignments | Where-Object { $_ -notin $allowedAssignedFields }); if ($unexpected.Count -gt 0) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': unexpected assignments [' + ($unexpected -join ', ') + ']') } }; exit 0&quot;" />
+  </Target>
+
+  <Target
+    Name="ValidateCompiledXbfFreshness"
+    AfterTargets="MarkupCompilePass2"
+    Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$project = [System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)'); $obj = [System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)'); $sources = @(); foreach ($relative in @('App.xaml','MainWindow.xaml')) { $path = Join-Path $project $relative; if (Test-Path $path) { $sources += Get-Item $path } }; foreach ($folder in @('Views','Styles')) { $root = Join-Path $project $folder; if (Test-Path $root) { $sources += Get-ChildItem -Path $root -Recurse -File -Filter *.xaml } }; $problems = @(); foreach ($source in $sources | Sort-Object FullName -Unique) { $relative = $source.FullName.Substring($project.Length).TrimStart('\'); $xbfRelative = [System.IO.Path]::ChangeExtension($relative, '.xbf'); $objXbf = Join-Path $obj $xbfRelative; if (!(Test-Path $objXbf)) { $problems += ('Missing compiled XBF: ' + $objXbf + ' for ' + $relative); continue }; if ($source.LastWriteTimeUtc -gt (Get-Item $objXbf).LastWriteTimeUtc) { $problems += ('Stale compiled XBF: ' + $objXbf + ' older than ' + $relative) } }; if ($problems.Count -gt 0) { throw ('Compiled XAML freshness validation failed:' + [Environment]::NewLine + ($problems -join [Environment]::NewLine)) }; exit 0&quot;" />
+  </Target>
+
+  <Target
+    Name="ValidateOutputXbfFreshness"
+    AfterTargets="CopyFilesToOutputDirectory"
+    Condition="'$(DesignTimeBuild)' != 'true'">
+    <Exec
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$project = [System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)'); $target = [System.IO.Path]::GetFullPath('$(TargetDir)'); $sources = @(); foreach ($relative in @('App.xaml','MainWindow.xaml')) { $path = Join-Path $project $relative; if (Test-Path $path) { $sources += Get-Item $path } }; foreach ($folder in @('Views','Styles')) { $root = Join-Path $project $folder; if (Test-Path $root) { $sources += Get-ChildItem -Path $root -Recurse -File -Filter *.xaml } }; $problems = @(); foreach ($source in $sources | Sort-Object FullName -Unique) { $relative = $source.FullName.Substring($project.Length).TrimStart('\'); $xbfRelative = [System.IO.Path]::ChangeExtension($relative, '.xbf'); $targetXbf = Join-Path $target $xbfRelative; if (!(Test-Path $targetXbf)) { $problems += ('Missing output XBF: ' + $targetXbf + ' for ' + $relative); continue }; if ($source.LastWriteTimeUtc -gt (Get-Item $targetXbf).LastWriteTimeUtc) { $problems += ('Stale output XBF: ' + $targetXbf + ' older than ' + $relative) } }; if ($problems.Count -gt 0) { throw ('Output XAML freshness validation failed:' + [Environment]::NewLine + ($problems -join [Environment]::NewLine)) }; exit 0&quot;" />
   </Target>
 </Project>

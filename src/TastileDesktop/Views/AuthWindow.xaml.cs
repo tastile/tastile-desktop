@@ -1,6 +1,7 @@
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Windowing;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -15,13 +16,19 @@ namespace TastileDesktop.Views;
 public sealed partial class AuthWindow : Window
 {
     private readonly CoreApiClient _api;
+    private readonly string? _scopes;
+    private readonly Dictionary<string, string>? _queryParams;
     private readonly TaskCompletionSource<AuthResult> _tcs = new();
     private string? _authUrl;
+    private string? _flowId;
     private string? _expectedState;
 
     public Task<AuthResult> AuthResultTask => _tcs.Task;
 
-    public AuthWindow(CoreApiClient api)
+    public AuthWindow(
+        CoreApiClient api,
+        string? scopes = null,
+        Dictionary<string, string>? queryParams = null)
     {
         Log("[AuthWindow.ctor] === START ===");
         
@@ -32,6 +39,8 @@ public sealed partial class AuthWindow : Window
             Log("[AuthWindow.ctor] InitializeComponent completed");
             
             _api = api;
+            _scopes = scopes;
+            _queryParams = queryParams;
             Log("[AuthWindow.ctor] CoreApiClient assigned");
 
             Log("[AuthWindow.ctor] Setting floating window chrome...");
@@ -76,7 +85,7 @@ public sealed partial class AuthWindow : Window
             {
                 try
                 {
-                    StatusTextBlock.Text = "Opening browser for authentication...";
+                    StatusTextBlock.Text = "Opening your browser for Google Calendar...";
                     Log("[StartAuthenticationAsync] StatusTextBlock updated");
                 }
                 catch (Exception ex)
@@ -86,14 +95,15 @@ public sealed partial class AuthWindow : Window
             });
 
             Log("[StartAuthenticationAsync] About to call StartBrowserAuthAsync...");
-            string? authUrl;
+            OAuthInitResult? authFlow;
             try
             {
-                authUrl = await _api.StartBrowserAuthAsync("google");
-                _authUrl = authUrl;
-                _expectedState = OAuthCallbackHandoff.ExtractStateFromAuthUrl(authUrl);
+                authFlow = await _api.StartBrowserAuthFlowAsync("google", _scopes, _queryParams);
+                _authUrl = authFlow?.AuthUrl;
+                _flowId = authFlow?.FlowId;
+                _expectedState = OAuthCallbackHandoff.ExtractStateFromAuthUrl(_authUrl);
                 OAuthCallbackHandoff.StoreExpectedState(_expectedState);
-                Log($"[StartAuthenticationAsync] StartBrowserAuthAsync returned URL: {authUrl}");
+                Log($"[StartAuthenticationAsync] StartBrowserAuthFlowAsync returned flow_id: {_flowId}, URL: {_authUrl}");
             }
             catch (Exception ex)
             {
@@ -107,23 +117,23 @@ public sealed partial class AuthWindow : Window
                 return;
             }
 
-            if (string.IsNullOrEmpty(authUrl))
+            if (string.IsNullOrEmpty(_authUrl) || string.IsNullOrWhiteSpace(_flowId))
             {
-                Log("[StartAuthenticationAsync] StartBrowserAuthAsync returned null or empty URL");
+                Log("[StartAuthenticationAsync] StartBrowserAuthFlowAsync returned incomplete flow metadata");
                 _tcs.SetResult(new AuthResult
                 {
                     Success = false,
-                    Error = "Failed to start authentication. Daemon returned no URL."
+                    Error = "Failed to start authentication. Daemon returned incomplete flow state."
                 });
                 ShowError("Failed to start authentication.");
                 return;
             }
 
             // Open browser with the auth URL (Desktop App opens browser, not daemon)
-            Log($"[StartAuthenticationAsync] Opening browser with URL: {authUrl}");
+            Log($"[StartAuthenticationAsync] Opening browser with URL: {_authUrl}");
             try
             {
-                OpenBrowser(authUrl);
+                OpenBrowser(_authUrl);
                 Log("[StartAuthenticationAsync] Browser opened successfully");
             }
             catch (Exception ex)
@@ -141,7 +151,7 @@ public sealed partial class AuthWindow : Window
             {
                 try
                 {
-                    StatusTextBlock.Text = "Complete sign-in in your browser...";
+                    StatusTextBlock.Text = "Finish the Google sign-in in your browser, then come back here.";
                     Log("[StartAuthenticationAsync] StatusTextBlock updated to polling message");
                 }
                 catch (Exception ex)
@@ -174,9 +184,9 @@ public sealed partial class AuthWindow : Window
                 _tcs.TrySetResult(new AuthResult 
                 { 
                     Success = false, 
-                    Error = "Authentication timed out. Please try again." 
+                    Error = "Google Calendar connection timed out. Please try again." 
                 });
-                ShowError("Authentication timed out. Please try again.");
+                ShowError("Google Calendar connection timed out. Please try again.");
             }
         }
         catch (Exception ex)
@@ -228,14 +238,22 @@ public sealed partial class AuthWindow : Window
                     }
                 }
 
-                Log($"[PollForAuthenticationAsync] About to call IsAuthenticatedAsync...");
-                var isAuthenticated = await _api.IsAuthenticatedAsync();
-                Log($"[PollForAuthenticationAsync] IsAuthenticatedAsync returned: {isAuthenticated}");
-
-                if (isAuthenticated)
+                if (!string.IsNullOrWhiteSpace(_flowId))
                 {
-                    Log($"[PollForAuthenticationAsync] Authenticated after {attemptCount} attempts!");
-                    return true;
+                    Log($"[PollForAuthenticationAsync] Checking flow status for {_flowId}...");
+                    var flowStatus = await _api.GetOAuthFlowStatusAsync(_flowId);
+                    Log($"[PollForAuthenticationAsync] Flow status: completed={flowStatus?.Completed}, error={flowStatus?.Error}");
+
+                    if (flowStatus?.Completed == true)
+                    {
+                        if (!string.IsNullOrWhiteSpace(flowStatus.Error))
+                        {
+                            throw new InvalidOperationException(flowStatus.Error);
+                        }
+
+                        Log($"[PollForAuthenticationAsync] Flow {_flowId} completed after {attemptCount} attempts.");
+                        return true;
+                    }
                 }
             }
             catch (Exception ex)
@@ -296,7 +314,7 @@ public sealed partial class AuthWindow : Window
         try
         {
             OpenBrowser(_authUrl);
-            StatusTextBlock.Text = "Browser reopened. Complete Google sign-in there.";
+            StatusTextBlock.Text = "Browser reopened. Finish the Google sign-in there, then return here.";
         }
         catch (Exception ex)
         {

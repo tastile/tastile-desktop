@@ -21,37 +21,58 @@
             <StackPanel Padding="32" Spacing="24" MaxWidth="720">
                 <StackPanel Spacing="6">
                     <TextBlock Text="Google Calendar" Style="{ThemeResource TitleLargeTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
-                    <TextBlock Text="Connect Disconnect Sync now をここから操作できます" Style="{ThemeResource BodyTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+                    <TextBlock Text="Connect your calendar once, choose how Tastile should sync, and run a manual sync when you need it." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
-                <Border CornerRadius="0" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
-                    <StackPanel>
-                        <TextBlock x:Name="StatusTextBlock" Text="Status: loading" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                        <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" Margin="0,8,0,8" />
-                        <TextBlock x:Name="ReadWriteTextBlock" Text="Read/Write: -" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                        <TextBlock x:Name="AccountTextBlock" Text="Account: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
-                        <TextBlock x:Name="SyncModeTextBlock" Text="Sync mode: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
-                        <TextBlock x:Name="TargetCalendarTextBlock" Text="Target calendar: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
-                        <TextBlock x:Name="SyncedTextBlock" Text="Last synced: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" />
-                        <TextBlock x:Name="SyncPlanTextBlock" Text="Sync plan: -" Foreground="{StaticResource AppForegroundMutedBrush}" Margin="0,4,0,0" TextWrapping="Wrap" />
-                        <StackPanel Orientation="Horizontal" Margin="0,10,0,0" Spacing="8">
-                            <ComboBox x:Name="SyncModeComboBox" Width="160">
-                                <ComboBoxItem Content="push_only" />
-                                <ComboBoxItem Content="pull_only" />
-                                <ComboBoxItem Content="bidirectional" />
-                            </ComboBox>
-                            <TextBox x:Name="TargetCalendarTextBox" Width="240" PlaceholderText="calendar id or primary" />
-                            <Button x:Name="SavePolicyButton" Content="Save policy" Click="OnSavePolicyClick" />
+                <Border CornerRadius="8" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Padding="20">
+                    <StackPanel Spacing="16">
+                        <Border Background="{StaticResource AppSurface0Brush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="999" Padding="10,4" HorizontalAlignment="Left">
+                            <TextBlock x:Name="StatusTextBlock" Text="Loading..." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                        </Border>
+
+                        <TextBlock x:Name="ConnectionHeadlineTextBlock" Text="Checking Google Calendar connection..." Style="{StaticResource PageTitleTextStyle}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="ConnectionDetailTextBlock" Text="We are loading your Google Calendar connection details." Style="{StaticResource SectionBodyTextStyle}" TextWrapping="Wrap" />
+
+                        <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                        <TextBlock Text="Calendar" Style="{StaticResource SectionTitleTextStyle}" />
+                        <TextBlock x:Name="TargetCalendarTextBlock" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+
+                        <TextBlock Text="Permissions" Style="{StaticResource SectionTitleTextStyle}" />
+                        <TextBlock x:Name="ReadWriteTextBlock" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+
+                        <TextBlock x:Name="LastSyncTextBlock" Text="Last sync: -" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                        <TextBlock x:Name="SyncHealthTextBlock" Text="Sync health: -" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+
+                        <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                        <TextBlock Text="Sync behavior" Style="{StaticResource SectionTitleTextStyle}" />
+                        <TextBlock Text="Choose whether Tastile writes its schedule to Google Calendar, reads Google events back, or does both." Style="{StaticResource SectionBodyTextStyle}" TextWrapping="Wrap" />
+                        <ComboBox x:Name="SyncModeComboBox" Width="240" SelectedValuePath="Tag">
+                            <ComboBoxItem Content="Tastile -> Google Calendar" Tag="push_only" />
+                            <ComboBoxItem Content="Google Calendar -> Tastile" Tag="pull_only" />
+                            <ComboBoxItem Content="Two-way sync" Tag="bidirectional" />
+                        </ComboBox>
+                        <TextBlock x:Name="SyncModeDescriptionTextBlock" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+
+                        <TextBlock Text="Target calendar" Style="{StaticResource SectionTitleTextStyle}" />
+                        <TextBox x:Name="TargetCalendarTextBox" Width="240" PlaceholderText="primary" />
+                        <TextBlock Text="Use &quot;primary&quot; for your main Google Calendar, or paste a specific calendar ID if Tastile should sync somewhere else." Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
+                        <TextBlock x:Name="SyncPlanTextBlock" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+                        <Button x:Name="SavePolicyButton" Content="Save sync settings" Click="OnSavePolicyClick" HorizontalAlignment="Stretch" />
+
+                        <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                        <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Button x:Name="ConnectButton" Content="Connect Google Calendar" Click="OnConnectClick" />
+                            <Button x:Name="SyncNowButton" Content="Run sync now" Click="OnSyncNowClick" />
+                            <Button x:Name="RefreshButton" Content="Refresh status" Click="OnRefreshClick" />
+                            <Button x:Name="DisconnectButton" Content="Disconnect" Click="OnDisconnectClick" />
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
-                            <Button x:Name="ConnectButton" Content="Connect" Click="OnConnectClick" Margin="0,0,8,0" />
-                            <Button x:Name="DisconnectButton" Content="Disconnect" Click="OnDisconnectClick" Margin="0,0,8,0" />
-                            <Button x:Name="SyncNowButton" Content="Sync now" Click="OnSyncNowClick" Margin="0,0,8,0" />
-                            <Button x:Name="RefreshButton" Content="Refresh" Click="OnRefreshClick" />
-                        </StackPanel>
-                        <TextBlock x:Name="ErrorTextBlock" Text="" Foreground="#FF0000" TextWrapping="Wrap" Margin="0,8,0,0" />
                     </StackPanel>
                 </Border>
+
+                <TextBlock x:Name="ErrorTextBlock" Text="" Foreground="#FFB00020" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>
     </Grid>
