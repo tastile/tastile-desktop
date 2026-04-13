@@ -23,7 +23,7 @@ public static class PromptAutoActionPolicy
 
         if (string.Equals(prompt.Kind, "end", StringComparison.OrdinalIgnoreCase))
         {
-            return FindAction(prompt, "COMPLETE_PHASE", "COMPLETE", "COMPLETE_TILE", "COMPLETE_AND_START_NEXT");
+            return FindAction(prompt, "COMPLETE", "COMPLETE_TILE", "COMPLETE_AND_START_NEXT", "COMPLETE_PHASE");
         }
 
         return null;
