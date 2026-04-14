@@ -36,6 +36,9 @@ on:
         default: ""
         type: string
 
+permissions:
+  contents: write
+
 jobs:
   build-desktop-installer:
     runs-on: windows-latest
@@ -108,6 +111,17 @@ jobs:
           name: desktop-installer
           path: ${{ steps.installer.outputs.installer_path }}
           if-no-files-found: error
+
+      - name: Attach installer to GitHub Release
+        if: github.event_name == 'release'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release upload "${{ github.event.release.tag_name }}" \
+            "${{ steps.installer.outputs.installer_path }}" \
+            --repo "${{ github.repository }}" \
+            --clobber
 
   publish-manifest:
     needs: build-desktop-installer

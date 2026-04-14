@@ -103,7 +103,7 @@ Installer upload and update-manifest publication are handled by:
 - `.github/workflows/publish-update-manifest.yml`
 - `scripts/publish-update-manifest.ps1`
 
-The workflow runs on GitHub release publication and also supports manual `workflow_dispatch`. For release events, it derives the version from the release tag, uploads the matching installer, and writes the hosted `manifest.json`.
+The workflow runs on GitHub release publication and also supports manual `workflow_dispatch`. For release events, it derives the version from the release tag, attaches the matching installer to the GitHub Release, uploads the same installer to hosted storage, and writes the hosted `manifest.json`.
 
 The app checks a hosted `manifest.json` and opens the installer download URL when an update is available.
 
