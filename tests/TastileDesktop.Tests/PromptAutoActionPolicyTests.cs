@@ -16,13 +16,23 @@ public sealed class PromptAutoActionPolicyTests
     }
 
     [Fact]
-    public void Resolve_ReturnsCompletePhase_ForFixedEndPrompt()
+    public void Resolve_PrefersCompleteTile_ForFixedEndPrompt()
     {
-        var prompt = BuildPrompt(kind: "end", actions: ["COMPLETE_PHASE", "DEFER_TILE"]);
+        var prompt = BuildPrompt(kind: "end", actions: ["COMPLETE_PHASE", "COMPLETE_TILE", "DEFER_TILE"]);
 
         var action = PromptAutoActionPolicy.Resolve(prompt, isFixedScheduleTile: true);
 
-        Assert.Equal("COMPLETE_PHASE", action);
+        Assert.Equal("COMPLETE_TILE", action);
+    }
+
+    [Fact]
+    public void Resolve_PrefersComplete_OverCompletePhase_ForFixedEndPrompt()
+    {
+        var prompt = BuildPrompt(kind: "end", actions: ["COMPLETE_PHASE", "COMPLETE", "DEFER_TILE"]);
+
+        var action = PromptAutoActionPolicy.Resolve(prompt, isFixedScheduleTile: true);
+
+        Assert.Equal("COMPLETE", action);
     }
 
     [Fact]
