@@ -16,6 +16,13 @@ public static class PromptAutoActionPolicy
             return null;
         }
 
+        if (!string.IsNullOrWhiteSpace(prompt.DefaultActionId)
+            && prompt.Actions.Any(action =>
+                string.Equals(action.Id, prompt.DefaultActionId, StringComparison.OrdinalIgnoreCase)))
+        {
+            return prompt.DefaultActionId;
+        }
+
         if (string.Equals(prompt.Kind, "start", StringComparison.OrdinalIgnoreCase))
         {
             return FindAction(prompt, "START", "START_TILE");
