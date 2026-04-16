@@ -161,7 +161,8 @@ public record PromptView(
     [property: JsonPropertyName("actions")] List<PromptActionView> Actions,
     [property: JsonPropertyName("created_at")] string? CreatedAt,
     [property: JsonPropertyName("expires_at")] string? ExpiresAt,
-    [property: JsonPropertyName("stale")] bool Stale
+    [property: JsonPropertyName("stale")] bool Stale,
+    [property: JsonPropertyName("default_action_id")] string? DefaultActionId = null
 );
 
 public record PromptActionView(

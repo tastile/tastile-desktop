@@ -6,9 +6,10 @@ namespace TastileDesktop.Task2.Tests;
 public sealed class PollingServiceDaemonDrivenBehaviorTests
 {
     [Fact]
-    public async Task PollingService_StartAsync_DoesNotRegisterDesktopWallClockTick()
+    public async Task PollingService_StartAsync_RegistersDesktopWallClockTick()
     {
         var scheduler = new FakeWallClockPollScheduler();
+        var pollCount = 0;
         using var listener = new HttpListener();
         listener.Prefixes.Add("http://127.0.0.1:19084/");
         listener.Start();
@@ -18,11 +19,17 @@ public sealed class PollingServiceDaemonDrivenBehaviorTests
             new CoreApiClient("http://127.0.0.1:19084"),
             new DaemonManager(),
             scheduler,
-            () => Task.CompletedTask);
+            () =>
+            {
+                pollCount++;
+                return Task.CompletedTask;
+            });
 
         await sut.StartAsync();
 
-        Assert.Null(scheduler.Interval);
+        Assert.Equal(TimeSpan.FromSeconds(1), scheduler.Interval);
+        scheduler.Fire();
+        Assert.True(pollCount > 0);
 
         listener.Stop();
         await serverTask;
@@ -69,12 +76,16 @@ public sealed class PollingServiceDaemonDrivenBehaviorTests
     private sealed class FakeWallClockPollScheduler : IWallClockPollScheduler
     {
         public TimeSpan? Interval { get; private set; }
+        private Action? _tick;
 
         public void Start(TimeSpan interval, Action tick)
         {
             Interval = interval;
+            _tick = tick;
         }
 
         public void Stop() { }
+
+        public void Fire() => _tick?.Invoke();
     }
 }

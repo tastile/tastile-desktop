@@ -182,6 +182,7 @@ public class PollingService : IDisposable, ITilesChangedSource
     {
         await _daemonManager.EnsureRunningAsync();
         await PollAsync();
+        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), () => _ = RunWallClockTickAsync());
         _eventStreamCts = new CancellationTokenSource();
         _eventStreamTask = RunStateEventLoopAsync(_eventStreamCts.Token);
     }
@@ -438,6 +439,12 @@ public class PollingService : IDisposable, ITilesChangedSource
                 await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
             }
         }
+    }
+
+    private async Task RunWallClockTickAsync()
+    {
+        await _api.TriggerTickAsync();
+        await _pollAction();
     }
 }
 

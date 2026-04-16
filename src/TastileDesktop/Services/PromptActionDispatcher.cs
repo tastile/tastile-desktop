@@ -33,17 +33,11 @@ public static class PromptActionDispatcher
                 return new PromptActionDispatchResult(true, id, "startup recovery prompt is missing required identifiers");
             }
 
-            var resolvedStopAt = stopAt;
-            if (id == "CONFIRM_STOP_AT" && !resolvedStopAt.HasValue)
-            {
-                resolvedStopAt = DateTimeOffset.Now;
-            }
-
             var response = await api.RespondStartupRecoveryPromptAsync(
                 prompt.PromptId,
                 prompt.TileId,
                 id,
-                resolvedStopAt);
+                stopAt);
             if (response is { Ok: false })
             {
                 return new PromptActionDispatchResult(true, id, response.Error ?? "failed to respond startup recovery prompt");
@@ -72,7 +66,7 @@ public static class PromptActionDispatcher
             "COMPLETE" or "COMPLETE_AND_START_NEXT" or "COMPLETE_TILE"
                 => await api.CompleteTileAsync(targetTileId, scope: "tile"),
             "COMPLETE_PHASE"
-                => await api.CompleteTileAsync(targetTileId, scope: "phase"),
+                => await api.CompleteTileAsync(targetTileId, scope: "tile"),
             "END_BREAK" => await api.EndBreakAsync(),
             "EXTEND" or "EXTEND_PHASE" => await api.ExtendTileAsync(10),
             "DEFER" or "DEFER_TILE"

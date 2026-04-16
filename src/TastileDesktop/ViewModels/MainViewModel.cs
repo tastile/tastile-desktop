@@ -759,7 +759,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public Visibility NextUpVisibility => NextUpTile is null ? Visibility.Collapsed : Visibility.Visible;
     public Visibility NextUpEmptyVisibility => NextUpTile is null ? Visibility.Visible : Visibility.Collapsed;
     public IReadOnlyList<TileListItem> RunningQuickTiles =>
-        _allTiles.Where(t => t.Lifecycle.Equals("Started", StringComparison.OrdinalIgnoreCase)).ToList();
+        RunningQuickTileResolver.Resolve(_allTiles, _executionView?.TilesInProgress);
     public TileListItem? MainRunningTask
     {
         get
@@ -969,6 +969,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(QuickBarOfflineIconVisibility));
         OnPropertyChanged(nameof(MainCountdownText));
         OnPropertyChanged(nameof(MainRunningProgressPercent));
+        OnPropertyChanged(nameof(RunningQuickTiles));
+        OnPropertyChanged(nameof(MainRunningTask));
+        OnPropertyChanged(nameof(HasMainRunningTask));
+        OnPropertyChanged(nameof(MainRunningTaskVisibility));
+        OnPropertyChanged(nameof(SecondaryRunningQuickTiles));
     }
 
     private void OnPendingPromptChanged(object? sender, PendingPromptResponse? prompt)

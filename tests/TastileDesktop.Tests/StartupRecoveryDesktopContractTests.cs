@@ -86,7 +86,7 @@ public sealed class StartupRecoveryDesktopContractTests
 
         Assert.DoesNotContain("PromptStopAtAsync(", source);
         Assert.DoesNotContain("ContentDialog", source);
-        Assert.Contains("DateTimeOffset.Now", source);
+        Assert.DoesNotContain("id == \"CONFIRM_STOP_AT\" ? DateTimeOffset.Now", source);
     }
 
     [Fact]
