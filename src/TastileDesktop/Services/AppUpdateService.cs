@@ -102,12 +102,35 @@ public sealed class AppUpdateService
 
     private static int CompareVersions(string left, string right)
     {
-        if (Version.TryParse(left, out var lv) && Version.TryParse(right, out var rv))
+        // Normalize versions to 4-part format (major.minor.build.revision)
+        var normalizedLeft = NormalizeVersion(left);
+        var normalizedRight = NormalizeVersion(right);
+
+        if (Version.TryParse(normalizedLeft, out var lv) && Version.TryParse(normalizedRight, out var rv))
         {
             return lv.CompareTo(rv);
         }
 
         return string.Compare(left, right, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string NormalizeVersion(string version)
+    {
+        // Split version string and normalize to 4 parts
+        var parts = version.Split('.');
+        if (parts.Length >= 4)
+        {
+            return version;
+        }
+
+        // Pad with zeros to get 4 parts
+        var normalized = parts.ToList();
+        while (normalized.Count < 4)
+        {
+            normalized.Add("0");
+        }
+
+        return string.Join('.', normalized);
     }
 
     private static string ResolveManifestUrl(string? manifestUrl)
