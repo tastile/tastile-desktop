@@ -6,9 +6,11 @@ namespace TastileDesktop.Task2.Tests;
 public sealed class PollingServiceDaemonDrivenBehaviorTests
 {
     [Fact]
-    public async Task PollingService_StartAsync_DoesNotRegisterDesktopWallClockTick()
+    public async Task PollingService_StartAsync_RegistersDesktopWallClockTick()
     {
         var scheduler = new FakeWallClockPollScheduler();
+        var pollCount = 0;
+        var polled = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
         using var listener = new HttpListener();
         listener.Prefixes.Add("http://127.0.0.1:19084/");
         listener.Start();
@@ -18,11 +20,69 @@ public sealed class PollingServiceDaemonDrivenBehaviorTests
             new CoreApiClient("http://127.0.0.1:19084"),
             new DaemonManager(),
             scheduler,
-            () => Task.CompletedTask);
+            () =>
+            {
+                Interlocked.Increment(ref pollCount);
+                polled.TrySetResult();
+                return Task.CompletedTask;
+            });
 
         await sut.StartAsync();
 
-        Assert.Null(scheduler.Interval);
+        Assert.Equal(TimeSpan.FromSeconds(1), scheduler.Interval);
+        scheduler.Fire();
+        await polled.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        Assert.True(Volatile.Read(ref pollCount) > 0);
+
+        listener.Stop();
+        await serverTask;
+    }
+
+    [Fact]
+    public async Task PollingService_WallClockTick_DoesNotOverlap()
+    {
+        var scheduler = new FakeWallClockPollScheduler();
+        var running = 0;
+        var maxConcurrent = 0;
+        var entered = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var release = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var listener = new HttpListener();
+        listener.Prefixes.Add("http://127.0.0.1:19085/");
+        listener.Start();
+        var serverTask = RunServerAsync(listener);
+
+        using var sut = new PollingService(
+            new CoreApiClient("http://127.0.0.1:19085"),
+            new DaemonManager(),
+            scheduler,
+            async () =>
+            {
+                var current = Interlocked.Increment(ref running);
+                var snapshot = Volatile.Read(ref maxConcurrent);
+                while (current > snapshot)
+                {
+                    var exchanged = Interlocked.CompareExchange(ref maxConcurrent, current, snapshot);
+                    if (exchanged == snapshot)
+                    {
+                        break;
+                    }
+                    snapshot = exchanged;
+                }
+
+                entered.TrySetResult();
+                await release.Task.WaitAsync(TimeSpan.FromSeconds(2));
+                Interlocked.Decrement(ref running);
+            });
+
+        await sut.StartAsync();
+        scheduler.Fire();
+        await entered.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        scheduler.Fire();
+        await Task.Delay(50);
+        release.TrySetResult();
+        await Task.Delay(50);
+
+        Assert.Equal(1, Volatile.Read(ref maxConcurrent));
 
         listener.Stop();
         await serverTask;
@@ -69,12 +129,16 @@ public sealed class PollingServiceDaemonDrivenBehaviorTests
     private sealed class FakeWallClockPollScheduler : IWallClockPollScheduler
     {
         public TimeSpan? Interval { get; private set; }
+        private Action? _tick;
 
         public void Start(TimeSpan interval, Action tick)
         {
             Interval = interval;
+            _tick = tick;
         }
 
         public void Stop() { }
+
+        public void Fire() => _tick?.Invoke();
     }
 }

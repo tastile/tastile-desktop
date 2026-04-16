@@ -39,7 +39,7 @@ public sealed class PromptActionDispatcherTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CompletePhase_UsesFallbackTileIdAndScope()
+    public async Task ExecuteAsync_CompletePhase_UsesFallbackTileIdAndCompletesTile()
     {
         string? capturedPath = null;
         string? capturedBody = null;
@@ -66,7 +66,7 @@ public sealed class PromptActionDispatcherTests
         Assert.NotNull(capturedBody);
         using var json = JsonDocument.Parse(capturedBody!);
         Assert.Equal("tile-fallback", json.RootElement.GetProperty("tile_id").GetString());
-        Assert.Equal("phase", json.RootElement.GetProperty("scope").GetString());
+        Assert.Equal("tile", json.RootElement.GetProperty("scope").GetString());
     }
 
     [Fact]
@@ -96,7 +96,7 @@ public sealed class PromptActionDispatcherTests
         Assert.NotNull(capturedBody);
         using var json = JsonDocument.Parse(capturedBody!);
         Assert.Equal("CONFIRM_STOP_AT", json.RootElement.GetProperty("action_id").GetString());
-        Assert.False(string.IsNullOrWhiteSpace(json.RootElement.GetProperty("stop_at").GetString()));
+        Assert.Equal(JsonValueKind.Null, json.RootElement.GetProperty("stop_at").ValueKind);
     }
 
     [Fact]

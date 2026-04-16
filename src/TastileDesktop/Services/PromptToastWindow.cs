@@ -15,11 +15,16 @@ public sealed class PromptToastWindow : Window
     private readonly Border _rootBorder;
     private readonly TextBlock _titleText;
     private readonly TextBlock _bodyText;
+    private readonly TextBlock _countdownText;
     private readonly Grid _actionsGrid;
     private readonly StackPanel _deferOptionsPanel;
     private readonly Button _deferBackButton;
+    private readonly DispatcherTimer _countdownTimer;
+    private DateTimeOffset? _expiresAtUtc;
     private Func<string, DateTimeOffset?, Task>? _actionHandler;
     private Func<string, int?, Task>? _deferHandler;
+    private string? _timeoutActionId;
+    private bool _timeoutActionTriggered;
 
     [DllImport("user32.dll")]
     private static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
@@ -50,6 +55,19 @@ public sealed class PromptToastWindow : Window
             Foreground = (Brush)Application.Current.Resources["SecondaryForegroundBrush"],
             Margin = new Thickness(0, 4, 0, 0),
         };
+        _countdownText = new TextBlock
+        {
+            FontSize = 11,
+            TextWrapping = TextWrapping.NoWrap,
+            Foreground = (Brush)Application.Current.Resources["SecondaryForegroundBrush"],
+            Margin = new Thickness(0, 4, 0, 0),
+            Visibility = Visibility.Collapsed,
+        };
+        _countdownTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1),
+        };
+        _countdownTimer.Tick += (_, _) => RefreshCountdown();
 
         _deferOptionsPanel = new StackPanel
         {
@@ -108,13 +126,16 @@ public sealed class PromptToastWindow : Window
         contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
         contentGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
         contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        contentGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
 
         Grid.SetRow(_titleText, 0);
         Grid.SetRow(_bodyText, 1);
-        Grid.SetRow(_actionsGrid, 3);
-        Grid.SetRow(_deferOptionsPanel, 3);
+        Grid.SetRow(_countdownText, 2);
+        Grid.SetRow(_actionsGrid, 4);
+        Grid.SetRow(_deferOptionsPanel, 4);
         contentGrid.Children.Add(_titleText);
         contentGrid.Children.Add(_bodyText);
+        contentGrid.Children.Add(_countdownText);
         contentGrid.Children.Add(_actionsGrid);
         contentGrid.Children.Add(_deferOptionsPanel);
 
@@ -139,8 +160,11 @@ public sealed class PromptToastWindow : Window
     {
         _actionHandler = actionHandler;
         _deferHandler = deferHandler;
+        _timeoutActionId = PromptTimeoutActionResolver.Resolve(prompt);
+        _timeoutActionTriggered = false;
         _titleText.Text = string.IsNullOrWhiteSpace(prompt.Title) ? "Prompt" : prompt.Title;
         _bodyText.Text = ResolveBodyText(prompt);
+        ConfigureCountdown(_timeoutActionId is null ? null : prompt.ExpiresAt);
         _actionsGrid.Visibility = Visibility.Visible;
         _deferOptionsPanel.Visibility = Visibility.Collapsed;
         _actionsGrid.Children.Clear();
@@ -237,14 +261,39 @@ public sealed class PromptToastWindow : Window
         return string.Empty;
     }
 
+    private async Task TriggerTimeoutActionAsync()
+    {
+        if (_timeoutActionTriggered)
+        {
+            return;
+        }
+        if (_actionHandler is null || string.IsNullOrWhiteSpace(_timeoutActionId))
+        {
+            return;
+        }
+
+        _timeoutActionTriggered = true;
+        try
+        {
+            await _actionHandler(_timeoutActionId!, null);
+        }
+        catch
+        {
+            _timeoutActionTriggered = false;
+        }
+    }
+
     public void ShowBackdrop(Models.PromptView prompt, int waitingBehind)
     {
         _actionHandler = null;
         _deferHandler = null;
+        _timeoutActionId = null;
+        _timeoutActionTriggered = false;
         _titleText.Text = string.IsNullOrWhiteSpace(prompt.Title) ? "Prompt" : prompt.Title;
         _bodyText.Text = waitingBehind > 0
             ? $"{Math.Clamp(waitingBehind, 1, 99)} more prompt(s) in queue"
             : ResolveBodyText(prompt);
+        ConfigureCountdown(null);
         _actionsGrid.Children.Clear();
         _actionsGrid.ColumnDefinitions.Clear();
         _actionsGrid.Visibility = Visibility.Collapsed;
@@ -255,6 +304,10 @@ public sealed class PromptToastWindow : Window
 
     public void HidePrompt()
     {
+        _countdownTimer.Stop();
+        _expiresAtUtc = null;
+        _timeoutActionTriggered = false;
+        _countdownText.Visibility = Visibility.Collapsed;
         WindowExtensions.Hide(this);
     }
 
@@ -300,7 +353,46 @@ public sealed class PromptToastWindow : Window
             return;
         }
 
-        var stopAt = id == "CONFIRM_STOP_AT" ? DateTimeOffset.Now : (DateTimeOffset?)null;
-        await _actionHandler(actionId, stopAt);
+        await _actionHandler(actionId, null);
+    }
+
+    private void ConfigureCountdown(string? expiresAt)
+    {
+        _countdownTimer.Stop();
+        _expiresAtUtc = null;
+        _countdownText.Visibility = Visibility.Collapsed;
+        _countdownText.Text = string.Empty;
+        if (string.IsNullOrWhiteSpace(expiresAt))
+        {
+            return;
+        }
+        if (!PromptExpiryParser.TryParseExpiryIso8601(expiresAt, out var parsed))
+        {
+            return;
+        }
+        _expiresAtUtc = parsed;
+        RefreshCountdown();
+        _countdownTimer.Start();
+    }
+
+    private void RefreshCountdown()
+    {
+        if (_expiresAtUtc is null)
+        {
+            _countdownTimer.Stop();
+            _countdownText.Visibility = Visibility.Collapsed;
+            return;
+        }
+        var remaining = _expiresAtUtc.Value - DateTimeOffset.UtcNow;
+        var remainingSeconds = Math.Max(0, (int)Math.Ceiling(remaining.TotalSeconds));
+        var minutes = remainingSeconds / 60;
+        var seconds = remainingSeconds % 60;
+        _countdownText.Text = $"自動実行まで {minutes:00}:{seconds:00}";
+        _countdownText.Visibility = Visibility.Visible;
+        if (remainingSeconds == 0)
+        {
+            _countdownTimer.Stop();
+            _ = TriggerTimeoutActionAsync();
+        }
     }
 }

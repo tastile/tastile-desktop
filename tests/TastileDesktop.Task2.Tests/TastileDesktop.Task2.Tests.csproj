@@ -20,6 +20,9 @@
     <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="Services\AuthService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\OAuthCallbackHandoff.cs" Link="Services\OAuthCallbackHandoff.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TileHashResolver.cs" Link="Services\TileHashResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\TimelineDiffResolver.cs" Link="Services\TimelineDiffResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\AbsoluteTimelineResolver.cs" Link="Services\AbsoluteTimelineResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CalendarViewportResolver.cs" Link="Services\CalendarViewportResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="Models\ApiModels.cs" />
   </ItemGroup>
   <ItemGroup>
