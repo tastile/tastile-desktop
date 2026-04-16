@@ -73,6 +73,7 @@ public class PollingService : IDisposable, ITilesChangedSource
     private PendingPromptResponse? _pendingPrompt;
     private TimelineTodayResponse? _pendingTimeline;
     private bool _pendingConnectionState;
+    private int _wallClockTickInFlight;
     private CancellationTokenSource? _eventStreamCts;
     private Task? _eventStreamTask;
     private TimelineViewportSettings _timelineViewport = new(
@@ -182,7 +183,7 @@ public class PollingService : IDisposable, ITilesChangedSource
     {
         await _daemonManager.EnsureRunningAsync();
         await PollAsync();
-        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), () => _ = RunWallClockTickAsync());
+        _wallClockPollTimer.Start(TimeSpan.FromSeconds(1), TryQueueWallClockTick);
         _eventStreamCts = new CancellationTokenSource();
         _eventStreamTask = RunStateEventLoopAsync(_eventStreamCts.Token);
     }
@@ -443,8 +444,31 @@ public class PollingService : IDisposable, ITilesChangedSource
 
     private async Task RunWallClockTickAsync()
     {
-        await _api.TriggerTickAsync();
-        await _pollAction();
+        try
+        {
+            await _api.TriggerTickAsync();
+            await _pollAction();
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch
+        {
+        }
+        finally
+        {
+            Interlocked.Exchange(ref _wallClockTickInFlight, 0);
+        }
+    }
+
+    private void TryQueueWallClockTick()
+    {
+        if (Interlocked.Exchange(ref _wallClockTickInFlight, 1) == 1)
+        {
+            return;
+        }
+
+        _ = RunWallClockTickAsync();
     }
 }
 

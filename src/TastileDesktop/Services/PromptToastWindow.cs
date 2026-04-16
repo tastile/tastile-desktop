@@ -164,7 +164,7 @@ public sealed class PromptToastWindow : Window
         _timeoutActionTriggered = false;
         _titleText.Text = string.IsNullOrWhiteSpace(prompt.Title) ? "Prompt" : prompt.Title;
         _bodyText.Text = ResolveBodyText(prompt);
-        ConfigureCountdown(prompt.ExpiresAt);
+        ConfigureCountdown(_timeoutActionId is null ? null : prompt.ExpiresAt);
         _actionsGrid.Visibility = Visibility.Visible;
         _deferOptionsPanel.Visibility = Visibility.Collapsed;
         _actionsGrid.Children.Clear();
@@ -273,7 +273,14 @@ public sealed class PromptToastWindow : Window
         }
 
         _timeoutActionTriggered = true;
-        await _actionHandler(_timeoutActionId!, null);
+        try
+        {
+            await _actionHandler(_timeoutActionId!, null);
+        }
+        catch
+        {
+            _timeoutActionTriggered = false;
+        }
     }
 
     public void ShowBackdrop(Models.PromptView prompt, int waitingBehind)
@@ -286,7 +293,7 @@ public sealed class PromptToastWindow : Window
         _bodyText.Text = waitingBehind > 0
             ? $"{Math.Clamp(waitingBehind, 1, 99)} more prompt(s) in queue"
             : ResolveBodyText(prompt);
-        ConfigureCountdown(prompt.ExpiresAt);
+        ConfigureCountdown(null);
         _actionsGrid.Children.Clear();
         _actionsGrid.ColumnDefinitions.Clear();
         _actionsGrid.Visibility = Visibility.Collapsed;

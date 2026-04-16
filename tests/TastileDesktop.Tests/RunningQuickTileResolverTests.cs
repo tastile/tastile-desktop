@@ -3,6 +3,15 @@ namespace TastileDesktop.Tests;
 public sealed class RunningQuickTileResolverTests
 {
     [Fact]
+    public void ResolverSource_DoesNotMutateAllTilesLifecycle()
+    {
+        var source = ReadRepoFile("src", "TastileDesktop", "Services", "RunningQuickTileResolver.cs");
+
+        Assert.DoesNotContain("existing.Lifecycle = \"Started\";", source);
+        Assert.Contains("TileListItemMapper.Map(tile)", source);
+    }
+
+    [Fact]
     public void MainViewModelSource_UsesExecutionViewForRunningQuickTiles()
     {
         var source = ReadRepoFile("src", "TastileDesktop", "ViewModels", "MainViewModel.cs");
