@@ -66,7 +66,7 @@ public static class PromptActionDispatcher
             "COMPLETE" or "COMPLETE_AND_START_NEXT" or "COMPLETE_TILE"
                 => await api.CompleteTileAsync(targetTileId, scope: "tile"),
             "COMPLETE_PHASE"
-                => await api.CompleteTileAsync(targetTileId, scope: "tile"),
+                => await api.CompleteTileAsync(targetTileId, scope: "phase"),
             "END_BREAK" => await api.EndBreakAsync(),
             "EXTEND" or "EXTEND_PHASE" => await api.ExtendTileAsync(10),
             "DEFER" or "DEFER_TILE"
