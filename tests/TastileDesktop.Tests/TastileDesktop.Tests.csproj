@@ -9,16 +9,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\src\TastileDesktop\Services\DaemonCompatibility.cs" Link="DaemonCompatibility.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="AuthService.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\RuntimeProfile.cs" Link="RuntimeProfile.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CognitoAuthService.cs" Link="CognitoAuthService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\SecureTokenStore.cs" Link="SecureTokenStore.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\ITokenStore.cs" Link="ITokenStore.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\JwtClaims.cs" Link="JwtClaims.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\Pkce.cs" Link="Pkce.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\AppSettings.cs" Link="AppSettings.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="CoreApiClient.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\OAuthCallbackHandoff.cs" Link="OAuthCallbackHandoff.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AppUpdateService.cs" Link="AppUpdateService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\StartupRegistrationService.cs" Link="StartupRegistrationService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CreateTileParityResolver.cs" Link="CreateTileParityResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CreateTileWindowContractResolver.cs" Link="CreateTileWindowContractResolver.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\ITilesChangedSource.cs" Link="ITilesChangedSource.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AbsoluteTimelineResolver.cs" Link="AbsoluteTimelineResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TimelineRangeComboResolver.cs" Link="TimelineRangeComboResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\MonthCalendarResolver.cs" Link="MonthCalendarResolver.cs" />
@@ -37,8 +39,9 @@
     <Compile Include="..\..\src\TastileDesktop\Services\PromptTimeoutActionResolver.cs" Link="PromptTimeoutActionResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\PromptExpiryParser.cs" Link="PromptExpiryParser.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\PromptToastSoundPlanBuilder.cs" Link="PromptToastSoundPlanBuilder.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\TilesWindowLiveUpdateBridge.cs" Link="TilesWindowLiveUpdateBridge.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\GoogleCalendarIntegrationPresentationResolver.cs" Link="GoogleCalendarIntegrationPresentationResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Models\AuthSession.cs" Link="AuthSession.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Models\CognitoConfig.cs" Link="CognitoConfig.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\CreateTileModels.cs" Link="CreateTileModels.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="ApiModels.cs" />
   </ItemGroup>
@@ -48,6 +51,7 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

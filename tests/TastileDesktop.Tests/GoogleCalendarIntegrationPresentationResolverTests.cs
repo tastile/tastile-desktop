@@ -15,7 +15,6 @@ public sealed class GoogleCalendarIntegrationPresentationResolverTests
                 ReadPolicy = "import_and_block_scheduling",
                 WritePolicy = "tastile_owned_only",
             },
-            syncStatus: null,
             plan: new CalendarSyncPlanPreviewResponse
             {
                 SyncMode = "push_only",
@@ -33,7 +32,7 @@ public sealed class GoogleCalendarIntegrationPresentationResolverTests
     }
 
     [Fact]
-    public void Resolve_ConnectedState_UsesHumanReadableSyncAndHealthSummary()
+    public void Resolve_ConnectedState_UsesHumanReadablePlanAndLastSyncSummary()
     {
         var presentation = GoogleCalendarIntegrationPresentationResolver.Resolve(
             new GoogleCalendarIntegrationResponse
@@ -44,21 +43,9 @@ public sealed class GoogleCalendarIntegrationPresentationResolverTests
                 SyncMode = "bidirectional",
                 ReadPolicy = "import_and_block_scheduling",
                 WritePolicy = "tastile_owned_only",
+                LastSyncedAt = "2026-04-10T03:00:00.000Z",
                 CanRead = true,
                 CanWrite = true,
-            },
-            new SyncStatusResponse
-            {
-                InProgress = false,
-                LastSuccessAt = "2026-04-10T03:00:00.000Z",
-                LastError = null,
-                LastResult = new SyncResultResponse
-                {
-                    Uploaded = 3,
-                    Downloaded = 2,
-                    Applied = 5,
-                    Failed = 0,
-                },
             },
             new CalendarSyncPlanPreviewResponse
             {
@@ -74,8 +61,6 @@ public sealed class GoogleCalendarIntegrationPresentationResolverTests
         Assert.Equal("Two-way sync", presentation.SyncModeLabel);
         Assert.Contains("Google Calendar events are read back", presentation.SyncModeDescription);
         Assert.Contains("Last successful sync:", presentation.LastSyncSummary);
-        Assert.Contains("uploaded 3", presentation.SyncHealthSummary);
-        Assert.Contains("downloaded 2", presentation.SyncHealthSummary);
         Assert.Equal("Read Google events to protect focus blocks. Write only Tastile-owned schedule blocks back to Google Calendar.", presentation.PlanSummary);
     }
 }

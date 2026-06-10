@@ -982,11 +982,7 @@ public sealed partial class CreateTileWindow : Window
                 return;
             }
 
-            if (isEdit)
-            {
-                await _api.TriggerTickAsync();
-            }
-
+            // Server-side recalculation handles the post-update state; no local tick needed.
             Close();
         }
         catch (Exception ex)

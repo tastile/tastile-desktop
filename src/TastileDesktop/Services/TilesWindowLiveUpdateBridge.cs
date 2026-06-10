@@ -4,11 +4,11 @@ namespace TastileDesktop.Services;
 
 public sealed class TilesWindowLiveUpdateBridge : IDisposable
 {
-    private readonly ITilesChangedSource _source;
+    private readonly EventDrivenPoller _source;
     private readonly Func<Task> _refreshAsync;
     private bool _disposed;
 
-    public TilesWindowLiveUpdateBridge(ITilesChangedSource source, Func<Task> refreshAsync)
+    public TilesWindowLiveUpdateBridge(EventDrivenPoller source, Func<Task> refreshAsync)
     {
         ArgumentNullException.ThrowIfNull(source);
         ArgumentNullException.ThrowIfNull(refreshAsync);

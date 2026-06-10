@@ -28,12 +28,11 @@ public sealed partial class IntegrationsWindow : Window
         {
             ErrorTextBlock.Text = string.Empty;
             var settingsTask = _api.GetIntegrationSettingsAsync();
-            var syncStatusTask = _api.GetSyncStatusAsync();
             var planTask = _api.GetCalendarSyncPlanPreviewAsync();
-            await Task.WhenAll(settingsTask, syncStatusTask, planTask);
+            await Task.WhenAll(settingsTask, planTask);
 
             var gc = settingsTask.Result?.GoogleCalendar ?? new GoogleCalendarIntegrationResponse();
-            var presentation = GoogleCalendarIntegrationPresentationResolver.Resolve(gc, syncStatusTask.Result, planTask.Result);
+            var presentation = GoogleCalendarIntegrationPresentationResolver.Resolve(gc, planTask.Result);
 
             StatusTextBlock.Text = presentation.StatusBadge;
             ConnectionHeadlineTextBlock.Text = presentation.Headline;
@@ -67,51 +66,11 @@ public sealed partial class IntegrationsWindow : Window
 
     private async void OnConnectClick(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            var authWindow = new AuthWindow(
-                _api,
-                GoogleCalendarOAuthScopes,
-                new Dictionary<string, string>
-                {
-                    ["access_type"] = "offline",
-                    ["prompt"] = "consent",
-                });
-            authWindow.Activate();
-            var result = await authWindow.AuthResultTask;
-            if (result.Success)
-            {
-                await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
-                var session = AuthService.Instance.CurrentSession;
-                if (string.IsNullOrWhiteSpace(session?.ProviderToken))
-                {
-                    ErrorTextBlock.Text = "Google Calendar access token was not returned. Please reconnect and approve calendar access.";
-                    return;
-                }
-
-                await _api.UpdateGoogleCalendarIntegrationAsync(
-                    connected: true,
-                    canRead: true,
-                    canWrite: true,
-                    accountEmail: session.Email,
-                    selectedCalendarId: "primary",
-                    grantedScopes: GrantedGoogleCalendarScopes);
-
-                await _api.TriggerSyncAsync();
-                await RefreshAsync();
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(result.Error))
-            {
-                ErrorTextBlock.Text = result.Error;
-            }
-        }
-        catch (Exception ex)
-        {
-            ErrorTextBlock.Text = $"Connect failed: {ex.Message}";
-            App.DebugLog($"[IntegrationsWindow] Connect failed: {ex}");
-        }
+        // Google Calendar integration is not yet implemented for the
+        // Cognito-only auth model. The previous daemon-mediated Google
+        // OAuth flow relied on a ProviderToken in the AuthSession, which
+        // Cognito's Hosted UI does not issue.
+        ErrorTextBlock.Text = "Google Calendar integration is not available in this build.";
     }
 
     private async void OnDisconnectClick(object sender, RoutedEventArgs e)
@@ -129,15 +88,9 @@ public sealed partial class IntegrationsWindow : Window
 
     private async void OnSyncNowClick(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            await _api.TriggerSyncAsync();
-            await RefreshAsync();
-        }
-        catch (Exception ex)
-        {
-            ErrorTextBlock.Text = $"Sync failed: {ex.Message}";
-        }
+        // Manual sync was a local-daemon action and is not part of the remote
+        // AWS architecture; the integration server handles scheduling itself.
+        ErrorTextBlock.Text = "Manual sync is handled by the integration server.";
     }
 
     private async void OnRefreshClick(object sender, RoutedEventArgs e)

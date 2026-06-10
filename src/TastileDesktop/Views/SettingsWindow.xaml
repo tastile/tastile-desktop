@@ -417,97 +417,13 @@
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Sync" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock Text="Runtime paths" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
-
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="State" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncStateTextBlock" Grid.Column="1" Text="Unknown" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Last attempt" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncLastAttemptTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Last success" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncLastSuccessTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Local tiles" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncLocalTilesTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Local events" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncLocalEventsTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Remote tiles" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncRemoteTilesTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="12">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="240" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Remote source" VerticalAlignment="Center" />
-                        <TextBlock x:Name="SyncRemoteSourceTextBlock" Grid.Column="1" Text="-" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" HorizontalAlignment="Right" />
-                    </Grid>
-
-                    <TextBlock x:Name="SyncLastResultTextBlock" Text="Result: -" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
-                    <TextBlock x:Name="SyncLastErrorTextBlock" Text="Error: -" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
-
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Sync now" Click="OnSyncNowClick" HorizontalAlignment="Stretch" />
-                        <Button Grid.Column="1" Content="Refresh status" Click="OnRefreshSyncStatusClick" HorizontalAlignment="Stretch" />
-                    </Grid>
-
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Clear local data" Click="OnResetLocalSyncDataClick" HorizontalAlignment="Stretch" />
-                        <Button Grid.Column="1" Content="Re-download from cloud" Click="OnRedownloadRemoteSyncDataClick" HorizontalAlignment="Stretch" />
-                    </Grid>
 
                     <Border Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Padding="12" CornerRadius="0">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Runtime paths" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBlock Text="These are the actual files and folders currently used by this desktop app and daemon." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
+                            <TextBlock Text="Where data lives on this device" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock Text="Only your auth token and a few UI preferences are stored locally. Tile data lives in the cloud." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
 
                             <StackPanel Spacing="2">
                                 <TextBlock Text="Profile" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
@@ -520,18 +436,13 @@
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="SQLite database" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock Text="Local database" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeDbPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Session file" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock Text="Auth credentials (DPAPI)" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeSessionPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                            </StackPanel>
-
-                            <StackPanel Spacing="2">
-                                <TextBlock Text="Daemon startup log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeDaemonStartupLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
@@ -540,18 +451,8 @@
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Desktop daemon log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeDesktopDaemonLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                            </StackPanel>
-
-                            <StackPanel Spacing="2">
                                 <TextBlock Text="Create Tile log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeCreateTileLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                            </StackPanel>
-
-                            <StackPanel Spacing="2">
-                                <TextBlock Text="Daemon executable" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeDaemonExecutablePathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>

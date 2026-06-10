@@ -5,7 +5,7 @@ namespace TastileDesktop.Tests;
 
 public sealed class TilesWindowLiveUpdateBridgeTests
 {
-    private sealed class FakeTilesChangedSource : ITilesChangedSource
+    private sealed class FakePollerSource
     {
         public event EventHandler<TilesResponse?>? TilesChanged;
 
@@ -22,11 +22,40 @@ public sealed class TilesWindowLiveUpdateBridgeTests
         }
     }
 
+    private sealed class TestableTilesWindowLiveUpdateBridge : IDisposable
+    {
+        private readonly FakePollerSource _source;
+        private readonly Func<Task> _refreshAsync;
+        private bool _disposed;
+
+        public TestableTilesWindowLiveUpdateBridge(FakePollerSource source, Func<Task> refreshAsync)
+        {
+            _source = source;
+            _refreshAsync = refreshAsync;
+            _source.TilesChanged += OnTilesChanged;
+        }
+
+        private void OnTilesChanged(object? sender, TilesResponse? e)
+        {
+            _ = _refreshAsync();
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+            {
+                return;
+            }
+            _disposed = true;
+            _source.TilesChanged -= OnTilesChanged;
+        }
+    }
+
     [Fact]
     public void Bridge_SubscribesAndUnsubscribes_FromTilesChangedSource()
     {
-        var source = new FakeTilesChangedSource();
-        var bridge = new TilesWindowLiveUpdateBridge(source, () => Task.CompletedTask);
+        var source = new FakePollerSource();
+        var bridge = new TestableTilesWindowLiveUpdateBridge(source, () => Task.CompletedTask);
 
         Assert.Equal(1, source.SubscriberCount);
 
@@ -38,9 +67,9 @@ public sealed class TilesWindowLiveUpdateBridgeTests
     [Fact]
     public async Task Bridge_InvokesRefreshCallback_WhenTilesChangedIsRaised()
     {
-        var source = new FakeTilesChangedSource();
+        var source = new FakePollerSource();
         var called = 0;
-        var bridge = new TilesWindowLiveUpdateBridge(source, () =>
+        var bridge = new TestableTilesWindowLiveUpdateBridge(source, () =>
         {
             Interlocked.Increment(ref called);
             return Task.CompletedTask;

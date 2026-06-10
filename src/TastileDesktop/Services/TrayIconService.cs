@@ -498,89 +498,13 @@ public class TrayIconService : IDisposable
 
     private async Task SignInWithGoogleAsync()
     {
-        var logPath = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tastile-tray-signin.log");
-        void Log(string msg)
-        {
-            try
-            {
-                System.IO.File.AppendAllText(logPath, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
-                System.Diagnostics.Debug.WriteLine(msg);
-            }
-            catch { }
-        }
-
         try
         {
-            Log("[SignInWithGoogleAsync] === START ===");
-
-            // Start OAuth flow via daemon - get auth URL from daemon
-            Log("[SignInWithGoogleAsync] Calling StartBrowserAuthAsync...");
-            var authUrl = await _api.StartBrowserAuthAsync("google");
-            Log($"[SignInWithGoogleAsync] Got auth URL: {authUrl}");
-
-            if (string.IsNullOrEmpty(authUrl))
-            {
-                Log("[SignInWithGoogleAsync] ERROR: No auth URL returned");
-                return;
-            }
-
-            // Open browser with auth URL (Desktop App opens browser, not daemon)
-            try
-            {
-                Log($"[SignInWithGoogleAsync] Opening browser...");
-                var psi = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = authUrl,
-                    UseShellExecute = true
-                };
-                System.Diagnostics.Process.Start(psi);
-                Log("[SignInWithGoogleAsync] Browser opened successfully");
-            }
-            catch (Exception ex)
-            {
-                Log($"[SignInWithGoogleAsync] ERROR opening browser: {ex.Message}");
-                return;
-            }
-
-            Log("[SignInWithGoogleAsync] Starting polling...");
-
-            // Poll for session completion (daemon receives callback on localhost:3140)
-            _ = Task.Run(async () =>
-            {
-                var maxAttempts = 60; // 2 minutes
-                for (int i = 0; i < maxAttempts; i++)
-                {
-                    await Task.Delay(2000);
-
-                    Log($"[Poll] Attempt {i + 1}/{maxAttempts}...");
-                    var session = await _api.GetSessionAsync();
-                    Log($"[Poll] GetSessionAsync returned: {(session != null ? $"UserId={session.UserId}, Email={session.Email}" : "null")}");
-
-                    if (session != null)
-                    {
-                        Log("[Poll] Session found! Calling AuthService.InitializeAsync...");
-                        try
-                        {
-                            await AuthService.Instance.InitializeAsync(_api);
-                            Log("[Poll] AuthService.InitializeAsync completed successfully");
-                        }
-                        catch (Exception ex)
-                        {
-                            Log($"[Poll] ERROR in InitializeAsync: {ex.GetType().Name}: {ex.Message}");
-                            Log($"[Poll] StackTrace: {ex.StackTrace}");
-                        }
-                        break;
-                    }
-                }
-                Log("[Poll] Polling finished");
-            });
-
-            Log("[SignInWithGoogleAsync] === END ===");
+            await CognitoAuthService.Instance.StartHostedUiAsync();
         }
         catch (Exception ex)
         {
-            Log($"[SignInWithGoogleAsync] EXCEPTION: {ex.GetType().Name}: {ex.Message}");
-            Log($"[SignInWithGoogleAsync] StackTrace: {ex.StackTrace}");
+            System.Diagnostics.Debug.WriteLine($"Sign in failed: {ex.Message}");
         }
     }
 

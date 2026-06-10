@@ -46,13 +46,20 @@ public sealed class SettingsLayoutTests
     }
 
     [Fact]
-    public void SettingsWindow_UsesRightAlignedSummaryValues_InSyncRows()
+    public void SettingsWindow_RuntimePathsSection_ExposesAuthAndDataLocations()
     {
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "SettingsWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("x:Name=\"SyncStateTextBlock\" Grid.Column=\"1\" Text=\"Unknown\" Foreground=\"{StaticResource AppForegroundMutedBrush}\" VerticalAlignment=\"Center\" HorizontalAlignment=\"Right\"", xaml);
-        Assert.Contains("x:Name=\"SyncLastAttemptTextBlock\" Grid.Column=\"1\" Text=\"-\" Foreground=\"{StaticResource AppForegroundMutedBrush}\" VerticalAlignment=\"Center\" HorizontalAlignment=\"Right\"", xaml);
-        Assert.Contains("x:Name=\"SyncLastSuccessTextBlock\" Grid.Column=\"1\" Text=\"-\" Foreground=\"{StaticResource AppForegroundMutedBrush}\" VerticalAlignment=\"Center\" HorizontalAlignment=\"Right\"", xaml);
+        // The runtime paths panel is the only diagnostic that remains after
+        // the daemon-era sync section was removed.
+        Assert.Contains("x:Name=\"RuntimeProfileTextBlock\"", xaml);
+        Assert.Contains("x:Name=\"RuntimeAppDataDirTextBlock\"", xaml);
+        Assert.Contains("x:Name=\"RuntimeSessionPathTextBlock\"", xaml);
+        Assert.Contains("Auth credentials (DPAPI)", xaml);
+        // Sync-specific diagnostics are gone.
+        Assert.DoesNotContain("x:Name=\"SyncStateTextBlock\"", xaml);
+        Assert.DoesNotContain("x:Name=\"SyncLastAttemptTextBlock\"", xaml);
+        Assert.DoesNotContain("x:Name=\"SyncLastSuccessTextBlock\"", xaml);
     }
 }

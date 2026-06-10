@@ -1,355 +1,72 @@
 using Microsoft.UI.Xaml;
-using Microsoft.UI.Windowing;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Threading.Tasks;
 using TastileDesktop.Services;
 
 namespace TastileDesktop.Views;
 
 /// <summary>
-/// OAuth authentication window - Daemon-mediated flow.
-/// Desktop asks daemon to open browser and handle OAuth callback.
+/// Hosted UI sign-in window. Opens the system browser pointed at the
+/// Cognito Hosted UI URL and auto-closes on successful sign-in.
 /// </summary>
 public sealed partial class AuthWindow : Window
 {
-    private readonly CoreApiClient _api;
-    private readonly string? _scopes;
-    private readonly Dictionary<string, string>? _queryParams;
-    private readonly TaskCompletionSource<AuthResult> _tcs = new();
-    private string? _authUrl;
-    private string? _flowId;
-    private string? _expectedState;
+    private EventHandler? _authStateChangedHandler;
 
-    public Task<AuthResult> AuthResultTask => _tcs.Task;
-
-    public AuthWindow(
-        CoreApiClient api,
-        string? scopes = null,
-        Dictionary<string, string>? queryParams = null)
+    public AuthWindow()
     {
-        Log("[AuthWindow.ctor] === START ===");
-        
-        try
+        this.InitializeComponent();
+        FloatingWindowHelper.Configure(this, TitleBarArea, 400, 300);
+        SignInButton.Click += OnSignInClick;
+        CancelButton.Click += OnCancelClick;
+
+        _authStateChangedHandler = (_, _) =>
         {
-            Log("[AuthWindow.ctor] Calling InitializeComponent...");
-            this.InitializeComponent();
-            Log("[AuthWindow.ctor] InitializeComponent completed");
-            
-            _api = api;
-            _scopes = scopes;
-            _queryParams = queryParams;
-            Log("[AuthWindow.ctor] CoreApiClient assigned");
-
-            Log("[AuthWindow.ctor] Setting floating window chrome...");
-            FloatingWindowHelper.Configure(this, TitleBarArea, 400, 300);
-            Log("[AuthWindow.ctor] Window chrome set");
-            this.Closed += OnWindowClosed;
-
-            // Start daemon-mediated authentication flow
-            Log("[AuthWindow.ctor] Starting StartAuthenticationAsync...");
-            _ = StartAuthenticationAsync();
-            Log("[AuthWindow.ctor] StartAuthenticationAsync dispatched");
-        }
-        catch (Exception ex)
-        {
-            Log($"[AuthWindow.ctor] ERROR: {ex.GetType().Name}: {ex.Message}");
-            Log($"[AuthWindow.ctor] StackTrace: {ex.StackTrace}");
-            throw;
-        }
-        
-        Log("[AuthWindow.ctor] === END ===");
-    }
-
-    private async Task StartAuthenticationAsync()
-    {
-        Log("[StartAuthenticationAsync] === START ===");
-
-        // Write a marker file to confirm this method is called
-        try
-        {
-            System.IO.File.WriteAllText(
-                System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tastile-auth-started.txt"),
-                $"StartAuthenticationAsync called at {DateTime.Now}");
-        }
-        catch { }
-
-        try
-        {
-            // Step 1: Ask daemon to start OAuth flow
-            Log("[StartAuthenticationAsync] Step 1: Calling _api.StartBrowserAuthAsync('google')...");
-
-            DispatcherQueue.TryEnqueue(() =>
+            if (CognitoAuthService.Instance.IsAuthenticated)
             {
-                try
-                {
-                    StatusTextBlock.Text = "Opening your browser for Google Calendar...";
-                    Log("[StartAuthenticationAsync] StatusTextBlock updated");
-                }
-                catch (Exception ex)
-                {
-                    Log($"[StartAuthenticationAsync] ERROR updating status: {ex.Message}");
-                }
-            });
-
-            Log("[StartAuthenticationAsync] About to call StartBrowserAuthAsync...");
-            OAuthInitResult? authFlow;
-            try
-            {
-                authFlow = await _api.StartBrowserAuthFlowAsync("google", _scopes, _queryParams);
-                _authUrl = authFlow?.AuthUrl;
-                _flowId = authFlow?.FlowId;
-                _expectedState = OAuthCallbackHandoff.ExtractStateFromAuthUrl(_authUrl);
-                OAuthCallbackHandoff.StoreExpectedState(_expectedState);
-                Log($"[StartAuthenticationAsync] StartBrowserAuthFlowAsync returned flow_id: {_flowId}, URL: {_authUrl}");
-            }
-            catch (Exception ex)
-            {
-                Log($"[StartAuthenticationAsync] ERROR in StartBrowserAuthAsync: {ex.GetType().Name}: {ex.Message}");
-                Log($"[StartAuthenticationAsync] StackTrace: {ex.StackTrace}");
-                _tcs.SetResult(new AuthResult
-                {
-                    Success = false,
-                    Error = $"Failed to call daemon: {ex.Message}"
-                });
-                return;
-            }
-
-            if (string.IsNullOrEmpty(_authUrl) || string.IsNullOrWhiteSpace(_flowId))
-            {
-                Log("[StartAuthenticationAsync] StartBrowserAuthFlowAsync returned incomplete flow metadata");
-                _tcs.SetResult(new AuthResult
-                {
-                    Success = false,
-                    Error = "Failed to start authentication. Daemon returned incomplete flow state."
-                });
-                ShowError("Failed to start authentication.");
-                return;
-            }
-
-            // Open browser with the auth URL (Desktop App opens browser, not daemon)
-            Log($"[StartAuthenticationAsync] Opening browser with URL: {_authUrl}");
-            try
-            {
-                OpenBrowser(_authUrl);
-                Log("[StartAuthenticationAsync] Browser opened successfully");
-            }
-            catch (Exception ex)
-            {
-                Log($"[StartAuthenticationAsync] ERROR opening browser: {ex.Message}");
-                // Continue anyway - user might open browser manually
-            }
-
-            Log("[StartAuthenticationAsync] Browser auth started successfully");
-
-            // Step 2: Poll daemon for authentication completion
-            Log("[StartAuthenticationAsync] Step 2: Starting polling for authentication...");
-            
-            DispatcherQueue.TryEnqueue(() =>
-            {
-                try
-                {
-                    StatusTextBlock.Text = "Finish the Google sign-in in your browser, then come back here.";
-                    Log("[StartAuthenticationAsync] StatusTextBlock updated to polling message");
-                }
-                catch (Exception ex)
-                {
-                    Log($"[StartAuthenticationAsync] ERROR updating polling status: {ex.Message}");
-                }
-            });
-            
-            Log("[StartAuthenticationAsync] Starting PollForAuthenticationAsync...");
-            var authenticated = await PollForAuthenticationAsync(
-                timeout: TimeSpan.FromMinutes(5),
-                pollInterval: TimeSpan.FromSeconds(2)
-            );
-            Log($"[StartAuthenticationAsync] PollForAuthenticationAsync returned: {authenticated}");
-
-            if (authenticated)
-            {
-                Log("[StartAuthenticationAsync] Authentication successful!");
-                await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
-                _tcs.TrySetResult(new AuthResult 
-                { 
-                    Success = true 
-                });
-                Log("[StartAuthenticationAsync] Calling Close()...");
                 DispatcherQueue.TryEnqueue(() => this.Close());
             }
-            else
-            {
-                Log("[StartAuthenticationAsync] Authentication timed out");
-                _tcs.TrySetResult(new AuthResult 
-                { 
-                    Success = false, 
-                    Error = "Google Calendar connection timed out. Please try again." 
-                });
-                ShowError("Google Calendar connection timed out. Please try again.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Log($"[StartAuthenticationAsync] UNEXPECTED ERROR: {ex.GetType().Name}: {ex.Message}");
-            Log($"[StartAuthenticationAsync] StackTrace: {ex.StackTrace}");
-            _tcs.TrySetResult(new AuthResult 
-            { 
-                Success = false, 
-                Error = ex.Message 
-            });
-            ShowError($"Authentication error: {ex.Message}");
-        }
-        
-        Log("[StartAuthenticationAsync] === END ===");
-    }
-
-    private async Task<bool> PollForAuthenticationAsync(TimeSpan timeout, TimeSpan pollInterval)
-    {
-        Log($"[PollForAuthenticationAsync] Starting poll: timeout={timeout}, interval={pollInterval}");
-        var startTime = DateTime.UtcNow;
-        int attemptCount = 0;
-
-        while (DateTime.UtcNow - startTime < timeout)
-        {
-            attemptCount++;
-            if (attemptCount <= 5 || attemptCount % 10 == 0)
-            {
-                Log($"[PollForAuthenticationAsync] Poll attempt {attemptCount}...");
-            }
-
-            try
-            {
-                var callbackUrl = OAuthCallbackHandoff.Peek();
-                if (!string.IsNullOrWhiteSpace(callbackUrl))
-                {
-                    Log("[PollForAuthenticationAsync] Found callback handoff; waiting for daemon-managed localhost callback");
-                    var parsed = ProtocolHandler.ParseOAuthCallback(callbackUrl);
-                    if (parsed != null)
-                    {
-                        var (_, state) = parsed.Value;
-                        if (!OAuthCallbackHandoff.MatchesExpectedState(state))
-                        {
-                            Log("[PollForAuthenticationAsync] Ignoring callback handoff because OAuth state did not match.");
-                            continue;
-                        }
-
-                        Log("[PollForAuthenticationAsync] Callback handoff matched expected state; daemon should complete via localhost callback.");
-                    }
-                }
-
-                if (!string.IsNullOrWhiteSpace(_flowId))
-                {
-                    Log($"[PollForAuthenticationAsync] Checking flow status for {_flowId}...");
-                    var flowStatus = await _api.GetOAuthFlowStatusAsync(_flowId);
-                    Log($"[PollForAuthenticationAsync] Flow status: completed={flowStatus?.Completed}, error={flowStatus?.Error}");
-
-                    if (flowStatus?.Completed == true)
-                    {
-                        if (!string.IsNullOrWhiteSpace(flowStatus.Error))
-                        {
-                            throw new InvalidOperationException(flowStatus.Error);
-                        }
-
-                        Log($"[PollForAuthenticationAsync] Flow {_flowId} completed after {attemptCount} attempts.");
-                        return true;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log($"[PollForAuthenticationAsync] Poll error (attempt {attemptCount}): {ex.GetType().Name}: {ex.Message}");
-                Log($"[PollForAuthenticationAsync] StackTrace: {ex.StackTrace}");
-            }
-
-            await Task.Delay(pollInterval);
-        }
-
-        Log($"[PollForAuthenticationAsync] Timeout after {attemptCount} attempts");
-        return false;
-    }
-
-    private void ShowError(string message)
-    {
-        Log($"[ShowError] {message}");
-        DispatcherQueue.TryEnqueue(() =>
-        {
-            try
-            {
-                StatusTextBlock.Text = $"Error: {message}";
-                StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                    ThemeManager.GetColor("AppPrimaryBrush"));
-            }
-            catch (Exception ex)
-            {
-                Log($"[ShowError] ERROR updating UI: {ex.Message}");
-            }
-        });
-    }
-
-    private void OnCancelClick(object sender, RoutedEventArgs e)
-    {
-        Log("[OnCancelClick] User cancelled authentication");
-        if (!_tcs.Task.IsCompleted)
-        {
-            OAuthCallbackHandoff.ClearCallback();
-            OAuthCallbackHandoff.ClearExpectedState();
-            _tcs.TrySetResult(new AuthResult 
-            { 
-                Success = false, 
-                Error = "User cancelled" 
-            });
-        }
-        this.Close();
-    }
-
-    private void OnOpenBrowserClick(object sender, RoutedEventArgs e)
-    {
-        if (string.IsNullOrWhiteSpace(_authUrl))
-        {
-            ShowError("Authentication URL is not ready yet.");
-            return;
-        }
-
-        try
-        {
-            OpenBrowser(_authUrl);
-            StatusTextBlock.Text = "Browser reopened. Finish the Google sign-in there, then return here.";
-        }
-        catch (Exception ex)
-        {
-            ShowError($"Failed to open browser: {ex.Message}");
-        }
+        };
+        CognitoAuthService.Instance.AuthStateChanged += _authStateChangedHandler;
+        Closed += OnWindowClosed;
     }
 
     private void OnWindowClosed(object sender, WindowEventArgs args)
     {
-        if (!_tcs.Task.IsCompleted)
+        if (_authStateChangedHandler is not null)
         {
-            OAuthCallbackHandoff.ClearCallback();
-            OAuthCallbackHandoff.ClearExpectedState();
-            _tcs.TrySetResult(new AuthResult
-            {
-                Success = false,
-                Error = "Authentication window closed"
-            });
+            CognitoAuthService.Instance.AuthStateChanged -= _authStateChangedHandler;
+            _authStateChangedHandler = null;
         }
     }
-    
-    private void Log(string message)
+
+    private async void OnSignInClick(object sender, RoutedEventArgs e)
     {
-        var path = Path.Combine(Path.GetTempPath(), "tastile-desktop-debug.log");
-        File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
-        Debug.WriteLine(message);
+        SignInButton.IsEnabled = false;
+        StatusTextBlock.Text = "ブラウザでサインインを完了してください…";
+
+        try
+        {
+            await CognitoAuthService.Instance.StartHostedUiAsync();
+        }
+        catch (Exception ex)
+        {
+            ShowError($"サインインを開始できませんでした: {ex.Message}");
+            SignInButton.IsEnabled = true;
+        }
     }
 
-    private static void OpenBrowser(string url)
+    private void OnCancelClick(object sender, RoutedEventArgs e)
     {
-        var psi = new ProcessStartInfo
+        this.Close();
+    }
+
+    private void ShowError(string message)
+    {
+        DispatcherQueue.TryEnqueue(() =>
         {
-            FileName = url,
-            UseShellExecute = true
-        };
-        Process.Start(psi);
+            StatusTextBlock.Text = message;
+            StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
+                ThemeManager.GetColor("AppPrimaryBrush"));
+        });
     }
 }

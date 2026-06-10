@@ -98,11 +98,13 @@ public sealed class CreateTileWindowContractsTests
     }
 
     [Fact]
-    public void CreateTileWindowSource_EditSave_TriggersTickBeforeClose()
+    public void CreateTileWindowSource_EditSave_DoesNotTriggerLocalTick()
     {
         var source = ReadRepoFile("src", "TastileDesktop", "Views", "CreateTileWindow.xaml.cs");
 
-        Assert.Contains("if (isEdit)", source);
-        Assert.Contains("await _api.TriggerTickAsync();", source);
+        // Server-side recalculation handles post-edit state. The desktop must
+        // not poke a 1-second tick on the local daemon any more.
+        Assert.DoesNotContain("await _api.TriggerTickAsync();", source);
+        Assert.DoesNotContain("/commands/tick", source);
     }
 }

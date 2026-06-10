@@ -19,7 +19,7 @@ public sealed class PromptAttentionOverlayService : IDisposable
 
     private sealed record OverlaySlot(DisplayInfo Display, OverlayEdge Edge);
 
-    private PollingService? _pollingService;
+    private EventDrivenPoller? _pollingService;
     private readonly SettingsService _settings = new();
     private readonly Dictionary<string, DateTimeOffset> _stackedPrompts = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<PromptAttentionOverlayWindow> _overlayWindows = [];
@@ -27,12 +27,12 @@ public sealed class PromptAttentionOverlayService : IDisposable
 
     public PromptAttentionOverlayService() { }
 
-    public PromptAttentionOverlayService(PollingService pollingService)
+    public PromptAttentionOverlayService(EventDrivenPoller pollingService)
     {
         Initialize(pollingService);
     }
 
-    public void Initialize(PollingService pollingService)
+    public void Initialize(EventDrivenPoller pollingService)
     {
         if (ReferenceEquals(_pollingService, pollingService))
         {

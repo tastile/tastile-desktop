@@ -1,22 +1,25 @@
-namespace TastileDesktop.Services;
-
-using System.Net.Http;
-using System.Net.Http.Json;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Runtime.CompilerServices;
-using System.Diagnostics;
-using System.IO;
-using System.Globalization;
 using TastileDesktop.Models;
+
+namespace TastileDesktop.Services;
 
 public class CoreApiClient
 {
     private readonly HttpClient _httpClient;
     private readonly HttpClient? _eventClient;
-    private readonly Uri _baseAddress;
+    private readonly Func<Task<string?>>? _getAccessToken;
+    private readonly Func<Task<TastileDesktop.Models.AuthSession?>>? _refreshTokens;
     private static readonly string LogPath = Path.Combine(Path.GetTempPath(), "tastile-desktop-debug.log");
+
     public static string DebugLogPath => LogPath;
 
     private static void Log(string message)
@@ -26,141 +29,166 @@ public class CoreApiClient
             File.AppendAllText(LogPath, $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
             Debug.WriteLine(message);
         }
-        catch { }
+        catch
+        {
+        }
     }
 
-    public CoreApiClient(string? baseUrl = null)
+    public CoreApiClient(
+        string? baseUrl = null,
+        Func<Task<string?>>? getAccessToken = null,
+        Func<Task<TastileDesktop.Models.AuthSession?>>? refreshTokens = null)
     {
         var resolvedBaseUrl = string.IsNullOrWhiteSpace(baseUrl)
-            ? RuntimeProfile.DaemonBaseUrl
+            ? AppSettings.ApiBaseUrl
             : baseUrl;
-        _baseAddress = new Uri(resolvedBaseUrl);
+        _getAccessToken = getAccessToken;
+        _refreshTokens = refreshTokens;
         _httpClient = new HttpClient
         {
-            BaseAddress = _baseAddress,
-            Timeout = TimeSpan.FromSeconds(4),
+            BaseAddress = new Uri(resolvedBaseUrl),
+            Timeout = TimeSpan.FromSeconds(10),
         };
-        // Create separate client for SSE with infinite timeout
+        _httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("TastileDesktop/0.3");
+        // Separate client for SSE with infinite timeout (request/response endpoints use the 10s timeout).
         _eventClient = new HttpClient
         {
-            BaseAddress = _baseAddress,
+            BaseAddress = _httpClient.BaseAddress,
             Timeout = Timeout.InfiniteTimeSpan,
         };
+        _eventClient.DefaultRequestHeaders.UserAgent.ParseAdd("TastileDesktop/0.3");
     }
 
     internal CoreApiClient(HttpClient httpClient)
     {
         _httpClient = httpClient;
-        _baseAddress = _httpClient.BaseAddress ?? new Uri(RuntimeProfile.DaemonBaseUrl);
         if (_httpClient.Timeout == TimeSpan.FromSeconds(100))
         {
-            _httpClient.Timeout = TimeSpan.FromSeconds(4);
+            _httpClient.Timeout = TimeSpan.FromSeconds(10);
         }
-        // Share the HttpClient for event streaming - allows test stubs to work
         _eventClient = httpClient;
     }
-    
-    // OAuth flow for browser-based authentication
-    public async Task<OAuthInitResult?> StartOAuthAsync(string provider = "google")
+
+    /// <summary>
+    /// Sends a request with an attached Bearer token (if a provider is configured).
+    /// On 401, attempts a token refresh once and retries.
+    /// </summary>
+    private async Task<HttpResponseMessage> SendWithAuthAsync(
+        HttpClient client,
+        HttpRequestMessage request,
+        CancellationToken cancellationToken = default)
     {
+        await AttachBearerAsync(request);
+
+        var response = await client.SendAsync(request, cancellationToken);
+        if (response.StatusCode != HttpStatusCode.Unauthorized || _refreshTokens is null)
+        {
+            return response;
+        }
+
+        // 401 → refresh once → retry.
+        response.Dispose();
+        var refreshed = await _refreshTokens();
+        if (refreshed is null)
+        {
+            return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+            {
+                Content = new StringContent("token refresh failed"),
+            };
+        }
+
+        var retry = new HttpRequestMessage(request.Method, request.RequestUri);
+        if (request.Content is not null)
+        {
+            retry.Content = request.Content;
+        }
+        retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.IdToken);
+        return await client.SendAsync(retry, cancellationToken);
+    }
+
+    private async Task AttachBearerAsync(HttpRequestMessage request)
+    {
+        if (_getAccessToken is null)
+        {
+            return;
+        }
+
         try
         {
-            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/start", new { provider });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<OAuthInitResult>();
+            var token = await _getAccessToken();
+            if (!string.IsNullOrEmpty(token))
+            {
+                request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            }
         }
         catch (Exception ex)
         {
-            Log($"StartOAuth failed: {ex.Message}");
-            return null;
+            Log($"token-provider failed: {ex.Message}");
         }
     }
-    
+
+    private async Task<T?> GetJsonAsync<T>(string path, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            return default;
+        }
+        return await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
+    }
+
+    private async Task<TResponse?> PostJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path)
+        {
+            Content = JsonContent.Create(body),
+        };
+        using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        return await ReadCommandResponseAsync<TResponse>(response, cancellationToken);
+    }
+
+    private async Task<TResponse?> PostJsonAsync<TResponse>(string path, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, path);
+        using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        return await ReadCommandResponseAsync<TResponse>(response, cancellationToken);
+    }
+
+    private static async Task<TResponse?> ReadCommandResponseAsync<TResponse>(HttpResponseMessage response, CancellationToken cancellationToken)
+    {
+        // Command endpoints often return Ok=false with a populated `Prompt`
+        // payload (e.g. create_conflict) on 4xx, so we attempt to parse the
+        // body for any 2xx/4xx response and only treat 5xx + transport
+        // failures as "no response".
+        if ((int)response.StatusCode >= 500)
+        {
+            return default;
+        }
+
+        return await response.Content.ReadFromJsonAsync<TResponse>(cancellationToken: cancellationToken);
+    }
+
     // Health
     public async Task<bool> CheckHealthAsync()
     {
         try
         {
-            var response = await _httpClient.GetAsync("/health");
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/health");
+            using var response = await SendWithAuthAsync(_httpClient, request);
             return response.IsSuccessStatusCode;
-        }
-        catch { return false; }
-    }
-
-    public async Task TriggerSyncAsync()
-    {
-        var response = await _httpClient.PostAsync("/sync/trigger", null);
-        if (response.IsSuccessStatusCode)
-        {
-            return;
-        }
-
-        // Daemon auth session is in-memory only; after daemon restart we may need
-        // to restore desktop-held session before retrying sync.
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
-            if (desktopSession != null)
-            {
-                Log("[TriggerSyncAsync] Unauthorized from daemon, restoring desktop session and retrying sync");
-                await RestoreSessionAsync(desktopSession);
-
-                var retry = await _httpClient.PostAsync("/sync/trigger", null);
-                retry.EnsureSuccessStatusCode();
-                return;
-            }
-        }
-
-        response.EnsureSuccessStatusCode();
-    }
-
-    public async Task<RecoveryResetResponse?> ResetLocalSyncDataAsync()
-        => await PostAuthorizedJsonAsync<RecoveryResetResponse>("/sync/recovery/reset-local");
-
-    public async Task<RecoveryResetResponse?> RedownloadRemoteSyncDataAsync()
-        => await PostAuthorizedJsonAsync<RecoveryResetResponse>("/sync/recovery/redownload-remote");
-
-    public async Task TriggerTickAsync()
-    {
-        try
-        {
-            var response = await _httpClient.PostAsync("/commands/tick", null);
-            if (response.IsSuccessStatusCode)
-            {
-                return;
-            }
-
-            if (response.StatusCode == HttpStatusCode.Unauthorized)
-            {
-                var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
-                if (desktopSession != null)
-                {
-                    await RestoreSessionAsync(desktopSession);
-                    var retry = await _httpClient.PostAsync("/commands/tick", null);
-                    retry.EnsureSuccessStatusCode();
-                    return;
-                }
-            }
-
-            response.EnsureSuccessStatusCode();
         }
         catch
         {
-            // Wall-clock tick is best-effort; regular polling still refreshes state.
+            return false;
         }
     }
 
-    public async Task<SyncStatusResponse?> GetSyncStatusAsync()
-        => await _httpClient.GetFromJsonAsync<SyncStatusResponse>("/sync/status");
-
-    public async Task<RuntimePathsResponse?> GetRuntimePathsAsync()
-        => await _httpClient.GetFromJsonAsync<RuntimePathsResponse>("/read/runtime-paths");
-
     // Read endpoints
-    public async Task<TilesResponse?> GetTilesAsync()
-        => await _httpClient.GetFromJsonAsync<TilesResponse>("/read/tiles");
+    public Task<TilesResponse?> GetTilesAsync()
+        => GetJsonAsync<TilesResponse>("/read/tiles");
 
-    public async Task<TilesResponse?> GetTilesAsync(string viewMode, string? lifecycle = null, int? limit = null, string? search = null)
+    public Task<TilesResponse?> GetTilesAsync(string viewMode, string? lifecycle = null, int? limit = null, string? search = null)
     {
         var queryParams = new List<string>();
         if (!string.IsNullOrEmpty(viewMode)) queryParams.Add($"view_mode={viewMode}");
@@ -168,38 +196,38 @@ public class CoreApiClient
         if (limit.HasValue) queryParams.Add($"limit={limit.Value}");
         if (!string.IsNullOrEmpty(search)) queryParams.Add($"search={Uri.EscapeDataString(search)}");
 
-        var query = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : "";
-        return await _httpClient.GetFromJsonAsync<TilesResponse>($"/read/tiles{query}");
+        var query = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty;
+        return GetJsonAsync<TilesResponse>($"/read/tiles{query}");
     }
 
-    public async Task<ExecutionView?> GetExecutionViewAsync()
-        => await _httpClient.GetFromJsonAsync<ExecutionView>("/read/execution-view");
+    public Task<ExecutionView?> GetExecutionViewAsync()
+        => GetJsonAsync<ExecutionView>("/read/execution-view");
 
-    public async Task<TileView?> GetTileByIdAsync(string tileId)
-        => await _httpClient.GetFromJsonAsync<TileView>($"/read/tile/{tileId}");
+    public Task<TileView?> GetTileByIdAsync(string tileId)
+        => GetJsonAsync<TileView>($"/read/tile/{tileId}");
 
-    public async Task<EditableTileView?> GetEditableTileByIdAsync(string tileId)
-        => await _httpClient.GetFromJsonAsync<EditableTileView>($"/read/tile/{tileId}/editable");
+    public Task<EditableTileView?> GetEditableTileByIdAsync(string tileId)
+        => GetJsonAsync<EditableTileView>($"/read/tile/{tileId}/editable");
 
-    public async Task<TilesInProgressResponse?> GetTilesInProgressAsync()
-        => await _httpClient.GetFromJsonAsync<TilesInProgressResponse>("/read/tiles-in-progress");
+    public Task<TilesInProgressResponse?> GetTilesInProgressAsync()
+        => GetJsonAsync<TilesInProgressResponse>("/read/tiles-in-progress");
 
-    public async Task<ActiveTileResponse?> GetActiveTileAsync()
-        => await _httpClient.GetFromJsonAsync<ActiveTileResponse>("/read/active-tile");
+    public Task<ActiveTileResponse?> GetActiveTileAsync()
+        => GetJsonAsync<ActiveTileResponse>("/read/active-tile");
 
-    public async Task<ExecutionResponse?> GetExecutionAsync()
-        => await _httpClient.GetFromJsonAsync<ExecutionResponse>("/read/execution");
+    public Task<ExecutionResponse?> GetExecutionAsync()
+        => GetJsonAsync<ExecutionResponse>("/read/execution");
 
-    public async Task<PendingPromptResponse?> GetPendingPromptAsync()
-        => await _httpClient.GetFromJsonAsync<PendingPromptResponse>("/views/pending-prompt");
+    public Task<PendingPromptResponse?> GetPendingPromptAsync()
+        => GetJsonAsync<PendingPromptResponse>("/views/pending-prompt");
 
-    public async Task<TimelineTodayResponse?> GetTodayTimelineAsync()
-        => await _httpClient.GetFromJsonAsync<TimelineTodayResponse>("/views/timeline/today");
+    public Task<TimelineTodayResponse?> GetTodayTimelineAsync()
+        => GetJsonAsync<TimelineTodayResponse>("/views/timeline/today");
 
-    public async Task<CalendarProjectionResponse?> GetCalendarProjectionAsync(string viewPath, DateTimeOffset anchorLocal)
+    public Task<CalendarProjectionResponse?> GetCalendarProjectionAsync(string viewPath, DateTimeOffset anchorLocal)
     {
         var anchor = Uri.EscapeDataString(anchorLocal.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
-        return await _httpClient.GetFromJsonAsync<CalendarProjectionResponse>($"{viewPath}?anchor={anchor}");
+        return GetJsonAsync<CalendarProjectionResponse>($"{viewPath}?anchor={anchor}");
     }
 
     public async Task<TimelineTodayResponse?> GetTimelineForViewportAsync(TimelineViewportSettings viewport)
@@ -236,13 +264,10 @@ public class CoreApiClient
 
     public async IAsyncEnumerable<string> StreamStateEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        // SSE must stay connected for the life of the desktop session; the normal
-        // 4s API timeout is appropriate for request/response endpoints but will
-        // churn the event stream and can wedge the daemon with reconnect storms.
-        // Use the shared event client (which is the same as _httpClient for test scenarios)
         var eventClient = _eventClient ?? _httpClient;
         using var request = new HttpRequestMessage(HttpMethod.Get, "/read/events/state");
         request.Headers.Accept.ParseAdd("text/event-stream");
+        await AttachBearerAsync(request);
         using var response = await eventClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();
 
@@ -277,47 +302,50 @@ public class CoreApiClient
             var json = await _httpClient.GetStringAsync("/debug/events");
             return JsonDocument.Parse(json).RootElement;
         }
-        catch { return null; }
+        catch
+        {
+            return null;
+        }
     }
 
     // Command endpoints
-    public async Task<CommandResponse?> CreateTileAsync(string title, string? nextAction = null, string? doneDefinition = null)
-        => await CreateTileAsync(new CreateTileRequest(title, nextAction, doneDefinition, null, null, null, null, null, null));
+    public Task<CommandResponse?> CreateTileAsync(string title, string? nextAction = null, string? doneDefinition = null)
+        => CreateTileAsync(new CreateTileRequest(title, nextAction, doneDefinition, null, null, null, null, null, null));
 
-    public async Task<CommandResponse?> CreateTileAsync(CreateTileRequest request)
-        => await PostCommandAsync("/commands/tile/create", request);
+    public Task<CommandResponse?> CreateTileAsync(CreateTileRequest request)
+        => PostJsonAsync<CreateTileRequest, CommandResponse>("/commands/tile/create", request);
 
-    public async Task<CommandResponse?> StartTileAsync(string tileId)
-        => await PostCommandAsync("/commands/tile/start", new { tile_id = tileId });
+    public Task<CommandResponse?> StartTileAsync(string tileId)
+        => PostJsonAsync<object, CommandResponse>("/commands/tile/start", new { tile_id = tileId });
 
-    public async Task<CommandResponse?> CompleteTileAsync(string? tileId = null, string? nextTileId = null, string? scope = null)
-        => await PostCommandAsync("/commands/tile/complete", new { tile_id = tileId, next_tile_id = nextTileId, scope });
+    public Task<CommandResponse?> CompleteTileAsync(string? tileId = null, string? nextTileId = null, string? scope = null)
+        => PostJsonAsync<object, CommandResponse>("/commands/tile/complete", new { tile_id = tileId, next_tile_id = nextTileId, scope });
 
-    public async Task<CommandResponse?> DeferTileAsync(string tileId, string? reason = null, int? minutes = null)
-        => await PostCommandAsync("/commands/tile/defer", new { tile_id = tileId, reason, minutes });
+    public Task<CommandResponse?> DeferTileAsync(string tileId, string? reason = null, int? minutes = null)
+        => PostJsonAsync<object, CommandResponse>("/commands/tile/defer", new { tile_id = tileId, reason, minutes });
 
     public async Task<CommandResponse?> StartBreakAsync(int breakMin, string? insertionMode = null)
     {
         Log($"[StartBreakAsync] Starting break: {breakMin} minutes");
-        var result = await PostCommandAsync("/commands/break/start", new { break_min = breakMin, insertion_mode = insertionMode });
+        var result = await PostJsonAsync<object, CommandResponse>("/commands/break/start", new { break_min = breakMin, insertion_mode = insertionMode });
         Log($"[StartBreakAsync] Result: ok={result?.Ok}, error={result?.Error}");
         return result;
     }
 
-    public async Task<CommandResponse?> EndBreakAsync()
-        => await PostCommandAsync("/commands/break/end", new { });
+    public Task<CommandResponse?> EndBreakAsync()
+        => PostJsonAsync<object, CommandResponse>("/commands/break/end", new { });
 
-    public async Task<CommandResponse?> AttachMemoAsync(string? tileId, string text, string? memoKind = null)
-        => await PostCommandAsync("/commands/memo/attach", new { tile_id = tileId, text, memo_kind = memoKind });
+    public Task<CommandResponse?> AttachMemoAsync(string? tileId, string text, string? memoKind = null)
+        => PostJsonAsync<object, CommandResponse>("/commands/memo/attach", new { tile_id = tileId, text, memo_kind = memoKind });
 
-    public async Task<CommandResponse?> ExtendTileAsync(int extendMin)
-        => await PostCommandAsync("/commands/tile/extend", new { delta_min = extendMin });
+    public Task<CommandResponse?> ExtendTileAsync(int extendMin)
+        => PostJsonAsync<object, CommandResponse>("/commands/tile/extend", new { delta_min = extendMin });
 
-    public async Task<CommandResponse?> DeleteTileAsync(string tileId)
-        => await PostCommandAsync("/commands/tile/delete", new { tile_id = tileId });
+    public Task<CommandResponse?> DeleteTileAsync(string tileId)
+        => PostJsonAsync<object, CommandResponse>("/commands/tile/delete", new { tile_id = tileId });
 
-    public async Task<CommandResponse?> UpdateTileAsync(string tileId, CreateTileRequest request)
-        => await PostCommandAsync("/commands/tile/update", new
+    public Task<CommandResponse?> UpdateTileAsync(string tileId, CreateTileRequest request)
+        => PostJsonAsync<object, CommandResponse>("/commands/tile/update", new
         {
             tile_id = tileId,
             title = request.Title,
@@ -335,13 +363,9 @@ public class CoreApiClient
         try
         {
             Log($"[RequestPromptAsync] Requesting prompt for tile: {tileId}");
-            var response = await _httpClient.PostAsJsonAsync("/commands/prompt/request", new { tile_id = tileId });
-            Log($"[RequestPromptAsync] Response status: {response.StatusCode}");
-            
-            var result = await response.Content.ReadFromJsonAsync<RequestPromptResponse>();
-            Log($"[RequestPromptAsync] Result: ok={result?.Ok}, hasPrompt={result?.Prompt != null}, error={result?.Error}");
-            
-            return result;
+            var response = await PostJsonAsync<object, RequestPromptResponse>("/commands/prompt/request", new { tile_id = tileId });
+            Log($"[RequestPromptAsync] Result: ok={response?.Ok}, hasPrompt={response?.Prompt != null}, error={response?.Error}");
+            return response;
         }
         catch (Exception ex)
         {
@@ -350,7 +374,7 @@ public class CoreApiClient
         }
     }
 
-    public async Task<CommandResponse?> RespondStartupRecoveryPromptAsync(
+    public Task<CommandResponse?> RespondStartupRecoveryPromptAsync(
         string promptId,
         string tileId,
         string actionId,
@@ -361,81 +385,24 @@ public class CoreApiClient
             TileId: tileId,
             ActionId: actionId,
             StopAt: stopAt?.UtcDateTime.ToString("O"));
-        return await PostCommandAsync("/commands/prompt/respond-startup-recovery", body);
-    }
-
-    private async Task<CommandResponse?> PostCommandAsync<T>(string path, T body)
-    {
-        var response = await _httpClient.PostAsJsonAsync(path, body);
-        return await response.Content.ReadFromJsonAsync<CommandResponse>();
-    }
-
-    private async Task<T?> PostAuthorizedJsonAsync<T>(string path)
-    {
-        var response = await _httpClient.PostAsync(path, null);
-        if (response.IsSuccessStatusCode)
-        {
-            return await response.Content.ReadFromJsonAsync<T>();
-        }
-
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
-            if (desktopSession != null)
-            {
-                await RestoreSessionAsync(desktopSession);
-                var retry = await _httpClient.PostAsync(path, null);
-                retry.EnsureSuccessStatusCode();
-                return await retry.Content.ReadFromJsonAsync<T>();
-            }
-        }
-
-        response.EnsureSuccessStatusCode();
-        return default;
+        return PostJsonAsync<RespondStartupRecoveryPromptRequest, CommandResponse>("/commands/prompt/respond-startup-recovery", body);
     }
 
     // Auth endpoints
     public async Task SignOutAsync()
     {
-        var response = await _httpClient.PostAsync("/auth/signout", null);
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/signout");
+        using var response = await SendWithAuthAsync(_httpClient, request);
         response.EnsureSuccessStatusCode();
     }
 
-    public async Task<TastileDesktop.Models.TileQuotaResponse?> GetTileQuotaAsync()
-    {
-        var response = await _httpClient.GetAsync("/auth/tile-quota");
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
-            if (desktopSession != null)
-            {
-                Log("[GetTileQuotaAsync] Unauthorized from daemon, restoring desktop session and retrying quota check");
-                await RestoreSessionAsync(desktopSession);
-                response = await _httpClient.GetAsync("/auth/tile-quota");
-            }
-        }
+    public Task<TileQuotaResponse?> GetTileQuotaAsync()
+        => GetJsonAsync<TileQuotaResponse>("/auth/tile-quota");
 
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<TastileDesktop.Models.TileQuotaResponse>();
-    }
+    public Task<IntegrationSettingsResponse?> GetIntegrationSettingsAsync()
+        => GetJsonAsync<IntegrationSettingsResponse>("/auth/integrations/settings");
 
-    public async Task<IntegrationSettingsResponse?> GetIntegrationSettingsAsync()
-    {
-        var response = await _httpClient.GetAsync("/auth/integrations/settings");
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
-            if (desktopSession != null)
-            {
-                await RestoreSessionAsync(desktopSession);
-                response = await _httpClient.GetAsync("/auth/integrations/settings");
-            }
-        }
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<IntegrationSettingsResponse>();
-    }
-
-    public async Task<IntegrationSettingsResponse?> UpdateGoogleCalendarIntegrationAsync(
+    public Task<IntegrationSettingsResponse?> UpdateGoogleCalendarIntegrationAsync(
         bool? connected = null,
         bool? canRead = null,
         bool? canWrite = null,
@@ -459,196 +426,14 @@ public class CoreApiClient
         if (grantedScopes is not null) payload["granted_scopes"] = grantedScopes;
         if (lastSyncedAt is not null) payload["last_synced_at"] = lastSyncedAt;
 
-        var response = await _httpClient.PostAsJsonAsync("/auth/integrations/settings", new
+        return PostJsonAsync<object, IntegrationSettingsResponse>("/auth/integrations/settings", new
         {
             google_calendar = payload,
         });
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
-            if (desktopSession != null)
-            {
-                await RestoreSessionAsync(desktopSession);
-                response = await _httpClient.PostAsJsonAsync("/auth/integrations/settings", new
-                {
-                    google_calendar = payload,
-                });
-            }
-        }
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<IntegrationSettingsResponse>();
     }
 
-    public async Task<CalendarSyncPlanPreviewResponse?> GetCalendarSyncPlanPreviewAsync()
-    {
-        var response = await _httpClient.GetAsync("/auth/integrations/calendar/sync-plan");
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
-        {
-            var desktopSession = AuthService.Instance.CurrentSession ?? await GetSessionAsync();
-            if (desktopSession != null)
-            {
-                await RestoreSessionAsync(desktopSession);
-                response = await _httpClient.GetAsync("/auth/integrations/calendar/sync-plan");
-            }
-        }
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<CalendarSyncPlanPreviewResponse>();
-    }
-
-    public async Task<AuthSession?> GetSessionAsync()
-    {
-        try
-        {
-            Log("[GetSessionAsync] Requesting /auth/session...");
-            var response = await _httpClient.GetAsync("/auth/session");
-            Log($"[GetSessionAsync] Status: {response.StatusCode}");
-
-            var content = await response.Content.ReadAsStringAsync();
-            Log($"[GetSessionAsync] Response: {content}");
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Log($"[GetSessionAsync] Failed with status {response.StatusCode}");
-                return null;
-            }
-
-            var session = await response.Content.ReadFromJsonAsync<AuthSession>();
-            Log($"[GetSessionAsync] Parsed session: UserId={session?.UserId}, Email={session?.Email}, HasAccessToken={!string.IsNullOrEmpty(session?.AccessToken)}");
-            return session;
-        }
-        catch (Exception ex)
-        {
-            Log($"[GetSessionAsync] Exception: {ex.Message}");
-            Log($"[GetSessionAsync] StackTrace: {ex.StackTrace}");
-            return null;
-        }
-    }
-
-    public async Task<AuthSession?> RestoreSessionAsync(AuthSession session)
-    {
-        var response = await _httpClient.PostAsJsonAsync("/auth/session/restore", new
-        {
-            user_id = session.UserId,
-            email = session.Email,
-            access_token = session.AccessToken,
-            refresh_token = session.RefreshToken,
-            provider_token = session.ProviderToken,
-            provider_refresh_token = session.ProviderRefreshToken,
-            expires_at = session.ExpiresAt,
-        });
-
-        response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<AuthSession>();
-    }
-
-    /// <summary>
-    /// Exchange OAuth authorization code for session.
-    /// </summary>
-    public async Task<OAuthTokenResponse?> SignInWithOAuthAsync(string provider, string code, string redirectUri, string? state = null)
-    {
-        try
-        {
-            // Daemon API uses /auth/oauth/exchange for client-managed callback flows.
-            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/exchange", new
-            {
-                code,
-                state,
-            });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<OAuthTokenResponse>();
-        }
-        catch (Exception ex)
-        {
-            Log($"OAuth callback failed: {ex.Message}");
-            return null;
-        }
-    }
-
-    /// <summary>
-    /// Desktop app asks daemon to start OAuth flow.
-    /// Returns the auth URL for the desktop app to open in browser.
-    /// </summary>
-    public async Task<string?> StartBrowserAuthAsync(
-        string provider = "google",
-        string? scopes = null,
-        Dictionary<string, string>? queryParams = null)
-    {
-        try
-        {
-            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/start", new
-            {
-                provider,
-                scopes,
-                query_params = queryParams,
-            });
-            response.EnsureSuccessStatusCode();
-            var result = await response.Content.ReadFromJsonAsync<OAuthInitResult>();
-            return result?.AuthUrl;
-        }
-        catch (Exception ex)
-        {
-            Log($"Failed to start browser auth: {ex.Message}");
-            return null;
-        }
-    }
-
-    public async Task<OAuthInitResult?> StartBrowserAuthFlowAsync(
-        string provider = "google",
-        string? scopes = null,
-        Dictionary<string, string>? queryParams = null)
-    {
-        try
-        {
-            var response = await _httpClient.PostAsJsonAsync("/auth/oauth/start", new
-            {
-                provider,
-                scopes,
-                query_params = queryParams,
-            });
-            response.EnsureSuccessStatusCode();
-            return await response.Content.ReadFromJsonAsync<OAuthInitResult>();
-        }
-        catch (Exception ex)
-        {
-            Log($"Failed to start browser auth flow: {ex.Message}");
-            return null;
-        }
-    }
-
-    public async Task<OAuthFlowStatusResponse?> GetOAuthFlowStatusAsync(string flowId)
-    {
-        try
-        {
-            return await _httpClient.GetFromJsonAsync<OAuthFlowStatusResponse>(
-                $"/auth/oauth/status?flow_id={Uri.EscapeDataString(flowId)}");
-        }
-        catch (Exception ex)
-        {
-            Log($"Failed to get oauth flow status: {ex.Message}");
-            return null;
-        }
-    }
-    
-    /// <summary>
-    /// Check if user is authenticated by asking daemon.
-    /// Called periodically during OAuth flow.
-    /// </summary>
-    public async Task<bool> IsAuthenticatedAsync()
-    {
-        try
-        {
-            Log("[IsAuthenticatedAsync] Checking authentication...");
-            var session = await GetSessionAsync();
-            var isAuth = session != null && !string.IsNullOrEmpty(session.AccessToken);
-            Log($"[IsAuthenticatedAsync] Result: {isAuth} (session={session != null}, hasToken={!string.IsNullOrEmpty(session?.AccessToken)})");
-            return isAuth;
-        }
-        catch (Exception ex)
-        {
-            Log($"[IsAuthenticatedAsync] Exception: {ex.Message}");
-            return false;
-        }
-    }
+    public Task<CalendarSyncPlanPreviewResponse?> GetCalendarSyncPlanPreviewAsync()
+        => GetJsonAsync<CalendarSyncPlanPreviewResponse>("/auth/integrations/calendar/sync-plan");
 
     private static long ResolveDurationMinutes(string? startAt, string? endAt)
     {
@@ -660,99 +445,6 @@ public class CoreApiClient
         var minutes = (long)(end - start).TotalMinutes;
         return minutes > 0 ? minutes : 0;
     }
-}
-
-/// <summary>
-/// OAuth flow initialization result
-/// </summary>
-public class OAuthInitResult
-{
-    [JsonPropertyName("flow_id")]
-    public string FlowId { get; set; } = "";
-    
-    [JsonPropertyName("auth_url")]
-    public string AuthUrl { get; set; } = "";
-    
-    [JsonPropertyName("provider")]
-    public string Provider { get; set; } = "";
-}
-
-/// <summary>
-/// OAuth token response from backend
-/// </summary>
-public class OAuthTokenResponse
-{
-    [JsonPropertyName("access_token")]
-    public string? AccessToken { get; set; }
-    
-    [JsonPropertyName("refresh_token")]
-    public string? RefreshToken { get; set; }
-    
-    [JsonPropertyName("expires_at")]
-    public long? ExpiresAt { get; set; }
-    
-    [JsonPropertyName("user")]
-    public OAuthUser? User { get; set; }
-}
-
-public class OAuthFlowStatusResponse
-{
-    [JsonPropertyName("flow_id")]
-    public string FlowId { get; set; } = "";
-
-    [JsonPropertyName("completed")]
-    public bool Completed { get; set; }
-
-    [JsonPropertyName("error")]
-    public string? Error { get; set; }
-}
-
-public class OAuthUser
-{
-    [JsonPropertyName("id")]
-    public string? Id { get; set; }
-    
-    [JsonPropertyName("email")]
-    public string? Email { get; set; }
-    
-    [JsonPropertyName("user_metadata")]
-    public Dictionary<string, object>? UserMetadata { get; set; }
-}
-
-public class SyncStatusResponse
-{
-    [JsonPropertyName("in_progress")]
-    public bool InProgress { get; set; }
-
-    [JsonPropertyName("last_attempt_at")]
-    public string? LastAttemptAt { get; set; }
-
-    [JsonPropertyName("last_success_at")]
-    public string? LastSuccessAt { get; set; }
-
-    [JsonPropertyName("last_error")]
-    public string? LastError { get; set; }
-
-    [JsonPropertyName("last_result")]
-    public SyncResultResponse? LastResult { get; set; }
-}
-
-public class SyncResultResponse
-{
-    [JsonPropertyName("uploaded")]
-    public int Uploaded { get; set; }
-
-    [JsonPropertyName("downloaded")]
-    public int Downloaded { get; set; }
-
-    [JsonPropertyName("failed")]
-    public int Failed { get; set; }
-
-    [JsonPropertyName("conflicts")]
-    public int Conflicts { get; set; }
-
-    [JsonPropertyName("applied")]
-    public int Applied { get; set; }
 }
 
 public class IntegrationSettingsResponse

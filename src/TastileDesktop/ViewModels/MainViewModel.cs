@@ -445,7 +445,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public event Action<string>? TimelineBlockEditRequested;
     public event Action<string>? TimelinePromptRequested;
 
-    private readonly PollingService _pollingService;
+    private readonly EventDrivenPoller _pollingService;
     private List<TileListItem> _allTiles = new();
     private ObservableCollection<TileListItem> _tiles = new();
     private string _selectedFilter = "All";
@@ -865,7 +865,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     private readonly object _promptCooldownGate = new();
     private static readonly TimeSpan PromptCooldownWindow = TimeSpan.FromSeconds(20);
     private static readonly TimeSpan PromptAutoExecutionDelay = TimeSpan.FromSeconds(30);
-    public PollingService PollingService => _pollingService;
+    public EventDrivenPoller PollingService => _pollingService;
     private readonly DispatcherQueue _dispatcher;
 
     public MainViewModel() : this(DispatcherQueue.GetForCurrentThread()!)
@@ -876,7 +876,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _api = new CoreApiClient();
-        _pollingService = new PollingService(_api, DaemonManager.Shared);
+        _pollingService = new EventDrivenPoller(_api, _dispatcher);
         _pollingService.SetTimelineViewport(_timelineViewport);
 
         // Notify initial visibility state
@@ -1115,7 +1115,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     // アクション実行後、即座にポーリングして状態を更新
                     System.Diagnostics.Debug.WriteLine($"[Toast] Polling after action");
                     App.DebugLog($"[Toast] Polling after action");
-                    await _pollingService.PollAsync();
+                    await _pollingService.RefreshAsync();
                 }
                 catch (Exception ex)
                 {
@@ -1143,7 +1143,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                     // アクション実行後、即座にポーリングして状態を更新
                     System.Diagnostics.Debug.WriteLine($"[Toast] Polling after defer");
                     App.DebugLog($"[Toast] Polling after defer");
-                    await _pollingService.PollAsync();
+                    await _pollingService.RefreshAsync();
                 }
                 catch (Exception ex)
                 {
@@ -1278,7 +1278,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         try
         {
             await ExecutePromptActionAsync(autoActionId, prompt, null, defaultBreakMinutes);
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -1712,7 +1712,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(TimelineAnchorLabel));
         OnPropertyChanged(nameof(TimelineCompactRangeLabel));
         _pollingService.SetTimelineViewport(viewport);
-        _ = _pollingService.PollAsync(forcePublish: true);
+        _ = _pollingService.RefreshAsync(forcePublish: true);
     }
 
     private void OnTilesChanged(object? sender, TilesResponse? tiles)
@@ -1970,7 +1970,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 NewTileNextAction = string.Empty;
                 NewTileDoneDefinition = string.Empty;
             }
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -2125,7 +2125,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    public Task RefreshAsync(bool forcePublish = false) => _pollingService.PollAsync(forcePublish);
+    public Task RefreshAsync(bool forcePublish = false) => _pollingService.RefreshAsync(forcePublish);
 
     public void NotifyTimeAdvanced()
     {
@@ -2147,7 +2147,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = $"Error: {result.Error}";
             else
                 StatusMessage = "Tile completed";
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -2165,7 +2165,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = $"Error: {result.Error}";
             else
                 StatusMessage = "Break started (5 min)";
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -2183,7 +2183,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = $"Error: {result.Error}";
             else
                 StatusMessage = "Break ended";
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -2206,7 +2206,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
                 StatusMessage = $"Started: {tile?.Title ?? tileId}";
             }
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -2255,7 +2255,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             var settings = new SettingsService();
             await ExecutePromptActionAsync(id, prompt, stopAt, settings.Current.DefaultBreakMinutes);
             StatusMessage = $"Prompt action: {id}";
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -2307,7 +2307,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
                 StatusMessage = $"Deferred: {tile?.Title ?? tileId}";
             }
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {
@@ -2328,7 +2328,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 StatusMessage = $"Error: {result.Error}";
             else
                 StatusMessage = "Tile deleted";
-            await _pollingService.PollAsync();
+            await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
         {

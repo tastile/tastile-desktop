@@ -9,29 +9,24 @@ namespace TastileDesktop;
 
 public partial class App : Application
 {
-    private static readonly string DebugLogPath = Path.Combine(
-        RuntimeProfile.GetLocalAppDataDirectory(),
-        "debug.log");
+    private static readonly string CallbackHandoffPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Tastile", "Auth", "callback-pending.txt");
 
     private static Mutex? _singleInstanceMutex;
-    private static readonly string MutexName = $"Global\\TastileDesktopSingleInstance-{RuntimeProfile.Name}";
+    private static readonly string MutexName = "Global\\TastileDesktopSingleInstance";
 
     public static void DebugLog(string msg)
     {
         try
         {
-            var dir = Path.GetDirectoryName(DebugLogPath);
-            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
-            {
-                Directory.CreateDirectory(dir);
-            }
-            File.AppendAllText(DebugLogPath, $"[{DateTime.Now:HH:mm:ss.fff}] {msg}{Environment.NewLine}");
+            var path = Path.Combine(Path.GetTempPath(), "tastile-desktop.log");
+            File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
         }
         catch { }
     }
     private MainWindow? _mainWindow;
     private TrayIconService? _trayIconService;
-    private DaemonManager? _daemonManager;
     private readonly SettingsService _settingsService = new();
     private readonly AppUpdateService _appUpdateService = new();
     private readonly SystemAppearanceService _appearanceService = SystemAppearanceService.Instance;
@@ -46,7 +41,7 @@ public partial class App : Application
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         SettingsService.GlobalSettingsChanged += OnSettingsChanged;
         _appearanceService.AppearanceChanged += OnAppearanceChanged;
-        
+
         // Initialize toast notifications
         ToastNotificationManagerCompat.OnActivated += OnToastActivated;
     }
@@ -83,35 +78,29 @@ public partial class App : Application
 
     private void OnUnhandledException(object sender, Microsoft.UI.Xaml.UnhandledExceptionEventArgs e)
     {
-        Log($"XAML UNHANDLED: {e.Exception.GetType().Name}: {e.Exception.Message}");
-        Log($"XAML STACK: {e.Exception.StackTrace}");
+        DebugLog($"XAML UNHANDLED: {e.Exception.GetType().Name}: {e.Exception.Message}");
+        DebugLog($"XAML STACK: {e.Exception.StackTrace}");
     }
 
     private void OnCurrentDomainUnhandledException(object sender, System.UnhandledExceptionEventArgs e)
     {
         if (e.ExceptionObject is Exception ex)
         {
-            Log($"APPDOMAIN UNHANDLED: {ex.GetType().Name}: {ex.Message}");
-            Log($"APPDOMAIN STACK: {ex.StackTrace}");
+            DebugLog($"APPDOMAIN UNHANDLED: {ex.GetType().Name}: {ex.Message}");
+            DebugLog($"APPDOMAIN STACK: {ex.StackTrace}");
         }
         else
         {
-            Log($"APPDOMAIN UNHANDLED NON-EXCEPTION: {e.ExceptionObject}");
+            DebugLog($"APPDOMAIN UNHANDLED NON-EXCEPTION: {e.ExceptionObject}");
         }
     }
 
     private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
     {
-        Log($"TASK UNOBSERVED: {e.Exception.GetType().Name}: {e.Exception.Message}");
-        Log($"TASK STACK: {e.Exception.StackTrace}");
+        DebugLog($"TASK UNOBSERVED: {e.Exception.GetType().Name}: {e.Exception.Message}");
+        DebugLog($"TASK STACK: {e.Exception.StackTrace}");
     }
-    
-    private void Log(string msg)
-    {
-        var path = Path.Combine(Path.GetTempPath(), "tastile-desktop.log");
-        File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss.fff} {msg}{Environment.NewLine}");
-    }
-    
+
     private void OnToastActivated(ToastNotificationActivatedEventArgsCompat e)
     {
         // Re-route to NotificationService
@@ -126,174 +115,171 @@ public partial class App : Application
         // シングルインスタンスチェック
         bool createdNew;
         _singleInstanceMutex = new Mutex(true, MutexName, out createdNew);
-        
+
         if (!createdNew)
         {
             if (oauthCallback != null)
             {
-                Log("Secondary instance received OAuth callback");
-                OAuthCallbackHandoff.Store(oauthCallback);
+                DebugLog("Secondary instance received OAuth callback");
+                TryStoreCallbackHandoff(oauthCallback);
             }
-            Log("Another instance is already running. Exiting.");
-            // 既存インスタンスにフォーカスを送る（将来実装）
+            DebugLog("Another instance is already running. Exiting.");
             Exit();
             return;
         }
 
         try
         {
-            Log("OnLaunched starting...");
-            
+            DebugLog("OnLaunched starting...");
+
             // Register custom URL protocol (tastile://) for OAuth callbacks
             if (!ProtocolHandler.IsProtocolRegistered())
             {
-                Log("Registering tastile:// protocol...");
+                DebugLog("Registering tastile:// protocol...");
                 ProtocolHandler.RegisterProtocol();
             }
-            
-            if (oauthCallback != null)
+
+            // Drain any callback that was handoffed from a previous secondary instance
+            var handoffCallback = TryConsumeCallbackHandoff();
+            if (handoffCallback != null)
             {
-                Log("Received OAuth callback");
+                DebugLog("Consumed OAuth callback handoff from secondary instance");
+                await HandleOAuthCallbackAsync(handoffCallback);
+            }
+            if (oauthCallback != null && handoffCallback == null)
+            {
+                DebugLog("Received OAuth callback");
                 await HandleOAuthCallbackAsync(oauthCallback);
-                // Don't exit - ensure daemon is running
             }
-            
-            // Start or connect to daemon
-            Log("Starting daemon...");
-            _daemonManager = DaemonManager.Shared;
-            var daemonStarted = await _daemonManager.EnsureRunningAsync();
-            if (daemonStarted)
+
+            // Hydrate session from DPAPI store
+            await CognitoAuthService.Instance.TryLoadFromStoreAsync();
+            if (!CognitoAuthService.Instance.IsAuthenticated)
             {
-                Log("Daemon ready");
-            }
-            else
-            {
-                Log("WARNING: Daemon failed to start - app will use mock mode");
-            }
-            
-            var apiClient = new Services.CoreApiClient();
-            await AuthService.Instance.InitializeAsync(apiClient);
-            if (!AuthService.Instance.IsAuthenticated)
-            {
-                if (!await EnsureAuthenticatedAsync(apiClient, "Authentication required before launch."))
+                var authWindow = new AuthWindow();
+                authWindow.Activate();
+
+                var tcs = new TaskCompletionSource<AuthResult>();
+                EventHandler onAuthStateChanged = (_, _) =>
                 {
+                    if (CognitoAuthService.Instance.IsAuthenticated)
+                    {
+                        tcs.TrySetResult(new AuthResult(true));
+                    }
+                };
+                CognitoAuthService.Instance.AuthStateChanged += onAuthStateChanged;
+                using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+                await using var registration = cts.Token.Register(() => tcs.TrySetResult(new AuthResult(false, "timeout")));
+                var result = await tcs.Task;
+                CognitoAuthService.Instance.AuthStateChanged -= onAuthStateChanged;
+                authWindow.Close();
+                if (!result.Success)
+                {
+                    DebugLog($"Authentication aborted: {result.ErrorCode}");
                     Shutdown();
                     return;
                 }
             }
+
+            var apiClient = new Services.CoreApiClient(
+                AppSettings.ApiBaseUrl,
+                AuthService.Instance.GetAccessTokenAsync,
+                CognitoAuthService.Instance.RefreshAsync);
 
             // Create main window
             _mainWindow = new MainWindow();
-            Log("MainWindow created");
+            DebugLog("MainWindow created");
             await _mainWindow.InitializeAsync();
-            if (!AuthService.Instance.IsAuthenticated)
-            {
-                if (!await EnsureAuthenticatedAsync(apiClient, "Main window initialized without session."))
-                {
-                    Shutdown();
-                    return;
-                }
-            }
+            DebugLog("MainWindow initialized");
 
-            Log("MainWindow initialized");
-            await apiClient.TriggerTickAsync();
-            Log("Startup tick triggered");
             ApplyAppearance(_appearanceService.GetCurrentSnapshot());
-            
+
             // Setup tray icon
-            Log("Creating TrayIconService...");
+            DebugLog("Creating TrayIconService...");
             _trayIconService = new TrayIconService(_mainWindow.ViewModel, apiClient, () => Shutdown(), _settingsService);
-            Log("Initializing tray icon...");
+            DebugLog("Initializing tray icon...");
             _trayIconService.Initialize(_mainWindow);
-            Log("Tray icon initialized");
+            DebugLog("Tray icon initialized");
 
             _ = CheckForUpdatesOnLaunchAsync();
-            
+
             // Handle window close to minimize to tray instead
             _mainWindow.Closed += OnMainWindowClosed;
-            
+
             // Show window unless --minimized flag is present
             if (!cmdArgs.Contains("--minimized"))
             {
-                Log("Showing quick panel...");
+                DebugLog("Showing quick panel...");
                 _mainWindow.ShowPanel();
-                Log("Quick panel shown");
+                DebugLog("Quick panel shown");
 
                 if (cmdArgs.Contains("--debug-open-create"))
                 {
-                    Log("Debug opening Create Tile...");
+                    DebugLog("Debug opening Create Tile...");
                     _mainWindow.DebugOpenCreateTileWindow();
                 }
 
                 if (cmdArgs.Contains("--debug-open-timeline"))
                 {
-                    Log("Debug opening Timeline...");
+                    DebugLog("Debug opening Timeline...");
                     _mainWindow.OpenTimelineWindow();
                 }
             }
             else
             {
-                Log("Starting minimized");
+                DebugLog("Starting minimized");
             }
         }
         catch (Exception ex)
         {
-            Log($"ERROR: {ex.GetType().Name}: {ex.Message}");
-            Log($"StackTrace: {ex.StackTrace}");
+            DebugLog($"ERROR: {ex.GetType().Name}: {ex.Message}");
+            DebugLog($"StackTrace: {ex.StackTrace}");
             throw;
         }
     }
-    
-    private Task HandleOAuthCallbackAsync(string callbackUrl)
+
+    private async Task HandleOAuthCallbackAsync(string callbackUrl)
     {
         var result = ProtocolHandler.ParseOAuthCallback(callbackUrl);
         if (result == null)
         {
-            Log("Invalid OAuth callback URL");
-            return Task.CompletedTask;
+            DebugLog("Invalid OAuth callback URL");
+            return;
         }
-        
+
         var (code, state) = result.Value;
-        Log("OAuth callback parsed");
+        DebugLog("OAuth callback parsed");
+        await CognitoAuthService.Instance.HandleAuthorizationCodeAsync(code, state);
+    }
 
-        if (!OAuthCallbackHandoff.MatchesExpectedState(state))
-        {
-            Log("Ignoring OAuth callback because state did not match the expected value.");
-            return Task.CompletedTask;
-        }
-
+    private static void TryStoreCallbackHandoff(string url)
+    {
         try
         {
-            Log("OAuth callback received by app; daemon-managed localhost callback remains the source of truth.");
+            var dir = Path.GetDirectoryName(CallbackHandoffPath);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+            File.WriteAllText(CallbackHandoffPath, url);
         }
         catch (Exception ex)
         {
-            Log($"OAuth callback handoff processing failed: {ex.Message}");
+            DebugLog($"Failed to store callback handoff: {ex.Message}");
         }
-
-        OAuthCallbackHandoff.Store(callbackUrl);
-        Log("OAuth callback stored for handoff fallback");
-        return Task.CompletedTask;
     }
 
-    public async Task<bool> EnsureAuthenticatedAsync(CoreApiClient apiClient, string reason)
+    private static string? TryConsumeCallbackHandoff()
     {
-        Log($"{reason} Waiting for Google OAuth completion.");
-        while (!AuthService.Instance.IsAuthenticated)
+        try
         {
-            var authWindow = new AuthWindow(apiClient);
-            authWindow.Activate();
-            var authResult = await authWindow.AuthResultTask;
-            if (!authResult.Success)
-            {
-                Log($"Authentication aborted: {authResult.Error}");
-                return false;
-            }
-
-            await AuthService.Instance.RefreshSessionFromDaemonAsync(apiClient);
+            if (!File.Exists(CallbackHandoffPath)) return null;
+            var url = File.ReadAllText(CallbackHandoffPath).Trim();
+            File.Delete(CallbackHandoffPath);
+            return string.IsNullOrEmpty(url) ? null : url;
         }
-
-        return true;
+        catch (Exception ex)
+        {
+            DebugLog($"Failed to consume callback handoff: {ex.Message}");
+            return null;
+        }
     }
 
     private async Task CheckForUpdatesOnLaunchAsync()
@@ -318,7 +304,7 @@ public partial class App : Application
         }
         catch (Exception ex)
         {
-            Log($"Update check failed: {ex.Message}");
+            DebugLog($"Update check failed: {ex.Message}");
         }
     }
 
@@ -364,7 +350,7 @@ public partial class App : Application
                         }
                         catch (Exception ex)
                         {
-                            Log($"Update install failed: {ex.Message}");
+                            DebugLog($"Update install failed: {ex.Message}");
                         }
                     }
                     else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
@@ -394,7 +380,6 @@ public partial class App : Application
         _isShuttingDown = true;
         _appearanceService.AppearanceChanged -= OnAppearanceChanged;
         _trayIconService?.Dispose();
-        _daemonManager?.Dispose();
         _singleInstanceMutex?.ReleaseMutex();
         _singleInstanceMutex?.Dispose();
         _mainWindow?.Close();

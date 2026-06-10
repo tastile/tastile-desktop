@@ -372,6 +372,6 @@ public sealed class TimelineWindowLayoutTests
         var sourceVm = File.ReadAllText(sourceVmPath);
 
         Assert.Contains("public void UpdateTimelineViewport(TimelineViewportSettings viewport)", sourceVm);
-        Assert.Contains("_ = _pollingService.PollAsync(forcePublish: true);", sourceVm);
+        Assert.Contains("_ = _pollingService.RefreshAsync(forcePublish: true);", sourceVm);
     }
 }

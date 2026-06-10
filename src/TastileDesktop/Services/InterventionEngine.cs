@@ -8,11 +8,11 @@ namespace TastileDesktop.Services;
 /// </summary>
 public class InterventionEngine : IDisposable
 {
-    private readonly PollingService _pollingService;
+    private readonly EventDrivenPoller _pollingService;
     private readonly CoreApiClient _api;
     private InterventionWindow? _interventionWindow;
 
-    public InterventionEngine(PollingService pollingService, CoreApiClient api, SettingsService? settingsService = null)
+    public InterventionEngine(EventDrivenPoller pollingService, CoreApiClient api, SettingsService? settingsService = null)
     {
         _pollingService = pollingService;
         _api = api;

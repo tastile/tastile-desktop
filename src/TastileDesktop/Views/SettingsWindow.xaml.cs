@@ -5,7 +5,6 @@ using TastileDesktop.Models;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 using System.IO;
-using System.Threading;
 using Windows.Storage.Pickers;
 
 namespace TastileDesktop.Views;
@@ -17,10 +16,7 @@ public sealed partial class SettingsWindow : Window
 {
     public SettingsViewModel ViewModel { get; } = new();
     private readonly SystemAppearanceService _appearanceService = SystemAppearanceService.Instance;
-    private readonly CoreApiClient _api = new();
     private readonly AppUpdateService _updateService = new();
-    private readonly DispatcherTimer _syncStatusTimer = new() { Interval = TimeSpan.FromSeconds(10) };
-    private readonly SemaphoreSlim _syncRefreshGate = new(1, 1);
 
     public SettingsWindow()
     {
@@ -31,9 +27,6 @@ public sealed partial class SettingsWindow : Window
         AuthService.Instance.AuthStateChanged += OnAuthStateChanged;
         RefreshAuthStatus();
         PopulateDesktopRuntimePaths();
-        _syncStatusTimer.Tick += OnSyncStatusTimerTick;
-        _syncStatusTimer.Start();
-        _ = RefreshSyncStatusAsync();
         Closed += OnClosed;
 
         var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
@@ -190,8 +183,6 @@ public sealed partial class SettingsWindow : Window
     {
         _appearanceService.AppearanceChanged -= OnAppearanceChanged;
         AuthService.Instance.AuthStateChanged -= OnAuthStateChanged;
-        _syncStatusTimer.Tick -= OnSyncStatusTimerTick;
-        _syncStatusTimer.Stop();
         Closed -= OnClosed;
     }
 
@@ -210,20 +201,14 @@ public sealed partial class SettingsWindow : Window
     {
         try
         {
-            var authWindow = new AuthWindow(_api);
+            var authWindow = new AuthWindow();
             authWindow.Activate();
-            var result = await authWindow.AuthResultTask;
-            if (result.Success)
-            {
-                await AuthService.Instance.RefreshSessionFromDaemonAsync(_api);
-                RefreshAuthStatus();
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(result.Error))
-            {
-                AuthStatusTextBlock.Text = result.Error;
-            }
+            var tcs = new TaskCompletionSource();
+            void OnClosed(object s, WindowEventArgs a) => tcs.TrySetResult();
+            authWindow.Closed += OnClosed;
+            await tcs.Task;
+            authWindow.Closed -= OnClosed;
+            RefreshAuthStatus();
         }
         catch (Exception ex)
         {
@@ -236,7 +221,7 @@ public sealed partial class SettingsWindow : Window
     {
         try
         {
-            await AuthService.Instance.SignOutAsync(_api);
+            await AuthService.Instance.SignOutAsync();
             RefreshAuthStatus();
         }
         catch (Exception ex)
@@ -267,226 +252,21 @@ public sealed partial class SettingsWindow : Window
         }
     }
 
-    private async void OnSyncNowClick(object sender, RoutedEventArgs e)
-    {
-        try
-        {
-            await _api.TriggerSyncAsync();
-            await RefreshSyncStatusAsync();
-        }
-        catch (Exception ex)
-        {
-            SyncStateTextBlock.Text = "Sync failed";
-            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
-            App.DebugLog($"[SyncStatus] Manual sync failed: {ex}");
-        }
-    }
-
-    private async void OnRefreshSyncStatusClick(object sender, RoutedEventArgs e)
-    {
-        await RefreshSyncStatusAsync();
-    }
-
-    private async void OnResetLocalSyncDataClick(object sender, RoutedEventArgs e)
-    {
-        if (!await ConfirmRecoveryActionAsync(
-                "Clear local data",
-                "This clears the local event log and local tiles on this device only. Cloud data is not deleted."))
-        {
-            return;
-        }
-
-        try
-        {
-            var result = await _api.ResetLocalSyncDataAsync();
-            SyncLastResultTextBlock.Text = $"Result: {result?.Message ?? "Local sync data cleared."}";
-            SyncLastErrorTextBlock.Text = "Error: -";
-            await RefreshSyncStatusAsync();
-        }
-        catch (Exception ex)
-        {
-            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
-            App.DebugLog($"[SyncRecovery] Reset local failed: {ex}");
-        }
-    }
-
-    private async void OnRedownloadRemoteSyncDataClick(object sender, RoutedEventArgs e)
-    {
-        if (!await ConfirmRecoveryActionAsync(
-                "Re-download cloud data",
-                "This clears the local data on this device, then downloads the current cloud event log again."))
-        {
-            return;
-        }
-
-        try
-        {
-            var result = await _api.RedownloadRemoteSyncDataAsync();
-            SyncLastResultTextBlock.Text = $"Result: {result?.Message ?? "Cloud data re-downloaded."}";
-            SyncLastErrorTextBlock.Text = "Error: -";
-            await RefreshSyncStatusAsync();
-        }
-        catch (Exception ex)
-        {
-            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
-            App.DebugLog($"[SyncRecovery] Redownload failed: {ex}");
-        }
-    }
-
-    private async void OnSyncStatusTimerTick(object? sender, object e)
-    {
-        await RefreshSyncStatusAsync();
-    }
-
-    private async Task RefreshSyncStatusAsync()
-    {
-        if (!await _syncRefreshGate.WaitAsync(0))
-        {
-            return;
-        }
-
-        try
-        {
-            var statusTask = _api.GetSyncStatusAsync();
-            var executionTask = _api.GetExecutionAsync();
-            var runtimePathsTask = _api.GetRuntimePathsAsync();
-            await Task.WhenAll(statusTask, executionTask, runtimePathsTask);
-
-            TileQuotaResponse? quota = null;
-            try
-            {
-                quota = await _api.GetTileQuotaAsync();
-            }
-            catch (Exception ex)
-            {
-                App.DebugLog($"[SyncStatus] Tile quota refresh skipped: {ex.Message}");
-            }
-
-            var status = statusTask.Result;
-            var execution = executionTask.Result;
-            var runtimePaths = runtimePathsTask.Result;
-            if (status == null)
-            {
-                SyncStateTextBlock.Text = "Unknown";
-                ApplyDaemonRuntimePaths(runtimePaths);
-                return;
-            }
-
-            var hasFailedOps = status.LastResult?.Failed > 0;
-            SyncStateTextBlock.Text = status.InProgress
-                ? "Syncing"
-                : (hasFailedOps || !string.IsNullOrWhiteSpace(status.LastError) ? "Error" : "Idle");
-            SyncLastAttemptTextBlock.Text = FormatTimestamp(status.LastAttemptAt);
-            SyncLastSuccessTextBlock.Text = FormatTimestamp(status.LastSuccessAt);
-            SyncLocalTilesTextBlock.Text = execution?.TileCount.ToString() ?? "-";
-            SyncLocalEventsTextBlock.Text = execution?.EventCount.ToString() ?? "-";
-            SyncRemoteTilesTextBlock.Text = quota == null
-                ? "-"
-                : $"{quota.TileCount} / {quota.MaxTiles}";
-            SyncRemoteSourceTextBlock.Text = quota?.Source switch
-            {
-                "remote" => "Supabase",
-                "local_fallback" => "Local fallback",
-                _ => "-"
-            };
-
-            if (status.LastResult != null)
-            {
-                SyncLastResultTextBlock.Text = $"Result: uploaded={status.LastResult.Uploaded}, downloaded={status.LastResult.Downloaded}, applied={status.LastResult.Applied}, failed={status.LastResult.Failed}";
-            }
-            else
-            {
-                SyncLastResultTextBlock.Text = "Result: -";
-            }
-
-            if (!string.IsNullOrWhiteSpace(status.LastError))
-            {
-                SyncLastErrorTextBlock.Text = $"Error: {status.LastError}";
-            }
-            else if (hasFailedOps)
-            {
-                SyncLastErrorTextBlock.Text = $"Error: sync reported failed={status.LastResult!.Failed}. Check daemon logs for details.";
-            }
-            else
-            {
-                SyncLastErrorTextBlock.Text = "Error: -";
-            }
-
-            ApplyDaemonRuntimePaths(runtimePaths);
-        }
-        catch (Exception ex)
-        {
-            SyncStateTextBlock.Text = "Unavailable";
-            SyncLastErrorTextBlock.Text = $"Error: {ex.Message}";
-            App.DebugLog($"[SyncStatus] Failed to refresh: {ex}");
-        }
-        finally
-        {
-            _syncRefreshGate.Release();
-        }
-    }
-
-    private static string FormatTimestamp(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-        {
-            return "-";
-        }
-
-        if (DateTimeOffset.TryParse(value, out var parsed))
-        {
-            return parsed.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
-        }
-
-        return value;
-    }
-
-    private async Task<bool> ConfirmRecoveryActionAsync(string title, string message)
-    {
-        if (Content is not FrameworkElement root)
-        {
-            return false;
-        }
-
-        var dialog = new ContentDialog
-        {
-            Title = title,
-            Content = message,
-            PrimaryButtonText = "Continue",
-            CloseButtonText = "Cancel",
-            DefaultButton = ContentDialogButton.Close,
-            XamlRoot = root.XamlRoot,
-        };
-
-        return await dialog.ShowAsync() == ContentDialogResult.Primary;
-    }
-
     private void PopulateDesktopRuntimePaths()
     {
-        RuntimeProfileTextBlock.Text = RuntimeProfile.Name;
-        RuntimeAppDataDirTextBlock.Text = RuntimeProfile.GetAppDataDirectory();
-        RuntimeDbPathTextBlock.Text = Path.Combine(RuntimeProfile.GetAppDataDirectory(), "tastile.db");
-        RuntimeSessionPathTextBlock.Text = Path.Combine(RuntimeProfile.GetAppDataDirectory(), "session.json");
+        var appDataDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Tastile");
+        var localAppDataDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Tastile");
+
+        RuntimeProfileTextBlock.Text = "AWS remote (beta.tastile.app)";
+        RuntimeAppDataDirTextBlock.Text = appDataDir;
+        RuntimeDbPathTextBlock.Text = "(none — cloud-only)";
+        RuntimeSessionPathTextBlock.Text = Path.Combine(localAppDataDir, "Auth", "credentials.bin");
         RuntimeDesktopApiLogPathTextBlock.Text = CoreApiClient.DebugLogPath;
-        RuntimeDesktopDaemonLogPathTextBlock.Text = DaemonLog.LogPath;
         RuntimeCreateTileLogPathTextBlock.Text = CreateTileWindow.DebugLogPath;
-        RuntimeDaemonStartupLogPathTextBlock.Text = "-";
-        RuntimeDaemonExecutablePathTextBlock.Text = "-";
-    }
-
-    private void ApplyDaemonRuntimePaths(RuntimePathsResponse? runtimePaths)
-    {
-        if (runtimePaths == null)
-        {
-            return;
-        }
-
-        RuntimeProfileTextBlock.Text = runtimePaths.ProfileName;
-        RuntimeAppDataDirTextBlock.Text = runtimePaths.AppDataDir;
-        RuntimeDbPathTextBlock.Text = runtimePaths.DbPath;
-        RuntimeSessionPathTextBlock.Text = runtimePaths.SessionPath;
-        RuntimeDaemonStartupLogPathTextBlock.Text = runtimePaths.DaemonStartupLogPath;
-        RuntimeDaemonExecutablePathTextBlock.Text = runtimePaths.DaemonExecutablePath;
     }
 
     private void ShowUpdateToast(AppUpdateInfo update)

@@ -82,7 +82,6 @@ function Assert-NoTimelineToolbarConnectorWiring {
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $desktopProject = Join-Path $repoRoot "src\TastileDesktop\TastileDesktop.csproj"
 $testProject = Join-Path $repoRoot "tests\TastileDesktop.Tests\TastileDesktop.Tests.csproj"
-$coreRepo = Join-Path (Split-Path $repoRoot -Parent) "tastile-core"
 $desktopProjectDir = Split-Path -Parent $desktopProject
 $desktopObjDir = Join-Path $desktopProjectDir "obj"
 $desktopBinDir = Join-Path $desktopProjectDir "bin"
@@ -97,9 +96,9 @@ try {
         return
     }
 
-    if (!(Test-Path $coreRepo)) {
-        throw "Desktop build requires a sibling tastile-core checkout at '$coreRepo'. Use -SkipDesktopBuild to run tests only."
-    }
+    # The desktop no longer bundles a local tastile-daemon binary; the
+    # build is self-contained and does not need a sibling tastile-core
+    # checkout on the build machine. The CLI check above still runs.
 
     Write-Host "==> Cleaning desktop build artifacts"
     if ((Test-Path $desktopObjDir) -or (Test-Path $desktopBinDir)) {

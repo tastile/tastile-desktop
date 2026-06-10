@@ -140,7 +140,7 @@ public sealed class AppUpdateService
             return manifestUrl.Trim();
         }
 
-        var runtimeConfigured = RuntimeProfile.ResolveEnvironmentValue("TASTILE_UPDATE_URL");
+        var runtimeConfigured = Environment.GetEnvironmentVariable("TASTILE_UPDATE_URL");
         return string.IsNullOrWhiteSpace(runtimeConfigured) ? DefaultUpdateEndpoint : runtimeConfigured.Trim();
     }
 

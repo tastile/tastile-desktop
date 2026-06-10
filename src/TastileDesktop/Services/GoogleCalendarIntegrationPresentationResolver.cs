@@ -17,7 +17,6 @@ public static class GoogleCalendarIntegrationPresentationResolver
 {
     public static GoogleCalendarIntegrationPresentation Resolve(
         GoogleCalendarIntegrationResponse integration,
-        SyncStatusResponse? syncStatus,
         CalendarSyncPlanPreviewResponse? plan)
     {
         var effectiveMode = plan?.SyncMode ?? integration.SyncMode;
@@ -26,7 +25,7 @@ public static class GoogleCalendarIntegrationPresentationResolver
         var effectiveCalendarId = plan?.SelectedCalendarId ?? integration.SelectedCalendarId;
 
         return new GoogleCalendarIntegrationPresentation(
-            StatusBadge: ResolveStatusBadge(integration, syncStatus),
+            StatusBadge: ResolveStatusBadge(integration),
             Headline: ResolveHeadline(integration),
             Detail: ResolveDetail(integration, effectiveCalendarId),
             PrimaryActionText: integration.Connected ? "Connected" : "Connect Google Calendar",
@@ -34,8 +33,8 @@ public static class GoogleCalendarIntegrationPresentationResolver
             SyncModeDescription: ResolveSyncModeDescription(effectiveMode),
             PermissionsSummary: ResolvePermissionsSummary(integration),
             CalendarSummary: ResolveCalendarSummary(effectiveCalendarId),
-            LastSyncSummary: ResolveLastSyncSummary(integration, syncStatus),
-            SyncHealthSummary: ResolveSyncHealthSummary(integration, syncStatus),
+            LastSyncSummary: ResolveLastSyncSummary(integration),
+            SyncHealthSummary: ResolveSyncHealthSummary(integration),
             PlanSummary: ResolvePlanSummary(effectiveReadPolicy, effectiveWritePolicy));
     }
 
@@ -55,21 +54,11 @@ public static class GoogleCalendarIntegrationPresentationResolver
             _ => "Tastile schedules are written to Google Calendar. Google Calendar events stay read-only in Tastile.",
         };
 
-    private static string ResolveStatusBadge(GoogleCalendarIntegrationResponse integration, SyncStatusResponse? syncStatus)
+    private static string ResolveStatusBadge(GoogleCalendarIntegrationResponse integration)
     {
         if (!integration.Connected)
         {
             return "Not connected";
-        }
-
-        if (syncStatus?.InProgress == true)
-        {
-            return "Syncing";
-        }
-
-        if (!string.IsNullOrWhiteSpace(syncStatus?.LastError))
-        {
-            return "Needs attention";
         }
 
         return "Connected";
@@ -123,21 +112,11 @@ public static class GoogleCalendarIntegrationPresentationResolver
         return $"Calendar: {selectedCalendarId}";
     }
 
-    private static string ResolveLastSyncSummary(GoogleCalendarIntegrationResponse integration, SyncStatusResponse? syncStatus)
+    private static string ResolveLastSyncSummary(GoogleCalendarIntegrationResponse integration)
     {
         if (!integration.Connected)
         {
             return "Last sync: not available until you connect";
-        }
-
-        if (syncStatus?.InProgress == true)
-        {
-            return "Sync is running now...";
-        }
-
-        if (TryFormatTimestamp(syncStatus?.LastSuccessAt, out var lastSuccess))
-        {
-            return $"Last successful sync: {lastSuccess}";
         }
 
         if (TryFormatTimestamp(integration.LastSyncedAt, out var integrationSync))
@@ -148,21 +127,11 @@ public static class GoogleCalendarIntegrationPresentationResolver
         return "No sync has completed yet.";
     }
 
-    private static string ResolveSyncHealthSummary(GoogleCalendarIntegrationResponse integration, SyncStatusResponse? syncStatus)
+    private static string ResolveSyncHealthSummary(GoogleCalendarIntegrationResponse integration)
     {
         if (!integration.Connected)
         {
             return "Sync health appears after the first connection.";
-        }
-
-        if (!string.IsNullOrWhiteSpace(syncStatus?.LastError))
-        {
-            return $"Last sync error: {syncStatus.LastError}";
-        }
-
-        if (syncStatus?.LastResult is { } lastResult)
-        {
-            return $"Last run uploaded {lastResult.Uploaded}, downloaded {lastResult.Downloaded}, applied {lastResult.Applied}, failed {lastResult.Failed}.";
         }
 
         return "No sync activity recorded yet.";

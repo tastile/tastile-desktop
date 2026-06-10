@@ -36,9 +36,13 @@ public sealed class DesktopUiLayoutTests
         Assert.DoesNotContain("HorizontalAlignment=\"Left\"", xaml);
         Assert.Contains("Content=\"Sign in with Google\" Click=\"OnSignInGoogleClick\" HorizontalAlignment=\"Stretch\"", xaml);
         Assert.Contains("Content=\"Sign out\" Click=\"OnSignOutClick\" HorizontalAlignment=\"Stretch\"", xaml);
-        Assert.Contains("Content=\"Sync now\" Click=\"OnSyncNowClick\" HorizontalAlignment=\"Stretch\"", xaml);
-        Assert.Contains("Content=\"Refresh status\" Click=\"OnRefreshSyncStatusClick\" HorizontalAlignment=\"Stretch\"", xaml);
         Assert.Contains("Content=\"Check for updates\" Click=\"OnCheckUpdateClick\" HorizontalAlignment=\"Stretch\"", xaml);
+        // The sync section was removed when the desktop stopped talking to a
+        // local daemon. Server-driven sync has no client-side action to wire.
+        Assert.DoesNotContain("Click=\"OnSyncNowClick\"", xaml);
+        Assert.DoesNotContain("Click=\"OnRefreshSyncStatusClick\"", xaml);
+        Assert.DoesNotContain("Click=\"OnResetLocalSyncDataClick\"", xaml);
+        Assert.DoesNotContain("Click=\"OnRedownloadRemoteSyncDataClick\"", xaml);
     }
 
     [Fact]
@@ -64,9 +68,11 @@ public sealed class DesktopUiLayoutTests
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Views\AuthWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("Connect Google Calendar", xaml);
-        Assert.Contains("Sign in with Google in your browser", xaml);
-        Assert.Contains("Allow Tastile to access the calendar you want to sync", xaml);
-        Assert.Contains("Return here after the browser says the connection is complete", xaml);
+        // The new auth model is single-step: open the browser, complete sign-in
+        // in the Cognito Hosted UI, return here. The old "Connect Google Calendar"
+        // copy belonged to the daemon-era ProviderToken flow.
+        Assert.Contains("Sign in to Tastile", xaml);
+        Assert.Contains("Tastile opens your browser to complete sign-in", xaml);
+        Assert.DoesNotContain("Connect Google Calendar", xaml);
     }
 }

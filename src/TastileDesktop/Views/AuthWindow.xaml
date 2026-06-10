@@ -5,7 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="Connect Google Calendar">
+    Title="Sign in">
 
     <Grid Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
@@ -14,25 +14,19 @@
         </Grid.RowDefinitions>
 
         <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="{StaticResource AppSurface0Brush}">
-            <TextBlock Text="Connect Google Calendar" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+            <TextBlock Text="Sign in" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
         </Grid>
 
         <Grid Grid.Row="1" Padding="{StaticResource WindowPagePadding}">
             <Border Style="{StaticResource WindowCardBorderStyle}" Padding="24" MaxWidth="460" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="320">
                 <StackPanel Spacing="18">
-                    <ProgressRing IsActive="True" Width="40" Height="40" HorizontalAlignment="Center" Foreground="{StaticResource AppPrimaryBrush}" />
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Finish connecting Google Calendar" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
-                        <TextBlock Text="Tastile uses your browser for Google sign-in, then waits here until the calendar connection is finished." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" />
+                        <TextBlock Text="Sign in to Tastile" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
+                        <TextBlock Text="Tastile opens your browser to complete sign-in. Return here when you are done." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" />
                     </StackPanel>
-                    <StackPanel Spacing="8">
-                        <TextBlock Text="1. Sign in with Google in your browser" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
-                        <TextBlock Text="2. Allow Tastile to access the calendar you want to sync" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
-                        <TextBlock Text="3. Return here after the browser says the connection is complete" Style="{ThemeResource BodyStrongTextBlockStyle}" TextWrapping="Wrap" />
-                    </StackPanel>
-                    <TextBlock x:Name="StatusTextBlock" Text="Opening your browser for Google Calendar..." TextWrapping="Wrap" Foreground="{StaticResource AppForegroundSubtleBrush}" TextAlignment="Center" />
+                    <TextBlock x:Name="StatusTextBlock" Text="" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundSubtleBrush}" TextAlignment="Center" />
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                        <Button x:Name="OpenBrowserButton" Content="Open browser again" Click="OnOpenBrowserClick" />
+                        <Button x:Name="SignInButton" Content="Sign in" Click="OnSignInClick" />
                         <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClick" />
                     </StackPanel>
                 </StackPanel>

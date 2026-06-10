@@ -7,8 +7,9 @@ namespace TastileDesktop.Services;
 /// </summary>
 public class SettingsService
 {
-    private static readonly string SettingsDir =
-        RuntimeProfile.GetAppDataDirectory();
+    private static readonly string SettingsDir = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "Tastile");
     private static readonly string SettingsFile =
         Path.Combine(SettingsDir, "settings.json");
 
@@ -142,6 +143,6 @@ public record TastileSettings
     public int IdlePromptMinutes { get; set; } = 5;
     public int InterventionRepeatMinutes { get; set; } = 5;
     public bool LaunchAtStartup { get; set; } = false;
-    public string UpdateManifestUrl { get; set; } = RuntimeProfile.ResolveEnvironmentValue("TASTILE_UPDATE_URL")?.Trim() ?? string.Empty;
+    public string UpdateManifestUrl { get; set; } = Environment.GetEnvironmentVariable("TASTILE_UPDATE_URL")?.Trim() ?? string.Empty;
     public string IgnoredUpdateVersion { get; set; } = string.Empty;
 }

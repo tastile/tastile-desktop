@@ -28,6 +28,7 @@ public sealed partial class MainWindow : Window
     private int _activatingWindowCount;
     private readonly DispatcherTimer _clockTimer = new() { Interval = TimeSpan.FromSeconds(1) };
     private readonly DispatcherTimer _topMostGuardTimer = new() { Interval = TimeSpan.FromMilliseconds(200) };
+    private DateTimeOffset _lastFocusRefresh = DateTimeOffset.MinValue;
     private bool _runningDragActive;
     private bool _nextCandidatesDragActive;
     private double _runningDragStartX;
@@ -68,6 +69,7 @@ public sealed partial class MainWindow : Window
         _clockTimer.Tick += (_, _) => OnClockTick();
         _clockTimer.Start();
         _topMostGuardTimer.Tick += (_, _) => OnTopMostGuardTick();
+        Activated += OnWindowActivated;
         Closed += (_, _) =>
         {
             _topMostGuardTimer.Stop();
@@ -101,7 +103,7 @@ public sealed partial class MainWindow : Window
 
     public async Task InitializeAsync()
     {
-        await AuthService.Instance.InitializeAsync(ViewModel.ApiClient);
+        await CognitoAuthService.Instance.TryLoadFromStoreAsync();
         await ViewModel.InitializeAsync();
         RefreshNativePanel();
         UpdateAccountUI();
@@ -169,33 +171,24 @@ public sealed partial class MainWindow : Window
         {
             if (!AuthService.Instance.IsAuthenticated)
             {
-                var authWindow = new AuthWindow(ViewModel.ApiClient);
+                var authWindow = new AuthWindow();
                 authWindow.Activate();
-                var result = await authWindow.AuthResultTask;
-                if (result.Success)
-                {
-                    await AuthService.Instance.RefreshSessionFromDaemonAsync(ViewModel.ApiClient);
-                    if (!AuthService.Instance.IsAuthenticated)
-                    {
-                        ViewModel.StatusMessage = "Signed in, but failed to load session";
-                        UpdateAccountUI();
-                        return;
-                    }
+                var tcs = new TaskCompletionSource();
+                void OnClosed(object s, WindowEventArgs a) => tcs.TrySetResult();
+                authWindow.Closed += OnClosed;
+                await tcs.Task;
+                authWindow.Closed -= OnClosed;
 
+                if (AuthService.Instance.IsAuthenticated)
+                {
                     await ViewModel.RefreshAsync();
                     ViewModel.StatusMessage = "Signed in";
-                    UpdateAccountUI();
                 }
-                else if (!string.IsNullOrWhiteSpace(result.Error) &&
-                         !string.Equals(result.Error, "Authentication window closed", StringComparison.Ordinal))
-                {
-                    ViewModel.StatusMessage = result.Error;
-                }
-
+                UpdateAccountUI();
                 return;
             }
 
-            await AuthService.Instance.SignOutAsync(ViewModel.ApiClient);
+            await AuthService.Instance.SignOutAsync();
             try
             {
                 await ViewModel.RefreshAsync();
@@ -465,6 +458,20 @@ public sealed partial class MainWindow : Window
         {
             FloatingWindowHelper.ReassertAlwaysOnTop(this, true);
         }
+    }
+
+    private void OnWindowActivated(object sender, WindowActivatedEventArgs args)
+    {
+        if (args.WindowActivationState is not (WindowActivationState.PointerActivated or WindowActivationState.CodeActivated))
+        {
+            return;
+        }
+        if (DateTimeOffset.UtcNow - _lastFocusRefresh < TimeSpan.FromSeconds(1))
+        {
+            return;
+        }
+        _lastFocusRefresh = DateTimeOffset.UtcNow;
+        _ = ViewModel.RefreshAsync();
     }
 
     private void UpdateClock()

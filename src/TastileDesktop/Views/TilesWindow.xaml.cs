@@ -27,7 +27,7 @@ public sealed partial class TilesWindow : Window
     private int _startedTotal = 0;
     private int _doneTotal = 0;
 
-    public TilesWindow(ITilesChangedSource tilesChangedSource)
+    public TilesWindow(EventDrivenPoller tilesChangedSource)
     {
         ArgumentNullException.ThrowIfNull(tilesChangedSource);
         InitializeComponent();
