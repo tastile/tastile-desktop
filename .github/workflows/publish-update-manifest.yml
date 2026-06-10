@@ -50,27 +50,10 @@ jobs:
       - name: Checkout desktop repo
         uses: actions/checkout@v4
 
-      - name: Checkout core repo at sibling path
-        uses: actions/checkout@v4
-        with:
-          repository: tastile/tastile-core
-          token: ${{ secrets.CORE_REPO_READ_TOKEN }}
-          path: .deps/tastile-core
-
-      - name: Create sibling junction for core path compatibility
-        shell: pwsh
-        run: |
-          New-Item -ItemType Junction -Path "$env:GITHUB_WORKSPACE\..\tastile-core" -Target "$env:GITHUB_WORKSPACE\.deps\tastile-core" -Force | Out-Null
-
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-
-      - name: Setup Rust toolchain
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: x86_64-pc-windows-msvc
 
       - name: Install Inno Setup
         shell: pwsh
