@@ -170,7 +170,16 @@ public partial class App : Application
                 CognitoAuthService.Instance.AuthStateChanged += onAuthStateChanged;
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                 await using var registration = cts.Token.Register(() => tcs.TrySetResult(new AuthResult(false, "timeout")));
+
+                // Poll the callback handoff file while waiting for auth to complete.
+                // The secondary instance (launched by the tastile:// protocol redirect)
+                // writes the callback URL here; the primary instance must pick it up.
+                var pollCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+                var pollTask = PollCallbackHandoffAsync(pollCts.Token, tcs);
+
                 var result = await tcs.Task;
+                pollCts.Cancel();
+
                 CognitoAuthService.Instance.AuthStateChanged -= onAuthStateChanged;
                 authWindow.Close();
                 if (!result.Success)
@@ -279,6 +288,31 @@ public partial class App : Application
         {
             DebugLog($"Failed to consume callback handoff: {ex.Message}");
             return null;
+        }
+    }
+
+    private async Task PollCallbackHandoffAsync(CancellationToken ct, TaskCompletionSource<AuthResult> tcs)
+    {
+        while (!ct.IsCancellationRequested && !tcs.Task.IsCompleted)
+        {
+            try
+            {
+                await Task.Delay(500, ct).ConfigureAwait(false);
+                var handoff = TryConsumeCallbackHandoff();
+                if (handoff != null)
+                {
+                    DebugLog("Polled OAuth callback handoff from secondary instance");
+                    await HandleOAuthCallbackAsync(handoff);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                DebugLog($"Poll callback handoff error: {ex.Message}");
+            }
         }
     }
 
