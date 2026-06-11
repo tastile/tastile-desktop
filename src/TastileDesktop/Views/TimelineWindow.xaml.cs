@@ -18,7 +18,9 @@ public sealed partial class TimelineWindow : Window
 {
     public MainViewModel ViewModel { get; } = new();
     private ComboBox? RangeComboBox;
-    private readonly CoreApiClient _api = new();
+    private readonly CoreApiClient _api = new(
+        getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
+        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
 

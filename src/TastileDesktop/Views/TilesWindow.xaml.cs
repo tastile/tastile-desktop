@@ -9,7 +9,9 @@ namespace TastileDesktop.Views;
 
 public sealed partial class TilesWindow : Window
 {
-    private readonly CoreApiClient _api = new();
+    private readonly CoreApiClient _api = new(
+        getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
+        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly TilesWindowLiveUpdateBridge _liveUpdateBridge;

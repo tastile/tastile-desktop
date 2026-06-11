@@ -8,7 +8,9 @@ namespace TastileDesktop.Views;
 
 public sealed partial class IntegrationsWindow : Window
 {
-    private readonly CoreApiClient _api = new();
+    private readonly CoreApiClient _api = new(
+        getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
+        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private const string GoogleCalendarOAuthScopes = "https://www.googleapis.com/auth/calendar.events";
     private static readonly List<string> GrantedGoogleCalendarScopes =
     [
