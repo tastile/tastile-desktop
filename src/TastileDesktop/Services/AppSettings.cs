@@ -20,10 +20,7 @@ public static class AppSettings
         }
     }
 
-    public static CognitoConfig Cognito =>
-        CognitoConfig.TryFromEnv()
-        ?? throw new InvalidOperationException(
-            "Cognito config is not available. Set TASTILE_COGNITO_CLIENT_ID.");
+    public static CognitoConfig Cognito => CognitoConfig.FromEnv();
 
     /// <summary>0 disables the idle refresh timer entirely.</summary>
     public static int PollIdleSeconds

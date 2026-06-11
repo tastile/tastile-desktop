@@ -18,18 +18,13 @@ public sealed record CognitoConfig(
     public string HostedUiBaseUrl =>
         $"https://{HostedUiDomain}.auth.{Region}.amazoncognito.com";
 
-    public static CognitoConfig? TryFromEnv()
+    public static CognitoConfig FromEnv()
     {
-        var clientId = Environment.GetEnvironmentVariable("TASTILE_COGNITO_CLIENT_ID")?.Trim();
-        if (string.IsNullOrEmpty(clientId))
-        {
-            return null;
-        }
-
         return new CognitoConfig(
             UserPoolId: Environment.GetEnvironmentVariable("TASTILE_COGNITO_USER_POOL_ID")?.Trim()
                 ?? "ap-northeast-1_pwYcPWOyR",
-            ClientId: clientId,
+            ClientId: Environment.GetEnvironmentVariable("TASTILE_COGNITO_CLIENT_ID")?.Trim()
+                ?? "2b9fkkb4u5di8veelnmjkmnldj",
             HostedUiDomain: Environment.GetEnvironmentVariable("TASTILE_COGNITO_HOSTED_UI_DOMAIN")?.Trim()
                 ?? "tastile-beta",
             Region: Environment.GetEnvironmentVariable("TASTILE_COGNITO_REGION")?.Trim()
