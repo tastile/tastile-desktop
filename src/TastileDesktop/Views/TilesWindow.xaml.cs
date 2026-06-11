@@ -165,7 +165,9 @@ public sealed partial class TilesWindow : Window
         }
         else if (lifecycle == "done")
         {
-            var api = new CoreApiClient();
+            var api = new CoreApiClient(
+                getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
+                refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
             await api.StartTileAsync(tileId);
             await RefreshTilesAsync();
         }
