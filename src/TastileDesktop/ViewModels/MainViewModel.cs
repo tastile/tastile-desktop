@@ -357,9 +357,9 @@ public sealed class TileListItem : ObservableObject
             {
                 if (!string.IsNullOrEmpty(ActiveEnd))
                 {
-                    if (DateTime.TryParse(ActiveEnd, out var endTime))
+                    if (DateTimeOffset.TryParse(ActiveEnd, out var endTime))
                     {
-                        var remaining = endTime - DateTime.Now;
+                        var remaining = endTime - DateTimeOffset.UtcNow;
                         if (remaining.TotalMinutes > 0)
                             return $"{(int)remaining.TotalMinutes}m remaining";
                         return "ending";
@@ -372,9 +372,9 @@ public sealed class TileListItem : ObservableObject
             {
                 if (!string.IsNullOrEmpty(FixedEnd))
                 {
-                    if (DateTime.TryParse(FixedEnd, out var endTime))
+                    if (DateTimeOffset.TryParse(FixedEnd, out var endTime))
                     {
-                        return $"ended {endTime:HH:mm}";
+                        return $"ended {endTime.ToLocalTime():HH:mm}";
                     }
                 }
                 return WorkedMinutes > 0 ? $"{WorkedMinutes}m total" : "";
