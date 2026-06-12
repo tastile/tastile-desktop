@@ -69,6 +69,16 @@ public class CoreApiClient
         _eventClient = httpClient;
     }
 
+    internal CoreApiClient(
+        HttpClient httpClient,
+        Func<Task<string?>>? getAccessToken,
+        Func<Task<TastileDesktop.Models.AuthSession?>>? refreshTokens = null)
+        : this(httpClient)
+    {
+        _getAccessToken = getAccessToken;
+        _refreshTokens = refreshTokens;
+    }
+
     /// <summary>
     /// Sends a request with an attached Bearer token (if a provider is configured).
     /// On 401, attempts a token refresh once and retries.
@@ -133,6 +143,8 @@ public class CoreApiClient
         using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
         if (!response.IsSuccessStatusCode)
         {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            Log($"[GetJsonAsync] {path} => {(int)response.StatusCode} {response.StatusCode} body={body}");
             return default;
         }
         return await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
@@ -145,6 +157,11 @@ public class CoreApiClient
             Content = JsonContent.Create(body),
         };
         using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var bodyText = await response.Content.ReadAsStringAsync(cancellationToken);
+            Log($"[PostJsonAsync] {path} => {(int)response.StatusCode} {response.StatusCode} body={bodyText}");
+        }
         return await ReadCommandResponseAsync<TResponse>(response, cancellationToken);
     }
 
@@ -152,6 +169,11 @@ public class CoreApiClient
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, path);
         using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            Log($"[PostJsonAsync] {path} => {(int)response.StatusCode} {response.StatusCode} body={body}");
+        }
         return await ReadCommandResponseAsync<TResponse>(response, cancellationToken);
     }
 
