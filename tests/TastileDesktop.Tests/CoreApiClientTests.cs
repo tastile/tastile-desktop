@@ -11,6 +11,70 @@ namespace TastileDesktop.Tests;
 public sealed class CoreApiClientTests
 {
     [Fact]
+    public async Task GetTilesAsync_AttachesBearerToken()
+    {
+        string? capturedAuthorization = null;
+        var client = new CoreApiClient(
+            new HttpClient(new StubHandler(request =>
+            {
+                capturedAuthorization = request.Headers.Authorization?.ToString();
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{ "tiles": [] }"""),
+                };
+            }))
+            {
+                BaseAddress = new Uri("http://localhost:3140"),
+            },
+            getAccessToken: () => Task.FromResult<string?>("id-token-1"));
+
+        _ = await client.GetTilesAsync();
+
+        Assert.Equal("Bearer id-token-1", capturedAuthorization);
+    }
+
+    [Fact]
+    public async Task GetTilesAsync_RefreshesOnceAfterUnauthorized()
+    {
+        var seenAuthorization = new List<string?>();
+        var attempts = 0;
+        string currentToken = "expired-id-token";
+        var client = new CoreApiClient(
+            new HttpClient(new StubHandler(request =>
+            {
+                attempts++;
+                seenAuthorization.Add(request.Headers.Authorization?.ToString());
+                return attempts == 1
+                    ? new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                    : new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent("""{ "tiles": [] }"""),
+                    };
+            }))
+            {
+                BaseAddress = new Uri("http://localhost:3140"),
+            },
+            getAccessToken: () => Task.FromResult<string?>(currentToken),
+            refreshTokens: () =>
+            {
+                currentToken = "fresh-id-token";
+                return Task.FromResult<AuthSession?>(new AuthSession(
+                    IdToken: "fresh-id-token",
+                    AccessToken: "fresh-access-token",
+                    RefreshToken: "refresh-token",
+                    Sub: "user-1",
+                    Email: "user@example.com",
+                    ExpiresAt: DateTimeOffset.UtcNow.AddHours(1)));
+            });
+
+        var response = await client.GetTilesAsync();
+
+        Assert.NotNull(response);
+        Assert.Equal(2, attempts);
+        Assert.Equal(["Bearer expired-id-token", "Bearer fresh-id-token"], seenAuthorization);
+    }
+
+    [Fact]
     public async Task UpdateTileAsync_PostsToUpdateEndpoint_WithSameTileId()
     {
         string? capturedPath = null;
@@ -147,7 +211,7 @@ public sealed class CoreApiClientTests
         var timeline = await client.GetTimelineForViewportAsync(viewport);
 
         Assert.NotNull(timeline);
-        Assert.Equal("/views/calendar/year?anchor=2026-04-08T00%3A00%3A00.0000000Z", capturedPathAndQuery);
+        Assert.Equal("/views/calendar/year?anchor=2026-04-08T00%3A00%3A00.0000000Z&tz_offset=32400", capturedPathAndQuery);
         Assert.Single(timeline!.Items);
         Assert.Equal("tile-1", timeline.Items[0].TileId);
     }

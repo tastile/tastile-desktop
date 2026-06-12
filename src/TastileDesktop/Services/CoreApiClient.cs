@@ -21,6 +21,7 @@ public class CoreApiClient
     private readonly Func<Task<string?>>? _getAccessToken;
     private readonly Func<Task<TastileDesktop.Models.AuthSession?>>? _refreshTokens;
     private static readonly string LogPath = Path.Combine(Path.GetTempPath(), "tastile-desktop-debug.log");
+    private static readonly SemaphoreSlim _refreshLock = new(1, 1);
 
     public static string DebugLogPath => LogPath;
 
@@ -90,7 +91,11 @@ public class CoreApiClient
         HttpRequestMessage request,
         CancellationToken cancellationToken = default)
     {
-        await AttachBearerAsync(request);
+        var initialToken = _getAccessToken is not null ? await _getAccessToken() : null;
+        if (!string.IsNullOrEmpty(initialToken))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", initialToken);
+        }
 
         var response = await client.SendAsync(request, cancellationToken);
         if (response.StatusCode != HttpStatusCode.Unauthorized || _refreshTokens is null)
@@ -98,24 +103,40 @@ public class CoreApiClient
             return response;
         }
 
-        // 401 → refresh once → retry.
+        // 401 → serialize refresh attempts to avoid Cognito revocation race
         response.Dispose();
-        var refreshed = await _refreshTokens();
-        if (refreshed is null)
+        await _refreshLock.WaitAsync(cancellationToken);
+        try
         {
-            return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+            // Double-check: another request may have refreshed already
+            var currentToken = _getAccessToken is not null ? await _getAccessToken() : null;
+            if (!string.IsNullOrEmpty(currentToken) && currentToken != initialToken)
             {
-                Content = new StringContent("token refresh failed"),
-            };
-        }
+                // Token was refreshed by another request, retry with it
+                var retry = new HttpRequestMessage(request.Method, request.RequestUri);
+                if (request.Content is not null) retry.Content = request.Content;
+                retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", currentToken);
+                return await client.SendAsync(retry, cancellationToken);
+            }
 
-        var retry = new HttpRequestMessage(request.Method, request.RequestUri);
-        if (request.Content is not null)
-        {
-            retry.Content = request.Content;
+            var refreshed = await _refreshTokens();
+            if (refreshed is null)
+            {
+                return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+                {
+                    Content = new StringContent("token refresh failed"),
+                };
+            }
+
+            var retryWithRefresh = new HttpRequestMessage(request.Method, request.RequestUri);
+            if (request.Content is not null) retryWithRefresh.Content = request.Content;
+            retryWithRefresh.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.IdToken);
+            return await client.SendAsync(retryWithRefresh, cancellationToken);
         }
-        retry.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.IdToken);
-        return await client.SendAsync(retry, cancellationToken);
+        finally
+        {
+            _refreshLock.Release();
+        }
     }
 
     private async Task AttachBearerAsync(HttpRequestMessage request)
@@ -428,6 +449,24 @@ public class CoreApiClient
     }
 
     // Auth endpoints
+    public async Task<JsonElement?> DebugTokenAsync()
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/auth/debug/token");
+            using var response = await SendWithAuthAsync(_httpClient, request);
+            var body = await response.Content.ReadAsStringAsync();
+            Log($"[DebugTokenAsync] Status={(int)response.StatusCode} body={body}");
+            if (!response.IsSuccessStatusCode) return null;
+            return JsonDocument.Parse(body).RootElement;
+        }
+        catch (Exception ex)
+        {
+            Log($"[DebugTokenAsync] Exception: {ex.Message}");
+            return null;
+        }
+    }
+
     public async Task SignOutAsync()
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/signout");
