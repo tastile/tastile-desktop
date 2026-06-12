@@ -940,6 +940,11 @@ public sealed partial class CreateTileWindow : Window
     {
         try
         {
+            if (!Services.AuthService.Instance.IsAuthenticated)
+            {
+                return true;
+            }
+
             var quota = await _api.GetTileQuotaAsync();
             if (quota == null)
             {

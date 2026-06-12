@@ -1910,6 +1910,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         try
         {
+            if (!Services.AuthService.Instance.IsAuthenticated)
+            {
+                return true;
+            }
+
             var quota = await _api.GetTileQuotaAsync();
             if (quota == null)
             {

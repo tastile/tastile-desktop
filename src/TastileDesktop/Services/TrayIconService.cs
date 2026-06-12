@@ -533,11 +533,14 @@ public class TrayIconService : IDisposable
             var title = textBox.Text?.Trim();
             if (!string.IsNullOrEmpty(title))
             {
-                var quota = await _api.GetTileQuotaAsync();
-                if (quota?.LimitReached == true)
+                if (Services.AuthService.Instance.IsAuthenticated)
                 {
-                    _viewModel.StatusMessage = "Error: free plan limit reached (100 tiles).";
-                    return;
+                    var quota = await _api.GetTileQuotaAsync();
+                    if (quota?.LimitReached == true)
+                    {
+                        _viewModel.StatusMessage = "Error: free plan limit reached (100 tiles).";
+                        return;
+                    }
                 }
 
                 await _api.CreateTileAsync(title);

@@ -227,7 +227,8 @@ public class CoreApiClient
     public Task<CalendarProjectionResponse?> GetCalendarProjectionAsync(string viewPath, DateTimeOffset anchorLocal)
     {
         var anchor = Uri.EscapeDataString(anchorLocal.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
-        return GetJsonAsync<CalendarProjectionResponse>($"{viewPath}?anchor={anchor}");
+        var tzOffset = (int)anchorLocal.Offset.TotalSeconds;
+        return GetJsonAsync<CalendarProjectionResponse>($"{viewPath}?anchor={anchor}&tz_offset={tzOffset}");
     }
 
     public async Task<TimelineTodayResponse?> GetTimelineForViewportAsync(TimelineViewportSettings viewport)
