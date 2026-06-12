@@ -124,15 +124,25 @@ public sealed class EventDrivenPoller : IDisposable
 
             try
             {
-                var executionViewTask = _api.GetExecutionViewAsync();
-                var tilesTask = _api.GetTilesAsync();
-                var promptTask = _api.GetPendingPromptAsync();
+                var executionViewTask = _api.GetExecutionViewWithStatusAsync();
+                var tilesTask = _api.GetTilesWithStatusAsync();
+                var promptTask = _api.GetPendingPromptWithStatusAsync();
                 var timelineTask = _api.GetTimelineForViewportAsync(_timelineViewport);
                 await Task.WhenAll(executionViewTask, tilesTask, promptTask, timelineTask);
-                executionView = executionViewTask.Result;
-                tiles = tilesTask.Result;
-                prompt = promptTask.Result;
+
+                var evResult = executionViewTask.Result;
+                var tilesResult = tilesTask.Result;
+                var promptResult = promptTask.Result;
                 timeline = timelineTask.Result;
+
+                executionView = evResult.Data;
+                tiles = tilesResult.Data;
+                prompt = promptResult.Data;
+
+                if (!evResult.IsSuccess && !tilesResult.IsSuccess && !promptResult.IsSuccess)
+                {
+                    connected = false;
+                }
             }
             catch
             {

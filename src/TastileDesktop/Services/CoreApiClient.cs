@@ -12,6 +12,8 @@ using TastileDesktop.Models;
 
 namespace TastileDesktop.Services;
 
+public record ApiResult<T>(T? Data, HttpStatusCode? StatusCode, bool IsSuccess);
+
 public class CoreApiClient
 {
     private readonly HttpClient _httpClient;
@@ -135,6 +137,20 @@ public class CoreApiClient
         {
             Log($"token-provider failed: {ex.Message}");
         }
+    }
+
+    private async Task<ApiResult<T>> GetJsonWithStatusAsync<T>(string path, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, path);
+        using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            Log($"[GetJsonAsync] {path} => {(int)response.StatusCode} {response.StatusCode} body={body}");
+            return new ApiResult<T>(default, response.StatusCode, false);
+        }
+        var data = await response.Content.ReadFromJsonAsync<T>(cancellationToken: cancellationToken);
+        return new ApiResult<T>(data, response.StatusCode, true);
     }
 
     private async Task<T?> GetJsonAsync<T>(string path, CancellationToken cancellationToken = default)
@@ -421,6 +437,19 @@ public class CoreApiClient
 
     public Task<TileQuotaResponse?> GetTileQuotaAsync()
         => GetJsonAsync<TileQuotaResponse>("/auth/tile-quota");
+
+    // WithStatus variants for EventDrivenPoller connection detection
+    public Task<ApiResult<ExecutionView>> GetExecutionViewWithStatusAsync()
+        => GetJsonWithStatusAsync<ExecutionView>("/read/execution-view");
+
+    public Task<ApiResult<TilesResponse>> GetTilesWithStatusAsync()
+        => GetJsonWithStatusAsync<TilesResponse>("/read/tiles");
+
+    public Task<ApiResult<PendingPromptResponse>> GetPendingPromptWithStatusAsync()
+        => GetJsonWithStatusAsync<PendingPromptResponse>("/views/pending-prompt");
+
+    public Task<ApiResult<TileQuotaResponse>> GetTileQuotaWithStatusAsync()
+        => GetJsonWithStatusAsync<TileQuotaResponse>("/auth/tile-quota");
 
     public Task<IntegrationSettingsResponse?> GetIntegrationSettingsAsync()
         => GetJsonAsync<IntegrationSettingsResponse>("/auth/integrations/settings");
