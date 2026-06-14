@@ -12,7 +12,16 @@ public sealed record AppUpdateInfo(
 
 public sealed class AppUpdateService
 {
-    private const string DefaultUpdateEndpoint = "https://tastile.app/api/version";
+    private const string DefaultUpdateEndpoint = "https://download.tastile.app/updates/desktop/manifest.json";
+    private static readonly string[] SilentInstallerArguments =
+    [
+        "/VERYSILENT",
+        "/SUPPRESSMSGBOXES",
+        "/NORESTART",
+        "/CLOSEAPPLICATIONS",
+        "/RESTARTAPPLICATIONS",
+    ];
+
     private readonly HttpClient _httpClient;
 
     public AppUpdateService(HttpClient? httpClient = null)
@@ -100,6 +109,33 @@ public sealed class AppUpdateService
         return tempPath;
     }
 
+    public static ProcessStartInfo CreateSilentInstallerStartInfo(string installerPath)
+    {
+        if (string.IsNullOrWhiteSpace(installerPath))
+        {
+            throw new ArgumentException("Installer path is required.", nameof(installerPath));
+        }
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = installerPath,
+            UseShellExecute = true,
+        };
+
+        foreach (var argument in SilentInstallerArguments)
+        {
+            startInfo.ArgumentList.Add(argument);
+        }
+
+        return startInfo;
+    }
+
+    public static Process StartSilentInstaller(string installerPath)
+    {
+        return Process.Start(CreateSilentInstallerStartInfo(installerPath)) ??
+            throw new InvalidOperationException("Failed to start the update installer.");
+    }
+
     private static int CompareVersions(string left, string right)
     {
         // Normalize versions to 4-part format (major.minor.build.revision)
@@ -137,11 +173,29 @@ public sealed class AppUpdateService
     {
         if (!string.IsNullOrWhiteSpace(manifestUrl))
         {
-            return manifestUrl.Trim();
+            var configuredUrl = manifestUrl.Trim();
+            if (IsLegacyVersionEndpoint(configuredUrl))
+            {
+                return DefaultUpdateEndpoint;
+            }
+
+            return configuredUrl;
         }
 
         var runtimeConfigured = Environment.GetEnvironmentVariable("TASTILE_UPDATE_URL");
-        return string.IsNullOrWhiteSpace(runtimeConfigured) ? DefaultUpdateEndpoint : runtimeConfigured.Trim();
+        if (string.IsNullOrWhiteSpace(runtimeConfigured))
+        {
+            return DefaultUpdateEndpoint;
+        }
+
+        var runtimeUrl = runtimeConfigured.Trim();
+        return IsLegacyVersionEndpoint(runtimeUrl) ? DefaultUpdateEndpoint : runtimeUrl;
+    }
+
+    private static bool IsLegacyVersionEndpoint(string url)
+    {
+        return string.Equals(url, "https://tastile.app/api/version", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(url, "https://app.tastile.app/api/version", StringComparison.OrdinalIgnoreCase);
     }
 
     private sealed class UpdateManifest

@@ -197,7 +197,7 @@ public sealed partial class SettingsWindow : Window
         AuthStatusTextBlock.Text = string.IsNullOrWhiteSpace(email) ? "Not signed in" : $"Signed in as {email}";
     }
 
-    private async void OnSignInGoogleClick(object sender, RoutedEventArgs e)
+    private async void OnSignInClick(object sender, RoutedEventArgs e)
     {
         try
         {
@@ -229,6 +229,11 @@ public sealed partial class SettingsWindow : Window
             AuthStatusTextBlock.Text = $"Sign-out failed: {ex.Message}";
             App.DebugLog($"[SettingsWindow] Sign-out failed: {ex}");
         }
+    }
+
+    private void OnOpenWebAccountClick(object sender, RoutedEventArgs e)
+    {
+        OpenExternalUrl(AppSettings.WebAccountUrl);
     }
 
     private async void OnCheckUpdateClick(object sender, RoutedEventArgs e)
@@ -269,6 +274,15 @@ public sealed partial class SettingsWindow : Window
         RuntimeCreateTileLogPathTextBlock.Text = CreateTileWindow.DebugLogPath;
     }
 
+    private static void OpenExternalUrl(string url)
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = url,
+            UseShellExecute = true,
+        });
+    }
+
     private void ShowUpdateToast(AppUpdateInfo update)
     {
         var prompt = new PromptView(
@@ -300,11 +314,7 @@ public sealed partial class SettingsWindow : Window
                     try
                     {
                         var installerPath = await _updateService.DownloadInstallerAsync(update.DownloadUrl);
-                        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                        {
-                            FileName = installerPath,
-                            UseShellExecute = true,
-                        });
+                        AppUpdateService.StartSilentInstaller(installerPath);
                         ((App)Application.Current).Shutdown();
                     }
                     catch (Exception ex)

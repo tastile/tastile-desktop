@@ -36,6 +36,8 @@ public sealed partial class SettingsViewModel : ObservableObject
     private int _idlePromptMinutes;
     private int _interventionRepeatMinutes;
     private bool _launchAtStartup;
+    private bool _securityLockEnabled = true;
+    private int _securityLockTimeoutMinutes = 10;
     private string _accentColorMode = AccentColorModes.WindowsAccent;
     private string _customAccentColorHex = "#0078D4";
     private string _windowsAccentColorHex = "#000000";
@@ -314,6 +316,18 @@ public sealed partial class SettingsViewModel : ObservableObject
         set => SetProperty(ref _launchAtStartup, value);
     }
 
+    public bool SecurityLockEnabled
+    {
+        get => _securityLockEnabled;
+        set => SetProperty(ref _securityLockEnabled, value);
+    }
+
+    public int SecurityLockTimeoutMinutes
+    {
+        get => _securityLockTimeoutMinutes;
+        set => SetProperty(ref _securityLockTimeoutMinutes, Math.Clamp(value, 1, 240));
+    }
+
     public SettingsViewModel()
     {
         _settingsService = new SettingsService();
@@ -355,6 +369,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         IdlePromptMinutes = current.IdlePromptMinutes;
         InterventionRepeatMinutes = current.InterventionRepeatMinutes;
         LaunchAtStartup = current.LaunchAtStartup;
+        SecurityLockEnabled = current.SecurityLockEnabled;
+        SecurityLockTimeoutMinutes = current.SecurityLockTimeoutMinutes;
         QuickPanelVerticalPosition = current.QuickPanelVerticalPosition;
         UpdateSystemAppearance(SystemAppearanceService.Instance.GetCurrentSnapshot());
     }
@@ -414,8 +430,12 @@ public sealed partial class SettingsViewModel : ObservableObject
             IdlePromptMinutes = IdlePromptMinutes,
             InterventionRepeatMinutes = InterventionRepeatMinutes,
             LaunchAtStartup = LaunchAtStartup,
+            SecurityLockEnabled = SecurityLockEnabled,
+            SecurityLockTimeoutMinutes = SecurityLockTimeoutMinutes,
+            SecurityLockLastClosedAtUtc = current.SecurityLockLastClosedAtUtc,
             QuickPanelVerticalPosition = QuickPanelVerticalPosition,
             UpdateManifestUrl = current.UpdateManifestUrl,
+            IgnoredUpdateVersion = current.IgnoredUpdateVersion,
         };
         _settingsService.Save(settings);
         

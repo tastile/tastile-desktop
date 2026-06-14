@@ -13,7 +13,7 @@ public sealed class UpdateManifestDefaultsTests
     {
         var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
         {
-            if (request.RequestUri?.AbsoluteUri == "https://tastile.app/api/version")
+            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/updates/desktop/manifest.json")
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
@@ -32,6 +32,36 @@ public sealed class UpdateManifestDefaultsTests
 
         var result = await service.CheckForUpdateAsync(
             manifestUrl: "",
+            currentVersion: "1.0.0");
+
+        Assert.True(result.HasUpdate);
+        Assert.Equal("9.9.9", result.LatestVersion);
+    }
+
+    [Fact]
+    public async Task CheckForUpdateAsync_UsesDefaultFeed_WhenLegacyVersionEndpointIsConfigured()
+    {
+        var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/updates/desktop/manifest.json")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "latest_version": "9.9.9",
+                      "download_url": "https://cdn.example.com/tastile-desktop-9.9.9.exe",
+                      "notes": "Latest desktop build"
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        })));
+
+        var result = await service.CheckForUpdateAsync(
+            manifestUrl: "https://tastile.app/api/version",
             currentVersion: "1.0.0");
 
         Assert.True(result.HasUpdate);

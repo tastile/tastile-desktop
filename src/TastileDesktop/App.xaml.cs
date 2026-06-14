@@ -28,6 +28,7 @@ public partial class App : Application
     private MainWindow? _mainWindow;
     private TrayIconService? _trayIconService;
     private readonly SettingsService _settingsService = new();
+    private readonly SecurityLockService _securityLockService = new();
     private readonly AppUpdateService _appUpdateService = new();
     private readonly SystemAppearanceService _appearanceService = SystemAppearanceService.Instance;
     private bool _isShuttingDown = false;
@@ -152,6 +153,8 @@ public partial class App : Application
                 await HandleOAuthCallbackAsync(oauthCallback);
             }
 
+            var isStartupLaunch = cmdArgs.Contains("--minimized");
+
             // Hydrate session from DPAPI store
             await CognitoAuthService.Instance.TryLoadFromStoreAsync();
             if (!CognitoAuthService.Instance.IsAuthenticated)
@@ -190,10 +193,33 @@ public partial class App : Application
                 }
             }
 
+            if (!await _securityLockService.RequestUnlockAsync(_settingsService.Current, isStartupLaunch))
+            {
+                DebugLog("Security lock verification was canceled.");
+                Shutdown();
+                return;
+            }
+
             var apiClient = new Services.CoreApiClient(
                 AppSettings.ApiBaseUrl,
                 AuthService.Instance.GetAccessTokenAsync,
                 CognitoAuthService.Instance.RefreshAsync);
+
+            // Debug: verify token validity against API
+            try
+            {
+                var debugResult = await apiClient.DebugTokenAsync();
+                if (debugResult is { } json)
+                {
+                    var valid = json.TryGetProperty("valid", out var v) && v.GetBoolean();
+                    var error = json.TryGetProperty("error", out var e) ? e.GetString() : null;
+                    DebugLog($"[Auth] Token debug: valid={valid} error={error}");
+                }
+            }
+            catch (Exception ex)
+            {
+                DebugLog($"[Auth] Token debug failed: {ex.Message}");
+            }
 
             // Create main window
             _mainWindow = new MainWindow();
@@ -216,7 +242,7 @@ public partial class App : Application
             _mainWindow.Closed += OnMainWindowClosed;
 
             // Show window unless --minimized flag is present
-            if (!cmdArgs.Contains("--minimized"))
+            if (!isStartupLaunch)
             {
                 DebugLog("Showing quick panel...");
                 _mainWindow.ShowPanel();
@@ -250,15 +276,33 @@ public partial class App : Application
     private async Task HandleOAuthCallbackAsync(string callbackUrl)
     {
         var result = ProtocolHandler.ParseOAuthCallback(callbackUrl);
+        if (result != null)
+        {
+            var (code, state) = result.Value;
+            DebugLog("OAuth callback parsed");
+            await CognitoAuthService.Instance.HandleAuthorizationCodeAsync(code, state);
+            return;
+        }
+
+        var tokenResult = ProtocolHandler.ParseTokenCallback(callbackUrl);
+        if (tokenResult != null)
+        {
+            DebugLog($"Token callback parsed, state={tokenResult.State[..8]}..., calling HandleTokenCallbackAsync");
+            var authResult = await CognitoAuthService.Instance.HandleTokenCallbackAsync(
+                tokenResult.IdToken,
+                tokenResult.AccessToken,
+                tokenResult.RefreshToken,
+                tokenResult.ExpiresIn,
+                tokenResult.State);
+            DebugLog($"HandleTokenCallbackAsync result: success={authResult.Success}, error={authResult.ErrorCode}");
+            return;
+        }
+
         if (result == null)
         {
             DebugLog("Invalid OAuth callback URL");
             return;
         }
-
-        var (code, state) = result.Value;
-        DebugLog("OAuth callback parsed");
-        await CognitoAuthService.Instance.HandleAuthorizationCodeAsync(code, state);
     }
 
     private static void TryStoreCallbackHandoff(string url)
@@ -322,11 +366,6 @@ public partial class App : Application
         {
             var settings = _settingsService.Current;
             var manifestUrl = settings.UpdateManifestUrl;
-            if (string.IsNullOrWhiteSpace(manifestUrl))
-            {
-                return;
-            }
-
             var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
             var update = await _appUpdateService.CheckForUpdateAsync(manifestUrl, currentVersion);
             if (!_appUpdateService.ShouldPromptForUpdate(update, settings.IgnoredUpdateVersion))
@@ -375,11 +414,7 @@ public partial class App : Application
                         try
                         {
                             var installerPath = await _appUpdateService.DownloadInstallerAsync(update.DownloadUrl);
-                            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                            {
-                                FileName = installerPath,
-                                UseShellExecute = true,
-                            });
+                            AppUpdateService.StartSilentInstaller(installerPath);
                             Shutdown();
                         }
                         catch (Exception ex)
@@ -412,6 +447,7 @@ public partial class App : Application
     public void Shutdown()
     {
         _isShuttingDown = true;
+        _settingsService.Update(s => s.SecurityLockLastClosedAtUtc = DateTimeOffset.UtcNow.ToString("O"));
         _appearanceService.AppearanceChanged -= OnAppearanceChanged;
         _trayIconService?.Dispose();
         _singleInstanceMutex?.ReleaseMutex();

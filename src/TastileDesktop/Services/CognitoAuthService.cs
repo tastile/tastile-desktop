@@ -9,8 +9,8 @@ using TastileDesktop.Models;
 namespace TastileDesktop.Services;
 
 /// <summary>
-/// Manages the Cognito Hosted UI PKCE flow: token exchange, refresh, sign-out.
-/// Mirrors tastile-web's <c>lib/cognito/server.ts</c> + Hosted UI flow.
+/// Manages the Cognito PKCE flow: opens Tastile's web sign-in surface,
+/// then exchanges the returned Cognito authorization code.
 ///
 /// State of the in-flight authorization-code exchange is held in
 /// <see cref="_pending"/> until the desktop's <c>tastile://auth/callback</c>
@@ -48,7 +48,7 @@ public sealed class CognitoAuthService
     }
 
     /// <summary>
-    /// Begin the Hosted UI flow. Generates a PKCE pair and CSRF state, opens
+    /// Begin the web sign-in flow. Generates a PKCE pair and CSRF state, opens
     /// the system browser, and registers a <see cref="TaskCompletionSource"/>
     /// that <see cref="HandleAuthorizationCodeAsync"/> will signal on callback.
     /// </summary>
@@ -59,20 +59,25 @@ public sealed class CognitoAuthService
         var challenge = Pkce.ComputeS256Challenge(verifier);
         var state = Convert.ToHexString(CryptoRandomBytes(16));
 
-        var authUrl = $"{cfg.HostedUiBaseUrl}/oauth2/authorize?" +
-            $"client_id={Uri.EscapeDataString(cfg.ClientId)}" +
-            $"&response_type=code" +
-            $"&scope=openid+email+profile" +
-            $"&redirect_uri={Uri.EscapeDataString(cfg.CallbackUrl)}" +
-            $"&code_challenge={Uri.EscapeDataString(challenge)}" +
-            $"&code_challenge_method=S256" +
-            $"&state={Uri.EscapeDataString(state)}";
+        var authUrl = BuildWebLoginUrl(cfg, challenge, state);
 
         var tcs = new TaskCompletionSource<AuthResult>(TaskCreationOptions.RunContinuationsAsynchronously);
         _pending = new PendingFlow(state, verifier, cfg.CallbackUrl, tcs);
 
         _ = Windows.System.Launcher.LaunchUriAsync(new Uri(authUrl));
         return tcs.Task;
+    }
+
+    internal static string BuildWebLoginUrl(CognitoConfig cfg, string codeChallenge, string state)
+    {
+        // Use app.tastile.app/login which handles the OAuth flow properly
+        return "https://app.tastile.app/login" +
+            $"?response_type=code" +
+            $"&client_id={Uri.EscapeDataString(cfg.ClientId)}" +
+            $"&redirect_uri={Uri.EscapeDataString(cfg.CallbackUrl)}" +
+            $"&code_challenge={Uri.EscapeDataString(codeChallenge)}" +
+            $"&code_challenge_method=S256" +
+            $"&state={Uri.EscapeDataString(state)}";
     }
 
     public async Task<AuthResult> HandleAuthorizationCodeAsync(string code, string state)
@@ -118,6 +123,54 @@ public sealed class CognitoAuthService
                 Sub: sub,
                 Email: email,
                 ExpiresAt: DateTimeOffset.FromUnixTimeSeconds(exp));
+
+            await _store.SaveAsync(_current).ConfigureAwait(false);
+            AuthStateChanged?.Invoke(this, EventArgs.Empty);
+            var ok = new AuthResult(true);
+            p.Tcs.TrySetResult(ok);
+            _pending = null;
+            return ok;
+        }
+        catch (Exception ex)
+        {
+            p.Tcs.TrySetResult(new AuthResult(false, ex.Message));
+            _pending = null;
+            return new AuthResult(false, ex.Message);
+        }
+    }
+
+    public async Task<AuthResult> HandleTokenCallbackAsync(
+        string idToken,
+        string accessToken,
+        string refreshToken,
+        int expiresIn,
+        string state)
+    {
+        if (_pending is not { } p)
+        {
+            System.Diagnostics.Debug.WriteLine($"HandleTokenCallbackAsync: _pending is null, rejecting");
+            return new AuthResult(false, "no_pending_flow");
+        }
+        if (!string.Equals(p.State, state, StringComparison.Ordinal))
+        {
+            System.Diagnostics.Debug.WriteLine($"HandleTokenCallbackAsync: state mismatch expected={p.State[..8]}... got={state[..8]}...");
+            return new AuthResult(false, "state_mismatch");
+        }
+        System.Diagnostics.Debug.WriteLine($"HandleTokenCallbackAsync: state OK, processing token");
+
+        try
+        {
+            var (sub, email, exp) = JwtClaims.ParseIdToken(idToken);
+            var expiresAt = exp > 0
+                ? DateTimeOffset.FromUnixTimeSeconds(exp)
+                : DateTimeOffset.UtcNow.AddSeconds(Math.Max(expiresIn, 60));
+            _current = new TastileDesktop.Models.AuthSession(
+                IdToken: idToken,
+                AccessToken: accessToken,
+                RefreshToken: refreshToken,
+                Sub: sub,
+                Email: email,
+                ExpiresAt: expiresAt);
 
             await _store.SaveAsync(_current).ConfigureAwait(false);
             AuthStateChanged?.Invoke(this, EventArgs.Empty);

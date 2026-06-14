@@ -11,7 +11,8 @@ public sealed record CognitoConfig(
     string ClientId,
     string HostedUiDomain,
     string Region,
-    string CallbackUrl)
+    string CallbackUrl,
+    string WebLoginUrl)
 {
     public string Issuer => $"https://cognito-idp.{Region}.amazonaws.com/{UserPoolId}";
 
@@ -30,6 +31,8 @@ public sealed record CognitoConfig(
             Region: Environment.GetEnvironmentVariable("TASTILE_COGNITO_REGION")?.Trim()
                 ?? "ap-northeast-1",
             CallbackUrl: Environment.GetEnvironmentVariable("TASTILE_COGNITO_CALLBACK_URL")?.Trim()
-                ?? "tastile://auth/callback");
+                ?? "tastile://auth/callback",
+            WebLoginUrl: Environment.GetEnvironmentVariable("TASTILE_WEB_LOGIN_URL")?.Trim()
+                ?? "https://app.tastile.app/login");
     }
 }

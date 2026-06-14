@@ -22,11 +22,11 @@
                 <StackPanel Spacing="18">
                     <StackPanel Spacing="6">
                         <TextBlock Text="Sign in to Tastile" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
-                        <TextBlock Text="Tastile opens your browser to complete sign-in. Return here when you are done." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" />
+                        <TextBlock Text="Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" TextWrapping="Wrap" />
                     </StackPanel>
                     <TextBlock x:Name="StatusTextBlock" Text="" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundSubtleBrush}" TextAlignment="Center" />
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                        <Button x:Name="SignInButton" Content="Sign in" Click="OnSignInClick" />
+                        <Button x:Name="SignInButton" Content="Continue in browser" Click="OnSignInClick" />
                         <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClick" />
                     </StackPanel>
                 </StackPanel>

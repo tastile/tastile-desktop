@@ -86,4 +86,41 @@ public static class ProtocolHandler
             return null;
         }
     }
+
+    public static TokenCallback? ParseTokenCallback(string url)
+    {
+        try
+        {
+            if (!url.StartsWith($"{ProtocolName}://auth/callback"))
+                return null;
+
+            var uri = new Uri(url);
+            var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
+            var fragment = uri.Fragment.StartsWith('#') ? uri.Fragment[1..] : uri.Fragment;
+            var values = System.Web.HttpUtility.ParseQueryString(fragment);
+
+            var state = query["state"];
+            var idToken = values["id_token"];
+            var accessToken = values["access_token"];
+            var refreshToken = values["refresh_token"];
+            var expiresInRaw = values["expires_in"];
+            var expiresIn = int.TryParse(expiresInRaw, out var parsed) ? parsed : 3600;
+
+            if (string.IsNullOrEmpty(state) || string.IsNullOrEmpty(idToken) || string.IsNullOrEmpty(accessToken))
+                return null;
+
+            return new TokenCallback(state, idToken, accessToken, refreshToken ?? string.Empty, expiresIn);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
+
+public sealed record TokenCallback(
+    string State,
+    string IdToken,
+    string AccessToken,
+    string RefreshToken,
+    int ExpiresIn);

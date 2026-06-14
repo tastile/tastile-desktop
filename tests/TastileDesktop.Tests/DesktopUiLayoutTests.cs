@@ -34,8 +34,9 @@ public sealed class DesktopUiLayoutTests
         var xaml = File.ReadAllText(xamlPath);
 
         Assert.DoesNotContain("HorizontalAlignment=\"Left\"", xaml);
-        Assert.Contains("Content=\"Sign in with Google\" Click=\"OnSignInGoogleClick\" HorizontalAlignment=\"Stretch\"", xaml);
+        Assert.Contains("Content=\"Sign in to Tastile\" Click=\"OnSignInClick\" HorizontalAlignment=\"Stretch\"", xaml);
         Assert.Contains("Content=\"Sign out\" Click=\"OnSignOutClick\" HorizontalAlignment=\"Stretch\"", xaml);
+        Assert.Contains("Content=\"Open Web account settings\" Click=\"OnOpenWebAccountClick\" HorizontalAlignment=\"Stretch\"", xaml);
         Assert.Contains("Content=\"Check for updates\" Click=\"OnCheckUpdateClick\" HorizontalAlignment=\"Stretch\"", xaml);
         // The sync section was removed when the desktop stopped talking to a
         // local daemon. Server-driven sync has no client-side action to wire.
@@ -68,11 +69,20 @@ public sealed class DesktopUiLayoutTests
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Views\AuthWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        // The new auth model is single-step: open the browser, complete sign-in
-        // in the Cognito Hosted UI, return here. The old "Connect Google Calendar"
-        // copy belonged to the daemon-era ProviderToken flow.
         Assert.Contains("Sign in to Tastile", xaml);
-        Assert.Contains("Tastile opens your browser to complete sign-in", xaml);
+        Assert.Contains("Your browser opens Tastile sign-in", xaml);
+        Assert.DoesNotContain("Cognito Hosted UI", xaml);
         Assert.DoesNotContain("Connect Google Calendar", xaml);
+    }
+
+    [Fact]
+    public void TrayIcon_ExposesWebAccountSettings()
+    {
+        var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Services\TrayIconService.cs"));
+        var source = File.ReadAllText(sourcePath);
+
+        Assert.Contains("Web account settings", source);
+        Assert.Contains("OpenWebAccountSettings", source);
+        Assert.Contains("AppSettings.WebAccountUrl", source);
     }
 }

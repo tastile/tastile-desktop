@@ -35,6 +35,7 @@ public class TrayIconService : IDisposable
     private MenuFlyoutItem? _breakItem;
     private MenuFlyoutItem? _endBreakItem;
     private MenuFlyoutItem? _signInItem;
+    private MenuFlyoutItem? _webAccountItem;
 
     public TrayIconService(MainViewModel viewModel, CoreApiClient api, Action quitCallback, SettingsService settingsService)
     {
@@ -251,10 +252,16 @@ public class TrayIconService : IDisposable
         };
         _signInItem = new MenuFlyoutItem
         {
-            Text = "Sign in with Google",
+            Text = "Sign in to Tastile",
         };
-        _signInItem.Click += async (_, _) => await SignInWithGoogleAsync();
+        _signInItem.Click += async (_, _) => await SignInAsync();
+        _webAccountItem = new MenuFlyoutItem
+        {
+            Text = "Web account settings",
+        };
+        _webAccountItem.Click += (_, _) => OpenWebAccountSettings();
         _accountMenu.Items.Add(_signInItem);
+        _accountMenu.Items.Add(_webAccountItem);
 
         menu.Items.Add(_showPanelItem);
         menu.Items.Add(_hidePanelItem);
@@ -329,7 +336,7 @@ public class TrayIconService : IDisposable
             }
             if (_signInItem != null)
             {
-                _signInItem.Text = AuthService.Instance.IsAuthenticated ? "Re-authenticate with Google" : "Sign in with Google";
+                _signInItem.Text = AuthService.Instance.IsAuthenticated ? "Re-authenticate Tastile" : "Sign in to Tastile";
             }
         }
         catch (Exception ex)
@@ -496,7 +503,7 @@ public class TrayIconService : IDisposable
         }
     }
 
-    private async Task SignInWithGoogleAsync()
+    private async Task SignInAsync()
     {
         try
         {
@@ -506,6 +513,15 @@ public class TrayIconService : IDisposable
         {
             System.Diagnostics.Debug.WriteLine($"Sign in failed: {ex.Message}");
         }
+    }
+
+    private static void OpenWebAccountSettings()
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+        {
+            FileName = AppSettings.WebAccountUrl,
+            UseShellExecute = true,
+        });
     }
 
     private async void ShowQuickCreateDialog()
@@ -574,6 +590,7 @@ public class TrayIconService : IDisposable
         _integrationsItem = null;
         _settingsItem = null;
         _signInItem = null;
+        _webAccountItem = null;
         _statusItem = null;
         _completeItem = null;
         _breakItem = null;

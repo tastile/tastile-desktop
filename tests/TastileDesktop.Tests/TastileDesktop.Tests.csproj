@@ -16,9 +16,11 @@
     <Compile Include="..\..\src\TastileDesktop\Services\JwtClaims.cs" Link="JwtClaims.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\Pkce.cs" Link="Pkce.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AppSettings.cs" Link="AppSettings.cs" />
+    <Compile Include="..\..\src\TastileDesktop\ProtocolHandler.cs" Link="ProtocolHandler.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="CoreApiClient.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AppUpdateService.cs" Link="AppUpdateService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\StartupRegistrationService.cs" Link="StartupRegistrationService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\SecurityLockPolicy.cs" Link="SecurityLockPolicy.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CreateTileParityResolver.cs" Link="CreateTileParityResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CreateTileWindowContractResolver.cs" Link="CreateTileWindowContractResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AbsoluteTimelineResolver.cs" Link="AbsoluteTimelineResolver.cs" />

@@ -87,7 +87,7 @@ public sealed class AppUpdateServiceTests
     {
         var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
         {
-            if (request.RequestUri?.AbsoluteUri == "https://tastile.app/api/version")
+            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/updates/desktop/manifest.json")
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
@@ -213,6 +213,20 @@ public sealed class AppUpdateServiceTests
                 File.Delete(path);
             }
         }
+    }
+
+    [Fact]
+    public void CreateSilentInstallerStartInfo_UsesInnoSilentUpdateArguments()
+    {
+        var startInfo = AppUpdateService.CreateSilentInstallerStartInfo(@"C:\Temp\tastile-update.exe");
+
+        Assert.Equal(@"C:\Temp\tastile-update.exe", startInfo.FileName);
+        Assert.True(startInfo.UseShellExecute);
+        Assert.Contains("/VERYSILENT", startInfo.ArgumentList);
+        Assert.Contains("/SUPPRESSMSGBOXES", startInfo.ArgumentList);
+        Assert.Contains("/NORESTART", startInfo.ArgumentList);
+        Assert.Contains("/CLOSEAPPLICATIONS", startInfo.ArgumentList);
+        Assert.Contains("/RESTARTAPPLICATIONS", startInfo.ArgumentList);
     }
 
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler

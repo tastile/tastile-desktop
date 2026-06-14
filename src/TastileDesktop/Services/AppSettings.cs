@@ -9,7 +9,8 @@ namespace TastileDesktop.Services;
 /// </summary>
 public static class AppSettings
 {
-    public const string DefaultApiBaseUrl = "https://beta.tastile.app";
+    public const string DefaultApiBaseUrl = "https://api.tastile.app";
+    public const string WebAccountUrl = "https://app.tastile.app/dashboard/account";
 
     public static string ApiBaseUrl
     {

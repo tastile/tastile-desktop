@@ -406,14 +406,16 @@
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <TextBlock x:Name="AuthStatusTextBlock" Text="Not signed in" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                    <TextBlock Text="メールアドレスの変更、ログイン方法の追加、Passkey 管理は Web アカウント設定で行います。" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Sign in with Google" Click="OnSignInGoogleClick" HorizontalAlignment="Stretch" />
+                        <Button Grid.Column="0" Content="Sign in to Tastile" Click="OnSignInClick" HorizontalAlignment="Stretch" />
                         <Button Grid.Column="1" Content="Sign out" Click="OnSignOutClick" HorizontalAlignment="Stretch" />
                     </Grid>
+                    <Button Content="Open Web account settings" Click="OnOpenWebAccountClick" HorizontalAlignment="Stretch" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
@@ -466,6 +468,29 @@
                     <TextBlock Text="Updates are delivered automatically from Tastile release channel." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                     <Button Content="Check for updates" Click="OnCheckUpdateClick" HorizontalAlignment="Stretch" />
                     <TextBlock x:Name="UpdateStatusTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Security" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Require Windows unlock on launch" VerticalAlignment="Center" />
+                        <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.SecurityLockEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
+                    </Grid>
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Lock after app quit" VerticalAlignment="Center" />
+                        <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.SecurityLockTimeoutMinutes, Mode=TwoWay}" Minimum="1" Maximum="240" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Inline" />
+                    </Grid>
+                    <TextBlock Text="Default is on. Startup launches from Windows are not interrupted." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">

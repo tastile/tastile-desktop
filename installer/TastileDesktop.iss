@@ -38,3 +38,4 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\TastileDesktop.exe"; Description: "Launch Tastile"; Flags: nowait postinstall skipifsilent
+Filename: "{app}\TastileDesktop.exe"; Parameters: "--minimized"; Flags: nowait skipifnotsilent

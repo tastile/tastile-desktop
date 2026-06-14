@@ -69,6 +69,8 @@ public class SettingsService
         settings.PromptToastSoundRepeatCount = Math.Clamp(settings.PromptToastSoundRepeatCount, 1, 10);
         settings.PromptToastSoundRepeatIntervalSeconds = Math.Clamp(settings.PromptToastSoundRepeatIntervalSeconds, 1, 30);
         settings.PromptToastSoundFilePath = (settings.PromptToastSoundFilePath ?? string.Empty).Trim();
+        settings.SecurityLockTimeoutMinutes = Math.Clamp(settings.SecurityLockTimeoutMinutes, 1, 240);
+        settings.SecurityLockLastClosedAtUtc = (settings.SecurityLockLastClosedAtUtc ?? string.Empty).Trim();
         return settings;
     }
 
@@ -143,6 +145,9 @@ public record TastileSettings
     public int IdlePromptMinutes { get; set; } = 5;
     public int InterventionRepeatMinutes { get; set; } = 5;
     public bool LaunchAtStartup { get; set; } = false;
+    public bool SecurityLockEnabled { get; set; } = true;
+    public int SecurityLockTimeoutMinutes { get; set; } = 10;
+    public string SecurityLockLastClosedAtUtc { get; set; } = string.Empty;
     public string UpdateManifestUrl { get; set; } = Environment.GetEnvironmentVariable("TASTILE_UPDATE_URL")?.Trim() ?? string.Empty;
     public string IgnoredUpdateVersion { get; set; } = string.Empty;
 }
