@@ -160,6 +160,7 @@ public sealed class TileListItem : ObservableObject
     private string? _activeEnd;
     private string? _releaseAt;
     private string? _dueAt;
+    private string? _tz;
     private int? _targetRestMin;
     private string? _doneRule;
     private string? _doneDefinition;
@@ -272,6 +273,12 @@ public sealed class TileListItem : ObservableObject
         set => SetProperty(ref _dueAt, value);
     }
 
+    public string? Tz
+    {
+        get => _tz;
+        set => SetProperty(ref _tz, value);
+    }
+
     public int? TargetRestMin
     {
         get => _targetRestMin;
@@ -374,7 +381,7 @@ public sealed class TileListItem : ObservableObject
                 {
                     if (DateTimeOffset.TryParse(FixedEnd, out var endTime))
                     {
-                        return $"ended {endTime.ToLocalTime():HH:mm}";
+                        return $"ended {TileTimezoneFormatter.Format(endTime, Tz, "HH:mm")}";
                     }
                 }
                 return WorkedMinutes > 0 ? $"{WorkedMinutes}m total" : "";
@@ -383,7 +390,8 @@ public sealed class TileListItem : ObservableObject
             return TileTimeDisplayResolver.ResolveScheduledTimeDisplay(
                 FixedStart,
                 ActiveStart,
-                ProjectedNextStartAt);
+                ProjectedNextStartAt,
+                Tz);
         }
     }
 
@@ -1308,7 +1316,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
             foreach (var tile in _allTiles)
             {
-                tile.NextStartLabel = ResolveNextStartLabel(tile.ProjectedNextStartAt);
+                tile.NextStartLabel = ResolveNextStartLabel(tile.ProjectedNextStartAt, tile.Tz);
             }
 
             const double laneGap = 4d;
@@ -1853,9 +1861,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(SecondaryRunningQuickTiles));
     }
 
-    private string? ResolveNextStartLabel(string? projectedNextStartAt)
+    private string? ResolveNextStartLabel(string? projectedNextStartAt, string? tz)
     {
-        return TileTimeDisplayResolver.ResolveNextStartLabel(projectedNextStartAt);
+        return TileTimeDisplayResolver.ResolveNextStartLabel(projectedNextStartAt, tz);
     }
 
     private static SolidColorBrush ResolveTimelineStatusFill(TimelineBlock block)
@@ -2094,7 +2102,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 DateTimeOffset.TryParse(_executionView.MainTileEndsAt, out var endsAt))
             {
                 var label = IsOnBreak ? "Break ends" : IsWorking ? "Block ends" : "Available at";
-                return $"{label} {endsAt.ToLocalTime():HH:mm}";
+                var mainTileTz = _executionView.MainTile?.Temporal?.Tz;
+                return $"{label} {TileTimezoneFormatter.Format(endsAt, mainTileTz, "HH:mm")}";
             }
 
             if (HasPendingPrompt)

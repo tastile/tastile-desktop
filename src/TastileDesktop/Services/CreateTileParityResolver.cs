@@ -130,6 +130,7 @@ public static class CreateTileParityResolver
             && workMinutes.Value >= nonRecurringWindowMinutes;
 
         var temporal = new CreateTileTemporalRequest(
+            Tz: ResolveTimeZoneId(),
             ReleaseAt: recurrenceValidFrom.HasValue ? ToIsoString(recurrenceValidFrom.Value) : null,
             DueAt: recurrenceValidTo.HasValue ? ToIsoString(recurrenceValidTo.Value.AddDays(1).AddMinutes(-1)) : null,
             FixedStart: fixedWindowShouldBeAbsolute ? ToIsoString(startAt!.Value) : null,
@@ -453,5 +454,15 @@ public static class CreateTileParityResolver
     private static string ToIsoString(DateTimeOffset value)
     {
         return value.ToUniversalTime().ToString("O");
+    }
+
+    private static string? ResolveTimeZoneId()
+    {
+        var local = TimeZoneInfo.Local;
+        if (TimeZoneInfo.TryConvertWindowsIdToIanaId(local.Id, out var ianaId) && ianaId is not null)
+        {
+            return ianaId;
+        }
+        return local.Id;
     }
 }

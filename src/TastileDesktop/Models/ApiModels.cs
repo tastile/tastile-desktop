@@ -30,6 +30,7 @@ public record ObjectiveInfo(
 );
 
 public record TemporalConditions(
+    [property: JsonPropertyName("tz")] string? Tz,
     [property: JsonPropertyName("release_at")] string? ReleaseAt,
     [property: JsonPropertyName("due_at")] string? DueAt,
     [property: JsonPropertyName("fixed_start")] string? FixedStart,
@@ -169,7 +170,8 @@ public record TimelineItemView(
     [property: JsonPropertyName("started_at")] string StartedAt,
     [property: JsonPropertyName("ended_at")] string? EndedAt,
     [property: JsonPropertyName("duration_min")] long DurationMin,
-    [property: JsonPropertyName("is_active")] bool IsActive
+    [property: JsonPropertyName("is_active")] bool IsActive,
+    [property: JsonPropertyName("tz")] string? Tz = null
 );
 
 public record CreateTileRequest(
@@ -197,6 +199,7 @@ public record EditableTileView(
 );
 
 public record CreateTileTemporalRequest(
+    [property: JsonPropertyName("tz")] string? Tz,
     [property: JsonPropertyName("release_at")] string? ReleaseAt,
     [property: JsonPropertyName("due_at")] string? DueAt,
     [property: JsonPropertyName("fixed_start")] string? FixedStart,
