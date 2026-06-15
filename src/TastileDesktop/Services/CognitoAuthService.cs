@@ -70,8 +70,10 @@ public sealed class CognitoAuthService
 
     internal static string BuildWebLoginUrl(CognitoConfig cfg, string codeChallenge, string state)
     {
-        // Use app.tastile.app/login which handles the OAuth flow properly
-        return "https://app.tastile.app/login" +
+        // For desktop PKCE we go directly to the Cognito Hosted UI authorize
+        // endpoint so the system browser can complete the OAuth handshake
+        // and return the authorization code to the tastile:// callback.
+        return $"{cfg.HostedUiBaseUrl}/oauth2/authorize" +
             $"?response_type=code" +
             $"&client_id={Uri.EscapeDataString(cfg.ClientId)}" +
             $"&redirect_uri={Uri.EscapeDataString(cfg.CallbackUrl)}" +
