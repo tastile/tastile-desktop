@@ -20,3 +20,8 @@ target/
 AGENTS.md
 
 .worktrees/
+
+.env
+.env.local
+.env.*
+!.env.example
