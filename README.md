@@ -17,20 +17,14 @@ Windows native client for the Tastile execution control system.
 - .NET 9 application target, built with SDK pinned in `global.json`
 - CommunityToolkit.Mvvm
 - H.NotifyIcon.WinUI
-- Rust daemon integration via sibling `tastile-core` checkout
+- Thin presentation layer over the `tastile-core` API (no local daemon)
 
 ## Prerequisites
 
 - Windows 11
 - .NET SDK `10.0.104` or newer in the same feature band
-- Rust stable toolchain with `x86_64-pc-windows-msvc`
+- AWS Cognito Hosted UI credentials (Google OAuth federated identity) — see `CLAUDE.md`
 - Inno Setup 6 for installer builds
-- `tastile-core` checked out as a sibling directory:
-
-```text
-../tastile-core
-../tastile-desktop
-```
 
 ## Local development
 
@@ -77,16 +71,9 @@ For local unpackaged runs we recommend
 
 ```powershell
 $env:TASTILE_PROFILE="dev"
-$env:TASTILE_DAEMON_PORT="3141"
+$env:TASTILE_API_BASE_URL="http://127.0.0.1:3140"
 dotnet run --project .\src\TastileDesktop\TastileDesktop.csproj
 ```
-
-Optional profile-scoped secrets to avoid mixing production credentials
-
-- `TASTILE_DEV_SUPABASE_URL`
-- `TASTILE_DEV_SUPABASE_PUBLISHABLE_KEY` (recommended)
-- `TASTILE_DEV_SUPABASE_ANON_KEY`
-- `TASTILE_DEV_TASTILE_UPDATE_URL`
 
 Create a release installer:
 
@@ -98,10 +85,9 @@ Use the same version for the app build, installer filename, and hosted update ma
 
 ## Update publication
 
-Installer upload and update-manifest publication are handled by:
+Installer upload and update-manifest publication are handled by the GitHub Actions workflow:
 
 - `.github/workflows/publish-update-manifest.yml`
-- `scripts/publish-update-manifest.ps1`
 
 The workflow runs on GitHub release publication and also supports manual `workflow_dispatch`. For release events, it derives the version from the release tag, attaches the matching installer to the GitHub Release, uploads the same installer to hosted storage, and writes the hosted `manifest.json`.
 
@@ -109,12 +95,13 @@ The app checks a hosted `manifest.json` and opens the installer download URL whe
 
 ## Architecture notes
 
-The desktop client is intentionally thin. Scheduling, prompting, and execution decisions belong to the daemon; the WinUI app is responsible for:
+The desktop client is intentionally thin. Scheduling, prompting, and execution decisions belong to the `tastile-core` API; the WinUI app is responsible for:
 
 - rendering daemon state
 - surfacing prompts and interventions
 - handling desktop-only UX such as tray, overlays, and startup integration
-- packaging the daemon alongside the app for local execution
+
+The desktop connects to a `tastile-core` API instance via `TASTILE_API_BASE_URL` (default `https://beta.tastile.app`). In production the API is the EC2-hosted `tastile-core` daemon; in dev it can point at `http://localhost:3140`. Auth uses AWS Cognito Hosted UI (Google OAuth federated identity) — see `CLAUDE.md` for the connection model and env-var key list.
 
 ## Contribution flow
 
