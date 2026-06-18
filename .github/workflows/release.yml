@@ -1,0 +1,150 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (e.g. 0.3.10.0)"
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  build-installer:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      installer_name: ${{ steps.installer.outputs.installer_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: choco install innosetup -y --no-progress
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
+            $version = "${{ github.event.inputs.version }}"
+          } else {
+            $version = "${{ github.ref_name }}".TrimStart("v")
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Build desktop installer
+        id: installer
+        shell: pwsh
+        run: |
+          .\scripts\build-desktop-installer.ps1 -Version "${{ steps.version.outputs.version }}"
+          $name = "tastile-desktop-${{ steps.version.outputs.version }}-setup.exe"
+          $path = "artifacts\installer\$name"
+          if (!(Test-Path $path)) { throw "Installer not found: $path" }
+          "installer_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
+
+      - name: Upload installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-installer
+          path: artifacts\installer\tastile-desktop-${{ steps.installer.outputs.installer_name }}
+          if-no-files-found: error
+
+  publish:
+    needs: build-installer
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download installer artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-installer
+          path: dist/update
+
+      - name: Materialize manifest.json
+        env:
+          VERSION: ${{ needs.build-installer.outputs.version }}
+          PUBLIC_BASE: ${{ secrets.DOWNLOAD_PUBLIC_BASE_URL }}
+          NOTES: ${{ github.event.release.body }}
+        run: |
+          cat > dist/update/manifest.json <<EOF
+          {
+            "latest_version": "${VERSION}",
+            "download_url": "${PUBLIC_BASE}/updates/desktop/tastile-desktop-${VERSION}-setup.exe",
+            "notes": $(jq -Rs . <<< "${NOTES:-Manual deploy}")
+          }
+          EOF
+          cat dist/update/manifest.json
+
+      - name: Assume AWS role via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.OIDC_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload installer + manifest to transfer bucket
+        id: upload
+        env:
+          TRANSFER_BUCKET: ${{ secrets.TRANSFER_BUCKET }}
+          VERSION: ${{ needs.build-installer.outputs.version }}
+        run: |
+          aws s3 cp "dist/update/tastile-desktop-${VERSION}-setup.exe" \
+                   "s3://${TRANSFER_BUCKET}/desktop-builds/${VERSION}/tastile-desktop-${VERSION}-setup.exe"
+          aws s3 cp "dist/update/manifest.json" \
+                   "s3://${TRANSFER_BUCKET}/desktop-builds/${VERSION}/manifest.json"
+          PRESIGNED_EXE=$(aws s3 presign "s3://${TRANSFER_BUCKET}/desktop-builds/${VERSION}/tastile-desktop-${VERSION}-setup.exe" --expires-in 900)
+          PRESIGNED_MANIFEST=$(aws s3 presign "s3://${TRANSFER_BUCKET}/desktop-builds/${VERSION}/manifest.json" --expires-in 900)
+          echo "presigned_exe=${PRESIGNED_EXE}" >> "$GITHUB_OUTPUT"
+          echo "presigned_manifest=${PRESIGNED_MANIFEST}" >> "$GITHUB_OUTPUT"
+
+      - name: Publish via SSM to web host (nginx serves download.tastile.app)
+        env:
+          WEB_INSTANCE_ID: ${{ secrets.WEB_INSTANCE_ID }}
+          VERSION: ${{ needs.build-installer.outputs.version }}
+        run: |
+          aws ssm send-command \
+            --instance-ids "$WEB_INSTANCE_ID" \
+            --document-name "AWS-RunShellScript" \
+            --parameters "$(cat <<JSON
+          {
+            "commands": [
+              "set -euo pipefail",
+              "VERSION='${VERSION}'",
+              "PRESIGNED_EXE='${{ steps.upload.outputs.presigned_exe }}'",
+              "PRESIGNED_MANIFEST='${{ steps.upload.outputs.presigned_manifest }}'",
+              "DOWNLOAD_ROOT=/var/www/tastile-downloads/updates/desktop",
+              "sudo mkdir -p \"$DOWNLOAD_ROOT\"",
+              "curl -fsSL \"$PRESIGNED_EXE\" -o \"/tmp/tastile-desktop-$VERSION-setup.exe\"",
+              "curl -fsSL \"$PRESIGNED_MANIFEST\" -o /tmp/manifest.json",
+              "sudo install -m 0644 \"/tmp/tastile-desktop-$VERSION-setup.exe\" \"$DOWNLOAD_ROOT/tastile-desktop-$VERSION-setup.exe\"",
+              "sudo install -m 0644 /tmp/manifest.json \"$DOWNLOAD_ROOT/manifest.json\"",
+              "sudo nginx -t",
+              "sudo systemctl reload nginx",
+              "curl -fsS -H 'Host: download.tastile.app' http://127.0.0.1/updates/desktop/manifest.json >/dev/null"
+            ]
+          }
+          JSON
+          )" \
+            --output text --query "Command.CommandId"
+
+      - name: Upload installer to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-installer.outputs.version }}
+          TAG_NAME: v${{ needs.build-installer.outputs.version }}
+        run: |
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" "dist/update/tastile-desktop-${VERSION}-setup.exe" --clobber
+          else
+            gh release create "$TAG_NAME" \
+              "dist/update/tastile-desktop-${VERSION}-setup.exe" \
+              --title "$TAG_NAME" --generate-notes
+          fi
