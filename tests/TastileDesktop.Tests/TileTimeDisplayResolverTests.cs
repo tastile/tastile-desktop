@@ -10,7 +10,7 @@ public sealed class TileTimeDisplayResolverTests
         var utc = new DateTimeOffset(2026, 4, 2, 16, 0, 0, TimeSpan.Zero);
         var expected = utc.ToLocalTime().ToString("MM/dd HH:mm");
 
-        var label = TileTimeDisplayResolver.ResolveNextStartLabel(utc.ToString("O"));
+        var label = TileTimeDisplayResolver.ResolveNextStartLabel(utc.ToString("O"), null);
 
         Assert.Equal(expected, label);
     }
@@ -18,7 +18,7 @@ public sealed class TileTimeDisplayResolverTests
     [Fact]
     public void ResolveNextStartLabel_ReturnsNull_ForInvalidInput()
     {
-        var label = TileTimeDisplayResolver.ResolveNextStartLabel("not-a-date");
+        var label = TileTimeDisplayResolver.ResolveNextStartLabel("not-a-date", null);
         Assert.Null(label);
     }
 
@@ -29,6 +29,7 @@ public sealed class TileTimeDisplayResolverTests
 
         var display = TileTimeDisplayResolver.ResolveScheduledTimeDisplay(
             fixedStartUtc.ToString("O"),
+            null,
             null,
             null);
 
@@ -43,7 +44,8 @@ public sealed class TileTimeDisplayResolverTests
         var display = TileTimeDisplayResolver.ResolveScheduledTimeDisplay(
             null,
             null,
-            projectedUtc.ToString("O"));
+            projectedUtc.ToString("O"),
+            null);
 
         Assert.Equal($"scheduled {projectedUtc.ToLocalTime():HH:mm}", display);
     }

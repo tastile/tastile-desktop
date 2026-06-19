@@ -23,7 +23,7 @@ public sealed class TileHashResolverTests
             DoneRule: null,
             ResumeNote: null,
             ProjectedNextStartAt: projected,
-            Temporal: new TemporalConditions(null, null, null, null, null, null),
+            Temporal: new TemporalConditions(null, null, null, null, null, null, null),
             Interruption: null,
             Automation: null,
             Recurrence: null,
