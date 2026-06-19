@@ -36,7 +36,7 @@ jobs:
         shell: pwsh
         run: |
           if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            $version = "${{ github.event.inputs.version }}"
+            $version = "${{ github.event.inputs.version }}".TrimStart("v")
           } else {
             $version = "${{ github.ref_name }}".TrimStart("v")
           }
