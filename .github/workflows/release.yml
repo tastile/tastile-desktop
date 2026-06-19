@@ -63,6 +63,8 @@ jobs:
     needs: build-installer
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - name: Download installer artifact
         uses: actions/download-artifact@v4
         with:
