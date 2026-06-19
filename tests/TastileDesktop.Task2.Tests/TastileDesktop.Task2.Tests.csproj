@@ -4,27 +4,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="PollingServiceDaemonDrivenBehaviorTests.cs" />
-    <Compile Include="TestAppStub.cs" />
-    <Compile Include="DispatcherTimerShim.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\PollingService.cs" Link="Services\PollingService.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\PollingHealthCoordinator.cs" Link="Services\PollingHealthCoordinator.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\ITilesChangedSource.cs" Link="Services\ITilesChangedSource.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="Services\CoreApiClient.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\DaemonManager.cs" Link="Services\DaemonManager.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\DaemonCompatibility.cs" Link="Services\DaemonCompatibility.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\RuntimeProfile.cs" Link="Services\RuntimeProfile.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="Services\AuthService.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\OAuthCallbackHandoff.cs" Link="Services\OAuthCallbackHandoff.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\TileHashResolver.cs" Link="Services\TileHashResolver.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\TimelineDiffResolver.cs" Link="Services\TimelineDiffResolver.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\AbsoluteTimelineResolver.cs" Link="Services\AbsoluteTimelineResolver.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\CalendarViewportResolver.cs" Link="Services\CalendarViewportResolver.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="Models\ApiModels.cs" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
