@@ -77,6 +77,7 @@ public sealed class CognitoAuthService
             $"?response_type=code" +
             $"&client_id={Uri.EscapeDataString(cfg.ClientId)}" +
             $"&redirect_uri={Uri.EscapeDataString(cfg.CallbackUrl)}" +
+            $"&scope={Uri.EscapeDataString("openid email profile")}" +
             $"&code_challenge={Uri.EscapeDataString(codeChallenge)}" +
             $"&code_challenge_method=S256" +
             $"&state={Uri.EscapeDataString(state)}";
