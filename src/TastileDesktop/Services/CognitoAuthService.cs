@@ -70,16 +70,10 @@ public sealed class CognitoAuthService
 
     internal static string BuildWebLoginUrl(CognitoConfig cfg, string codeChallenge, string state)
     {
-        // For desktop PKCE we go directly to the Cognito Hosted UI authorize
-        // endpoint so the system browser can complete the OAuth handshake
-        // and return the authorization code to the tastile:// callback.
-        return $"{cfg.HostedUiBaseUrl}/oauth2/authorize" +
-            $"?response_type=code" +
-            $"&client_id={Uri.EscapeDataString(cfg.ClientId)}" +
-            $"&redirect_uri={Uri.EscapeDataString(cfg.CallbackUrl)}" +
-            $"&scope={Uri.EscapeDataString("openid email profile")}" +
+        var separator = cfg.WebLoginUrl.Contains('?', StringComparison.Ordinal) ? "&" : "?";
+        return $"{cfg.WebLoginUrl}{separator}" +
+            $"redirect_uri={Uri.EscapeDataString(cfg.CallbackUrl)}" +
             $"&code_challenge={Uri.EscapeDataString(codeChallenge)}" +
-            $"&code_challenge_method=S256" +
             $"&state={Uri.EscapeDataString(state)}";
     }
 
