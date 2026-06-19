@@ -32,6 +32,7 @@
     <Compile Include="..\..\src\TastileDesktop\Services\RunningTileSelection.cs" Link="RunningTileSelection.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CountdownTextResolver.cs" Link="CountdownTextResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TileTimeDisplayResolver.cs" Link="TileTimeDisplayResolver.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\TileTimezoneFormatter.cs" Link="TileTimezoneFormatter.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TileDurationResolver.cs" Link="TileDurationResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TileHashResolver.cs" Link="TileHashResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\TimelineDiffResolver.cs" Link="TimelineDiffResolver.cs" />
