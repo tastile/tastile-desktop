@@ -56,7 +56,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: desktop-installer
-          path: artifacts\installer\tastile-desktop-${{ steps.installer.outputs.installer_name }}
+          path: artifacts\installer\${{ steps.installer.outputs.installer_name }}
           if-no-files-found: error
 
   publish:
