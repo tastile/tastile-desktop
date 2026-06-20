@@ -114,10 +114,29 @@ jobs:
           PRESIGNED_EXE: ${{ steps.upload.outputs.presigned_exe }}
           PRESIGNED_MANIFEST: ${{ steps.upload.outputs.presigned_manifest }}
         run: |
+          PARAMETERS=$(jq -n \
+            --arg version "$VERSION" \
+            --arg exe "$PRESIGNED_EXE" \
+            --arg manifest "$PRESIGNED_MANIFEST" \
+            '{
+              commands: [
+                "set -euo pipefail",
+                ("VERSION=" + $version),
+                "DOWNLOAD_ROOT=/var/www/tastile-downloads/updates/desktop",
+                "sudo mkdir -p \"$DOWNLOAD_ROOT\"",
+                ("curl -fsSL " + ($exe | @sh) + " -o \"/tmp/tastile-desktop-$VERSION-setup.exe\""),
+                ("curl -fsSL " + ($manifest | @sh) + " -o /tmp/manifest.json"),
+                "sudo install -m 0644 \"/tmp/tastile-desktop-$VERSION-setup.exe\" \"$DOWNLOAD_ROOT/tastile-desktop-$VERSION-setup.exe\"",
+                "sudo install -m 0644 /tmp/manifest.json \"$DOWNLOAD_ROOT/manifest.json\"",
+                "sudo nginx -t",
+                "sudo systemctl reload nginx",
+                "curl -fsS -H Host:download.tastile.app http://127.0.0.1/updates/desktop/manifest.json"
+              ]
+            }')
           COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$WEB_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
-            --parameters "commands=['set -euo pipefail','VERSION=${VERSION}','PRESIGNED_EXE='\''${PRESIGNED_EXE}'\''','PRESIGNED_MANIFEST='\''${PRESIGNED_MANIFEST}'\''','DOWNLOAD_ROOT=/var/www/tastile-downloads/updates/desktop','sudo mkdir -p \"\$DOWNLOAD_ROOT\"','curl -fsSL \"\$PRESIGNED_EXE\" -o \"/tmp/tastile-desktop-\$VERSION-setup.exe\"','curl -fsSL \"\$PRESIGNED_MANIFEST\" -o /tmp/manifest.json','sudo install -m 0644 \"/tmp/tastile-desktop-\$VERSION-setup.exe\" \"\$DOWNLOAD_ROOT/tastile-desktop-\$VERSION-setup.exe\"','sudo install -m 0644 /tmp/manifest.json \"\$DOWNLOAD_ROOT/manifest.json\"','sudo nginx -t','sudo systemctl reload nginx','curl -fsS -H Host:download.tastile.app http://127.0.0.1/updates/desktop/manifest.json']" \
+            --parameters "$PARAMETERS" \
             --output text --query "Command.CommandId")
           echo "SSM command: ${COMMAND_ID}"
           set +e
