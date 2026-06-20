@@ -29,7 +29,7 @@ if ([string]::IsNullOrWhiteSpace($AppStoragePath)) {
 }
 Write-Host ""
 Write-Host "Required repo secrets:"
-Write-Host "  SUPABASE_URL"
-Write-Host "  SUPABASE_SECRET_KEY"
-Write-Host "  SUPABASE_UPDATE_BUCKET"
+Write-Host "  AWS_ACCESS_KEY_ID"
+Write-Host "  AWS_SECRET_ACCESS_KEY"
+Write-Host "  S3_UPDATE_BUCKET"
 Write-Host "  CORE_REPO_READ_TOKEN"
