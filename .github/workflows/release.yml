@@ -114,11 +114,30 @@ jobs:
           PRESIGNED_EXE: ${{ steps.upload.outputs.presigned_exe }}
           PRESIGNED_MANIFEST: ${{ steps.upload.outputs.presigned_manifest }}
         run: |
-          aws ssm send-command \
+          COMMAND_ID=$(aws ssm send-command \
             --instance-ids "$WEB_INSTANCE_ID" \
             --document-name "AWS-RunShellScript" \
             --parameters "commands=['set -euo pipefail','VERSION=${VERSION}','PRESIGNED_EXE=${PRESIGNED_EXE}','PRESIGNED_MANIFEST=${PRESIGNED_MANIFEST}','DOWNLOAD_ROOT=/var/www/tastile-downloads/updates/desktop','sudo mkdir -p \"\$DOWNLOAD_ROOT\"','curl -fsSL \"\$PRESIGNED_EXE\" -o \"/tmp/tastile-desktop-\$VERSION-setup.exe\"','curl -fsSL \"\$PRESIGNED_MANIFEST\" -o /tmp/manifest.json','sudo install -m 0644 \"/tmp/tastile-desktop-\$VERSION-setup.exe\" \"\$DOWNLOAD_ROOT/tastile-desktop-\$VERSION-setup.exe\"','sudo install -m 0644 /tmp/manifest.json \"\$DOWNLOAD_ROOT/manifest.json\"','sudo nginx -t','sudo systemctl reload nginx','curl -fsS -H Host:download.tastile.app http://127.0.0.1/updates/desktop/manifest.json']" \
-            --output text --query "Command.CommandId"
+            --output text --query "Command.CommandId")
+          echo "SSM command: ${COMMAND_ID}"
+          aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "$WEB_INSTANCE_ID"
+          aws ssm get-command-invocation \
+            --command-id "$COMMAND_ID" \
+            --instance-id "$WEB_INSTANCE_ID" \
+            --query '{Status:Status,ResponseCode:ResponseCode,StandardOutputContent:StandardOutputContent,StandardErrorContent:StandardErrorContent}' \
+            --output json
+
+      - name: Verify public update manifest
+        env:
+          VERSION: ${{ needs.build-installer.outputs.version }}
+        run: |
+          PUBLIC_MANIFEST=$(curl -fsS https://download.tastile.app/updates/desktop/manifest.json)
+          echo "$PUBLIC_MANIFEST"
+          ACTUAL_VERSION=$(jq -r '.latest_version // .latest // empty' <<< "$PUBLIC_MANIFEST")
+          if [ "$ACTUAL_VERSION" != "$VERSION" ]; then
+            echo "::error::Public desktop update manifest is ${ACTUAL_VERSION}, expected ${VERSION}"
+            exit 1
+          fi
 
       - name: Upload installer to GitHub Release
         env:

@@ -1,9 +1,40 @@
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace TastileDesktop.Tests;
 
 public sealed class InstallerConfigTests
 {
+    [Fact]
+    public void WindowsManifests_MatchProjectVersion()
+    {
+        var projectPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\TastileDesktop.csproj"));
+        var appManifestPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\app.manifest"));
+        var packageManifestPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Package.appxmanifest"));
+
+        var version = XDocument.Load(projectPath)
+            .Descendants("Version")
+            .Single()
+            .Value;
+
+        XNamespace assemblyNs = "urn:schemas-microsoft-com:asm.v1";
+        var appManifestVersion = XDocument.Load(appManifestPath)
+            .Root?
+            .Element(assemblyNs + "assemblyIdentity")?
+            .Attribute("version")?
+            .Value;
+
+        XNamespace packageNs = "http://schemas.microsoft.com/appx/manifest/foundation/windows10";
+        var packageManifestVersion = XDocument.Load(packageManifestPath)
+            .Root?
+            .Element(packageNs + "Identity")?
+            .Attribute("Version")?
+            .Value;
+
+        Assert.Equal(version, appManifestVersion);
+        Assert.Equal(version, packageManifestVersion);
+    }
+
     [Fact]
     public void InstallerConfig_UsesStableProductIdentityAndCleanDisplayName()
     {
