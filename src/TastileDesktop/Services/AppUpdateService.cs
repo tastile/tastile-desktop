@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text.Json.Serialization;
 
 namespace TastileDesktop.Services;
@@ -8,6 +9,7 @@ public sealed record AppUpdateInfo(
     bool HasUpdate,
     string LatestVersion,
     string DownloadUrl,
+    string Sha256,
     string? Notes);
 
 public sealed class AppUpdateService
@@ -38,35 +40,39 @@ public sealed class AppUpdateService
             var manifest = await _httpClient.GetFromJsonAsync<UpdateManifest>(resolvedManifestUrl);
             var latestVersion = manifest?.ResolvedLatestVersion;
             var downloadUrl = manifest?.ResolvedDownloadUrl;
-            if (string.IsNullOrWhiteSpace(latestVersion) || string.IsNullOrWhiteSpace(downloadUrl))
+            var sha256 = manifest?.ResolvedSha256 ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(latestVersion) ||
+                string.IsNullOrWhiteSpace(downloadUrl) ||
+                !IsSha256Hex(sha256))
             {
-                return new AppUpdateInfo(false, currentVersion, string.Empty, null);
+                return new AppUpdateInfo(false, currentVersion, string.Empty, string.Empty, null);
             }
 
             var hasUpdate = CompareVersions(latestVersion, currentVersion) > 0;
             if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var downloadUri) ||
                 !string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
             {
-                return new AppUpdateInfo(false, currentVersion, string.Empty, null);
+                return new AppUpdateInfo(false, currentVersion, string.Empty, string.Empty, null);
             }
 
             return new AppUpdateInfo(
                 HasUpdate: hasUpdate,
                 LatestVersion: latestVersion,
                 DownloadUrl: downloadUri.ToString(),
+                Sha256: sha256,
                 Notes: manifest?.ResolvedNotes);
         }
         catch (HttpRequestException)
         {
-            return new AppUpdateInfo(false, currentVersion, string.Empty, null);
+            return new AppUpdateInfo(false, currentVersion, string.Empty, string.Empty, null);
         }
         catch (NotSupportedException)
         {
-            return new AppUpdateInfo(false, currentVersion, string.Empty, null);
+            return new AppUpdateInfo(false, currentVersion, string.Empty, string.Empty, null);
         }
         catch (System.Text.Json.JsonException)
         {
-            return new AppUpdateInfo(false, currentVersion, string.Empty, null);
+            return new AppUpdateInfo(false, currentVersion, string.Empty, string.Empty, null);
         }
     }
 
@@ -80,12 +86,16 @@ public sealed class AppUpdateService
         return !string.Equals(update.LatestVersion, ignoredVersion, StringComparison.OrdinalIgnoreCase);
     }
 
-    public async Task<string> DownloadInstallerAsync(string downloadUrl)
+    public async Task<string> DownloadInstallerAsync(string downloadUrl, string expectedSha256)
     {
         if (!Uri.TryCreate(downloadUrl, UriKind.Absolute, out var downloadUri) ||
             !string.Equals(downloadUri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase))
         {
             throw new ArgumentException("Installer download URL must use HTTPS.", nameof(downloadUrl));
+        }
+        if (!IsSha256Hex(expectedSha256))
+        {
+            throw new ArgumentException("Installer SHA-256 is required.", nameof(expectedSha256));
         }
 
         var fileName = Path.GetFileName(downloadUri.LocalPath);
@@ -102,9 +112,23 @@ public sealed class AppUpdateService
         using var response = await _httpClient.GetAsync(downloadUri, HttpCompletionOption.ResponseHeadersRead);
         response.EnsureSuccessStatusCode();
 
-        await using var source = await response.Content.ReadAsStreamAsync();
-        await using var destination = File.Create(tempPath);
-        await source.CopyToAsync(destination);
+        await using (var source = await response.Content.ReadAsStreamAsync())
+        await using (var destination = File.Create(tempPath))
+        {
+            await source.CopyToAsync(destination);
+        }
+
+        string actualSha256;
+        await using (var downloaded = File.OpenRead(tempPath))
+        using (var sha = SHA256.Create())
+        {
+            actualSha256 = Convert.ToHexString(await sha.ComputeHashAsync(downloaded));
+        }
+        if (!string.Equals(actualSha256, expectedSha256, StringComparison.OrdinalIgnoreCase))
+        {
+            File.Delete(tempPath);
+            throw new InvalidOperationException("Installer SHA-256 verification failed.");
+        }
 
         return tempPath;
     }
@@ -198,6 +222,16 @@ public sealed class AppUpdateService
             string.Equals(url, "https://app.tastile.app/api/version", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsSha256Hex(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value) || value.Length != 64)
+        {
+            return false;
+        }
+
+        return value.All(c => Uri.IsHexDigit(c));
+    }
+
     private sealed class UpdateManifest
     {
         [JsonPropertyName("latest_version")]
@@ -209,6 +243,9 @@ public sealed class AppUpdateService
         [JsonPropertyName("download_url")]
         public string? DownloadUrl { get; set; }
 
+        [JsonPropertyName("sha256")]
+        public string? Sha256 { get; set; }
+
         [JsonPropertyName("notes")]
         public string? Notes { get; set; }
 
@@ -219,6 +256,8 @@ public sealed class AppUpdateService
             string.IsNullOrWhiteSpace(LatestVersion) ? Latest?.Trim() : LatestVersion.Trim();
 
         public string? ResolvedDownloadUrl => DownloadUrl?.Trim();
+
+        public string? ResolvedSha256 => Sha256?.Trim();
 
         public string? ResolvedNotes =>
             string.IsNullOrWhiteSpace(Notes) ? ReleaseNotes?.Trim() : Notes.Trim();

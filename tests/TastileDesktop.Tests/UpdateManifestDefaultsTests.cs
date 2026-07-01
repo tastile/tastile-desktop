@@ -21,6 +21,7 @@ public sealed class UpdateManifestDefaultsTests
                     {
                       "latest": "9.9.9",
                       "download_url": "https://cdn.example.com/tastile-desktop-9.9.9.exe",
+                      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                       "release_notes": "Latest desktop build"
                     }
                     """),
@@ -51,6 +52,7 @@ public sealed class UpdateManifestDefaultsTests
                     {
                       "latest_version": "9.9.9",
                       "download_url": "https://cdn.example.com/tastile-desktop-9.9.9.exe",
+                      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                       "notes": "Latest desktop build"
                     }
                     """),

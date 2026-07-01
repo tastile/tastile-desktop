@@ -313,7 +313,7 @@ public sealed partial class SettingsWindow : Window
                 {
                     try
                     {
-                        var installerPath = await _updateService.DownloadInstallerAsync(update.DownloadUrl);
+                        var installerPath = await _updateService.DownloadInstallerAsync(update.DownloadUrl, update.Sha256);
                         AppUpdateService.StartSilentInstaller(installerPath);
                         ((App)Application.Current).Shutdown();
                     }

@@ -413,7 +413,7 @@ public partial class App : Application
                     {
                         try
                         {
-                            var installerPath = await _appUpdateService.DownloadInstallerAsync(update.DownloadUrl);
+                            var installerPath = await _appUpdateService.DownloadInstallerAsync(update.DownloadUrl, update.Sha256);
                             AppUpdateService.StartSilentInstaller(installerPath);
                             Shutdown();
                         }

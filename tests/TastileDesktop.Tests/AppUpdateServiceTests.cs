@@ -21,6 +21,7 @@ public sealed class AppUpdateServiceTests
                     {
                       "latest_version": "9.9.9",
                       "download_url": "https://example.com/tastile-setup.exe",
+                      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                       "notes": "Bug fixes"
                     }
                     """),
@@ -37,6 +38,7 @@ public sealed class AppUpdateServiceTests
         Assert.True(result.HasUpdate);
         Assert.Equal("9.9.9", result.LatestVersion);
         Assert.Equal("https://example.com/tastile-setup.exe", result.DownloadUrl);
+        Assert.Equal("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", result.Sha256);
     }
 
     [Fact]
@@ -52,6 +54,7 @@ public sealed class AppUpdateServiceTests
                     {
                       "latest_version": "1.0.0",
                       "download_url": "https://example.com/tastile-setup.exe",
+                      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                       "notes": "No-op"
                     }
                     """),
@@ -76,6 +79,7 @@ public sealed class AppUpdateServiceTests
             HasUpdate: true,
             LatestVersion: "2.0.0",
             DownloadUrl: "https://example.com/setup.exe",
+            Sha256: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
             Notes: null);
 
         Assert.False(service.ShouldPromptForUpdate(update, "2.0.0"));
@@ -95,6 +99,7 @@ public sealed class AppUpdateServiceTests
                     {
                       "latest": "1.0.0",
                       "download_url": "https://example.com/tastile-setup.exe",
+                      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
                       "release_notes": "No-op"
                     }
                     """),
@@ -164,6 +169,37 @@ public sealed class AppUpdateServiceTests
                     {
                       "latest_version": "9.9.9",
                       "download_url": "ms-appinstaller:?source=https://example.com/tastile.appinstaller",
+                      "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                      "notes": "Bug fixes"
+                    }
+                    """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        })));
+
+        var result = await service.CheckForUpdateAsync(
+            manifestUrl: "https://updates.example.com/manifest.json",
+            currentVersion: "1.0.0");
+
+        Assert.False(result.HasUpdate);
+        Assert.Equal(string.Empty, result.DownloadUrl);
+    }
+
+    [Fact]
+    public async Task CheckForUpdateAsync_ReturnsNoUpdate_WhenManifestHashIsMissing()
+    {
+        var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsoluteUri == "https://updates.example.com/manifest.json")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""
+                    {
+                      "latest_version": "9.9.9",
+                      "download_url": "https://example.com/tastile-setup.exe",
                       "notes": "Bug fixes"
                     }
                     """),
@@ -198,7 +234,9 @@ public sealed class AppUpdateServiceTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         })));
 
-        var path = await service.DownloadInstallerAsync("https://updates.example.com/tastile-0.3.0-setup.exe");
+        var path = await service.DownloadInstallerAsync(
+            "https://updates.example.com/tastile-0.3.0-setup.exe",
+            "74F81FE167D99B4CB41D6D0CCDA82278CAEE9F3E2F25D5E5A3936FF3DCEC60D0");
 
         try
         {
@@ -213,6 +251,29 @@ public sealed class AppUpdateServiceTests
                 File.Delete(path);
             }
         }
+    }
+
+    [Fact]
+    public async Task DownloadInstallerAsync_DeletesPayloadAndThrows_WhenHashDoesNotMatch()
+    {
+        var payload = new byte[] { 1, 2, 3, 4, 5 };
+        var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
+        {
+            if (request.RequestUri?.AbsoluteUri == "https://updates.example.com/tastile-0.3.0-setup.exe")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(payload),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        })));
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            service.DownloadInstallerAsync(
+                "https://updates.example.com/tastile-0.3.0-setup.exe",
+                "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"));
     }
 
     [Fact]
