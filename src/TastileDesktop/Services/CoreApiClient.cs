@@ -84,7 +84,8 @@ public class CoreApiClient
 
     /// <summary>
     /// Sends a request with an attached Bearer token (if a provider is configured).
-    /// On 401, attempts a token refresh once and retries.
+    /// On 401, attempts a token refresh once and retries using the OAuth2
+    /// access token (never the Cognito id_token, which is not valid v1 auth).
     /// </summary>
     private async Task<HttpResponseMessage> SendWithAuthAsync(
         HttpClient client,
@@ -103,7 +104,9 @@ public class CoreApiClient
             return response;
         }
 
-        // 401 → serialize refresh attempts to avoid Cognito revocation race
+        // 401 → serialize refresh attempts to avoid Cognito revocation race.
+        // Reuse the *same* access token model the v1 API speaks; the Cognito
+        // id_token is never sent as a v1 bearer (PROJECT-TRUTH §Authentication).
         response.Dispose();
         await _refreshLock.WaitAsync(cancellationToken);
         try
@@ -130,7 +133,7 @@ public class CoreApiClient
 
             var retryWithRefresh = new HttpRequestMessage(request.Method, request.RequestUri);
             if (request.Content is not null) retryWithRefresh.Content = request.Content;
-            retryWithRefresh.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.IdToken);
+            retryWithRefresh.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.AccessToken);
             return await client.SendAsync(retryWithRefresh, cancellationToken);
         }
         finally
@@ -159,6 +162,20 @@ public class CoreApiClient
             Log($"token-provider failed: {ex.Message}");
         }
     }
+
+    private static NotSupportedException NotSupportedOnV1(string operation)
+        => new($"Operation '{operation}' has no v1 API equivalent and is not supported by the desktop v1 client.");
+
+    // Wraps a typed payload in the v1 CommandEnvelope per v1/14 §1.
+    // Every POST/DELETE that maps to a v1 CommandKind handler requires
+    // this envelope; only `idempotency_key` is mandatory, the rest is
+    // sent as null when the caller has nothing to assert.
+    private static CommandEnvelope<TPayload> WrapEnvelope<TPayload>(TPayload payload)
+        => new(
+            ExpectedRevision: null,
+            IdempotencyKey: Guid.NewGuid(),
+            OccurredAt: null,
+            Payload: payload);
 
     private async Task<ApiResult<T>> GetJsonWithStatusAsync<T>(string path, CancellationToken cancellationToken = default)
     {
@@ -214,6 +231,36 @@ public class CoreApiClient
         return await ReadCommandResponseAsync<TResponse>(response, cancellationToken);
     }
 
+    private async Task<TResponse?> DeleteJsonAsync<TResponse>(string path, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, path);
+        using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var body = await response.Content.ReadAsStringAsync(cancellationToken);
+            Log($"[DeleteJsonAsync] {path} => {(int)response.StatusCode} {response.StatusCode} body={body}");
+        }
+        return await ReadCommandResponseAsync<TResponse>(response, cancellationToken);
+    }
+
+    // DELETE-with-body variant.  v1 archive_tile requires a
+    // CommandEnvelope<ArchiveTilePayload> body; axum tolerates a
+    // request body on DELETE.
+    private async Task<TResponse?> DeleteJsonAsync<TRequest, TResponse>(string path, TRequest body, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Delete, path)
+        {
+            Content = JsonContent.Create(body),
+        };
+        using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        if (!response.IsSuccessStatusCode)
+        {
+            var bodyText = await response.Content.ReadAsStringAsync(cancellationToken);
+            Log($"[DeleteJsonAsync] {path} => {(int)response.StatusCode} {response.StatusCode} body={bodyText}");
+        }
+        return await ReadCommandResponseAsync<TResponse>(response, cancellationToken);
+    }
+
     private static async Task<TResponse?> ReadCommandResponseAsync<TResponse>(HttpResponseMessage response, CancellationToken cancellationToken)
     {
         // Command endpoints often return Ok=false with a populated `Prompt`
@@ -233,7 +280,7 @@ public class CoreApiClient
     {
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Get, "/health");
+            using var request = new HttpRequestMessage(HttpMethod.Get, "/v1/health");
             using var response = await SendWithAuthAsync(_httpClient, request);
             return response.IsSuccessStatusCode;
         }
@@ -243,48 +290,51 @@ public class CoreApiClient
         }
     }
 
-    // Read endpoints
+    // Read endpoints (v1)
     public Task<TilesResponse?> GetTilesAsync()
-        => GetJsonAsync<TilesResponse>("/read/tiles");
+        => GetJsonAsync<TilesResponse>("/v1/tiles");
 
     public Task<TilesResponse?> GetTilesAsync(string viewMode, string? lifecycle = null, int? limit = null, string? search = null)
     {
+        // v1 list_tiles only honors `owner_ids` and `limit`. `view_mode`,
+        // `lifecycle`, and `search` are v0-only filters and are ignored on
+        // the v1 endpoint; callers that still pass them will get the
+        // default owner-scoped page. Caller follow-up tracked in WORK-LOG.
         var queryParams = new List<string>();
-        if (!string.IsNullOrEmpty(viewMode)) queryParams.Add($"view_mode={viewMode}");
-        if (!string.IsNullOrEmpty(lifecycle)) queryParams.Add($"lifecycle={lifecycle}");
         if (limit.HasValue) queryParams.Add($"limit={limit.Value}");
-        if (!string.IsNullOrEmpty(search)) queryParams.Add($"search={Uri.EscapeDataString(search)}");
-
         var query = queryParams.Count > 0 ? "?" + string.Join("&", queryParams) : string.Empty;
-        return GetJsonAsync<TilesResponse>($"/read/tiles{query}");
+        return GetJsonAsync<TilesResponse>($"/v1/tiles{query}");
     }
 
     public Task<ExecutionView?> GetExecutionViewAsync()
-        => GetJsonAsync<ExecutionView>("/read/execution-view");
+        => throw NotSupportedOnV1("GetExecutionViewAsync (no execution_id)");
 
     public Task<TileView?> GetTileByIdAsync(string tileId)
-        => GetJsonAsync<TileView>($"/read/tile/{tileId}");
+        => GetJsonAsync<TileView>($"/v1/tiles/{tileId}");
 
     public Task<EditableTileView?> GetEditableTileByIdAsync(string tileId)
-        => GetJsonAsync<EditableTileView>($"/read/tile/{tileId}/editable");
+        => GetJsonAsync<EditableTileView>($"/v1/tiles/{tileId}/editable");
 
     public Task<TilesInProgressResponse?> GetTilesInProgressAsync()
-        => GetJsonAsync<TilesInProgressResponse>("/read/tiles-in-progress");
+        => throw NotSupportedOnV1("GetTilesInProgressAsync");
 
     public Task<ActiveTileResponse?> GetActiveTileAsync()
-        => GetJsonAsync<ActiveTileResponse>("/read/active-tile");
+        => GetJsonAsync<ActiveTileResponse>("/v1/active-tile");
 
     public Task<ExecutionResponse?> GetExecutionAsync()
-        => GetJsonAsync<ExecutionResponse>("/read/execution");
+        => throw NotSupportedOnV1("GetExecutionAsync (no execution_id)");
 
     public Task<PendingPromptResponse?> GetPendingPromptAsync()
-        => GetJsonAsync<PendingPromptResponse>("/views/pending-prompt");
+        => GetJsonAsync<PendingPromptResponse>("/v1/prompts/pending");
 
     public Task<TimelineTodayResponse?> GetTodayTimelineAsync()
-        => GetJsonAsync<TimelineTodayResponse>("/views/timeline/today");
+        => GetJsonAsync<TimelineTodayResponse>("/v1/timeline/today");
 
     public Task<CalendarProjectionResponse?> GetCalendarProjectionAsync(string viewPath, DateTimeOffset anchorLocal)
     {
+        // Calendar viewport paths come from CalendarViewportResolver; the
+        // desktop ViewPath is built on top of the v1 calendar surface
+        // (e.g. "/v1/calendar/year"), so no further rewriting is needed.
         var anchor = Uri.EscapeDataString(anchorLocal.UtcDateTime.ToString("O", CultureInfo.InvariantCulture));
         var tzOffset = (int)anchorLocal.Offset.TotalSeconds;
         return GetJsonAsync<CalendarProjectionResponse>($"{viewPath}?anchor={anchor}&tz_offset={tzOffset}");
@@ -324,34 +374,14 @@ public class CoreApiClient
 
     public async IAsyncEnumerable<string> StreamStateEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
-        var eventClient = _eventClient ?? _httpClient;
-        using var request = new HttpRequestMessage(HttpMethod.Get, "/read/events/state");
-        request.Headers.Accept.ParseAdd("text/event-stream");
-        await AttachBearerAsync(request);
-        using var response = await eventClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
-        response.EnsureSuccessStatusCode();
-
-        using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        using var reader = new StreamReader(stream);
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            var line = await reader.ReadLineAsync(cancellationToken);
-            if (line is null)
-            {
-                yield break;
-            }
-
-            if (!line.StartsWith("data:", StringComparison.Ordinal))
-            {
-                continue;
-            }
-
-            var payload = line["data:".Length..].Trim();
-            if (!string.IsNullOrWhiteSpace(payload))
-            {
-                yield return payload;
-            }
-        }
+        // v1 has no equivalent SSE state stream; the previous /read/events/state
+        // endpoint was a v0 daemon surface that has been removed. Fail loudly
+        // so any SSE caller surfaces the regression.
+        throw NotSupportedOnV1("StreamStateEventsAsync");
+        // unreachable; satisfies the iterator signature
+#pragma warning disable CS0162
+        yield break;
+#pragma warning restore CS0162
     }
 
     // Returns raw JSON because Event uses serde tagged enum
@@ -359,7 +389,7 @@ public class CoreApiClient
     {
         try
         {
-            var json = await _httpClient.GetStringAsync("/debug/events");
+            var json = await _httpClient.GetStringAsync("/v1/debug/events");
             return JsonDocument.Parse(json).RootElement;
         }
         catch
@@ -368,72 +398,88 @@ public class CoreApiClient
         }
     }
 
-    // Command endpoints
+    // Command endpoints (v1)
+    //
+    // The v1 server validates every `POST /v1/...` command against
+    // a `CommandRequest<TPayload>` envelope (idempotency_key +
+    // expected_revision + payload).  Only the payload field is
+    // call-shape-specific; the surrounding envelope is generated by
+    // `WrapEnvelope`.  Where the existing desktop DTO cannot produce
+    // a safe v1 payload (the v0 fields don't line up with v1's typed
+    // payloads), the method throws `NotSupportedException` so the
+    // regression is explicit.
+
     public Task<CommandResponse?> CreateTileAsync(string title, string? nextAction = null, string? doneDefinition = null)
-        => CreateTileAsync(new CreateTileRequest(title, nextAction, doneDefinition, null, null, null, null, null, null));
+        => throw NotSupportedOnV1(
+            "CreateTileAsync: v1 CreateTilePayload requires typed TileKind + PlanRole (i16) and the desktop form's free-text fields don't map. " +
+            "Use a CreateTileRequest whose UI collects v1-shaped fields before re-introducing this call.");
 
     public Task<CommandResponse?> CreateTileAsync(CreateTileRequest request)
-        => PostJsonAsync<CreateTileRequest, CommandResponse>("/commands/tile/create", request);
+        => throw NotSupportedOnV1(
+            "CreateTileAsync(CreateTileRequest): v1 CreateTilePayload requires typed TileKind + PlanRole (i16); the existing free-form CreateTileRequest carries v0-shaped fields. " +
+            "A v1-shaped DTO must be introduced at the UI boundary first.");
 
     public Task<CommandResponse?> StartTileAsync(string tileId)
-        => PostJsonAsync<object, CommandResponse>("/commands/tile/start", new { tile_id = tileId });
+        => throw NotSupportedOnV1(
+            $"StartTileAsync: v1 StartTilePayload requires plan_id + PlacementSource + PlacementSourceRef + PlacementBaseline; a tile_id alone cannot satisfy '{tileId}'.");
 
     public Task<CommandResponse?> CompleteTileAsync(string? tileId = null, string? nextTileId = null, string? scope = null)
-        => PostJsonAsync<object, CommandResponse>("/commands/tile/complete", new { tile_id = tileId, next_tile_id = nextTileId, scope });
+        => throw NotSupportedOnV1(
+            "CompleteTileAsync: v1 SetTileLifecyclePayload (the handler behind /complete) requires a numeric state (0=active,1=deferred,2=completed); the desktop's (tile_id, next_tile_id, scope) free-form shape doesn't map. " +
+            "Introduce a v1 lifecycle DTO at the UI boundary.");
 
     public Task<CommandResponse?> DeferTileAsync(string tileId, string? reason = null, int? minutes = null)
-        => PostJsonAsync<object, CommandResponse>("/commands/tile/defer", new { tile_id = tileId, reason, minutes });
+        => throw NotSupportedOnV1(
+            $"DeferTileAsync: v1 SetTileLifecyclePayload requires a numeric state (1=deferred) and a deferred_until timestamp; the desktop's (reason, minutes) shape doesn't map for tile '{tileId}'.");
 
-    public async Task<CommandResponse?> StartBreakAsync(int breakMin, string? insertionMode = null)
-    {
-        Log($"[StartBreakAsync] Starting break: {breakMin} minutes");
-        var result = await PostJsonAsync<object, CommandResponse>("/commands/break/start", new { break_min = breakMin, insertion_mode = insertionMode });
-        Log($"[StartBreakAsync] Result: ok={result?.Ok}, error={result?.Error}");
-        return result;
-    }
+    public Task<CommandResponse?> StartBreakAsync(int breakMin, string? insertionMode = null)
+        => throw NotSupportedOnV1("StartBreakAsync (breaks are not modeled in v1)");
 
     public Task<CommandResponse?> EndBreakAsync()
-        => PostJsonAsync<object, CommandResponse>("/commands/break/end", new { });
+        => throw NotSupportedOnV1("EndBreakAsync (breaks are not modeled in v1)");
 
     public Task<CommandResponse?> AttachMemoAsync(string? tileId, string text, string? memoKind = null)
-        => PostJsonAsync<object, CommandResponse>("/commands/memo/attach", new { tile_id = tileId, text, memo_kind = memoKind });
-
-    public Task<CommandResponse?> ExtendTileAsync(int extendMin)
-        => PostJsonAsync<object, CommandResponse>("/commands/tile/extend", new { delta_min = extendMin });
-
-    public Task<CommandResponse?> DeleteTileAsync(string tileId)
-        => PostJsonAsync<object, CommandResponse>("/commands/tile/delete", new { tile_id = tileId });
-
-    public Task<CommandResponse?> UpdateTileAsync(string tileId, CreateTileRequest request)
-        => PostJsonAsync<object, CommandResponse>("/commands/tile/update", new
-        {
-            tile_id = tileId,
-            title = request.Title,
-            next_action = request.NextAction,
-            done_definition = request.DoneDefinition,
-            temporal = request.Temporal,
-            objective = request.Objective,
-            interruption = request.Interruption,
-            automation = request.Automation,
-            annotation = request.Annotation,
-        });
-
-    public async Task<RequestPromptResponse?> RequestPromptAsync(string tileId)
     {
-        try
+        if (string.IsNullOrEmpty(tileId))
         {
-            Log($"[RequestPromptAsync] Requesting prompt for tile: {tileId}");
-            var response = await PostJsonAsync<object, RequestPromptResponse>("/commands/prompt/request", new { tile_id = tileId });
-            Log($"[RequestPromptAsync] Result: ok={response?.Ok}, hasPrompt={response?.Prompt != null}, error={response?.Error}");
-            return response;
+            throw NotSupportedOnV1("AttachMemoAsync requires a tile_id on v1");
         }
-        catch (Exception ex)
+        if (memoKind is not null)
         {
-            Log($"[RequestPromptAsync] Exception: {ex.Message}");
-            throw;
+            // v1 AttachMemoPayload has no memo_kind field; raising
+            // here prevents silently dropping the kind from the wire.
+            throw NotSupportedOnV1(
+                $"AttachMemoAsync: v1 AttachMemoPayload has no 'memo_kind' field (provided '{memoKind}'). Drop memo_kind or extend the v1 payload type.");
         }
+        var envelope = WrapEnvelope(new AttachMemoV1Payload(TileId: tileId!, Body: text));
+        return PostJsonAsync<CommandEnvelope<AttachMemoV1Payload>, CommandResponse>(
+            $"/v1/tiles/{tileId}/memos", envelope);
     }
 
+    public Task<CommandResponse?> ExtendTileAsync(int extendMin)
+        => throw NotSupportedOnV1("ExtendTileAsync (no tile_id parameter and no v1 extend endpoint in this scope)");
+
+    // DeleteTileAsync → archive_tile.  v1 archive_tile accepts a
+    // CommandEnvelope<ArchiveTilePayload> body ({ tile_id }).
+    public Task<CommandResponse?> DeleteTileAsync(string tileId)
+    {
+        var envelope = WrapEnvelope(new ArchiveTileV1Payload(TileId: tileId));
+        return DeleteJsonAsync<CommandEnvelope<ArchiveTileV1Payload>, CommandResponse>(
+            $"/v1/tiles/{tileId}", envelope);
+    }
+
+    public Task<CommandResponse?> UpdateTileAsync(string tileId, CreateTileRequest request)
+        => throw NotSupportedOnV1(
+            $"UpdateTileAsync: v1 UpdateTilePayload uses (title, description, color, icon, external_id) — the desktop's CreateTileRequest carries v0-shaped fields (next_action, done_definition, temporal, objective, ...). tile_id='{tileId}'.");
+
+    public Task<RequestPromptResponse?> RequestPromptAsync(string tileId)
+        => throw NotSupportedOnV1(
+            $"RequestPromptAsync: v1 create_prompt expects a free-form {{ kind, payload }} envelope, not a tile-only body (tile_id='{tileId}'). " +
+            "Introduce a v1-shaped prompt request DTO before re-introducing this call.");
+
+    // startup-recovery is intentionally free-form on the server (the
+    // handler accepts raw serde_json::Value) so we do NOT wrap the
+    // existing RespondStartupRecoveryPromptRequest in a v1 envelope.
     public Task<CommandResponse?> RespondStartupRecoveryPromptAsync(
         string promptId,
         string tileId,
@@ -445,53 +491,41 @@ public class CoreApiClient
             TileId: tileId,
             ActionId: actionId,
             StopAt: stopAt?.UtcDateTime.ToString("O"));
-        return PostJsonAsync<RespondStartupRecoveryPromptRequest, CommandResponse>("/commands/prompt/respond-startup-recovery", body);
+        return PostJsonAsync<RespondStartupRecoveryPromptRequest, CommandResponse>("/v1/prompts/startup-recovery", body);
     }
 
-    // Auth endpoints
+    // Auth endpoints (v1)
     public async Task<JsonElement?> DebugTokenAsync()
-    {
-        try
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Get, "/auth/debug/token");
-            using var response = await SendWithAuthAsync(_httpClient, request);
-            var body = await response.Content.ReadAsStringAsync();
-            Log($"[DebugTokenAsync] Status={(int)response.StatusCode} body={body}");
-            if (!response.IsSuccessStatusCode) return null;
-            return JsonDocument.Parse(body).RootElement;
-        }
-        catch (Exception ex)
-        {
-            Log($"[DebugTokenAsync] Exception: {ex.Message}");
-            return null;
-        }
-    }
+        => throw NotSupportedOnV1("DebugTokenAsync");
 
     public async Task SignOutAsync()
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, "/auth/signout");
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/v1/auth/signout");
         using var response = await SendWithAuthAsync(_httpClient, request);
         response.EnsureSuccessStatusCode();
     }
 
     public Task<TileQuotaResponse?> GetTileQuotaAsync()
-        => GetJsonAsync<TileQuotaResponse>("/auth/tile-quota");
+        => GetJsonAsync<TileQuotaResponse>("/v1/quota/tiles");
 
     // WithStatus variants for EventDrivenPoller connection detection
     public Task<ApiResult<ExecutionView>> GetExecutionViewWithStatusAsync()
-        => GetJsonWithStatusAsync<ExecutionView>("/read/execution-view");
+        => throw NotSupportedOnV1("GetExecutionViewWithStatusAsync (no execution_id)");
 
     public Task<ApiResult<TilesResponse>> GetTilesWithStatusAsync()
-        => GetJsonWithStatusAsync<TilesResponse>("/read/tiles");
+        => GetJsonWithStatusAsync<TilesResponse>("/v1/tiles");
 
     public Task<ApiResult<PendingPromptResponse>> GetPendingPromptWithStatusAsync()
-        => GetJsonWithStatusAsync<PendingPromptResponse>("/views/pending-prompt");
+        => GetJsonWithStatusAsync<PendingPromptResponse>("/v1/prompts/pending");
 
     public Task<ApiResult<TileQuotaResponse>> GetTileQuotaWithStatusAsync()
-        => GetJsonWithStatusAsync<TileQuotaResponse>("/auth/tile-quota");
+        => GetJsonWithStatusAsync<TileQuotaResponse>("/v1/quota/tiles");
 
+    // Google Calendar integration: excluded from the current v1 recovery phase
+    // per PROJECT-TRUTH. The desktop surfaces a clear "not supported" result
+    // instead of silently calling a v0 /auth/integrations/* endpoint.
     public Task<IntegrationSettingsResponse?> GetIntegrationSettingsAsync()
-        => GetJsonAsync<IntegrationSettingsResponse>("/auth/integrations/settings");
+        => throw NotSupportedOnV1("GetIntegrationSettingsAsync (Google Calendar excluded from v1 recovery)");
 
     public Task<IntegrationSettingsResponse?> UpdateGoogleCalendarIntegrationAsync(
         bool? connected = null,
@@ -504,27 +538,10 @@ public class CoreApiClient
         string? writePolicy = null,
         List<string>? grantedScopes = null,
         string? lastSyncedAt = null)
-    {
-        var payload = new Dictionary<string, object?>();
-        if (connected.HasValue) payload["connected"] = connected.Value;
-        if (canRead.HasValue) payload["can_read"] = canRead.Value;
-        if (canWrite.HasValue) payload["can_write"] = canWrite.Value;
-        if (accountEmail is not null || (connected.HasValue && !connected.Value)) payload["account_email"] = accountEmail;
-        if (selectedCalendarId is not null || (connected.HasValue && !connected.Value)) payload["selected_calendar_id"] = selectedCalendarId;
-        if (!string.IsNullOrWhiteSpace(syncMode)) payload["sync_mode"] = syncMode;
-        if (!string.IsNullOrWhiteSpace(readPolicy)) payload["read_policy"] = readPolicy;
-        if (!string.IsNullOrWhiteSpace(writePolicy)) payload["write_policy"] = writePolicy;
-        if (grantedScopes is not null) payload["granted_scopes"] = grantedScopes;
-        if (lastSyncedAt is not null) payload["last_synced_at"] = lastSyncedAt;
-
-        return PostJsonAsync<object, IntegrationSettingsResponse>("/auth/integrations/settings", new
-        {
-            google_calendar = payload,
-        });
-    }
+        => throw NotSupportedOnV1("UpdateGoogleCalendarIntegrationAsync (Google Calendar excluded from v1 recovery)");
 
     public Task<CalendarSyncPlanPreviewResponse?> GetCalendarSyncPlanPreviewAsync()
-        => GetJsonAsync<CalendarSyncPlanPreviewResponse>("/auth/integrations/calendar/sync-plan");
+        => throw NotSupportedOnV1("GetCalendarSyncPlanPreviewAsync (Google Calendar excluded from v1 recovery)");
 
     private static long ResolveDurationMinutes(string? startAt, string? endAt)
     {

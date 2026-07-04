@@ -17,8 +17,6 @@ public sealed class EventDrivenPoller : IDisposable
     private readonly DispatcherTimer _uiUpdateTimer;
     private readonly SemaphoreSlim _pollGate = new(1, 1);
     private DispatcherQueueTimer? _idleTimer;
-    private CancellationTokenSource? _eventStreamCts;
-    private Task? _eventStreamTask;
 
     private ExecutionView? _lastExecutionView;
     private TilesResponse? _lastTiles;
@@ -81,10 +79,9 @@ public sealed class EventDrivenPoller : IDisposable
             _idleTimer.Start();
         }
 
-        if (AppSettings.EnableSse && _eventStreamCts == null)
+        if (AppSettings.EnableSse)
         {
-            _eventStreamCts = new CancellationTokenSource();
-            _eventStreamTask = RunStateEventLoopAsync(_eventStreamCts.Token);
+            App.DebugLog("[EventDrivenPoller] SSE disabled: v1 has no state-event stream.");
         }
     }
 
@@ -92,7 +89,6 @@ public sealed class EventDrivenPoller : IDisposable
     {
         _uiUpdateTimer.Stop();
         _idleTimer?.Stop();
-        _eventStreamCts?.Cancel();
     }
 
     public async Task StartAsync()
@@ -124,22 +120,21 @@ public sealed class EventDrivenPoller : IDisposable
 
             try
             {
-                var executionViewTask = _api.GetExecutionViewWithStatusAsync();
+                var healthTask = _api.CheckHealthAsync();
                 var tilesTask = _api.GetTilesWithStatusAsync();
                 var promptTask = _api.GetPendingPromptWithStatusAsync();
                 var timelineTask = _api.GetTimelineForViewportAsync(_timelineViewport);
-                await Task.WhenAll(executionViewTask, tilesTask, promptTask, timelineTask);
+                await Task.WhenAll(healthTask, tilesTask, promptTask, timelineTask);
 
-                var evResult = executionViewTask.Result;
+                var healthOk = healthTask.Result;
                 var tilesResult = tilesTask.Result;
                 var promptResult = promptTask.Result;
                 timeline = timelineTask.Result;
 
-                executionView = evResult.Data;
                 tiles = tilesResult.Data;
                 prompt = promptResult.Data;
 
-                if (!evResult.IsSuccess && !tilesResult.IsSuccess && !promptResult.IsSuccess)
+                if (!healthOk && !tilesResult.IsSuccess && !promptResult.IsSuccess)
                 {
                     connected = false;
                 }
@@ -206,7 +201,6 @@ public sealed class EventDrivenPoller : IDisposable
     public void Dispose()
     {
         Stop();
-        _eventStreamCts?.Dispose();
         _idleTimer = null;
         _pollGate.Dispose();
     }
@@ -315,33 +309,4 @@ public sealed class EventDrivenPoller : IDisposable
         return TimelineDiffResolver.HasTimelineChanged(old, current);
     }
 
-    private async Task RunStateEventLoopAsync(CancellationToken cancellationToken)
-    {
-        while (!cancellationToken.IsCancellationRequested)
-        {
-            try
-            {
-                await foreach (var _ in _api.StreamStateEventsAsync(cancellationToken))
-                {
-                    if (cancellationToken.IsCancellationRequested) return;
-                    await RefreshAsync(userInitiated: false);
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                return;
-            }
-            catch
-            {
-                try
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(1), cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    return;
-                }
-            }
-        }
-    }
 }

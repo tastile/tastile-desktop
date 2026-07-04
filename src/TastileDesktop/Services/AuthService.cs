@@ -30,10 +30,10 @@ public sealed class AuthService
     {
         if (Inner.CurrentSession is { } s && s.ExpiresAt > DateTimeOffset.UtcNow.AddSeconds(60))
         {
-            return s.IdToken;
+            return s.AccessToken;
         }
         var refreshed = await Inner.RefreshAsync();
-        return refreshed?.IdToken;
+        return refreshed?.AccessToken;
     }
 
     public Task SignOutAsync() => Inner.SignOutAsync();

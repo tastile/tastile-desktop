@@ -15,17 +15,17 @@ public static class CalendarViewportResolver
     {
         if (viewport.ScaleUnit == TimelineScaleUnit.Day)
         {
-            return "/views/calendar/day";
+            return "/v1/calendar/day";
         }
 
         if (viewport.ScaleUnit == TimelineScaleUnit.Week)
         {
-            return "/views/calendar/week";
+            return "/v1/calendar/week";
         }
 
         return viewport.RangeMode == TimelineRangeMode.Year1
-            ? "/views/calendar/year"
-            : "/views/calendar/month";
+            ? "/v1/calendar/year"
+            : "/v1/calendar/month";
     }
 
     private static DateTimeOffset ResolveAnchor(TimelineViewportSettings viewport, DateTimeOffset nowLocal)

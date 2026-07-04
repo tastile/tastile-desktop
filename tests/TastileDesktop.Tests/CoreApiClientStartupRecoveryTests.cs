@@ -32,7 +32,7 @@ public sealed class CoreApiClientStartupRecoveryTests
             tileId: "t-1",
             actionId: "CONFIRM_CONTINUE");
 
-        Assert.Equal("/commands/prompt/respond-startup-recovery", capturedPath);
+        Assert.Equal("/v1/prompts/startup-recovery", capturedPath);
         Assert.NotNull(capturedBody);
         using var doc = JsonDocument.Parse(capturedBody!);
         var root = doc.RootElement;
@@ -73,30 +73,21 @@ public sealed class CoreApiClientStartupRecoveryTests
     }
 
     [Fact]
-    public async Task CompleteTileAsync_SendsTileIdWhenProvided()
+    public async Task CompleteTileAsync_ThrowsNotSupportedOnV1()
     {
-        string? capturedPath = null;
-        string? capturedBody = null;
-        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
-        {
-            capturedPath = request.RequestUri?.AbsolutePath;
-            capturedBody = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("""{ "ok": true, "events": [], "tile_id": null }"""),
-            };
-        }))
+        // v1 /complete accepts a CommandEnvelope<SetTileLifecyclePayload>
+        // body whose state field is an i16 (0=active, 1=deferred, 2=completed).
+        // The desktop's (tile_id, next_tile_id, scope) free-form shape
+        // doesn't map, so the call is now an explicit NotSupportedException.
+        var client = new CoreApiClient(new HttpClient(new StubHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.OK)))
         {
             BaseAddress = new Uri("http://localhost:3140"),
         });
 
-        _ = await client.CompleteTileAsync(tileId: "tile-123");
-
-        Assert.Equal("/commands/tile/complete", capturedPath);
-        Assert.NotNull(capturedBody);
-        using var doc = JsonDocument.Parse(capturedBody!);
-        var root = doc.RootElement;
-        Assert.Equal("tile-123", root.GetProperty("tile_id").GetString());
+        var ex = await Assert.ThrowsAsync<NotSupportedException>(
+            () => client.CompleteTileAsync(tileId: "tile-123"));
+        Assert.Contains("CompleteTileAsync", ex.Message);
     }
 
     private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> responder) : HttpMessageHandler

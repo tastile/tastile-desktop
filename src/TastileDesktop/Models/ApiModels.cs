@@ -274,3 +274,34 @@ public record RespondStartupRecoveryPromptRequest(
     [property: JsonPropertyName("action_id")] string ActionId,
     [property: JsonPropertyName("stop_at")] string? StopAt
 );
+
+// ------------------------------------------------------------
+// v1 Command Envelope (v1/14 §1, v1 core/crates/v1/domain/src/command.rs).
+//
+// Every POST that maps to a v1 CommandKind handler MUST send a
+// CommandEnvelope<TPayload> body.  The Rust `CommandRequest<T>` struct
+// has these four top-level fields; the only required one is
+// `idempotency_key`.  `expected_revision` and `occurred_at` are null
+// when the caller has nothing to assert / stamp.
+// ------------------------------------------------------------
+
+public record CommandEnvelope<TPayload>(
+    [property: JsonPropertyName("expected_revision")] long? ExpectedRevision,
+    [property: JsonPropertyName("idempotency_key")] Guid IdempotencyKey,
+    [property: JsonPropertyName("occurred_at")] string? OccurredAt,
+    [property: JsonPropertyName("payload")] TPayload Payload
+);
+
+// v1 payloads the desktop already sends today.  These mirror the
+// `domain::command::*Payload` types; the desktop never invents v1-only
+// fields — every property here is exactly what the v1 handler
+// validates in `commands.rs`.
+
+public record ArchiveTileV1Payload(
+    [property: JsonPropertyName("tile_id")] string TileId
+);
+
+public record AttachMemoV1Payload(
+    [property: JsonPropertyName("tile_id")] string TileId,
+    [property: JsonPropertyName("body")] string Body
+);

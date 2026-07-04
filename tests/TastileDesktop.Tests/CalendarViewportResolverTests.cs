@@ -14,7 +14,7 @@ public sealed class CalendarViewportResolverTests
 
         var request = CalendarViewportResolver.Resolve(viewport, viewport.AnchorLocal);
 
-        Assert.Equal("/views/calendar/day", request.ViewPath);
+        Assert.Equal("/v1/calendar/day", request.ViewPath);
         Assert.Equal(viewport.AnchorLocal, request.AnchorLocal);
     }
 
@@ -28,7 +28,7 @@ public sealed class CalendarViewportResolverTests
 
         var request = CalendarViewportResolver.Resolve(viewport, viewport.AnchorLocal);
 
-        Assert.Equal("/views/calendar/year", request.ViewPath);
+        Assert.Equal("/v1/calendar/year", request.ViewPath);
     }
 
     [Fact]
@@ -45,7 +45,7 @@ public sealed class CalendarViewportResolverTests
 
         var request = CalendarViewportResolver.Resolve(viewport, DateTimeOffset.Now);
 
-        Assert.Equal("/views/calendar/day", request.ViewPath);
+        Assert.Equal("/v1/calendar/day", request.ViewPath);
         Assert.Equal(customStart, request.AnchorLocal);
     }
 }

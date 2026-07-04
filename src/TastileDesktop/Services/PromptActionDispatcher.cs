@@ -56,25 +56,36 @@ public static class PromptActionDispatcher
 
         var breakMinutes = Math.Max(1, defaultBreakMinutes);
         CommandResponse? result;
-        result = id switch
+        try
         {
-            "CONTINUE" or "DISMISS" => null,
-            "BREAK" or "START_BREAK" => await api.StartBreakAsync(breakMinutes),
-            "START_BREAK_PARALLEL" => await api.StartBreakAsync(breakMinutes, insertionMode: "parallel"),
-            "START_BREAK_SPLIT" => await api.StartBreakAsync(breakMinutes, insertionMode: "split"),
-            "START_BREAK_SPLIT_EXTEND" => await api.StartBreakAsync(breakMinutes, insertionMode: "split_and_extend"),
-            "COMPLETE" or "COMPLETE_AND_START_NEXT" or "COMPLETE_TILE"
-                => await api.CompleteTileAsync(targetTileId, scope: "tile"),
-            "COMPLETE_PHASE"
-                => await api.CompleteTileAsync(targetTileId, scope: "phase"),
-            "END_BREAK" => await api.EndBreakAsync(),
-            "EXTEND" or "EXTEND_PHASE" => await api.ExtendTileAsync(10),
-            "DEFER" or "DEFER_TILE"
-                => await api.DeferTileAsync(targetTileId!),
-            "START" or "START_TILE"
-                => await api.StartTileAsync(targetTileId!),
-            _ => null,
-        };
+            result = id switch
+            {
+                "CONTINUE" or "DISMISS" => null,
+                "BREAK" or "START_BREAK" => await api.StartBreakAsync(breakMinutes),
+                "START_BREAK_PARALLEL" => await api.StartBreakAsync(breakMinutes, insertionMode: "parallel"),
+                "START_BREAK_SPLIT" => await api.StartBreakAsync(breakMinutes, insertionMode: "split"),
+                "START_BREAK_SPLIT_EXTEND" => await api.StartBreakAsync(breakMinutes, insertionMode: "split_and_extend"),
+                "COMPLETE" or "COMPLETE_AND_START_NEXT" or "COMPLETE_TILE"
+                    => await api.CompleteTileAsync(targetTileId, scope: "tile"),
+                "COMPLETE_PHASE"
+                    => await api.CompleteTileAsync(targetTileId, scope: "phase"),
+                "END_BREAK" => await api.EndBreakAsync(),
+                "EXTEND" or "EXTEND_PHASE" => await api.ExtendTileAsync(10),
+                "DEFER" or "DEFER_TILE"
+                    => await api.DeferTileAsync(targetTileId!),
+                "START" or "START_TILE"
+                    => await api.StartTileAsync(targetTileId!),
+                _ => null,
+            };
+        }
+        catch (NotSupportedException ex)
+        {
+            // v1 removed the v0 commands for break / complete / extend /
+            // defer / start. Surface them as a resolved-but-error result
+            // so the UI can render a "not supported" message instead of
+            // crashing through the dispatch pipeline.
+            return new PromptActionDispatchResult(true, id, ex.Message);
+        }
         if (result is null && id is not "CONTINUE" and not "DISMISS")
         {
             return new PromptActionDispatchResult(true, id, $"unsupported prompt action: {id}");

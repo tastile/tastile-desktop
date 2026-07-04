@@ -8,19 +8,17 @@ namespace TastileDesktop.Tests;
 public sealed class PromptActionDispatcherTests
 {
     [Fact]
-    public async Task ExecuteAsync_StartBreakParallel_UsesProvidedBreakMinutes()
+    public async Task ExecuteAsync_StartBreakParallel_OnV1_ReturnsResolvedErrorBecauseBreakIsNotModeled()
     {
-        string? capturedPath = null;
-        string? capturedBody = null;
-        var api = CreateApiClient(request =>
-        {
-            capturedPath = request.RequestUri?.AbsolutePath;
-            capturedBody = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
-            return new HttpResponseMessage(HttpStatusCode.OK)
+        // v1 has no /commands/break/start equivalent — StartBreakAsync
+        // throws NotSupportedException. The dispatcher must catch that
+        // and surface a resolved error result (not let the exception
+        // propagate) so the UI can render an "unsupported" message.
+        var api = CreateApiClient(_ =>
+            new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("""{ "ok": true, "events": [] }"""),
-            };
-        });
+            });
 
         var result = await PromptActionDispatcher.ExecuteAsync(
             api,
@@ -30,28 +28,22 @@ public sealed class PromptActionDispatcherTests
             defaultBreakMinutes: 12);
 
         Assert.True(result.IsResolved);
-        Assert.Null(result.Error);
-        Assert.Equal("/commands/break/start", capturedPath);
-        Assert.NotNull(capturedBody);
-        using var json = JsonDocument.Parse(capturedBody!);
-        Assert.Equal(12, json.RootElement.GetProperty("break_min").GetInt32());
-        Assert.Equal("parallel", json.RootElement.GetProperty("insertion_mode").GetString());
+        Assert.Equal("START_BREAK_PARALLEL", result.ResolvedActionId);
+        Assert.NotNull(result.Error);
+        Assert.Contains("StartBreakAsync", result.Error!);
     }
 
     [Fact]
-    public async Task ExecuteAsync_CompletePhase_UsesFallbackTileIdAndCompletesPhase()
+    public async Task ExecuteAsync_CompletePhase_OnV1_ReturnsResolvedErrorBecauseLifecycleNeedsNumericState()
     {
-        string? capturedPath = null;
-        string? capturedBody = null;
-        var api = CreateApiClient(request =>
-        {
-            capturedPath = request.RequestUri?.AbsolutePath;
-            capturedBody = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
-            return new HttpResponseMessage(HttpStatusCode.OK)
+        // CompleteTileAsync now throws NotSupportedException because
+        // v1 lifecycle needs a numeric state. The dispatcher must
+        // catch and translate it into a resolved error.
+        var api = CreateApiClient(_ =>
+            new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("""{ "ok": true, "events": [] }"""),
-            };
-        });
+            });
 
         var result = await PromptActionDispatcher.ExecuteAsync(
             api,
@@ -61,12 +53,9 @@ public sealed class PromptActionDispatcherTests
             fallbackTileId: "tile-fallback");
 
         Assert.True(result.IsResolved);
-        Assert.Null(result.Error);
-        Assert.Equal("/commands/tile/complete", capturedPath);
-        Assert.NotNull(capturedBody);
-        using var json = JsonDocument.Parse(capturedBody!);
-        Assert.Equal("tile-fallback", json.RootElement.GetProperty("tile_id").GetString());
-        Assert.Equal("phase", json.RootElement.GetProperty("scope").GetString());
+        Assert.Equal("COMPLETE_PHASE", result.ResolvedActionId);
+        Assert.NotNull(result.Error);
+        Assert.Contains("CompleteTileAsync", result.Error!);
     }
 
     [Fact]
@@ -92,7 +81,9 @@ public sealed class PromptActionDispatcherTests
 
         Assert.True(result.IsResolved);
         Assert.Null(result.Error);
-        Assert.Equal("/commands/prompt/respond-startup-recovery", capturedPath);
+        // Path was the v0 string until the previous desktop-v1-client
+        // migration; this is the v1 startup-recovery endpoint.
+        Assert.Equal("/v1/prompts/startup-recovery", capturedPath);
         Assert.NotNull(capturedBody);
         using var json = JsonDocument.Parse(capturedBody!);
         Assert.Equal("CONFIRM_STOP_AT", json.RootElement.GetProperty("action_id").GetString());

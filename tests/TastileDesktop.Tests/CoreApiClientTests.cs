@@ -26,11 +26,11 @@ public sealed class CoreApiClientTests
             {
                 BaseAddress = new Uri("http://localhost:3140"),
             },
-            getAccessToken: () => Task.FromResult<string?>("id-token-1"));
+            getAccessToken: () => Task.FromResult<string?>("access-token-1"));
 
         _ = await client.GetTilesAsync();
 
-        Assert.Equal("Bearer id-token-1", capturedAuthorization);
+        Assert.Equal("Bearer access-token-1", capturedAuthorization);
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public sealed class CoreApiClientTests
     {
         var seenAuthorization = new List<string?>();
         var attempts = 0;
-        string currentToken = "expired-id-token";
+        string currentToken = "expired-access-token";
         var client = new CoreApiClient(
             new HttpClient(new StubHandler(request =>
             {
@@ -57,9 +57,9 @@ public sealed class CoreApiClientTests
             getAccessToken: () => Task.FromResult<string?>(currentToken),
             refreshTokens: () =>
             {
-                currentToken = "fresh-id-token";
+                currentToken = "fresh-access-token";
                 return Task.FromResult<AuthSession?>(new AuthSession(
-                    IdToken: "fresh-id-token",
+                    IdToken: "fresh-id-token-must-not-leak",
                     AccessToken: "fresh-access-token",
                     RefreshToken: "refresh-token",
                     Sub: "user-1",
@@ -71,23 +71,21 @@ public sealed class CoreApiClientTests
 
         Assert.NotNull(response);
         Assert.Equal(2, attempts);
-        Assert.Equal(["Bearer expired-id-token", "Bearer fresh-id-token"], seenAuthorization);
+        // The 401 retry path must use the OAuth2 access token, never the
+        // Cognito id_token (PROJECT-TRUTH §Authentication).
+        Assert.Equal(["Bearer expired-access-token", "Bearer fresh-access-token"], seenAuthorization);
+        Assert.DoesNotContain(seenAuthorization, header => header?.Contains("id-token-must-not-leak", StringComparison.Ordinal) == true);
     }
 
     [Fact]
-    public async Task UpdateTileAsync_PostsToUpdateEndpoint_WithSameTileId()
+    public async Task UpdateTileAsync_ThrowsNotSupportedOnV1()
     {
-        string? capturedPath = null;
-        string? capturedBody = null;
-        var client = new CoreApiClient(new HttpClient(new StubHandler(request =>
-        {
-            capturedPath = request.RequestUri?.AbsolutePath;
-            capturedBody = request.Content?.ReadAsStringAsync().GetAwaiter().GetResult();
-            return new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent("""{ "ok": true, "events": [], "tile_id": null }"""),
-            };
-        }))
+        // v1 UpdateTilePayload uses (tile_id, title, description, color, icon,
+        // external_id); the existing CreateTileRequest carries v0-shaped
+        // fields that don't map. Surface the gap explicitly instead of
+        // posting a body the server will reject with a confusing 400.
+        var client = new CoreApiClient(new HttpClient(new StubHandler(_ =>
+            new HttpResponseMessage(HttpStatusCode.OK)))
         {
             BaseAddress = new Uri("http://localhost:3140"),
         });
@@ -103,65 +101,27 @@ public sealed class CoreApiClientTests
             Annotation: null,
             ConflictResolution: null);
 
-        _ = await client.UpdateTileAsync("tile-1", request);
-
-        Assert.Equal("/commands/tile/update", capturedPath);
-        Assert.NotNull(capturedBody);
-        using var json = JsonDocument.Parse(capturedBody!);
-        var root = json.RootElement;
-        Assert.Equal("tile-1", root.GetProperty("tile_id").GetString());
-        Assert.Equal("Updated title", root.GetProperty("title").GetString());
-        Assert.Equal("Updated action", root.GetProperty("next_action").GetString());
-        Assert.Equal("Updated done", root.GetProperty("done_definition").GetString());
+        var ex = await Assert.ThrowsAsync<NotSupportedException>(
+            () => client.UpdateTileAsync("tile-1", request));
+        Assert.Contains("UpdateTileAsync", ex.Message);
     }
 
     [Fact]
-    public async Task StreamStateEventsAsync_YieldsDataLines()
+    public async Task StreamStateEventsAsync_NotSupportedOnV1()
     {
-        var sse = "event: state_changed\n" +
-                  "data: state_changed\n\n" +
-                  "event: state_changed\n" +
-                  "data: another\n\n";
         var client = new CoreApiClient(new HttpClient(new StubHandler(_ =>
-            new HttpResponseMessage(HttpStatusCode.OK)
-            {
-                Content = new StringContent(sse),
-            }))
+            new HttpResponseMessage(HttpStatusCode.OK)))
         {
             BaseAddress = new Uri("http://localhost:3140"),
         });
 
-        var received = new List<string>();
-        await foreach (var message in client.StreamStateEventsAsync())
+        await Assert.ThrowsAsync<NotSupportedException>(async () =>
         {
-            received.Add(message);
-        }
-
-        Assert.Equal(["state_changed", "another"], received);
-    }
-
-    [Fact]
-    public async Task StreamStateEventsAsync_SupportsProjectedStartPayload()
-    {
-        var sse = "event: state_changed\n" +
-                  "data: {\"reason\":\"projection_only\"}\n\n";
-        var client = new CoreApiClient(new HttpClient(new StubHandler(_ =>
-            new HttpResponseMessage(HttpStatusCode.OK)
+            await foreach (var _ in client.StreamStateEventsAsync())
             {
-                Content = new StringContent(sse),
-            }))
-        {
-            BaseAddress = new Uri("http://localhost:3140"),
+                // should never produce values
+            }
         });
-
-        var received = new List<string>();
-        await foreach (var message in client.StreamStateEventsAsync())
-        {
-            received.Add(message);
-        }
-
-        Assert.Single(received);
-        Assert.Contains("projection_only", received[0], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -211,7 +171,7 @@ public sealed class CoreApiClientTests
         var timeline = await client.GetTimelineForViewportAsync(viewport);
 
         Assert.NotNull(timeline);
-        Assert.Equal("/views/calendar/year?anchor=2026-04-08T00%3A00%3A00.0000000Z&tz_offset=32400", capturedPathAndQuery);
+        Assert.Equal("/v1/calendar/year?anchor=2026-04-08T00%3A00%3A00.0000000Z&tz_offset=32400", capturedPathAndQuery);
         Assert.Single(timeline!.Items);
         Assert.Equal("tile-1", timeline.Items[0].TileId);
     }
