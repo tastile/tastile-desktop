@@ -34,20 +34,41 @@ jobs:
       - name: Resolve version
         id: version
         shell: pwsh
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          REF_NAME: ${{ github.ref_name }}
         run: |
-          if ("${{ github.event_name }}" -eq "workflow_dispatch") {
-            $version = "${{ github.event.inputs.version }}".TrimStart("v")
+          if ($env:EVENT_NAME -eq "workflow_dispatch") {
+            $version = $env:INPUT_VERSION.TrimStart("v")
           } else {
-            $version = "${{ github.ref_name }}".TrimStart("v")
+            $version = $env:REF_NAME.TrimStart("v")
+          }
+          if ($version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$') {
+            throw "Release version must contain exactly four ASCII numeric components."
+          }
+          foreach ($component in $version.Split(".")) {
+            $parsedComponent = 0
+            if ((![int]::TryParse($component, [ref]$parsedComponent)) -or $parsedComponent -gt 65535) {
+              throw "Each release version component must be between 0 and 65535."
+            }
+          }
+
+          [xml]$project = Get-Content -Raw -Path "src\TastileDesktop\TastileDesktop.csproj"
+          $projectVersion = [string]($project.Project.PropertyGroup.Version | Select-Object -First 1)
+          if ($version -ne $projectVersion) {
+            throw "Release version $version does not match project version $projectVersion."
           }
           "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: Build desktop installer
         id: installer
         shell: pwsh
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          .\scripts\build-desktop-installer.ps1 -Version "${{ steps.version.outputs.version }}"
-          $name = "tastile-desktop-${{ steps.version.outputs.version }}-setup.exe"
+          .\scripts\build-desktop-installer.ps1 -Version $env:VERSION
+          $name = "tastile-desktop-$($env:VERSION)-setup.exe"
           $path = "artifacts\installer\$name"
           if (!(Test-Path $path)) { throw "Installer not found: $path" }
           "installer_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
@@ -77,13 +98,20 @@ jobs:
           PUBLIC_BASE: ${{ secrets.DOWNLOAD_PUBLIC_BASE_URL }}
           NOTES: ${{ github.event.release.body }}
         run: |
-          cat > dist/update/manifest.json <<EOF
-          {
-            "latest_version": "${VERSION}",
-            "download_url": "${PUBLIC_BASE}/updates/desktop/tastile-desktop-${VERSION}-setup.exe",
-            "notes": $(jq -Rs . <<< "${NOTES:-Manual deploy}")
-          }
-          EOF
+          INSTALLER_PATH="dist/update/tastile-desktop-${VERSION}-setup.exe"
+          INSTALLER_SHA256=$(sha256sum "$INSTALLER_PATH" | awk '{print $1}')
+          DOWNLOAD_URL="${PUBLIC_BASE%/}/updates/desktop/tastile-desktop-${VERSION}-setup.exe"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg download_url "$DOWNLOAD_URL" \
+            --arg sha256 "$INSTALLER_SHA256" \
+            --arg notes "${NOTES:-Manual deploy}" \
+            '{
+              latest_version: $version,
+              download_url: $download_url,
+              sha256: $sha256,
+              notes: $notes
+            }' > dist/update/manifest.json
           cat dist/update/manifest.json
 
       - name: Assume AWS role via OIDC
@@ -157,8 +185,34 @@ jobs:
           PUBLIC_MANIFEST=$(curl -fsS https://download.tastile.app/updates/desktop/manifest.json)
           echo "$PUBLIC_MANIFEST"
           ACTUAL_VERSION=$(jq -r '.latest_version // .latest // empty' <<< "$PUBLIC_MANIFEST")
+          DOWNLOAD_URL=$(jq -r '.download_url // empty' <<< "$PUBLIC_MANIFEST")
+          EXPECTED_SHA256=$(jq -r '.sha256 // empty' <<< "$PUBLIC_MANIFEST")
           if [ "$ACTUAL_VERSION" != "$VERSION" ]; then
             echo "::error::Public desktop update manifest is ${ACTUAL_VERSION}, expected ${VERSION}"
+            exit 1
+          fi
+          if ! [[ "$DOWNLOAD_URL" =~ ^https:// ]]; then
+            echo "::error::Public desktop update manifest download_url must use HTTPS"
+            exit 1
+          fi
+          if ! [[ "$EXPECTED_SHA256" =~ ^[0-9A-Fa-f]{64}$ ]]; then
+            echo "::error::Public desktop update manifest sha256 must be 64 hexadecimal characters"
+            exit 1
+          fi
+
+          LOCAL_INSTALLER="dist/update/tastile-desktop-${VERSION}-setup.exe"
+          LOCAL_SHA256=$(sha256sum "$LOCAL_INSTALLER" | awk '{print $1}')
+          if [ "${EXPECTED_SHA256,,}" != "${LOCAL_SHA256,,}" ]; then
+            echo "::error::Public update manifest SHA-256 does not match the local release installer"
+            exit 1
+          fi
+
+          PUBLIC_INSTALLER=$(mktemp)
+          trap 'rm -f "$PUBLIC_INSTALLER"' EXIT
+          curl -fsSL "$DOWNLOAD_URL" -o "$PUBLIC_INSTALLER"
+          ACTUAL_SHA256=$(sha256sum "$PUBLIC_INSTALLER" | awk '{print $1}')
+          if [ "${ACTUAL_SHA256,,}" != "${LOCAL_SHA256,,}" ]; then
+            echo "::error::Public installer SHA-256 does not match the local release installer"
             exit 1
           fi
 
