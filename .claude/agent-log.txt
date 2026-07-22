@@ -1,9 +1,0 @@
-[20260410-080156] stash@{0}: On feature/calendar-replacement-20260408: agent-safety:session-start 20260410-080156
-
-[SessionEnd] branch=feature/calendar-replacement-20260408
-stash@{0}: On feature/calendar-replacement-20260408: agent-safety:session-start 20260410-080156
-stash@{1}: On feature/calendar-replacement-20260408: agent-safety:session-start 20260409-202143
-
-[SessionEnd] branch=feature/calendar-replacement-20260408
-stash@{0}: On feature/calendar-replacement-20260408: agent-safety:session-start 20260410-080156
-stash@{1}: On feature/calendar-replacement-20260408: agent-safety:session-start 20260409-202143
