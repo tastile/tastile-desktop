@@ -5,7 +5,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using TastileDesktop.Models;
@@ -372,16 +371,12 @@ public class CoreApiClient
             RangeEnd: projection.RangeEnd);
     }
 
-    public async IAsyncEnumerable<string> StreamStateEventsAsync([EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public IAsyncEnumerable<string> StreamStateEventsAsync(CancellationToken cancellationToken = default)
     {
         // v1 has no equivalent SSE state stream; the previous /read/events/state
         // endpoint was a v0 daemon surface that has been removed. Fail loudly
         // so any SSE caller surfaces the regression.
         throw NotSupportedOnV1("StreamStateEventsAsync");
-        // unreachable; satisfies the iterator signature
-#pragma warning disable CS0162
-        yield break;
-#pragma warning restore CS0162
     }
 
     // Returns raw JSON because Event uses serde tagged enum
