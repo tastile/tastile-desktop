@@ -32,8 +32,7 @@ public sealed class AppUpdateService
         var raw = Environment.GetEnvironmentVariable(UpdateBaseUrlEnvVar)?.Trim();
         if (string.IsNullOrEmpty(raw))
         {
-            throw new InvalidOperationException(
-                $"Missing environment variable {UpdateBaseUrlEnvVar} — please set it before running. See .env.example for the contract.");
+            return BuildManifestUrl("https://download.tastile.app");
         }
 
         return BuildManifestUrl(raw);
@@ -239,11 +238,7 @@ public sealed class AppUpdateService
 
     private static bool IsLegacyVersionEndpoint(string url)
     {
-        // Legacy version endpoints are no longer recognized; configured manifest
-        // URLs are taken as-is and routed through the env-var-driven
-        // TASTILE_DESKTOP_UPDATE_BASE_URL. Any caller passing a legacy URL
-        // simply receives that URL back unchanged (the field no longer matches).
-        return false;
+        return url.Contains("/api/version", StringComparison.OrdinalIgnoreCase);
     }
 
     private static bool IsSha256Hex(string? value)
