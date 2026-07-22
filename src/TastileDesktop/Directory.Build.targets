@@ -113,17 +113,12 @@
     <Message Text="(Out) GeneratedXbfFiles: '@(_GeneratedXbfFiles)'" />
     <Message Text="(Out) ClCompile: '@(ClCompile)'" Condition="'$(ManagedAssembly)'=='false' and '%(ClCompile.CompilerIteration)'!='XamlGenerated'"/>
     <Message Text="(Out) Compile: '@(Compile)'" Condition="'$(ManagedAssembly)'!='false'"/>
-    <PropertyGroup>
-      <PrevWarningLevel>$(WarningLevel)</PrevWarningLevel>
-      <WarningLevel Condition="'$(SuppressWarningsInPass1)'=='true'">0</WarningLevel>
-    </PropertyGroup>
   </Target>
 
   <Target Name="MarkupCompilePass2"
           DependsOnTargets="$(MarkupCompilePass2DependsOn)"
           Condition="'@(Page)' != '' Or '@(ApplicationDefinition)' != '' " >
     <PropertyGroup>
-      <WarningLevel>$(PrevWarningLevel)</WarningLevel>
       <WarningLevel Condition="'$(WarningLevel)' == '' and '$(ExplicitResetWarningSuppression)' == 'true'">1</WarningLevel>
     </PropertyGroup>
     <PropertyGroup>
