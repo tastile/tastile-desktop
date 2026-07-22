@@ -1,27 +1,28 @@
-.vs/
+# Per-machine / IDE / agent tooling
 .idea/
+.vs/
+.claude/
+.agents/
+.impeccable/
+.cursor/
+.vscode/
+
+# Local / test artifacts
+artifacts/
+*.log
+.env
+
+# Build outputs
 bin/
 obj/
-artifacts/
-TestResults/
-.deps/
+publish/
 
-*.user
-*.suo
-*.DotSettings.user
-*.nupkg
-*.binlog
-*.log
+# Windows signing — must never be committed
 *.pfx
+*.p12
+signing.key
+signing.cert
 
-packages/
-target/
-
-AGENTS.md
-
-.worktrees/
-
-.env
-.env.local
-.env.*
-!.env.example
+# Development overrides
+appsettings.Development.json
+appsettings.Local.json

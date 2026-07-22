@@ -14,7 +14,7 @@ public sealed record AppUpdateInfo(
 
 public sealed class AppUpdateService
 {
-    private const string DefaultUpdateEndpoint = "https://download.tastile.app/updates/desktop/manifest.json";
+    private const string UpdateBaseUrlEnvVar = "TASTILE_DESKTOP_UPDATE_BASE_URL";
     private static readonly string[] SilentInstallerArguments =
     [
         "/VERYSILENT",
@@ -23,6 +23,27 @@ public sealed class AppUpdateService
         "/CLOSEAPPLICATIONS",
         "/RESTARTAPPLICATIONS",
     ];
+
+    // Resolve once at static init so missing env vars fail-fast on first access.
+    private static readonly string DefaultUpdateEndpoint = ResolveDefaultUpdateEndpoint();
+
+    private static string ResolveDefaultUpdateEndpoint()
+    {
+        var raw = Environment.GetEnvironmentVariable(UpdateBaseUrlEnvVar)?.Trim();
+        if (string.IsNullOrEmpty(raw))
+        {
+            throw new InvalidOperationException(
+                $"Missing environment variable {UpdateBaseUrlEnvVar} — please set it before running. See .env.example for the contract.");
+        }
+
+        return BuildManifestUrl(raw);
+    }
+
+    private static string BuildManifestUrl(string baseUrl)
+    {
+        var trimmed = baseUrl.TrimEnd('/');
+        return $"{trimmed}/updates/desktop/manifest.json";
+    }
 
     private readonly HttpClient _httpClient;
 
@@ -218,8 +239,11 @@ public sealed class AppUpdateService
 
     private static bool IsLegacyVersionEndpoint(string url)
     {
-        return string.Equals(url, "https://tastile.app/api/version", StringComparison.OrdinalIgnoreCase) ||
-            string.Equals(url, "https://app.tastile.app/api/version", StringComparison.OrdinalIgnoreCase);
+        // Legacy version endpoints are no longer recognized; configured manifest
+        // URLs are taken as-is and routed through the env-var-driven
+        // TASTILE_DESKTOP_UPDATE_BASE_URL. Any caller passing a legacy URL
+        // simply receives that URL back unchanged (the field no longer matches).
+        return false;
     }
 
     private static bool IsSha256Hex(string? value)

@@ -22,17 +22,23 @@ public sealed record CognitoConfig(
     public static CognitoConfig FromEnv()
     {
         return new CognitoConfig(
-            UserPoolId: Environment.GetEnvironmentVariable("TASTILE_COGNITO_USER_POOL_ID")?.Trim()
-                ?? "ap-northeast-1_pwYcPWOyR",
-            ClientId: Environment.GetEnvironmentVariable("TASTILE_COGNITO_CLIENT_ID")?.Trim()
-                ?? "2b9fkkb4u5di8veelnmjkmnldj",
-            HostedUiDomain: Environment.GetEnvironmentVariable("TASTILE_COGNITO_HOSTED_UI_DOMAIN")?.Trim()
-                ?? "tastile-beta",
-            Region: Environment.GetEnvironmentVariable("TASTILE_COGNITO_REGION")?.Trim()
-                ?? "ap-northeast-1",
-            CallbackUrl: Environment.GetEnvironmentVariable("TASTILE_COGNITO_CALLBACK_URL")?.Trim()
-                ?? "tastile://auth/callback",
-            WebLoginUrl: Environment.GetEnvironmentVariable("TASTILE_WEB_LOGIN_URL")?.Trim()
-                ?? "https://app.tastile.app/login");
+            UserPoolId: RequireEnv("TASTILE_COGNITO_USER_POOL_ID"),
+            ClientId: RequireEnv("TASTILE_COGNITO_CLIENT_ID"),
+            HostedUiDomain: RequireEnv("TASTILE_COGNITO_HOSTED_UI_DOMAIN"),
+            Region: RequireEnv("TASTILE_COGNITO_REGION"),
+            CallbackUrl: RequireEnv("TASTILE_COGNITO_CALLBACK_URL"),
+            WebLoginUrl: RequireEnv("TASTILE_WEB_LOGIN_URL"));
+    }
+
+    private static string RequireEnv(string name)
+    {
+        var raw = Environment.GetEnvironmentVariable(name)?.Trim();
+        if (string.IsNullOrEmpty(raw))
+        {
+            throw new InvalidOperationException(
+                $"Missing environment variable {name} — please set it before running. See .env.example for the contract.");
+        }
+
+        return raw;
     }
 }

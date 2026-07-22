@@ -9,15 +9,33 @@ namespace TastileDesktop.Services;
 /// </summary>
 public static class AppSettings
 {
-    public const string DefaultApiBaseUrl = "https://api.tastile.app";
-    public const string WebAccountUrl = "https://app.tastile.app/dashboard/account";
+    public static string WebAccountUrl
+    {
+        get
+        {
+            var raw = Environment.GetEnvironmentVariable("TASTILE_WEB_ACCOUNT_URL")?.Trim();
+            if (string.IsNullOrEmpty(raw))
+            {
+                throw new InvalidOperationException(
+                    "Missing environment variable TASTILE_WEB_ACCOUNT_URL — please set it before running. See .env.example for the contract.");
+            }
+
+            return raw;
+        }
+    }
 
     public static string ApiBaseUrl
     {
         get
         {
             var raw = Environment.GetEnvironmentVariable("TASTILE_API_BASE_URL")?.Trim();
-            return string.IsNullOrEmpty(raw) ? DefaultApiBaseUrl : raw.TrimEnd('/');
+            if (string.IsNullOrEmpty(raw))
+            {
+                throw new InvalidOperationException(
+                    "Missing environment variable TASTILE_API_BASE_URL — please set it before running. See .env.example for the contract.");
+            }
+
+            return raw.TrimEnd('/');
         }
     }
 
