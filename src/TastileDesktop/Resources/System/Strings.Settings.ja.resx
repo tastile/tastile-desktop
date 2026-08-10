@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Settings.CancelButton" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Settings.TitleBarHeading" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings_AccentColorHeading" xml:space="preserve"><value>アクセントカラー</value></data>
+  <data name="Settings_AccentSource" xml:space="preserve"><value>アクセントの取得元</value></data>
+  <data name="Settings_AccentSourceDefault" xml:space="preserve"><value>Tastile のデフォルトの青を使う</value></data>
+  <data name="Settings_AccentSourceHelp" xml:space="preserve"><value>既定では個人用設定のアクセントカラーを使い、いつでも手動指定に切り替えられます。</value></data>
+  <data name="Settings_AccentSourceManual" xml:space="preserve"><value>手動で HEX 色を指定</value></data>
+  <data name="Settings_AccentSourceWindowsAccent" xml:space="preserve"><value>Windows のアクセントに従う</value></data>
+  <data name="Settings_AccentSourceWindowsUiAccent" xml:space="preserve"><value>Windows UI のアクセントに従う</value></data>
+  <data name="Settings_AccountHeading" xml:space="preserve"><value>アカウント</value></data>
+  <data name="Settings_AccountHelp" xml:space="preserve"><value>メールアドレスの変更、ログイン方法の追加、Passkey 管理は Web アカウント設定で行います。</value></data>
+  <data name="Settings_AnimatePromptToast" xml:space="preserve"><value>プロンプトをアニメーション</value></data>
+  <data name="Settings_AnimatePromptToastHelp" xml:space="preserve"><value>プロンプト表示時にフェードインします。Windows のアニメーションが無効の場合は自動で無効化されます。</value></data>
+  <data name="Settings_Animations" xml:space="preserve"><value>アニメーション</value></data>
+  <data name="Settings_AppAccentColor" xml:space="preserve"><value>アプリのアクセントカラー</value></data>
+  <data name="Settings_AppAccentColorDescription" xml:space="preserve"><value>設定の選択後に Tastile で使われているアクセントカラー。</value></data>
+  <data name="Settings_AppDataDirectory" xml:space="preserve"><value>アプリデータディレクトリ</value></data>
+  <data name="Settings_AppTheme" xml:space="preserve"><value>アプリのテーマ</value></data>
+  <data name="Settings_AppThemeDescription" xml:space="preserve"><value>Windows のアプリ外観から派生しています。</value></data>
+  <data name="Settings_AppearanceDescription" xml:space="preserve"><value>Tastile は現在の Windows ユーザーの外観とアクセシビリティ設定に従います。</value></data>
+  <data name="Settings_AppearanceHeading" xml:space="preserve"><value>Windows の外観</value></data>
+  <data name="Settings_AuthCredentials" xml:space="preserve"><value>認証資格情報 (DPAPI)</value></data>
+  <data name="Settings_BreaksHeading" xml:space="preserve"><value>休憩</value></data>
+  <data name="Settings_BrowseButton" xml:space="preserve"><value>参照</value></data>
+  <data name="Settings_CheckForUpdates" xml:space="preserve"><value>アップデートを確認</value></data>
+  <data name="Settings_CreateTileLog" xml:space="preserve"><value>タイル作成ログ</value></data>
+  <data name="Settings_CurrentVersion" xml:space="preserve"><value>現在のバージョン: {0}</value></data>
+  <data name="Settings_CustomSoundFile" xml:space="preserve"><value>カスタム音声ファイル</value></data>
+  <data name="Settings_CustomSoundFilePlaceholder" xml:space="preserve"><value>C:\path\to\sound.mp3</value></data>
+  <data name="Settings_DataLivesHere" xml:space="preserve"><value>この端末でデータが保存される場所</value></data>
+  <data name="Settings_DataLivesHereHelp" xml:space="preserve"><value>認証トークンと一部の UI 設定のみをローカルに保存します。タイルデータはクラウドにあります。</value></data>
+  <data name="Settings_DefaultBreakTime" xml:space="preserve"><value>既定の休憩時間</value></data>
+  <data name="Settings_DesktopApiLog" xml:space="preserve"><value>デスクトップ API ログ</value></data>
+  <data name="Settings_ForceIntervention" xml:space="preserve"><value>操作を強制</value></data>
+  <data name="Settings_HighContrast" xml:space="preserve"><value>ハイコントラスト</value></data>
+  <data name="Settings_IdlePromptAfter" xml:space="preserve"><value>アイドルプロンプトまでの時間</value></data>
+  <data name="Settings_LanguageChinese" xml:space="preserve"><value>中文</value></data>
+  <data name="Settings_LanguageDescription" xml:space="preserve"><value>Tastile で使う言語を選びます。変更は再起動後に有効になります。</value></data>
+  <data name="Settings_LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_LanguageHeading" xml:space="preserve"><value>言語</value></data>
+  <data name="Settings_LanguageJapanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Settings_LanguageKorean" xml:space="preserve"><value>한국어</value></data>
+  <data name="Settings_LanguageLabel" xml:space="preserve"><value>言語</value></data>
+  <data name="Settings_LanguageRestartHint" xml:space="preserve"><value>新しい言語を適用するには Tastile を再起動してください。</value></data>
+  <data name="Settings_LanguageSpanish" xml:space="preserve"><value>Español</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>Windows 起動時に Tastile を起動</value></data>
+  <data name="Settings_LaunchAtStartupHelp" xml:space="preserve"><value>Windows の起動時に Tastile を開始します</value></data>
+  <data name="Settings_LocalDatabase" xml:space="preserve"><value>ローカルデータベース</value></data>
+  <data name="Settings_LocalDatabaseNone" xml:space="preserve"><value>(なし — クラウドのみ)</value></data>
+  <data name="Settings_LockAfterQuit" xml:space="preserve"><value>アプリ終了後にロック</value></data>
+  <data name="Settings_ManualAccent" xml:space="preserve"><value>手動のアクセント</value></data>
+  <data name="Settings_ManualAccentHelp" xml:space="preserve"><value>#RRGGBB または #AARRGGBB 形式。無効な値は Windows のアクセントにフォールバックします。</value></data>
+  <data name="Settings_Minutes" xml:space="preserve"><value>分</value></data>
+  <data name="Settings_MinutesAfterDismissed" xml:space="preserve"><value>閉じられてから (分)</value></data>
+  <data name="Settings_MinutesAfterWorkStarts" xml:space="preserve"><value>作業開始から (分)</value></data>
+  <data name="Settings_MirrorSimplified" xml:space="preserve"><value>簡易表示をミラー</value></data>
+  <data name="Settings_MirrorSimplifiedHelp" xml:space="preserve"><value>「すべてのディスプレイ」と併用時、他のモニターにはタイトルとキュー数のみの縮小カードを表示します。</value></data>
+  <data name="Settings_NextDisplay" xml:space="preserve"><value>次のディスプレイ</value></data>
+  <data name="Settings_NextDisplayHelp" xml:space="preserve"><value>パネルを次のディスプレイへ移動します</value></data>
+  <data name="Settings_NotSignedIn" xml:space="preserve"><value>サインインしていません</value></data>
+  <data name="Settings_NotificationsHeading" xml:space="preserve"><value>通知</value></data>
+  <data name="Settings_OpenWebAccount" xml:space="preserve"><value>Web アカウント設定を開く</value></data>
+  <data name="Settings_OverlayDuration" xml:space="preserve"><value>オーバーレイの長さ</value></data>
+  <data name="Settings_OverlayDurationHelp" xml:space="preserve"><value>秒</value></data>
+  <data name="Settings_PositionBottom" xml:space="preserve"><value>下</value></data>
+  <data name="Settings_PositionTop" xml:space="preserve"><value>上</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>プロファイル</value></data>
+  <data name="Settings_ProfileAwsRemote" xml:space="preserve"><value>AWS リモート (beta.tastile.app)</value></data>
+  <data name="Settings_PromptEdgeOverlay" xml:space="preserve"><value>エッジオーバーレイ</value></data>
+  <data name="Settings_PromptEdgeOverlayHelp" xml:space="preserve"><value>新しいプロンプト表示時に、各ディスプレイの縁に細いアクセント枠を表示します。</value></data>
+  <data name="Settings_PromptToastDisplay" xml:space="preserve"><value>プロンプトの表示先</value></data>
+  <data name="Settings_PromptToastDisplayActiveWindow" xml:space="preserve"><value>アクティブなウィンドウのあるディスプレイ</value></data>
+  <data name="Settings_PromptToastDisplayAll" xml:space="preserve"><value>すべてのディスプレイ</value></data>
+  <data name="Settings_PromptToastDisplayHelp" xml:space="preserve"><value>プロンプトを 1 つのディスプレイにのみ出すか、全ディスプレイにミラーするかを選びます。</value></data>
+  <data name="Settings_PromptToastDisplayPrimary" xml:space="preserve"><value>プライマリディスプレイ</value></data>
+  <data name="Settings_PromptToastMaxStack" xml:space="preserve"><value>プロンプトの最大スタック数</value></data>
+  <data name="Settings_PromptToastMaxStackHelp" xml:space="preserve"><value>同時に表示するカード数。新しいプロンプトが上に積まれ、古いものは下に待機します。</value></data>
+  <data name="Settings_PromptToastPosition" xml:space="preserve"><value>プロンプトの位置</value></data>
+  <data name="Settings_PromptToastPositionBottomLeft" xml:space="preserve"><value>左下</value></data>
+  <data name="Settings_PromptToastPositionBottomRight" xml:space="preserve"><value>右下</value></data>
+  <data name="Settings_PromptToastPositionHelp" xml:space="preserve"><value>メインのプロンプトを、選んだディスプレイのいずれかの角に固定します。</value></data>
+  <data name="Settings_PromptToastPositionTopCenter" xml:space="preserve"><value>上中央</value></data>
+  <data name="Settings_PromptToastPositionTopLeft" xml:space="preserve"><value>左上</value></data>
+  <data name="Settings_PromptToastPositionTopRight" xml:space="preserve"><value>右上</value></data>
+  <data name="Settings_PromptToastRepeat" xml:space="preserve"><value>プロンプトのくり返し回数</value></data>
+  <data name="Settings_PromptToastRepeatHelp" xml:space="preserve"><value>1 回のプロンプトごとの回数</value></data>
+  <data name="Settings_PromptToastRepeatInterval" xml:space="preserve"><value>プロンプトの再生間隔</value></data>
+  <data name="Settings_PromptToastRepeatIntervalHelp" xml:space="preserve"><value>再生と再生の間隔 (秒)</value></data>
+  <data name="Settings_PromptToastSound" xml:space="preserve"><value>プロンプトの音</value></data>
+  <data name="Settings_PromptToastSoundHelp" xml:space="preserve"><value>プロンプトが表示されるたびに短い注意音を鳴らします。</value></data>
+  <data name="Settings_PromptToastSoundLength" xml:space="preserve"><value>プロンプト音の長さ</value></data>
+  <data name="Settings_PromptToastSoundLengthHelp" xml:space="preserve"><value>1 回の再生秒数</value></data>
+  <data name="Settings_PromptToastSoundRepeatMode" xml:space="preserve"><value>プロンプト音の再生モード</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeFixedCount" xml:space="preserve"><value>指定回数くり返し</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeUntilResponse" xml:space="preserve"><value>応答があるまで</value></data>
+  <data name="Settings_PromptToastSoundSource" xml:space="preserve"><value>プロンプト音のソース</value></data>
+  <data name="Settings_PromptToastSoundSourceCustomFile" xml:space="preserve"><value>カスタム音声ファイル</value></data>
+  <data name="Settings_PromptToastSoundSourceSystemBeep" xml:space="preserve"><value>システム音</value></data>
+  <data name="Settings_PromptToastStack" xml:space="preserve"><value>プロンプトをスタック表示</value></data>
+  <data name="Settings_PromptToastStackHelp" xml:space="preserve"><value>プライマリディスプレイの上端中央付近にプロンプトをスタック表示します。</value></data>
+  <data name="Settings_QuickPanelHeading" xml:space="preserve"><value>クイックパネル</value></data>
+  <data name="Settings_RepeatIntervention" xml:space="preserve"><value>操作の要求を繰り返す</value></data>
+  <data name="Settings_RequireWindowsUnlock" xml:space="preserve"><value>起動時に Windows のロック解除を要求</value></data>
+  <data name="Settings_RuntimePathsHeading" xml:space="preserve"><value>ランタイムパス</value></data>
+  <data name="Settings_SaveButton" xml:space="preserve"><value>保存</value></data>
+  <data name="Settings_SecurityHeading" xml:space="preserve"><value>セキュリティ</value></data>
+  <data name="Settings_SecurityLockHelp" xml:space="preserve"><value>既定で有効。Windows のスタートアップからの起動は対象外です。</value></data>
+  <data name="Settings_SignInFailed" xml:space="preserve"><value>サインインに失敗しました: {0}</value></data>
+  <data name="Settings_SignInToTastile" xml:space="preserve"><value>Tastile にサインイン</value></data>
+  <data name="Settings_SignOut" xml:space="preserve"><value>サインアウト</value></data>
+  <data name="Settings_SignOutFailed" xml:space="preserve"><value>サインアウトに失敗しました: {0}</value></data>
+  <data name="Settings_SignedInAs" xml:space="preserve"><value>{0} としてサインイン中</value></data>
+  <data name="Settings_SuppressFullscreen" xml:space="preserve"><value>フルスクリーンアプリでは抑止</value></data>
+  <data name="Settings_SuppressFullscreenHelp" xml:space="preserve"><value>ゲームや動画再生など、別のアプリがモニター全体を占有しているときはオーバーレイを表示しません。</value></data>
+  <data name="Settings_SystemHeading" xml:space="preserve"><value>システム</value></data>
+  <data name="Settings_SystemTheme" xml:space="preserve"><value>システムのテーマ</value></data>
+  <data name="Settings_SystemThemeDescription" xml:space="preserve"><value>Windows 自体が使うシェルのテーマです。</value></data>
+  <data name="Settings_TaskbarAlignment" xml:space="preserve"><value>タスクバーの配置</value></data>
+  <data name="Settings_TestOverlay" xml:space="preserve"><value>オーバーレイをテスト</value></data>
+  <data name="Settings_TestPromptToast" xml:space="preserve"><value>プロンプトをテスト</value></data>
+  <data name="Settings_TestPromptToastActionComplete" xml:space="preserve"><value>完了</value></data>
+  <data name="Settings_TestPromptToastActionDefer" xml:space="preserve"><value>先送り</value></data>
+  <data name="Settings_TestPromptToastActionStart" xml:space="preserve"><value>開始</value></data>
+  <data name="Settings_TestPromptToastBody" xml:space="preserve"><value>これはテスト用のトースト通知です</value></data>
+  <data name="Settings_TestPromptToastSound" xml:space="preserve"><value>プロンプト音をテスト</value></data>
+  <data name="Settings_TestPromptToastTitle" xml:space="preserve"><value>テストプロンプト</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings_TitleBarHeading" xml:space="preserve"><value>設定</value></data>
+  <data name="Settings_ToastReminder" xml:space="preserve"><value>トーストでの通知</value></data>
+  <data name="Settings_TransparencyEffects" xml:space="preserve"><value>透過効果</value></data>
+  <data name="Settings_UpToDate" xml:space="preserve"><value>最新バージョンです。</value></data>
+  <data name="Settings_UpdateActionIgnore" xml:space="preserve"><value>無視</value></data>
+  <data name="Settings_UpdateActionInstall" xml:space="preserve"><value>アップデートをインストール</value></data>
+  <data name="Settings_UpdateAvailable" xml:space="preserve"><value>アップデート {0} が利用可能です。</value></data>
+  <data name="Settings_UpdateAvailableTitle" xml:space="preserve"><value>アップデートがあります: {0}</value></data>
+  <data name="Settings_UpdateBodyFallback" xml:space="preserve"><value>インストーラーをダウンロードして最新バージョンをインストールしてください。</value></data>
+  <data name="Settings_UpdateCheckFailed" xml:space="preserve"><value>アップデートの確認に失敗しました: {0}</value></data>
+  <data name="Settings_UpdateIgnored" xml:space="preserve"><value>アップデート {0} を無視しました。</value></data>
+  <data name="Settings_UpdateInstallFailed" xml:space="preserve"><value>アップデートのインストールに失敗しました: {0}</value></data>
+  <data name="Settings_UpdateWhy" xml:space="preserve"><value>新しいアプリケーションユップデートがあります。</value></data>
+  <data name="Settings_UpdatesDescription" xml:space="preserve"><value>アップデートは Tastile のリリースチャネルから自動配信されます。</value></data>
+  <data name="Settings_UpdatesHeading" xml:space="preserve"><value>アップデート</value></data>
+  <data name="Settings_VerticalPosition" xml:space="preserve"><value>縦方向の位置</value></data>
+  <data name="Settings_WindowsAccent" xml:space="preserve"><value>Windows のアクセント</value></data>
+  <data name="Settings_WindowsAccentDescription" xml:space="preserve"><value>個人用設定 &gt; 色で選ばれたアクセントカラー。</value></data>
+  <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Windows UI のアクセント</value></data>
+  <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>シェル UI API が公開しているアクセント。端末によって別のハイライト色を返すことがあります。</value></data>
+
+</root>

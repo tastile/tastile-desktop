@@ -1,5 +1,6 @@
 using Microsoft.UI.Xaml;
 using System;
+using TastileDesktop.Resources;
 using TastileDesktop.Services;
 
 namespace TastileDesktop.Views;
@@ -42,7 +43,7 @@ public sealed partial class AuthWindow : Window
     private async void OnSignInClick(object sender, RoutedEventArgs e)
     {
         SignInButton.IsEnabled = false;
-        StatusTextBlock.Text = "ブラウザでサインインを完了してください…";
+        StatusTextBlock.Text = Strings.Get("Auth_ContinueInBrowserStatus");
 
         try
         {
@@ -50,7 +51,7 @@ public sealed partial class AuthWindow : Window
         }
         catch (Exception ex)
         {
-            ShowError($"サインインを開始できませんでした: {ex.Message}");
+            ShowError(string.Format(Strings.Get("Auth_SignInFailed"), ex.Message));
             SignInButton.IsEnabled = true;
         }
     }

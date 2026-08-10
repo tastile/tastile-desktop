@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    x:Uid="Auth"
     Title="Sign in">
 
     <Grid Background="{StaticResource AppBackgroundBrush}">
@@ -14,20 +15,20 @@
         </Grid.RowDefinitions>
 
         <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="{StaticResource AppSurface0Brush}">
-            <TextBlock Text="Sign in" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+            <TextBlock x:Uid="Auth_TitleBarHeading" Text="Sign in" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
         </Grid>
 
         <Grid Grid.Row="1" Padding="{StaticResource WindowPagePadding}">
             <Border Style="{StaticResource WindowCardBorderStyle}" Padding="24" MaxWidth="460" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="320">
                 <StackPanel Spacing="18">
                     <StackPanel Spacing="6">
-                        <TextBlock Text="Sign in to Tastile" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
-                        <TextBlock Text="Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" TextWrapping="Wrap" />
+                        <TextBlock x:Uid="Auth_Heading" Text="Sign in to Tastile" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
+                        <TextBlock x:Uid="Auth_Description" Text="Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" TextWrapping="Wrap" />
                     </StackPanel>
                     <TextBlock x:Name="StatusTextBlock" Text="" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundSubtleBrush}" TextAlignment="Center" />
                     <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
-                        <Button x:Name="SignInButton" Content="Continue in browser" Click="OnSignInClick" />
-                        <Button x:Name="CancelButton" Content="Cancel" Click="OnCancelClick" />
+                        <Button x:Name="SignInButton" x:Uid="Auth_ContinueInBrowser" Content="Continue in browser" Click="OnSignInClick" />
+                        <Button x:Name="CancelButton" x:Uid="Auth_Cancel" Content="Cancel" Click="OnCancelClick" />
                     </StackPanel>
                 </StackPanel>
             </Border>

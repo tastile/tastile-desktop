@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Execute.AttachMemo" xml:space="preserve"><value>メモを送信</value></data>
+  <data name="Execute.BreakLabel" xml:space="preserve"><value>休憩</value></data>
+  <data name="Execute.CompleteButton" xml:space="preserve"><value>完了</value></data>
+  <data name="Execute.Description" xml:space="preserve"><value>プロンプトはトースト通知に任せ、現在の集中ブロック・休憩・次のタイルを確認できます。</value></data>
+  <data name="Execute.EndBreakButton" xml:space="preserve"><value>休憩を終えて続行</value></data>
+  <data name="Execute.Heading" xml:space="preserve"><value>実行状況</value></data>
+  <data name="Execute.IdleLabel" xml:space="preserve"><value>アイドル</value></data>
+  <data name="Execute.IdleTitle" xml:space="preserve"><value>アクティブなタイルはありません</value></data>
+  <data name="Execute.QuickMemo" xml:space="preserve"><value>クイックメモ</value></data>
+  <data name="Execute.StartBreakButton" xml:space="preserve"><value>5分休憩を始める</value></data>
+  <data name="Execute.TitleBarHeading" xml:space="preserve"><value>実行</value></data>
+  <data name="Execute.WorkingLabel" xml:space="preserve"><value>作業中</value></data>
+  <data name="Execute_Title" xml:space="preserve"><value>実行</value></data>
+
+</root>

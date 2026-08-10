@@ -3,7 +3,8 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:viewModels="using:TastileDesktop.ViewModels"
-    Title="Tastile">
+    Title="Tastile"
+    x:Uid="MainWindow">
 
     <Grid Background="Transparent" Width="892" Height="88">
         <Border
@@ -28,10 +29,12 @@
                                Foreground="{ThemeResource PrimaryForegroundBrush}"
                                Text="{x:Bind ViewModel.MainCountdownText, Mode=OneWay}" />
                     <TextBlock x:Name="DateText"
+                               x:Uid="MainWindow_DateText"
                                FontSize="10" FontFamily="Consolas"
                                Foreground="{ThemeResource SecondaryForegroundBrush}"
                                Text="----/--/--" />
                     <TextBlock x:Name="ClockText"
+                               x:Uid="MainWindow_ClockText"
                                FontSize="10" FontFamily="Consolas"
                                Foreground="{ThemeResource SecondaryForegroundBrush}"
                                Text="--:--:--" />
@@ -185,37 +188,37 @@
                         <RowDefinition Height="Auto" />
                     </Grid.RowDefinitions>
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
-                        <Button x:Name="IntegrationsButton" Width="34" Height="28" Click="OnOpenIntegrationsWindowClick"
+                        <Button x:Name="IntegrationsButton" x:Uid="MainWindow_IntegrationsButton" Width="34" Height="28" Click="OnOpenIntegrationsWindowClick"
                                 ToolTipService.ToolTip="Integrations" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{x:Bind IntegrationsActionIconForegroundBrush, Mode=OneWay}" Glyph="&#xE774;" />
                         </Button>
-                        <Button x:Name="SettingsButton" Width="34" Height="28" Click="OnOpenSettingsWindowClick"
+                        <Button x:Name="SettingsButton" x:Uid="MainWindow_SettingsButton" Width="34" Height="28" Click="OnOpenSettingsWindowClick"
                                 ToolTipService.ToolTip="Settings" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE713;" />
                         </Button>
-                        <Button x:Name="PinButton" Width="34" Height="28" Click="OnPinClick"
+                        <Button x:Name="PinButton" x:Uid="MainWindow_PinButton" Width="34" Height="28" Click="OnPinClick"
                                 ToolTipService.ToolTip="Pin window" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="12" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE718;" />
                         </Button>
-                        <Button x:Name="HideButton" Width="34" Height="28" Click="OnHidePanelClick"
+                        <Button x:Name="HideButton" x:Uid="MainWindow_HideButton" Width="34" Height="28" Click="OnHidePanelClick"
                                 ToolTipService.ToolTip="Hide" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="11" Foreground="{ThemeResource TertiaryForegroundBrush}" Glyph="&#xE711;" />
                         </Button>
                     </StackPanel>
                     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,2,0,0">
-                        <Button x:Name="ExecuteButton" Width="34" Height="28" Click="OnOpenExecuteWindowClick"
+                        <Button x:Name="ExecuteButton" x:Uid="MainWindow_ExecuteButton" Width="34" Height="28" Click="OnOpenExecuteWindowClick"
                                 ToolTipService.ToolTip="Execute" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE768;" />
                         </Button>
-                        <Button x:Name="TilesButton" Width="34" Height="28" Click="OnOpenTilesWindowClick"
+                        <Button x:Name="TilesButton" x:Uid="MainWindow_TilesButton" Width="34" Height="28" Click="OnOpenTilesWindowClick"
                                 ToolTipService.ToolTip="Tiles" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE8A5;" />
                         </Button>
-                        <Button x:Name="TimelineButton" Width="34" Height="28" Click="OnOpenTimelineWindowClick"
+                        <Button x:Name="TimelineButton" x:Uid="MainWindow_TimelineButton" Width="34" Height="28" Click="OnOpenTimelineWindowClick"
                                 ToolTipService.ToolTip="Timeline" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{ThemeResource PrimaryForegroundBrush}" Glyph="&#xE787;" />
                         </Button>
-                        <Button x:Name="CreateTileButton" Width="34" Height="28" Click="OnOpenCreateTileWindowClick"
+                        <Button x:Name="CreateTileButton" x:Uid="MainWindow_CreateTileButton" Width="34" Height="28" Click="OnOpenCreateTileWindowClick"
                                 ToolTipService.ToolTip="Create Tile" Background="Transparent" BorderThickness="0" Padding="0">
                             <FontIcon FontFamily="Segoe Fluent Icons" FontSize="13" Foreground="{x:Bind CreateActionIconForegroundBrush, Mode=OneWay}" Glyph="&#xE710;" />
                         </Button>

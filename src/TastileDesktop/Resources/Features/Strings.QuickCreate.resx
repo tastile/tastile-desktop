@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="CreateTile.CancelButton" xml:space="preserve"><value>Cancel</value></data>
+  <data name="CreateTile.CompletionModeLabel" xml:space="preserve"><value>Completion mode</value></data>
+  <data name="CreateTile.CompletionModeNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="CreateTile.CompletionModeRecurring" xml:space="preserve"><value>Recurring</value></data>
+  <data name="CreateTile.DeleteButton" xml:space="preserve"><value>Delete</value></data>
+  <data name="CreateTile.DurationLabel" xml:space="preserve"><value>Duration</value></data>
+  <data name="CreateTile.EditPrimaryButton" xml:space="preserve"><value>Save</value></data>
+  <data name="CreateTile.EndButton" xml:space="preserve"><value>End</value></data>
+  <data name="CreateTile.FrequencyDaily" xml:space="preserve"><value>Daily</value></data>
+  <data name="CreateTile.FrequencyMonthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="CreateTile.FrequencyWeekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="CreateTile.Heading" xml:space="preserve"><value>Create Tile</value></data>
+  <data name="CreateTile.HoursLabel" xml:space="preserve"><value>Hours</value></data>
+  <data name="CreateTile.KindLabel" xml:space="preserve"><value>Kind</value></data>
+  <data name="CreateTile.KindLabelTile" xml:space="preserve"><value>Label</value></data>
+  <data name="CreateTile.KindTask" xml:space="preserve"><value>Task</value></data>
+  <data name="CreateTile.MaximizeButton" xml:space="preserve"><value>Maximize within interval</value></data>
+  <data name="CreateTile.MemoLabel" xml:space="preserve"><value>Memo</value></data>
+  <data name="CreateTile.MemoPlaceholder" xml:space="preserve"><value>Supplementary notes</value></data>
+  <data name="CreateTile.MinutesLabel" xml:space="preserve"><value>Minutes</value></data>
+  <data name="CreateTile.MonthlyWeek" xml:space="preserve"><value>Which week</value></data>
+  <data name="CreateTile.MonthlyWeekday" xml:space="preserve"><value>Weekday</value></data>
+  <data name="CreateTile.PrimaryButton" xml:space="preserve"><value>Create</value></data>
+  <data name="CreateTile.ProjectLabel" xml:space="preserve"><value>Project</value></data>
+  <data name="CreateTile.ProjectPlaceholder" xml:space="preserve"><value>Project name</value></data>
+  <data name="CreateTile.RecurrenceEndTime" xml:space="preserve"><value>End time</value></data>
+  <data name="CreateTile.RecurrencePrefix" xml:space="preserve"><value>Every</value></data>
+  <data name="CreateTile.RecurrenceStartTime" xml:space="preserve"><value>Start time</value></data>
+  <data name="CreateTile.RecurrenceSuffixDaily" xml:space="preserve"><value>day(s)</value></data>
+  <data name="CreateTile.RecurrenceSuffixMonthly" xml:space="preserve"><value>month(s)</value></data>
+  <data name="CreateTile.RecurrenceSuffixWeekly" xml:space="preserve"><value>week(s)</value></data>
+  <data name="CreateTile.RecurrenceValidFrom" xml:space="preserve"><value>Valid from</value></data>
+  <data name="CreateTile.RecurrenceValidTo" xml:space="preserve"><value>Valid until</value></data>
+  <data name="CreateTile.RecurrenceValidityLabel" xml:space="preserve"><value>Validity period</value></data>
+  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>Allow split</value></data>
+  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>Do not split</value></data>
+  <data name="CreateTile.SplitLabel" xml:space="preserve"><value>Split</value></data>
+  <data name="CreateTile.StartButton" xml:space="preserve"><value>Start</value></data>
+  <data name="CreateTile.TagLabel" xml:space="preserve"><value>Tags</value></data>
+  <data name="CreateTile.TagPlaceholder" xml:space="preserve"><value>Tag name</value></data>
+  <data name="CreateTile.TimingLabel" xml:space="preserve"><value>Run timing</value></data>
+  <data name="CreateTile.TitleLabel" xml:space="preserve"><value>Title</value></data>
+  <data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>Work 25 min</value></data>
+  <data name="CreateTile.WeekdayFri" xml:space="preserve"><value>Fri</value></data>
+  <data name="CreateTile.WeekdayMon" xml:space="preserve"><value>Mon</value></data>
+  <data name="CreateTile.WeekdaySat" xml:space="preserve"><value>Sat</value></data>
+  <data name="CreateTile.WeekdaySun" xml:space="preserve"><value>Sun</value></data>
+  <data name="CreateTile.WeekdayThu" xml:space="preserve"><value>Thu</value></data>
+  <data name="CreateTile.WeekdayTue" xml:space="preserve"><value>Tue</value></data>
+  <data name="CreateTile.WeekdayWed" xml:space="preserve"><value>Wed</value></data>
+  <data name="CreateTile_CreateFailed" xml:space="preserve"><value>Failed to create tile.</value></data>
+  <data name="CreateTile_CreateFailedWithMessage" xml:space="preserve"><value>Failed to create tile: {0}</value></data>
+  <data name="CreateTile_DeleteFailed" xml:space="preserve"><value>Failed to delete tile.</value></data>
+  <data name="CreateTile_EditHeading" xml:space="preserve"><value>Edit Tile</value></data>
+  <data name="CreateTile_EditTitle" xml:space="preserve"><value>Edit Tile</value></data>
+  <data name="CreateTile_ErrorPrefix" xml:space="preserve"><value>Error: {0}</value></data>
+  <data name="CreateTile_NoResponse" xml:space="preserve"><value>Daemon did not return a response.</value></data>
+  <data name="CreateTile_ProjectCreateNew" xml:space="preserve"><value>Create "{0}"</value></data>
+  <data name="CreateTile_QuotaCheckException" xml:space="preserve"><value>Failed to validate tile limit: {0}</value></data>
+  <data name="CreateTile_QuotaCheckFailed" xml:space="preserve"><value>Could not verify tile limit.</value></data>
+  <data name="CreateTile_QuotaLimitReached" xml:space="preserve"><value>Free plan limit reached (100 tiles). Archive tiles or upgrade your plan.</value></data>
+  <data name="CreateTile_TagCreateNew" xml:space="preserve"><value>Add new #{0}</value></data>
+  <data name="CreateTile_Title" xml:space="preserve"><value>Create Tile</value></data>
+  <data name="CreateTile_UpdateFailed" xml:space="preserve"><value>Failed to update tile.</value></data>
+  <data name="CreateTile_UpdateFailedWithMessage" xml:space="preserve"><value>Failed to update tile: {0}</value></data>
+  <data name="CreateTile_ValidationDurationRequired" xml:space="preserve"><value>Duration is required when start or end is specified.</value></data>
+  <data name="CreateTile_ValidationRecurrenceEndAfterStart" xml:space="preserve"><value>Recurring end time must be after start time.</value></data>
+  <data name="CreateTile_ValidationRecurrenceIntervalMin" xml:space="preserve"><value>Recurrence interval must be at least 1.</value></data>
+  <data name="CreateTile_ValidationStartEndOrder" xml:space="preserve"><value>Check the start and end order.</value></data>
+  <data name="CreateTile_ValidationTitleRequired" xml:space="preserve"><value>Enter a title.</value></data>
+
+</root>

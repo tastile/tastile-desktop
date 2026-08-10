@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Models;
+using TastileDesktop.Resources;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 
@@ -30,7 +31,6 @@ public sealed partial class CreateTileWindow : Window
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
         refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
-    private readonly bool _isJapanese = CreateTileParityResolver.IsJapanese();
     private readonly string? _editTileId;
     private CreateTileCatalog _catalog = new([], [], []);
     private readonly HashSet<int> _recurrenceWeekdays = [];
@@ -388,6 +388,12 @@ public sealed partial class CreateTileWindow : Window
         btn.IsChecked = active;
     }
 
+    // Gate-time helper: CreateTileParityResolver still needs a boolean to
+    // format API-side strings (suggested title + conflict prompt body). UI
+    // text in this window goes through Strings.Get() directly so it tracks
+    // the live UICulture.
+    private static bool IsJapanese() => CreateTileParityResolver.IsJapanese();
+
     private void WireDynamicHandlers()
     {
         TitleTextBox.TextChanged += OnTitleTextChanged;
@@ -415,9 +421,19 @@ public sealed partial class CreateTileWindow : Window
 
     private void InitTabSelectors()
     {
-        KindSelector.ItemsSource = new[] { "タスク", "ラベル" };
-        ModeSelector.ItemsSource = new[] { "通常", "定期" };
-        FreqSelector.ItemsSource = new[] { "日次", "週次", "月次" };
+        KindSelector.ItemsSource = new[] {
+            Strings.Get("CreateTile.KindTask.Content"),
+            Strings.Get("CreateTile.KindLabelTile.Content"),
+        };
+        ModeSelector.ItemsSource = new[] {
+            Strings.Get("CreateTile.CompletionModeNormal.Content"),
+            Strings.Get("CreateTile.CompletionModeRecurring.Content"),
+        };
+        FreqSelector.ItemsSource = new[] {
+            Strings.Get("CreateTile.FrequencyDaily.Content"),
+            Strings.Get("CreateTile.FrequencyWeekly.Content"),
+            Strings.Get("CreateTile.FrequencyMonthly.Content"),
+        };
     }
 
     private async Task LoadCatalogAsync()
@@ -466,9 +482,9 @@ public sealed partial class CreateTileWindow : Window
         _recurrenceFrequency = index switch { 1 => "weekly", 2 => "monthly", _ => "daily" };
         RecurrenceSuffixText.Text = _recurrenceFrequency switch
         {
-            "weekly" => "週ごと",
-            "monthly" => "か月ごと",
-            _ => "日ごと",
+            "weekly" => Strings.Get("CreateTile.RecurrenceSuffixWeekly.Text"),
+            "monthly" => Strings.Get("CreateTile.RecurrenceSuffixMonthly.Text"),
+            _ => Strings.Get("CreateTile.RecurrenceSuffixDaily.Text"),
         };
         WeeklyDaysGrid.Visibility = _recurrenceFrequency == "weekly" ? Visibility.Visible : Visibility.Collapsed;
         MonthlyPatternGrid.Visibility = _recurrenceFrequency == "monthly" ? Visibility.Visible : Visibility.Collapsed;
@@ -608,7 +624,7 @@ public sealed partial class CreateTileWindow : Window
 
     private void RefreshSuggestedTitle()
     {
-        var suggestion = CreateTileParityResolver.GetSuggestedTitle(BuildDraft(), _isJapanese);
+        var suggestion = CreateTileParityResolver.GetSuggestedTitle(BuildDraft(), IsJapanese());
         _suggestedTitle = suggestion;
         TitleTextBox.PlaceholderText = suggestion;
         if (_titleEdited) return;
@@ -673,7 +689,7 @@ public sealed partial class CreateTileWindow : Window
             .Where(project => project.Contains(query, StringComparison.CurrentCultureIgnoreCase))
             .Take(8)
             .ToList();
-        PopulateDropdownPanel(ProjectSuggestionPanel, ProjectSuggestionBorder, items, CommitProjectSelection, _projectInputFocused, query, _isJapanese ? $"新規作成: {query}" : $"Create \"{query}\"");
+        PopulateDropdownPanel(ProjectSuggestionPanel, ProjectSuggestionBorder, items, CommitProjectSelection, _projectInputFocused, query, string.Format(Strings.Get("CreateTile_ProjectCreateNew"), query));
     }
 
     private void RefreshTagSuggestions()
@@ -684,7 +700,7 @@ public sealed partial class CreateTileWindow : Window
             .Where(tag => !CurrentTags().Contains(tag, StringComparer.CurrentCultureIgnoreCase))
             .Take(8)
             .ToList();
-        PopulateDropdownPanel(TagSuggestionPanel, TagSuggestionBorder, items, AddTag, _tagInputFocused, query, _isJapanese ? $"新規追加: #{query}" : $"Add new #{query}", "#");
+        PopulateDropdownPanel(TagSuggestionPanel, TagSuggestionBorder, items, AddTag, _tagInputFocused, query, string.Format(Strings.Get("CreateTile_TagCreateNew"), query), "#");
     }
 
     private void PopulateDropdownPanel(Panel panel, FrameworkElement host, IReadOnlyList<string> items, Action<string> onClick, bool isFocused, string query, string createLabel, string prefix = "")
@@ -749,7 +765,7 @@ public sealed partial class CreateTileWindow : Window
     {
         var draft = BuildDraft();
         var title = string.IsNullOrWhiteSpace(draft.Title)
-            ? CreateTileParityResolver.GetSuggestedTitle(draft, _isJapanese)
+            ? CreateTileParityResolver.GetSuggestedTitle(draft, IsJapanese())
             : draft.Title.Trim();
         var workMinutes = ((draft.WorkHours ?? 0) * 60) + (draft.WorkMinutes ?? 0);
         var hasAnyTemporalConstraint = draft.UseStartAt || draft.UseEndAt;
@@ -758,7 +774,7 @@ public sealed partial class CreateTileWindow : Window
         if (draft.UseStartAt && draft.UseEndAt && draft.StartAt.HasValue && draft.EndAt.HasValue && draft.EndAt <= draft.StartAt)
         {
             request = null!;
-            ShowError(_isJapanese ? "日時の前後関係を確認してください。" : "Check the start and end order.");
+            ShowError(Strings.Get("CreateTile_ValidationStartEndOrder"));
             return false;
         }
 
@@ -768,33 +784,33 @@ public sealed partial class CreateTileWindow : Window
             && draft.RecurrenceEndTime <= draft.RecurrenceStartTime)
         {
             request = null!;
-            ShowError(_isJapanese ? "定期実行の終了時刻は開始時刻より後にしてください。" : "Recurring end time must be after start time.");
+            ShowError(Strings.Get("CreateTile_ValidationRecurrenceEndAfterStart"));
             return false;
         }
 
         if (draft.ObjectiveMode == "recurring" && draft.RecurrenceInterval <= 0)
         {
             request = null!;
-            ShowError(_isJapanese ? "定期実行の間隔は 1 以上にしてください。" : "Recurrence interval must be at least 1.");
+            ShowError(Strings.Get("CreateTile_ValidationRecurrenceIntervalMin"));
             return false;
         }
 
         if (draft.TileKind == "work" && !isRecurring && hasAnyTemporalConstraint && workMinutes <= 0)
         {
             request = null!;
-            ShowError(_isJapanese ? "開始または終了を指定した場合は所要時間が必要です。" : "Duration is required when start or end is specified.");
+            ShowError(Strings.Get("CreateTile_ValidationDurationRequired"));
             return false;
         }
 
         if (string.IsNullOrWhiteSpace(title))
         {
             request = null!;
-            ShowError(_isJapanese ? "タイトルを入力してください。" : "Enter a title.");
+            ShowError(Strings.Get("CreateTile_ValidationTitleRequired"));
             return false;
         }
 
         ErrorTextBlock.Visibility = Visibility.Collapsed;
-        request = CreateTileParityResolver.BuildRequest(draft with { Title = title }, _isJapanese);
+        request = CreateTileParityResolver.BuildRequest(draft with { Title = title }, IsJapanese());
         return true;
     }
 
@@ -856,7 +872,7 @@ public sealed partial class CreateTileWindow : Window
     private void PopulateMonthlyWeekdayOptions()
     {
         MonthlyWeekdayComboBox.Items.Clear();
-        var labels = _isJapanese
+        var labels = IsJapanese()
             ? new[] { "日", "月", "火", "水", "木", "金", "土" }
             : new[] { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
         foreach (var label in labels) MonthlyWeekdayComboBox.Items.Add(new ComboBoxItem { Content = label });
@@ -929,7 +945,7 @@ public sealed partial class CreateTileWindow : Window
 
     private void ApplyWindowTextContract(bool isEditMode)
     {
-        var contract = CreateTileWindowContractResolver.ResolveWindowText(isEditMode, _isJapanese);
+        var contract = CreateTileWindowContractResolver.ResolveWindowText(isEditMode, IsJapanese());
         Title = contract.WindowTitle;
         HeadingTextBlock.Text = contract.HeadingText;
         CreateButton.Content = contract.PrimaryButtonText;
@@ -948,15 +964,13 @@ public sealed partial class CreateTileWindow : Window
             var quota = await _api.GetTileQuotaAsync();
             if (quota == null)
             {
-                ShowError(_isJapanese ? "タイル上限を確認できませんでした。" : "Could not verify tile limit.");
+                ShowError(Strings.Get("CreateTile_QuotaCheckFailed"));
                 return false;
             }
 
             if (quota.LimitReached)
             {
-                ShowError(_isJapanese
-                    ? "無料プランの上限（100タイル）に達しました。不要なタイルを整理するか、プランをアップグレードしてください。"
-                    : "Free plan limit reached (100 tiles). Archive tiles or upgrade your plan.");
+                ShowError(Strings.Get("CreateTile_QuotaLimitReached"));
                 return false;
             }
 
@@ -964,7 +978,7 @@ public sealed partial class CreateTileWindow : Window
         }
         catch (Exception ex)
         {
-            ShowError((_isJapanese ? "タイル上限の確認に失敗しました: " : "Failed to validate tile limit: ") + ex.Message);
+            ShowError(string.Format(Strings.Get("CreateTile_QuotaCheckException"), ex.Message));
             return false;
         }
     }
@@ -979,13 +993,11 @@ public sealed partial class CreateTileWindow : Window
             var result = isEdit
                 ? await _api.UpdateTileAsync(_editTileId!, request)
                 : await TryCreateWithConflictResolutionAsync(request);
-            if (result == null) { ShowError(_isJapanese ? "Daemon から応答がありません。" : "Daemon did not return a response."); return; }
+            if (result == null) { ShowError(Strings.Get("CreateTile_NoResponse")); return; }
             if (!result.Ok && string.Equals(result.Error, CreateCanceledErrorCode, StringComparison.Ordinal)) { return; }
             if (!result.Ok)
             {
-                ShowError(result.Error ?? (_isJapanese
-                    ? (isEdit ? "タイルの更新に失敗しました。" : "タイルの作成に失敗しました。")
-                    : (isEdit ? "Failed to update tile." : "Failed to create tile.")));
+                ShowError(result.Error ?? Strings.Get(isEdit ? "CreateTile_UpdateFailed" : "CreateTile_CreateFailed"));
                 return;
             }
 
@@ -995,9 +1007,9 @@ public sealed partial class CreateTileWindow : Window
         catch (Exception ex)
         {
             var prefix = _editTileId is null
-                ? (_isJapanese ? "タイルの作成に失敗しました: " : "Failed to create tile: ")
-                : (_isJapanese ? "タイルの更新に失敗しました: " : "Failed to update tile: ");
-            ShowError(prefix + ex.Message);
+                ? string.Format(Strings.Get("CreateTile_CreateFailedWithMessage"), ex.Message)
+                : string.Format(Strings.Get("CreateTile_UpdateFailedWithMessage"), ex.Message);
+            ShowError(prefix);
         }
     }
 
@@ -1018,7 +1030,7 @@ public sealed partial class CreateTileWindow : Window
 
         if (string.Equals(choice, "manual_adjust", StringComparison.OrdinalIgnoreCase))
         {
-            var guidance = CreateTileParityResolver.GetManualAdjustGuidance(request, _isJapanese);
+            var guidance = CreateTileParityResolver.GetManualAdjustGuidance(request, IsJapanese());
             ApplyManualAdjustGuidance(guidance);
             return new CommandResponse(false, [], null, result.Prompt, guidance.Message);
         }
@@ -1029,7 +1041,7 @@ public sealed partial class CreateTileWindow : Window
 
     private async Task<string?> ShowConflictResolutionToastAsync(CreateConflictPrompt prompt)
     {
-        var toastPrompt = CreateTileParityResolver.BuildCreateConflictToastPrompt(prompt, _isJapanese);
+        var toastPrompt = CreateTileParityResolver.BuildCreateConflictToastPrompt(prompt, IsJapanese());
         var completion = new TaskCompletionSource<string?>();
 
         _promptToast.ShowPrompt(
@@ -1104,12 +1116,12 @@ public sealed partial class CreateTileWindow : Window
             }
             else
             {
-                ShowError(_isJapanese ? "タイルの削除に失敗しました。" : "Failed to delete tile.");
+                ShowError(Strings.Get("CreateTile_DeleteFailed"));
             }
         }
         catch (Exception ex)
         {
-            ShowError((_isJapanese ? "エラー: " : "Error: ") + ex.Message);
+            ShowError(string.Format(Strings.Get("CreateTile_ErrorPrefix"), ex.Message));
         }
     }
 }

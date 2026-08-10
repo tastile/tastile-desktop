@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Settings_LanguageChinese" xml:space="preserve"><value>中文</value></data>
+  <data name="Settings_LanguageDescription" xml:space="preserve"><value>Elija el idioma de Tastile. Los cambios se aplican tras reiniciar.</value></data>
+  <data name="Settings_LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_LanguageHeading" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Settings_LanguageJapanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Settings_LanguageKorean" xml:space="preserve"><value>한국어</value></data>
+  <data name="Settings_LanguageLabel" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Settings_LanguageRestartHint" xml:space="preserve"><value>Reinicie Tastile para aplicar el nuevo idioma.</value></data>
+  <data name="Settings_LanguageSpanish" xml:space="preserve"><value>Español</value></data>
+
+</root>

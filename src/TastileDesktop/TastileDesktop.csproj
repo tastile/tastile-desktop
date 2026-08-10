@@ -22,7 +22,141 @@
     <WindowsPackageType>None</WindowsPackageType>
     <ApplicationIcon>Assets\tastile.ico</ApplicationIcon>
     <EnableTimelineConnectorValidation>true</EnableTimelineConnectorValidation>
+    <NeutralResourcesLanguage>en</NeutralResourcesLanguage>
+    <SatelliteResourceLanguages>en;ja;zh-CN;ko;es</SatelliteResourceLanguages>
   </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Resources\App\Strings.Common.resx">
+      <Generator>PublicResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+      <StronglyTypedNamePrefix>TastileDesktop.Resources</StronglyTypedNamePrefix>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Common.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="Resources\Strings.Designer.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250310001" />

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Intervention.CompleteButton" xml:space="preserve"><value>完了</value></data>
+  <data name="Intervention.EndBreakButton" xml:space="preserve"><value>休憩を終わって続行</value></data>
+  <data name="Intervention.Heading" xml:space="preserve"><value>操作が必要です</value></data>
+  <data name="Intervention_BreakButton" xml:space="preserve"><value>休憩する (5分)</value></data>
+  <data name="Intervention_BreakOver" xml:space="preserve"><value>休憩時間が終わりました。</value></data>
+  <data name="Intervention_ChooseNext" xml:space="preserve"><value>次のタイルを選んでください</value></data>
+  <data name="Intervention_ContinueButton" xml:space="preserve"><value>続ける (25分)</value></data>
+  <data name="Intervention_CreateNewButton" xml:space="preserve"><value>新しいタイルを作成</value></data>
+  <data name="Intervention_Footer" xml:space="preserve"><value>このダイアログは項目を選ぶまで画面に表示され続けます。</value></data>
+  <data name="Intervention_NoReadyTiles" xml:space="preserve"><value>Ready なタイルがありません。新しいタイルを作成してください。</value></data>
+  <data name="Intervention_ReadyTilesHint" xml:space="preserve"><value>Ready なタイル</value></data>
+  <data name="Intervention_Title" xml:space="preserve"><value>Tastile - 操作が必要です</value></data>
+  <data name="Intervention_WorkMessage" xml:space="preserve"><value>25 分間作業を続けました。</value></data>
+
+</root>

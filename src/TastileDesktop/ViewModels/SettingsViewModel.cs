@@ -53,6 +53,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private SolidColorBrush _accentBrush = new(Colors.Transparent);
     private SolidColorBrush _windowsAccentBrush = new(Colors.Transparent);
     private SolidColorBrush _uiAccentBrush = new(Colors.Transparent);
+    private string _selectedLanguageTag = "en";
 
     public string AccentColorMode
     {
@@ -150,6 +151,12 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         get => _uiAccentBrush;
         set => SetProperty(ref _uiAccentBrush, value);
+    }
+
+    public string SelectedLanguageTag
+    {
+        get => _selectedLanguageTag;
+        set => SetProperty(ref _selectedLanguageTag, value);
     }
 
     public string QuickPanelVerticalPosition
@@ -372,6 +379,8 @@ public sealed partial class SettingsViewModel : ObservableObject
         SecurityLockEnabled = current.SecurityLockEnabled;
         SecurityLockTimeoutMinutes = current.SecurityLockTimeoutMinutes;
         QuickPanelVerticalPosition = current.QuickPanelVerticalPosition;
+        _selectedLanguageTag = NormalizeLanguageTag(Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride);
+        OnPropertyChanged(nameof(SelectedLanguageTag));
         UpdateSystemAppearance(SystemAppearanceService.Instance.GetCurrentSnapshot());
     }
 
@@ -459,5 +468,16 @@ public sealed partial class SettingsViewModel : ObservableObject
         {
             System.Diagnostics.Debug.WriteLine($"Startup task registration failed: {ex.Message}");
         }
+    }
+
+    private static string NormalizeLanguageTag(string? tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag)) return "en";
+        var trimmed = tag.Trim();
+        return trimmed switch
+        {
+            "en" or "ja" or "zh-CN" or "ko" or "es" => trimmed,
+            _ => "en",
+        };
     }
 }

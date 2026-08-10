@@ -5,6 +5,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
+    x:Uid="Settings"
     Title="Settings">
 
     <Grid Background="{StaticResource AppBackgroundBrush}">
@@ -14,14 +15,14 @@
         </Grid.RowDefinitions>
 
         <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="Transparent">
-            <TextBlock Text="Settings" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+            <TextBlock x:Uid="Settings_TitleBarHeading" Text="Settings" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
         </Grid>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel Padding="32" Spacing="24" MaxWidth="720">
                 <StackPanel Spacing="6">
-                    <TextBlock Text="Windows appearance" Style="{ThemeResource TitleLargeTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
-                    <TextBlock Text="Tastile follows the appearance and accessibility choices of the current Windows user." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+                    <TextBlock x:Uid="Settings_AppearanceHeading" Text="Windows appearance" Style="{ThemeResource TitleLargeTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_AppearanceDescription" Text="Tastile follows the appearance and accessibility choices of the current Windows user." Style="{ThemeResource BodyTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
                 <Border CornerRadius="0" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1">
@@ -29,8 +30,8 @@
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="App theme" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                <TextBlock Text="Derived from Windows app appearance." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                                <TextBlock x:Uid="Settings_AppTheme" Text="App theme" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="Settings_AppThemeDescription" Text="Derived from Windows app appearance." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
                             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.AppThemeSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
@@ -38,8 +39,8 @@
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="System theme" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                <TextBlock Text="Shell theme used by Windows itself." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                                <TextBlock x:Uid="Settings_SystemTheme" Text="System theme" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="Settings_SystemThemeDescription" Text="Shell theme used by Windows itself." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
                             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.SystemThemeSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
@@ -47,8 +48,8 @@
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="App accent color" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                <TextBlock Text="The accent currently used by Tastile after source selection." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                                <TextBlock x:Uid="Settings_AppAccentColor" Text="App accent color" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="Settings_AppAccentColorDescription" Text="The accent currently used by Tastile after source selection." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
                                 <Ellipse Width="16" Height="16" Fill="{x:Bind ViewModel.AccentBrush, Mode=OneWay}" Stroke="{StaticResource AppBorderBrush}" />
@@ -59,8 +60,8 @@
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Windows accent" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                <TextBlock Text="Accent color selected in Personalization > Colors." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                                <TextBlock x:Uid="Settings_WindowsAccent" Text="Windows accent" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="Settings_WindowsAccentDescription" Text="Accent color selected in Personalization &gt; Colors." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
                                 <Ellipse Width="16" Height="16" Fill="{x:Bind ViewModel.WindowsAccentBrush, Mode=OneWay}" Stroke="{StaticResource AppBorderBrush}" />
@@ -71,8 +72,8 @@
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Windows UI accent" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                                <TextBlock Text="Accent exposed by the shell UI APIs. Some devices report a different highlight color here." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                                <TextBlock x:Uid="Settings_WindowsUiAccent" Text="Windows UI accent" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                                <TextBlock x:Uid="Settings_WindowsUiAccentDescription" Text="Accent exposed by the shell UI APIs. Some devices report a different highlight color here." Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center" HorizontalAlignment="Right">
                                 <Ellipse Width="16" Height="16" Fill="{x:Bind ViewModel.UiAccentBrush, Mode=OneWay}" Stroke="{StaticResource AppBorderBrush}" />
@@ -82,32 +83,32 @@
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
-                            <TextBlock Text="Transparency effects" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Uid="Settings_TransparencyEffects" Text="Transparency effects" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TransparencySummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
-                            <TextBlock Text="Animations" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Uid="Settings_Animations" Text="Animations" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.AnimationsSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
-                            <TextBlock Text="High contrast" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Uid="Settings_HighContrast" Text="High contrast" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.HighContrastSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                         <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
                         <Grid Padding="16,14" ColumnSpacing="16">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="240" /></Grid.ColumnDefinitions>
-                            <TextBlock Text="Taskbar alignment" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Uid="Settings_TaskbarAlignment" Text="Taskbar alignment" Style="{ThemeResource BodyStrongTextBlockStyle}" />
                             <TextBlock Grid.Column="1" Text="{x:Bind ViewModel.TaskbarAlignmentSummary, Mode=OneWay}" VerticalAlignment="Center" HorizontalAlignment="Right" Foreground="{StaticResource AppForegroundMutedBrush}" />
                         </Grid>
                     </StackPanel>
                 </Border>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Accent color" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_AccentColorHeading" Text="Accent color" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <Grid ColumnSpacing="12">
@@ -115,29 +116,29 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Accent source" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_AccentSource" Text="Accent source" VerticalAlignment="Center" />
                         <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.AccentColorMode, Mode=TwoWay}" HorizontalAlignment="Right">
-                            <ComboBoxItem Content="Follow Windows accent" Tag="windows-accent" />
-                            <ComboBoxItem Content="Follow Windows UI accent" Tag="windows-ui-accent" />
-                            <ComboBoxItem Content="Use Tastile default blue" Tag="default" />
-                            <ComboBoxItem Content="Manual hex color" Tag="manual" />
+                            <ComboBoxItem x:Uid="Settings_AccentSourceWindowsAccent" Content="Follow Windows accent" Tag="windows-accent" />
+                            <ComboBoxItem x:Uid="Settings_AccentSourceWindowsUiAccent" Content="Follow Windows UI accent" Tag="windows-ui-accent" />
+                            <ComboBoxItem x:Uid="Settings_AccentSourceDefault" Content="Use Tastile default blue" Tag="default" />
+                            <ComboBoxItem x:Uid="Settings_AccentSourceManual" Content="Manual hex color" Tag="manual" />
                         </ComboBox>
                     </Grid>
-                    <TextBlock Text="Use the Windows accent from Personalization by default, or switch to a manual color at any time." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_AccentSourceHelp" Text="Use the Windows accent from Personalization by default, or switch to a manual color at any time." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0" Visibility="{x:Bind ViewModel.ManualAccentVisibility, Mode=OneWay}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Manual accent" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_ManualAccent" Text="Manual accent" VerticalAlignment="Center" />
                         <TextBox Grid.Column="1" Width="160" Text="{x:Bind ViewModel.CustomAccentColorHex, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" PlaceholderText="#0078D4" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Accepts #RRGGBB or #AARRGGBB. Invalid values fall back to the Windows accent." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" Visibility="{x:Bind ViewModel.ManualAccentVisibility, Mode=OneWay}" />
+                    <TextBlock x:Uid="Settings_ManualAccentHelp" Text="Accepts #RRGGBB or #AARRGGBB. Invalid values fall back to the Windows accent." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" Visibility="{x:Bind ViewModel.ManualAccentVisibility, Mode=OneWay}" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Notifications" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_NotificationsHeading" Text="Notifications" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <Grid ColumnSpacing="12">
@@ -145,120 +146,120 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Toast reminder" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_ToastReminder" Text="Toast reminder" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.ToastNotifyMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_MinutesAfterWorkStarts" Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Force intervention" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_ForceIntervention" Text="Force intervention" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionMinutes, Mode=TwoWay}" Minimum="1" Maximum="120" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_MinutesAfterWorkStarts" Text="minutes after work starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Repeat intervention" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_RepeatIntervention" Text="Repeat intervention" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.InterventionRepeatMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="minutes after dismissed" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_MinutesAfterDismissed" Text="minutes after dismissed" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast stack" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastStack" Text="Prompt toast stack" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Show a stacked prompt notification window near the top-center edge of the primary display" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptToastStackHelp" Text="Show a stacked prompt notification window near the top-center edge of the primary display" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast max stack" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastMaxStack" Text="Prompt toast max stack" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastMaxVisible, Mode=TwoWay}" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Visible cards at once. New prompts stay on top and older ones wait underneath." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptToastMaxStackHelp" Text="Visible cards at once. New prompts stay on top and older ones wait underneath." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast display" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastDisplay" Text="Prompt toast display" VerticalAlignment="Center" />
                         <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastDisplayMode, Mode=TwoWay}" HorizontalAlignment="Right">
-                            <ComboBoxItem Content="Primary display" Tag="primary-display" />
-                            <ComboBoxItem Content="Display with active window" Tag="active-window-display" />
-                            <ComboBoxItem Content="All displays" Tag="all-displays" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastDisplayPrimary" Content="Primary display" Tag="primary-display" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastDisplayActiveWindow" Content="Display with active window" Tag="active-window-display" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastDisplayAll" Content="All displays" Tag="all-displays" />
                         </ComboBox>
                     </Grid>
-                    <TextBlock Text="Choose whether the full prompt toast lives on one display or mirrors across all displays." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptToastDisplayHelp" Text="Choose whether the full prompt toast lives on one display or mirrors across all displays." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast position" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastPosition" Text="Prompt toast position" VerticalAlignment="Center" />
                         <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastAnchor, Mode=TwoWay}" HorizontalAlignment="Right">
-                            <ComboBoxItem Content="Top center" Tag="top-center" />
-                            <ComboBoxItem Content="Top right" Tag="top-right" />
-                            <ComboBoxItem Content="Top left" Tag="top-left" />
-                            <ComboBoxItem Content="Bottom right" Tag="bottom-right" />
-                            <ComboBoxItem Content="Bottom left" Tag="bottom-left" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastPositionTopCenter" Content="Top center" Tag="top-center" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastPositionTopRight" Content="Top right" Tag="top-right" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastPositionTopLeft" Content="Top left" Tag="top-left" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastPositionBottomRight" Content="Bottom right" Tag="bottom-right" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastPositionBottomLeft" Content="Bottom left" Tag="bottom-left" />
                         </ComboBox>
                     </Grid>
-                    <TextBlock Text="Anchor the main prompt toast to a corner of the chosen display work area." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptToastPositionHelp" Text="Anchor the main prompt toast to a corner of the chosen display work area." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Mirror simplified notifications" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_MirrorSimplified" Text="Mirror simplified notifications" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastMirrorSecondaryDisplays, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="When enabled with All displays, other monitors show a reduced prompt card with only the title and queue count." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_MirrorSimplifiedHelp" Text="When enabled with All displays, other monitors show a reduced prompt card with only the title and queue count." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Animate prompt toast" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_AnimatePromptToast" Text="Animate prompt toast" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastAnimate, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Fade the prompt toast stack in when it appears. Disabled automatically if Windows animations are turned off." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_AnimatePromptToastHelp" Text="Fade the prompt toast stack in when it appears. Disabled automatically if Windows animations are turned off." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast sound" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastSound" Text="Prompt toast sound" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptToastSoundEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Play a short attention sound whenever a prompt toast appears" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptToastSoundHelp" Text="Play a short attention sound whenever a prompt toast appears" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast sound source" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastSoundSource" Text="Prompt toast sound source" VerticalAlignment="Center" />
                         <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastSoundSource, Mode=TwoWay}" HorizontalAlignment="Right">
-                            <ComboBoxItem Content="System beep" Tag="system-beep" />
-                            <ComboBoxItem Content="Custom audio file" Tag="custom-file" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastSoundSourceSystemBeep" Content="System beep" Tag="system-beep" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastSoundSourceCustomFile" Content="Custom audio file" Tag="custom-file" />
                         </ComboBox>
                     </Grid>
 
@@ -267,10 +268,10 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast sound repeat mode" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastSoundRepeatMode" Text="Prompt toast sound repeat mode" VerticalAlignment="Center" />
                         <ComboBox Grid.Column="1" Width="160" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.PromptToastSoundPlaybackMode, Mode=TwoWay}" HorizontalAlignment="Right">
-                            <ComboBoxItem Content="Fixed repeat count" Tag="fixed-count" />
-                            <ComboBoxItem Content="Until prompt response" Tag="until-prompt-response" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastSoundRepeatModeFixedCount" Content="Fixed repeat count" Tag="fixed-count" />
+                            <ComboBoxItem x:Uid="Settings_PromptToastSoundRepeatModeUntilResponse" Content="Until prompt response" Tag="until-prompt-response" />
                         </ComboBox>
                     </Grid>
 
@@ -279,14 +280,14 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Custom sound file" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_CustomSoundFile" Text="Custom sound file" VerticalAlignment="Center" />
                         <Grid Grid.Column="1" ColumnSpacing="8" HorizontalAlignment="Right">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBox Width="148" Text="{x:Bind ViewModel.PromptToastSoundFilePath, Mode=TwoWay}" PlaceholderText="C:\path\to\sound.mp3" />
-                            <Button Grid.Column="1" Content="Browse" Click="OnBrowsePromptToastSoundFileClick" />
+                            <TextBox Width="148" Text="{x:Bind ViewModel.PromptToastSoundFilePath, Mode=TwoWay}" x:Uid="Settings_CustomSoundFilePlaceholder" PlaceholderText="C:\path\to\sound.mp3" />
+                            <Button Grid.Column="1" x:Uid="Settings_BrowseButton" Content="Browse" Click="OnBrowsePromptToastSoundFileClick" />
                         </Grid>
                     </Grid>
 
@@ -295,69 +296,69 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast sound length" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastSoundLength" Text="Prompt toast sound length" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastSoundDurationSeconds, Mode=TwoWay}" Minimum="1" Maximum="30" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="seconds per playback" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptToastSoundLengthHelp" Text="seconds per playback" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast repeat interval" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastRepeatInterval" Text="Prompt toast repeat interval" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastSoundRepeatIntervalSeconds, Mode=TwoWay}" Minimum="1" Maximum="30" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="seconds between playbacks" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptToastRepeatIntervalHelp" Text="seconds between playbacks" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0" Visibility="{x:Bind ViewModel.PromptToastFixedCountSettingsVisibility, Mode=OneWay}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt toast repeat" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptToastRepeat" Text="Prompt toast repeat" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptToastSoundRepeatCount, Mode=TwoWay}" Minimum="1" Maximum="10" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="times per prompt toast event" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" Visibility="{x:Bind ViewModel.PromptToastFixedCountSettingsVisibility, Mode=OneWay}" />
+                    <TextBlock x:Uid="Settings_PromptToastRepeatHelp" Text="times per prompt toast event" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" Visibility="{x:Bind ViewModel.PromptToastFixedCountSettingsVisibility, Mode=OneWay}" />
 
-                    <Button Content="Test prompt toast sound" Click="OnTestPromptToastSoundClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
-                    <Button Content="Test prompt toast" Click="OnTestPromptToastClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
+                    <Button x:Uid="Settings_TestPromptToastSound" Content="Test prompt toast sound" Click="OnTestPromptToastSoundClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
+                    <Button x:Uid="Settings_TestPromptToast" Content="Test prompt toast" Click="OnTestPromptToastClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,16,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Prompt edge overlay" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_PromptEdgeOverlay" Text="Prompt edge overlay" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptOverlayEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Show a thin accent border around each display when a new prompt appears" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_PromptEdgeOverlayHelp" Text="Show a thin accent border around each display when a new prompt appears" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Overlay duration" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_OverlayDuration" Text="Overlay duration" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.PromptOverlayDurationSeconds, Mode=TwoWay}" Minimum="1" Maximum="15" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="seconds" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_OverlayDurationHelp" Text="seconds" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Suppress in fullscreen apps" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_SuppressFullscreen" Text="Suppress in fullscreen apps" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.PromptOverlaySuppressFullscreen, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Skip the overlay when another app occupies the full monitor, such as games or video playback" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_SuppressFullscreenHelp" Text="Skip the overlay when another app occupies the full monitor, such as games or video playback" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
-                    <Button Content="Test overlay" Click="OnTestPromptOverlayClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
+                    <Button x:Uid="Settings_TestOverlay" Content="Test overlay" Click="OnTestPromptOverlayClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Breaks" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_BreaksHeading" Text="Breaks" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <Grid ColumnSpacing="12">
@@ -365,24 +366,24 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Default break time" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_DefaultBreakTime" Text="Default break time" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.DefaultBreakMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_Minutes" Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
 
                     <Grid ColumnSpacing="12" Margin="0,8,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Idle prompt after" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_IdlePromptAfter" Text="Idle prompt after" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.IdlePromptMinutes, Mode=TwoWay}" Minimum="1" Maximum="60" SpinButtonPlacementMode="Inline" Width="160" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_Minutes" Text="minutes" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Quick Panel" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_QuickPanelHeading" Text="Quick Panel" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <Grid ColumnSpacing="12">
@@ -390,70 +391,92 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Vertical position" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_VerticalPosition" Text="Vertical position" VerticalAlignment="Center" />
                         <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
-                            <Button Content="Top" Click="OnTopClick" Width="80" />
-                            <Button Content="Bottom" Click="OnBottomClick" Width="80" />
+                            <Button x:Uid="Settings_PositionTop" Content="Top" Click="OnTopClick" Width="80" />
+                            <Button x:Uid="Settings_PositionBottom" Content="Bottom" Click="OnBottomClick" Width="80" />
                         </StackPanel>
                     </Grid>
 
-                    <Button Content="Next Display" Click="OnNextDisplayClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
-                    <TextBlock Text="Move panel to the next display" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <Button x:Uid="Settings_NextDisplay" Content="Next Display" Click="OnNextDisplayClick" HorizontalAlignment="Stretch" Margin="0,8,0,0" />
+                    <TextBlock x:Uid="Settings_NextDisplayHelp" Text="Move panel to the next display" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Account" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_LanguageHeading" Text="Language" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
+                    <TextBlock x:Uid="Settings_LanguageDescription" Text="Choose the language for Tastile. Changes take effect after restart." Style="{StaticResource SectionBodyTextStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" TextWrapping="Wrap" />
+
+                    <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="240" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock x:Uid="Settings_LanguageLabel" Text="Language" VerticalAlignment="Center" />
+                        <ComboBox x:Name="LanguageCombo" Grid.Column="1" Width="160" HorizontalAlignment="Right" SelectionChanged="OnLanguageChanged" SelectedValuePath="Tag" SelectedValue="{x:Bind ViewModel.SelectedLanguageTag, Mode=TwoWay}">
+                            <ComboBoxItem x:Uid="Settings_LanguageEnglish" Content="English" Tag="en" />
+                            <ComboBoxItem x:Uid="Settings_LanguageJapanese" Content="日本語" Tag="ja" />
+                            <ComboBoxItem x:Uid="Settings_LanguageChinese" Content="中文" Tag="zh-CN" />
+                            <ComboBoxItem x:Uid="Settings_LanguageKorean" Content="한국어" Tag="ko" />
+                            <ComboBoxItem x:Uid="Settings_LanguageSpanish" Content="Español" Tag="es" />
+                        </ComboBox>
+                    </Grid>
+                    <TextBlock x:Uid="Settings_LanguageRestartHint" Text="Restart Tastile to apply the new language." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                </StackPanel>
+
+                <StackPanel Spacing="12">
+                    <TextBlock x:Uid="Settings_AccountHeading" Text="Account" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
-                    <TextBlock x:Name="AuthStatusTextBlock" Text="Not signed in" Foreground="{StaticResource AppForegroundSubtleBrush}" />
-                    <TextBlock Text="メールアドレスの変更、ログイン方法の追加、Passkey 管理は Web アカウント設定で行います。" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
+                    <TextBlock x:Name="AuthStatusTextBlock" x:Uid="Settings_NotSignedIn" Text="Not signed in" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                    <TextBlock x:Uid="Settings_AccountHelp" Text="Change email, add login methods, or manage passkeys from the Web account settings." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Button Grid.Column="0" Content="Sign in to Tastile" Click="OnSignInClick" HorizontalAlignment="Stretch" />
-                        <Button Grid.Column="1" Content="Sign out" Click="OnSignOutClick" HorizontalAlignment="Stretch" />
+                        <Button Grid.Column="0" x:Uid="Settings_SignInToTastile" Content="Sign in to Tastile" Click="OnSignInClick" HorizontalAlignment="Stretch" />
+                        <Button Grid.Column="1" x:Uid="Settings_SignOut" Content="Sign out" Click="OnSignOutClick" HorizontalAlignment="Stretch" />
                     </Grid>
-                    <Button Content="Open Web account settings" Click="OnOpenWebAccountClick" HorizontalAlignment="Stretch" />
+                    <Button x:Uid="Settings_OpenWebAccount" Content="Open Web account settings" Click="OnOpenWebAccountClick" HorizontalAlignment="Stretch" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Runtime paths" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_RuntimePathsHeading" Text="Runtime paths" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <Border Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" Padding="12" CornerRadius="0">
                         <StackPanel Spacing="8">
-                            <TextBlock Text="Where data lives on this device" Style="{ThemeResource BodyStrongTextBlockStyle}" />
-                            <TextBlock Text="Only your auth token and a few UI preferences are stored locally. Tile data lives in the cloud." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
+                            <TextBlock x:Uid="Settings_DataLivesHere" Text="Where data lives on this device" Style="{ThemeResource BodyStrongTextBlockStyle}" />
+                            <TextBlock x:Uid="Settings_DataLivesHereHelp" Text="Only your auth token and a few UI preferences are stored locally. Tile data lives in the cloud." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Profile" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Uid="Settings_Profile" Text="Profile" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeProfileTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="App data directory" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Uid="Settings_AppDataDirectory" Text="App data directory" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeAppDataDirTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Local database" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Uid="Settings_LocalDatabase" Text="Local database" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeDbPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Auth credentials (DPAPI)" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Uid="Settings_AuthCredentials" Text="Auth credentials (DPAPI)" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeSessionPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Desktop API log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Uid="Settings_DesktopApiLog" Text="Desktop API log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeDesktopApiLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
-                                <TextBlock Text="Create Tile log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                                <TextBlock x:Uid="Settings_CreateTileLog" Text="Create Tile log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                                 <TextBlock x:Name="RuntimeCreateTileLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
                         </StackPanel>
@@ -461,17 +484,17 @@
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Updates" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_UpdatesHeading" Text="Updates" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <TextBlock x:Name="CurrentVersionTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                    <TextBlock Text="Updates are delivered automatically from Tastile release channel." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                    <Button Content="Check for updates" Click="OnCheckUpdateClick" HorizontalAlignment="Stretch" />
+                    <TextBlock x:Uid="Settings_UpdatesDescription" Text="Updates are delivered automatically from Tastile release channel." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                    <Button x:Uid="Settings_CheckForUpdates" Content="Check for updates" Click="OnCheckUpdateClick" HorizontalAlignment="Stretch" />
                     <TextBlock x:Name="UpdateStatusTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="Security" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_SecurityHeading" Text="Security" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <Grid ColumnSpacing="12">
@@ -479,7 +502,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Require Windows unlock on launch" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_RequireWindowsUnlock" Text="Require Windows unlock on launch" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.SecurityLockEnabled, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
                     <Grid ColumnSpacing="12">
@@ -487,14 +510,14 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Lock after app quit" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_LockAfterQuit" Text="Lock after app quit" VerticalAlignment="Center" />
                         <NumberBox Grid.Column="1" Value="{x:Bind ViewModel.SecurityLockTimeoutMinutes, Mode=TwoWay}" Minimum="1" Maximum="240" SmallChange="1" LargeChange="5" SpinButtonPlacementMode="Inline" />
                     </Grid>
-                    <TextBlock Text="Default is on. Startup launches from Windows are not interrupted." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_SecurityLockHelp" Text="Default is on. Startup launches from Windows are not interrupted." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">
-                    <TextBlock Text="System" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+                    <TextBlock x:Uid="Settings_SystemHeading" Text="System" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
                     <Grid ColumnSpacing="12">
@@ -502,15 +525,15 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="240" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="Launch at startup" VerticalAlignment="Center" />
+                        <TextBlock x:Uid="Settings_LaunchAtStartup" Text="Launch at startup" VerticalAlignment="Center" />
                         <ToggleSwitch Grid.Column="1" IsOn="{x:Bind ViewModel.LaunchAtStartup, Mode=TwoWay}" HorizontalAlignment="Right" />
                     </Grid>
-                    <TextBlock Text="Start Tastile when Windows starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
+                    <TextBlock x:Uid="Settings_LaunchAtStartupHelp" Text="Start Tastile when Windows starts" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                    <Button Content="Cancel" Command="{x:Bind ViewModel.CancelCommand}" />
-                    <Button Content="Save" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.SaveCommand}" Click="OnSaveClick" />
+                    <Button x:Uid="Settings.CancelButton" Content="Cancel" Command="{x:Bind ViewModel.CancelCommand}" />
+                    <Button x:Uid="Settings_SaveButton" Content="Save" Style="{StaticResource AccentButtonStyle}" Command="{x:Bind ViewModel.SaveCommand}" Click="OnSaveClick" />
                 </StackPanel>
             </StackPanel>
         </ScrollViewer>

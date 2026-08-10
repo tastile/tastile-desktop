@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Intervention.CompleteButton" xml:space="preserve"><value>Complete</value></data>
+  <data name="Intervention.EndBreakButton" xml:space="preserve"><value>End break and continue</value></data>
+  <data name="Intervention.Heading" xml:space="preserve"><value>Intervention required</value></data>
+  <data name="Intervention_BreakButton" xml:space="preserve"><value>Take a break (5 min)</value></data>
+  <data name="Intervention_BreakOver" xml:space="preserve"><value>Your break is over.</value></data>
+  <data name="Intervention_ChooseNext" xml:space="preserve"><value>Choose the next tile</value></data>
+  <data name="Intervention_ContinueButton" xml:space="preserve"><value>Continue (25 min)</value></data>
+  <data name="Intervention_CreateNewButton" xml:space="preserve"><value>Create new tile</value></data>
+  <data name="Intervention_Footer" xml:space="preserve"><value>This dialog stays on screen until you choose an action.</value></data>
+  <data name="Intervention_NoReadyTiles" xml:space="preserve"><value>No ready tiles. Create a new one to continue.</value></data>
+  <data name="Intervention_ReadyTilesHint" xml:space="preserve"><value>Ready tiles</value></data>
+  <data name="Intervention_Title" xml:space="preserve"><value>Tastile - Intervention Required</value></data>
+  <data name="Intervention_WorkMessage" xml:space="preserve"><value>You've been working for 25 minutes.</value></data>
+
+</root>

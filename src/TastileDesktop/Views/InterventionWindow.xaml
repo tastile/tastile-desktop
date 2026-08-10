@@ -2,6 +2,7 @@
     x:Class="TastileDesktop.Views.InterventionWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Uid="Intervention"
     Title="Tastile - Intervention Required">
 
     <Grid Background="#66000000">
@@ -18,11 +19,12 @@
             <StackPanel Spacing="20">
                 <StackPanel HorizontalAlignment="Center" Spacing="10">
                     <FontIcon Glyph="&#xE7BA;" FontSize="40" Foreground="{StaticResource AppPrimaryBrush}" />
-                    <TextBlock Text="Intervention required" Style="{StaticResource PageTitleTextStyle}" HorizontalAlignment="Center" />
+                    <TextBlock x:Uid="Intervention_Heading" Text="Intervention required" Style="{StaticResource PageTitleTextStyle}" HorizontalAlignment="Center" />
                 </StackPanel>
 
                 <TextBlock
                     x:Name="MessageText"
+                    x:Uid="Intervention_WorkMessage"
                     Text="You've been working for 25 minutes."
                     Style="{StaticResource SectionBodyTextStyle}"
                     HorizontalAlignment="Center"
@@ -34,19 +36,19 @@
                 </StackPanel>
 
                 <StackPanel x:Name="WorkButtons" Spacing="12" Visibility="Collapsed">
-                    <Button x:Name="ContinueButton" Content="Continue (25 min)" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="OnContinue" />
-                    <Button x:Name="BreakButton" Content="Take a break (5 min)" HorizontalAlignment="Stretch" Click="OnTakeBreak" />
-                    <Button x:Name="CompleteButton" Content="Complete" HorizontalAlignment="Stretch" Click="OnComplete" />
+                    <Button x:Name="ContinueButton" x:Uid="Intervention_ContinueButton" Content="Continue (25 min)" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="OnContinue" />
+                    <Button x:Name="BreakButton" x:Uid="Intervention_BreakButton" Content="Take a break (5 min)" HorizontalAlignment="Stretch" Click="OnTakeBreak" />
+                    <Button x:Name="CompleteButton" x:Uid="Intervention_CompleteButton" Content="Complete" HorizontalAlignment="Stretch" Click="OnComplete" />
                 </StackPanel>
 
                 <StackPanel x:Name="BreakButtons" Spacing="12" Visibility="Collapsed">
-                    <TextBlock Text="Your break is over." Style="{StaticResource SectionTitleTextStyle}" HorizontalAlignment="Center" />
-                    <Button x:Name="EndBreakButton" Content="End break and continue" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="OnEndBreak" />
+                    <TextBlock x:Uid="Intervention_BreakOver" Text="Your break is over." Style="{StaticResource SectionTitleTextStyle}" HorizontalAlignment="Center" />
+                    <Button x:Name="EndBreakButton" x:Uid="Intervention_EndBreakButton" Content="End break and continue" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Click="OnEndBreak" />
                 </StackPanel>
 
                 <StackPanel x:Name="IdleButtons" Spacing="12" Visibility="Collapsed">
-                    <TextBlock Text="Choose the next tile" Style="{StaticResource SectionTitleTextStyle}" HorizontalAlignment="Center" />
-                    <TextBlock x:Name="ReadyTilesHintText" Text="Ready tiles" Style="{StaticResource CaptionMutedTextStyle}" />
+                    <TextBlock x:Uid="Intervention_ChooseNext" Text="Choose the next tile" Style="{StaticResource SectionTitleTextStyle}" HorizontalAlignment="Center" />
+                    <TextBlock x:Name="ReadyTilesHintText" x:Uid="Intervention_ReadyTilesHint" Text="Ready tiles" Style="{StaticResource CaptionMutedTextStyle}" />
                     <ListView x:Name="ReadyTilesList" MaxHeight="220" SelectionMode="None" IsItemClickEnabled="True" ItemClick="OnReadyTileClick">
                         <ListView.ItemTemplate>
                             <DataTemplate>
@@ -57,11 +59,11 @@
                             </DataTemplate>
                         </ListView.ItemTemplate>
                     </ListView>
-                    <TextBlock x:Name="NoReadyTilesText" Text="No ready tiles. Create a new one to continue." Visibility="Collapsed" Style="{StaticResource SectionBodyTextStyle}" />
-                    <Button x:Name="CreateNewButton" Content="Create new tile" HorizontalAlignment="Stretch" Click="OnCreateNew" />
+                    <TextBlock x:Name="NoReadyTilesText" x:Uid="Intervention_NoReadyTiles" Text="No ready tiles. Create a new one to continue." Visibility="Collapsed" Style="{StaticResource SectionBodyTextStyle}" />
+                    <Button x:Name="CreateNewButton" x:Uid="Intervention_CreateNewButton" Content="Create new tile" HorizontalAlignment="Stretch" Click="OnCreateNew" />
                 </StackPanel>
 
-                <TextBlock Text="This dialog stays on screen until you choose an action." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" HorizontalAlignment="Center" TextAlignment="Center" />
+                <TextBlock x:Uid="Intervention_Footer" Text="This dialog stays on screen until you choose an action." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" HorizontalAlignment="Center" TextAlignment="Center" />
             </StackPanel>
         </Border>
     </Grid>

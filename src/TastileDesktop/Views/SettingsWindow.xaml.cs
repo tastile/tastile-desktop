@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Windowing;
 using TastileDesktop.Models;
+using TastileDesktop.Resources;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 using System.IO;
@@ -30,13 +31,28 @@ public sealed partial class SettingsWindow : Window
         Closed += OnClosed;
 
         var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
-        CurrentVersionTextBlock.Text = $"Current version: {currentVersion}";
+        CurrentVersionTextBlock.Text = string.Format(Strings.Get("Settings_CurrentVersion"), currentVersion);
     }
 
     private void OnSaveClick(object sender, RoutedEventArgs e)
     {
         // Close the window after saving
         this.Close();
+    }
+
+    private void OnLanguageChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (sender is not ComboBox combo) return;
+        var tag = combo.SelectedValue as string;
+        if (string.IsNullOrEmpty(tag)) return;
+        try
+        {
+            Windows.Globalization.ApplicationLanguages.PrimaryLanguageOverride = tag;
+        }
+        catch
+        {
+            // PrimaryLanguageOverride is not available on all SKUs; ignore.
+        }
     }
 
     private async void OnTestPromptOverlayClick(object sender, RoutedEventArgs e)
@@ -85,15 +101,15 @@ public sealed partial class SettingsWindow : Window
             "test",
             null,
             null,
-            "Test Prompt",
-            "This is a test toast notification",
+            Strings.Get("Settings_TestPromptToastTitle"),
+            Strings.Get("Settings_TestPromptToastBody"),
             "",
             null,
             new List<Models.PromptActionView>
             {
-                new("start", "開始"),
-                new("defer", "先送り"),
-                new("complete", "完了"),
+                new("start", Strings.Get("Settings_TestPromptToastActionStart")),
+                new("defer", Strings.Get("Settings_TestPromptToastActionDefer")),
+                new("complete", Strings.Get("Settings_TestPromptToastActionComplete")),
             },
             null,
             null,
@@ -194,7 +210,9 @@ public sealed partial class SettingsWindow : Window
     private void RefreshAuthStatus()
     {
         var email = AuthService.Instance.UserEmail;
-        AuthStatusTextBlock.Text = string.IsNullOrWhiteSpace(email) ? "Not signed in" : $"Signed in as {email}";
+        AuthStatusTextBlock.Text = string.IsNullOrWhiteSpace(email)
+            ? Strings.Get("Settings_NotSignedIn")
+            : string.Format(Strings.Get("Settings_SignedInAs"), email);
     }
 
     private async void OnSignInClick(object sender, RoutedEventArgs e)
@@ -212,7 +230,7 @@ public sealed partial class SettingsWindow : Window
         }
         catch (Exception ex)
         {
-            AuthStatusTextBlock.Text = $"Sign-in failed: {ex.Message}";
+            AuthStatusTextBlock.Text = string.Format(Strings.Get("Settings_SignInFailed"), ex.Message);
             App.DebugLog($"[SettingsWindow] Sign-in failed: {ex}");
         }
     }
@@ -226,7 +244,7 @@ public sealed partial class SettingsWindow : Window
         }
         catch (Exception ex)
         {
-            AuthStatusTextBlock.Text = $"Sign-out failed: {ex.Message}";
+            AuthStatusTextBlock.Text = string.Format(Strings.Get("Settings_SignOutFailed"), ex.Message);
             App.DebugLog($"[SettingsWindow] Sign-out failed: {ex}");
         }
     }
@@ -244,16 +262,16 @@ public sealed partial class SettingsWindow : Window
             var result = await _updateService.CheckForUpdateAsync(string.Empty, currentVersion);
             if (!result.HasUpdate)
             {
-                UpdateStatusTextBlock.Text = "You are up to date.";
+                UpdateStatusTextBlock.Text = Strings.Get("Settings_UpToDate");
                 return;
             }
 
-            UpdateStatusTextBlock.Text = $"Update {result.LatestVersion} is available.";
+            UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateAvailable"), result.LatestVersion);
             ShowUpdateToast(result);
         }
         catch (Exception ex)
         {
-            UpdateStatusTextBlock.Text = $"Update check failed: {ex.Message}";
+            UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateCheckFailed"), ex.Message);
         }
     }
 
@@ -266,9 +284,9 @@ public sealed partial class SettingsWindow : Window
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Tastile");
 
-        RuntimeProfileTextBlock.Text = "AWS remote (beta.tastile.app)";
+        RuntimeProfileTextBlock.Text = Strings.Get("Settings_ProfileAwsRemote");
         RuntimeAppDataDirTextBlock.Text = appDataDir;
-        RuntimeDbPathTextBlock.Text = "(none — cloud-only)";
+        RuntimeDbPathTextBlock.Text = Strings.Get("Settings_LocalDatabaseNone");
         RuntimeSessionPathTextBlock.Text = Path.Combine(localAppDataDir, "Auth", "credentials.bin");
         RuntimeDesktopApiLogPathTextBlock.Text = CoreApiClient.DebugLogPath;
         RuntimeCreateTileLogPathTextBlock.Text = CreateTileWindow.DebugLogPath;
@@ -290,14 +308,14 @@ public sealed partial class SettingsWindow : Window
             Kind: "app_update",
             Severity: "info",
             TileId: null,
-            Title: $"Update available: {update.LatestVersion}",
-            Body: string.IsNullOrWhiteSpace(update.Notes) ? "Download the installer and install the latest version." : update.Notes,
-            Why: "An application update is available.",
+            Title: string.Format(Strings.Get("Settings_UpdateAvailableTitle"), update.LatestVersion),
+            Body: string.IsNullOrWhiteSpace(update.Notes) ? Strings.Get("Settings_UpdateBodyFallback") : update.Notes,
+            Why: Strings.Get("Settings_UpdateWhy"),
             SuggestedMinutes: null,
             Actions: new List<PromptActionView>
             {
-                new("install_update", "Install Update"),
-                new("ignore_update", "Ignore"),
+                new("install_update", Strings.Get("Settings_UpdateActionInstall")),
+                new("ignore_update", Strings.Get("Settings_UpdateActionIgnore")),
             },
             CreatedAt: null,
             ExpiresAt: null,
@@ -319,14 +337,14 @@ public sealed partial class SettingsWindow : Window
                     }
                     catch (Exception ex)
                     {
-                        UpdateStatusTextBlock.Text = $"Update install failed: {ex.Message}";
+                        UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateInstallFailed"), ex.Message);
                     }
                 }
                 else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
                 {
                     var settingsService = new SettingsService();
                     settingsService.Update(settings => settings.IgnoredUpdateVersion = update.LatestVersion);
-                    UpdateStatusTextBlock.Text = $"Ignored update {update.LatestVersion}.";
+                    UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateIgnored"), update.LatestVersion);
                 }
                 await Task.CompletedTask;
             });

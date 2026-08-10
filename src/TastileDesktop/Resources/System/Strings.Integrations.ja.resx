@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Integrations.Description" xml:space="preserve"><value>カレンダーを一度連携し、Tastile の同期間引き方を決め、必要なときに手動で同期します。</value></data>
+  <data name="Integrations.Heading" xml:space="preserve"><value>Google カレンダー</value></data>
+  <data name="Integrations.Loading" xml:space="preserve"><value>読み込み中...</value></data>
+  <data name="Integrations.TitleBarHeading" xml:space="preserve"><value>連携</value></data>
+  <data name="Integrations_Calendar" xml:space="preserve"><value>カレンダー</value></data>
+  <data name="Integrations_ConnectButton" xml:space="preserve"><value>Google カレンダーを連携</value></data>
+  <data name="Integrations_ConnectionChecking" xml:space="preserve"><value>Google カレンダーの接続を確認中...</value></data>
+  <data name="Integrations_ConnectionLoading" xml:space="preserve"><value>Google カレンダーの接続情報を読み込んでいます。</value></data>
+  <data name="Integrations_DisconnectButton" xml:space="preserve"><value>連携を解除</value></data>
+  <data name="Integrations_LastSync" xml:space="preserve"><value>最終同期: -</value></data>
+  <data name="Integrations_Permissions" xml:space="preserve"><value>権限</value></data>
+  <data name="Integrations_RefreshButton" xml:space="preserve"><value>状態を再取得</value></data>
+  <data name="Integrations_SavePolicy" xml:space="preserve"><value>同期設定を保存</value></data>
+  <data name="Integrations_SyncBehavior" xml:space="preserve"><value>同期の挙動</value></data>
+  <data name="Integrations_SyncBehaviorDesc" xml:space="preserve"><value>Tastile から書き出すか、Google から読み取るか、両方を行うかを選びます。</value></data>
+  <data name="Integrations_SyncHealth" xml:space="preserve"><value>同期の状態: -</value></data>
+  <data name="Integrations_SyncModeBidirectional" xml:space="preserve"><value>双方向同期</value></data>
+  <data name="Integrations_SyncModePullOnly" xml:space="preserve"><value>Google カレンダー → Tastile</value></data>
+  <data name="Integrations_SyncModePushOnly" xml:space="preserve"><value>Tastile → Google カレンダー</value></data>
+  <data name="Integrations_SyncNowButton" xml:space="preserve"><value>今すぐ同期</value></data>
+  <data name="Integrations_TargetCalendar" xml:space="preserve"><value>対象のカレンダー</value></data>
+  <data name="Integrations_TargetCalendarHelp" xml:space="preserve"><value>メインのカレンダーは "primary" のまま使うか、別のカレンダー ID を指定できます。</value></data>
+  <data name="Integrations_TargetCalendarPlaceholder" xml:space="preserve"><value>primary</value></data>
+  <data name="Integrations_Title" xml:space="preserve"><value>連携</value></data>
+
+</root>

@@ -3,6 +3,7 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TastileDesktop.Views"
+    x:Uid="Tiles"
     Title="Tiles">
 
     <Grid x:Name="RootGrid" Background="{StaticResource AppBackgroundBrush}">
@@ -12,26 +13,26 @@
         </Grid.RowDefinitions>
 
         <Grid x:Name="TitleBarArea" Height="32" Padding="16,0,12,0" Background="Transparent">
-            <TextBlock Text="Tiles" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
+            <TextBlock x:Uid="Tiles_TitleBarHeading" Text="Tiles" Style="{ThemeResource BodyStrongTextBlockStyle}" VerticalAlignment="Center" Foreground="{StaticResource AppForegroundBrush}" />
         </Grid>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
             <StackPanel Padding="32" Spacing="20">
 
                 <StackPanel Orientation="Horizontal" Spacing="0">
-                    <Button x:Name="BtnByState" Content="状態別" Width="72" Height="32" Click="OnViewByStateClick" Background="Transparent" BorderThickness="1,1,0,1" BorderBrush="{ThemeResource AppBorderBrush}" />
-                    <Button x:Name="BtnByGroup" Content="グループ別" Width="88" Height="32" Click="OnViewByGroupClick" Background="Transparent" BorderThickness="0,1,0,1" BorderBrush="{ThemeResource AppBorderBrush}" />
-                    <Button x:Name="BtnByProject" Content="プロジェクト別" Width="104" Height="32" Click="OnViewByProjectClick" Background="Transparent" BorderThickness="0,1,0,1" BorderBrush="{ThemeResource AppBorderBrush}" />
-                    <Button x:Name="BtnByTag" Content="タグ別" Width="72" Height="32" Click="OnViewByTagClick" Background="Transparent" BorderThickness="0,1,1,1" BorderBrush="{ThemeResource AppBorderBrush}" />
+                    <Button x:Name="BtnByState" x:Uid="Tiles_ViewByState" Content="状態別" Width="72" Height="32" Click="OnViewByStateClick" Background="Transparent" BorderThickness="1,1,0,1" BorderBrush="{ThemeResource AppBorderBrush}" />
+                    <Button x:Name="BtnByGroup" x:Uid="Tiles_ViewByGroup" Content="グループ別" Width="88" Height="32" Click="OnViewByGroupClick" Background="Transparent" BorderThickness="0,1,0,1" BorderBrush="{ThemeResource AppBorderBrush}" />
+                    <Button x:Name="BtnByProject" x:Uid="Tiles_ViewByProject" Content="プロジェクト別" Width="104" Height="32" Click="OnViewByProjectClick" Background="Transparent" BorderThickness="0,1,0,1" BorderBrush="{ThemeResource AppBorderBrush}" />
+                    <Button x:Name="BtnByTag" x:Uid="Tiles_ViewByTag" Content="タグ別" Width="72" Height="32" Click="OnViewByTagClick" Background="Transparent" BorderThickness="0,1,1,1" BorderBrush="{ThemeResource AppBorderBrush}" />
                 </StackPanel>
 
-                <TextBox x:Name="SearchBox" PlaceholderText="検索..." Height="36" TextChanged="OnSearchTextChanged" />
+                <TextBox x:Name="SearchBox" x:Uid="Tiles_SearchPlaceholder" PlaceholderText="検索..." Height="36" TextChanged="OnSearchTextChanged" />
 
                 <StackPanel x:Name="ReadySection" Spacing="12">
                     <Button Click="OnReadyHeaderClick" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" FontSize="14" Foreground="{StaticResource AccentBrush}" />
-                            <TextBlock Text="Ready" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AccentBrush}" />
+                            <TextBlock x:Uid="Tiles_Ready" Text="Ready" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AccentBrush}" />
                             <TextBlock x:Name="ReadyCount" Text="0" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -71,7 +72,7 @@
                     <Button Click="OnStartedHeaderClick" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" FontSize="14" Foreground="{StaticResource PrimaryForegroundBrush}" />
-                            <TextBlock Text="Running" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource PrimaryForegroundBrush}" />
+                            <TextBlock x:Uid="Tiles_Running" Text="Running" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource PrimaryForegroundBrush}" />
                             <TextBlock x:Name="StartedCount" Text="0" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
@@ -111,7 +112,7 @@
                     <Button Click="OnDoneHeaderClick" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left">
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE73E;" FontSize="14" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                            <TextBlock Text="Done" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                            <TextBlock x:Uid="Tiles_Done" Text="Done" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             <TextBlock x:Name="DoneCount" Text="0" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>

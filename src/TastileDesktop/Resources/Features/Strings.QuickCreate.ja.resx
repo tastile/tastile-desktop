@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="CreateTile.CancelButton" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="CreateTile.CompletionModeLabel" xml:space="preserve"><value>完了モード</value></data>
+  <data name="CreateTile.CompletionModeNormal" xml:space="preserve"><value>通常</value></data>
+  <data name="CreateTile.CompletionModeRecurring" xml:space="preserve"><value>定期</value></data>
+  <data name="CreateTile.DeleteButton" xml:space="preserve"><value>削除</value></data>
+  <data name="CreateTile.DurationLabel" xml:space="preserve"><value>所要時間</value></data>
+  <data name="CreateTile.EditPrimaryButton" xml:space="preserve"><value>保存</value></data>
+  <data name="CreateTile.EndButton" xml:space="preserve"><value>終了</value></data>
+  <data name="CreateTile.FrequencyDaily" xml:space="preserve"><value>日次</value></data>
+  <data name="CreateTile.FrequencyMonthly" xml:space="preserve"><value>月次</value></data>
+  <data name="CreateTile.FrequencyWeekly" xml:space="preserve"><value>週次</value></data>
+  <data name="CreateTile.Heading" xml:space="preserve"><value>タイルを作成</value></data>
+  <data name="CreateTile.HoursLabel" xml:space="preserve"><value>時間</value></data>
+  <data name="CreateTile.KindLabel" xml:space="preserve"><value>種類</value></data>
+  <data name="CreateTile.KindLabelTile" xml:space="preserve"><value>ラベル</value></data>
+  <data name="CreateTile.KindTask" xml:space="preserve"><value>タスク</value></data>
+  <data name="CreateTile.MaximizeButton" xml:space="preserve"><value>時間枠の中で最大化</value></data>
+  <data name="CreateTile.MemoLabel" xml:space="preserve"><value>メモ</value></data>
+  <data name="CreateTile.MemoPlaceholder" xml:space="preserve"><value>補足メモ</value></data>
+  <data name="CreateTile.MinutesLabel" xml:space="preserve"><value>分</value></data>
+  <data name="CreateTile.MonthlyWeek" xml:space="preserve"><value>第何週</value></data>
+  <data name="CreateTile.MonthlyWeekday" xml:space="preserve"><value>曜日</value></data>
+  <data name="CreateTile.PrimaryButton" xml:space="preserve"><value>作成</value></data>
+  <data name="CreateTile.ProjectLabel" xml:space="preserve"><value>プロジェクト</value></data>
+  <data name="CreateTile.ProjectPlaceholder" xml:space="preserve"><value>プロジェクト名</value></data>
+  <data name="CreateTile.RecurrenceEndTime" xml:space="preserve"><value>終了時刻</value></data>
+  <data name="CreateTile.RecurrencePrefix" xml:space="preserve"><value>毎</value></data>
+  <data name="CreateTile.RecurrenceStartTime" xml:space="preserve"><value>開始時刻</value></data>
+  <data name="CreateTile.RecurrenceSuffixDaily" xml:space="preserve"><value>日ごと</value></data>
+  <data name="CreateTile.RecurrenceSuffixMonthly" xml:space="preserve"><value>か月ごと</value></data>
+  <data name="CreateTile.RecurrenceSuffixWeekly" xml:space="preserve"><value>週ごと</value></data>
+  <data name="CreateTile.RecurrenceValidFrom" xml:space="preserve"><value>有効開始</value></data>
+  <data name="CreateTile.RecurrenceValidTo" xml:space="preserve"><value>有効終了</value></data>
+  <data name="CreateTile.RecurrenceValidityLabel" xml:space="preserve"><value>有効期間</value></data>
+  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>分割してよい</value></data>
+  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>分割しない</value></data>
+  <data name="CreateTile.SplitLabel" xml:space="preserve"><value>分割</value></data>
+  <data name="CreateTile.StartButton" xml:space="preserve"><value>開始</value></data>
+  <data name="CreateTile.TagLabel" xml:space="preserve"><value>タグ</value></data>
+  <data name="CreateTile.TagPlaceholder" xml:space="preserve"><value>タグ名</value></data>
+  <data name="CreateTile.TimingLabel" xml:space="preserve"><value>実行タイミング</value></data>
+  <data name="CreateTile.TitleLabel" xml:space="preserve"><value>タイトル</value></data>
+  <data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>作業 25分</value></data>
+  <data name="CreateTile.WeekdayFri" xml:space="preserve"><value>金</value></data>
+  <data name="CreateTile.WeekdayMon" xml:space="preserve"><value>月</value></data>
+  <data name="CreateTile.WeekdaySat" xml:space="preserve"><value>土</value></data>
+  <data name="CreateTile.WeekdaySun" xml:space="preserve"><value>日</value></data>
+  <data name="CreateTile.WeekdayThu" xml:space="preserve"><value>木</value></data>
+  <data name="CreateTile.WeekdayTue" xml:space="preserve"><value>火</value></data>
+  <data name="CreateTile.WeekdayWed" xml:space="preserve"><value>水</value></data>
+  <data name="CreateTile_CreateFailed" xml:space="preserve"><value>タイルの作成に失敗しました。</value></data>
+  <data name="CreateTile_CreateFailedWithMessage" xml:space="preserve"><value>タイルの作成に失敗しました: {0}</value></data>
+  <data name="CreateTile_DeleteFailed" xml:space="preserve"><value>タイルの削除に失敗しました。</value></data>
+  <data name="CreateTile_EditHeading" xml:space="preserve"><value>タイルを編集</value></data>
+  <data name="CreateTile_EditTitle" xml:space="preserve"><value>タイルを編集</value></data>
+  <data name="CreateTile_ErrorPrefix" xml:space="preserve"><value>エラー: {0}</value></data>
+  <data name="CreateTile_NoResponse" xml:space="preserve"><value>Daemon から応答がありません。</value></data>
+  <data name="CreateTile_ProjectCreateNew" xml:space="preserve"><value>新規作成: {0}</value></data>
+  <data name="CreateTile_QuotaCheckException" xml:space="preserve"><value>タイル上限の確認に失敗しました: {0}</value></data>
+  <data name="CreateTile_QuotaCheckFailed" xml:space="preserve"><value>タイル上限を確認できませんでした。</value></data>
+  <data name="CreateTile_QuotaLimitReached" xml:space="preserve"><value>無料プランの上限（100タイル）に達しました。不要なタイルを整理するか、プランをアップグレードしてください。</value></data>
+  <data name="CreateTile_TagCreateNew" xml:space="preserve"><value>新規追加: #{0}</value></data>
+  <data name="CreateTile_Title" xml:space="preserve"><value>タイルを作成</value></data>
+  <data name="CreateTile_UpdateFailed" xml:space="preserve"><value>タイルの更新に失敗しました。</value></data>
+  <data name="CreateTile_UpdateFailedWithMessage" xml:space="preserve"><value>タイルの更新に失敗しました: {0}</value></data>
+  <data name="CreateTile_ValidationDurationRequired" xml:space="preserve"><value>開始または終了を指定した場合は所要時間が必要です。</value></data>
+  <data name="CreateTile_ValidationRecurrenceEndAfterStart" xml:space="preserve"><value>定期実行の終了時刻は開始時刻より後にしてください。</value></data>
+  <data name="CreateTile_ValidationRecurrenceIntervalMin" xml:space="preserve"><value>定期実行の間隔は 1 以上にしてください。</value></data>
+  <data name="CreateTile_ValidationStartEndOrder" xml:space="preserve"><value>日時の前後関係を確認してください。</value></data>
+  <data name="CreateTile_ValidationTitleRequired" xml:space="preserve"><value>タイトルを入力してください。</value></data>
+
+</root>

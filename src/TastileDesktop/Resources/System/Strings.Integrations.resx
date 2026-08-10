@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Integrations.Description" xml:space="preserve"><value>Connect your calendar once, choose how Tastile should sync, and run a manual sync when you need it.</value></data>
+  <data name="Integrations.Heading" xml:space="preserve"><value>Google Calendar</value></data>
+  <data name="Integrations.Loading" xml:space="preserve"><value>Loading...</value></data>
+  <data name="Integrations.TitleBarHeading" xml:space="preserve"><value>Integrations</value></data>
+  <data name="Integrations_Calendar" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Integrations_ConnectButton" xml:space="preserve"><value>Connect Google Calendar</value></data>
+  <data name="Integrations_ConnectionChecking" xml:space="preserve"><value>Checking Google Calendar connection...</value></data>
+  <data name="Integrations_ConnectionLoading" xml:space="preserve"><value>We are loading your Google Calendar connection details.</value></data>
+  <data name="Integrations_DisconnectButton" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="Integrations_LastSync" xml:space="preserve"><value>Last sync: -</value></data>
+  <data name="Integrations_Permissions" xml:space="preserve"><value>Permissions</value></data>
+  <data name="Integrations_RefreshButton" xml:space="preserve"><value>Refresh status</value></data>
+  <data name="Integrations_SavePolicy" xml:space="preserve"><value>Save sync settings</value></data>
+  <data name="Integrations_SyncBehavior" xml:space="preserve"><value>Sync behavior</value></data>
+  <data name="Integrations_SyncBehaviorDesc" xml:space="preserve"><value>Choose whether Tastile writes its schedule to Google Calendar, reads Google events back, or does both.</value></data>
+  <data name="Integrations_SyncHealth" xml:space="preserve"><value>Sync health: -</value></data>
+  <data name="Integrations_SyncModeBidirectional" xml:space="preserve"><value>Two-way sync</value></data>
+  <data name="Integrations_SyncModePullOnly" xml:space="preserve"><value>Google Calendar -&gt; Tastile</value></data>
+  <data name="Integrations_SyncModePushOnly" xml:space="preserve"><value>Tastile -&gt; Google Calendar</value></data>
+  <data name="Integrations_SyncNowButton" xml:space="preserve"><value>Run sync now</value></data>
+  <data name="Integrations_TargetCalendar" xml:space="preserve"><value>Target calendar</value></data>
+  <data name="Integrations_TargetCalendarHelp" xml:space="preserve"><value>Use "primary" for your main Google Calendar, or paste a specific calendar ID if Tastile should sync somewhere else.</value></data>
+  <data name="Integrations_TargetCalendarPlaceholder" xml:space="preserve"><value>primary</value></data>
+  <data name="Integrations_Title" xml:space="preserve"><value>Integrations</value></data>
+
+</root>
