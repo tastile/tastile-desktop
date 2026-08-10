@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Settings.CancelButton" xml:space="preserve"><value>취소</value></data>
+  <data name="Settings.TitleBarHeading" xml:space="preserve"><value>설정</value></data>
+  <data name="Settings_AccentColorHeading" xml:space="preserve"><value>강조 색상</value></data>
+  <data name="Settings_AccentSource" xml:space="preserve"><value>강조 색상 소스</value></data>
+  <data name="Settings_AccentSourceDefault" xml:space="preserve"><value>Tastile 기본 파란색 사용</value></data>
+  <data name="Settings_AccentSourceHelp" xml:space="preserve"><value>기본적으로 Windows 개인 설정의 강조 색상을 사용하며, 언제든지 수동 색상으로 전환할 수 있습니다.</value></data>
+  <data name="Settings_AccentSourceManual" xml:space="preserve"><value>16진수 색상 수동 지정</value></data>
+  <data name="Settings_AccentSourceWindowsAccent" xml:space="preserve"><value>Windows 강조 색상 사용</value></data>
+  <data name="Settings_AccentSourceWindowsUiAccent" xml:space="preserve"><value>Windows UI 강조 색상 사용</value></data>
+  <data name="Settings_AccountHeading" xml:space="preserve"><value>계정</value></data>
+  <data name="Settings_AccountHelp" xml:space="preserve"><value>이메일 변경, 로그인 수단 추가, Passkey 관리는 웹 계정 설정에서 진행하세요.</value></data>
+  <data name="Settings_AnimatePromptToast" xml:space="preserve"><value>프롬프트 애니메이션</value></data>
+  <data name="Settings_AnimatePromptToastHelp" xml:space="preserve"><value>프롬프트가 나타날 때 페이드 인됩니다. Windows 애니메이션이 꺼져 있으면 자동으로 비활성화됩니다.</value></data>
+  <data name="Settings_Animations" xml:space="preserve"><value>애니메이션</value></data>
+  <data name="Settings_AppAccentColor" xml:space="preserve"><value>앱 강조 색상</value></data>
+  <data name="Settings_AppAccentColorDescription" xml:space="preserve"><value>소스를 선택한 후 Tastile에서 현재 사용 중인 강조 색상입니다.</value></data>
+  <data name="Settings_AppDataDirectory" xml:space="preserve"><value>앱 데이터 디렉터리</value></data>
+  <data name="Settings_AppTheme" xml:space="preserve"><value>앱 테마</value></data>
+  <data name="Settings_AppThemeDescription" xml:space="preserve"><value>Windows 앱 모양에서 파생됩니다.</value></data>
+  <data name="Settings_AppearanceDescription" xml:space="preserve"><value>Tastile은 현재 Windows 사용자의 모양 및 접근성 설정을 따릅니다.</value></data>
+  <data name="Settings_AppearanceHeading" xml:space="preserve"><value>Windows 모양</value></data>
+  <data name="Settings_AuthCredentials" xml:space="preserve"><value>인증 자격 증명 (DPAPI)</value></data>
+  <data name="Settings_BreaksHeading" xml:space="preserve"><value>휴식</value></data>
+  <data name="Settings_BrowseButton" xml:space="preserve"><value>찾아보기</value></data>
+  <data name="Settings_CheckForUpdates" xml:space="preserve"><value>업데이트 확인</value></data>
+  <data name="Settings_CreateTileLog" xml:space="preserve"><value>타일 생성 로그</value></data>
+  <data name="Settings_CurrentVersion" xml:space="preserve"><value>현재 버전: {0}</value></data>
+  <data name="Settings_CustomSoundFile" xml:space="preserve"><value>사용자 지정 사운드 파일</value></data>
+  <data name="Settings_CustomSoundFilePlaceholder" xml:space="preserve"><value>C:\path\to\sound.mp3</value></data>
+  <data name="Settings_DataLivesHere" xml:space="preserve"><value>이 기기에서 데이터가 저장되는 위치</value></data>
+  <data name="Settings_DataLivesHereHelp" xml:space="preserve"><value>인증 토큰과 일부 UI 환경설정만 로컬에 저장됩니다. 타일 데이터는 클라우드에 있습니다.</value></data>
+  <data name="Settings_DefaultBreakTime" xml:space="preserve"><value>기본 휴식 시간</value></data>
+  <data name="Settings_DesktopApiLog" xml:space="preserve"><value>데스크톱 API 로그</value></data>
+  <data name="Settings_ForceIntervention" xml:space="preserve"><value>강제 개입</value></data>
+  <data name="Settings_HighContrast" xml:space="preserve"><value>고대비</value></data>
+  <data name="Settings_IdlePromptAfter" xml:space="preserve"><value>유휴 프롬프트 시간</value></data>
+  <data name="Settings_LanguageChinese" xml:space="preserve"><value>中文</value></data>
+  <data name="Settings_LanguageDescription" xml:space="preserve"><value>Tastile에서 사용할 언어를 선택하세요. 변경 사항은 재시작 후에 적용됩니다.</value></data>
+  <data name="Settings_LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_LanguageHeading" xml:space="preserve"><value>언어</value></data>
+  <data name="Settings_LanguageJapanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Settings_LanguageKorean" xml:space="preserve"><value>한국어</value></data>
+  <data name="Settings_LanguageLabel" xml:space="preserve"><value>언어</value></data>
+  <data name="Settings_LanguageRestartHint" xml:space="preserve"><value>새 언어를 적용하려면 Tastile을 재시작하세요.</value></data>
+  <data name="Settings_LanguageSpanish" xml:space="preserve"><value>Español</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>시작 시 실행</value></data>
+  <data name="Settings_LaunchAtStartupHelp" xml:space="preserve"><value>Windows 시작 시 Tastile 실행</value></data>
+  <data name="Settings_LocalDatabase" xml:space="preserve"><value>로컬 데이터베이스</value></data>
+  <data name="Settings_LocalDatabaseNone" xml:space="preserve"><value>(없음 — 클라우드 전용)</value></data>
+  <data name="Settings_LockAfterQuit" xml:space="preserve"><value>앱 종료 후 잠금</value></data>
+  <data name="Settings_ManualAccent" xml:space="preserve"><value>수동 강조 색상</value></data>
+  <data name="Settings_ManualAccentHelp" xml:space="preserve"><value>#RRGGBB 또는 #AARRGGBB 형식. 잘못된 값은 Windows 강조 색상으로 대체됩니다.</value></data>
+  <data name="Settings_Minutes" xml:space="preserve"><value>분</value></data>
+  <data name="Settings_MinutesAfterDismissed" xml:space="preserve"><value>닫은 후 (분)</value></data>
+  <data name="Settings_MinutesAfterWorkStarts" xml:space="preserve"><value>작업 시작 후 (분)</value></data>
+  <data name="Settings_MirrorSimplified" xml:space="preserve"><value>간소화된 알림 미러링</value></data>
+  <data name="Settings_MirrorSimplifiedHelp" xml:space="preserve"><value>모든 디스플레이와 함께 사용 설정하면 다른 모니터에는 제목과 큐 개수만 표시되는 축소 알림 카드가 표시됩니다.</value></data>
+  <data name="Settings_NextDisplay" xml:space="preserve"><value>다음 디스플레이</value></data>
+  <data name="Settings_NextDisplayHelp" xml:space="preserve"><value>패널을 다음 디스플레이로 이동</value></data>
+  <data name="Settings_NotSignedIn" xml:space="preserve"><value>로그인되지 않음</value></data>
+  <data name="Settings_NotificationsHeading" xml:space="preserve"><value>알림</value></data>
+  <data name="Settings_OpenWebAccount" xml:space="preserve"><value>웹 계정 설정 열기</value></data>
+  <data name="Settings_OverlayDuration" xml:space="preserve"><value>오버레이 지속 시간</value></data>
+  <data name="Settings_OverlayDurationHelp" xml:space="preserve"><value>초</value></data>
+  <data name="Settings_PositionBottom" xml:space="preserve"><value>하단</value></data>
+  <data name="Settings_PositionTop" xml:space="preserve"><value>상단</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>프로필</value></data>
+  <data name="Settings_ProfileAwsRemote" xml:space="preserve"><value>AWS 원격 (beta.tastile.app)</value></data>
+  <data name="Settings_PromptEdgeOverlay" xml:space="preserve"><value>프롬프트 가장자리 오버레이</value></data>
+  <data name="Settings_PromptEdgeOverlayHelp" xml:space="preserve"><value>새 프롬프트가 나타날 때 각 디스플레이 가장자리에 얇은 강조 색상 테두리를 표시합니다.</value></data>
+  <data name="Settings_PromptToastDisplay" xml:space="preserve"><value>프롬프트 토스트 표시 위치</value></data>
+  <data name="Settings_PromptToastDisplayActiveWindow" xml:space="preserve"><value>활성 창이 있는 디스플레이</value></data>
+  <data name="Settings_PromptToastDisplayAll" xml:space="preserve"><value>모든 디스플레이</value></data>
+  <data name="Settings_PromptToastDisplayHelp" xml:space="preserve"><value>프롬프트 토스트를 한 디스플레이에만 표시할지, 모든 디스플레이에 미러링할지 선택합니다.</value></data>
+  <data name="Settings_PromptToastDisplayPrimary" xml:space="preserve"><value>기본 디스플레이</value></data>
+  <data name="Settings_PromptToastMaxStack" xml:space="preserve"><value>프롬프트 토스트 최대 스택</value></data>
+  <data name="Settings_PromptToastMaxStackHelp" xml:space="preserve"><value>동시에 표시되는 카드 수. 새 프롬프트가 위에 쌓이고 오래된 항목은 아래에서 대기합니다.</value></data>
+  <data name="Settings_PromptToastPosition" xml:space="preserve"><value>프롬프트 토스트 위치</value></data>
+  <data name="Settings_PromptToastPositionBottomLeft" xml:space="preserve"><value>왼쪽 아래</value></data>
+  <data name="Settings_PromptToastPositionBottomRight" xml:space="preserve"><value>오른쪽 아래</value></data>
+  <data name="Settings_PromptToastPositionHelp" xml:space="preserve"><value>선택한 디스플레이 작업 영역의 모서리에 기본 프롬프트 토스트를 고정합니다.</value></data>
+  <data name="Settings_PromptToastPositionTopCenter" xml:space="preserve"><value>상단 중앙</value></data>
+  <data name="Settings_PromptToastPositionTopLeft" xml:space="preserve"><value>왼쪽 위</value></data>
+  <data name="Settings_PromptToastPositionTopRight" xml:space="preserve"><value>오른쪽 위</value></data>
+  <data name="Settings_PromptToastRepeat" xml:space="preserve"><value>프롬프트 토스트 반복</value></data>
+  <data name="Settings_PromptToastRepeatHelp" xml:space="preserve"><value>프롬프트 토스트 이벤트당 횟수</value></data>
+  <data name="Settings_PromptToastRepeatInterval" xml:space="preserve"><value>프롬프트 토스트 반복 간격</value></data>
+  <data name="Settings_PromptToastRepeatIntervalHelp" xml:space="preserve"><value>재생 간 간격(초)</value></data>
+  <data name="Settings_PromptToastSound" xml:space="preserve"><value>프롬프트 토스트 사운드</value></data>
+  <data name="Settings_PromptToastSoundHelp" xml:space="preserve"><value>프롬프트 토스트가 나타날 때마다 짧은 주의 사운드를 재생합니다.</value></data>
+  <data name="Settings_PromptToastSoundLength" xml:space="preserve"><value>프롬프트 토스트 사운드 길이</value></data>
+  <data name="Settings_PromptToastSoundLengthHelp" xml:space="preserve"><value>재생당 초</value></data>
+  <data name="Settings_PromptToastSoundRepeatMode" xml:space="preserve"><value>프롬프트 토스트 사운드 반복 모드</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeFixedCount" xml:space="preserve"><value>고정 반복 횟수</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeUntilResponse" xml:space="preserve"><value>프롬프트 응답 시까지</value></data>
+  <data name="Settings_PromptToastSoundSource" xml:space="preserve"><value>프롬프트 토스트 사운드 소스</value></data>
+  <data name="Settings_PromptToastSoundSourceCustomFile" xml:space="preserve"><value>사용자 지정 오디오 파일</value></data>
+  <data name="Settings_PromptToastSoundSourceSystemBeep" xml:space="preserve"><value>시스템 신호음</value></data>
+  <data name="Settings_PromptToastStack" xml:space="preserve"><value>프롬프트 토스트 스택</value></data>
+  <data name="Settings_PromptToastStackHelp" xml:space="preserve"><value>기본 디스플레이 상단 중앙 근처에 쌓인 프롬프트 알림 창을 표시합니다.</value></data>
+  <data name="Settings_QuickPanelHeading" xml:space="preserve"><value>빠른 패널</value></data>
+  <data name="Settings_RepeatIntervention" xml:space="preserve"><value>개입 반복</value></data>
+  <data name="Settings_RequireWindowsUnlock" xml:space="preserve"><value>시작 시 Windows 잠금 해제 요구</value></data>
+  <data name="Settings_RuntimePathsHeading" xml:space="preserve"><value>런타임 경로</value></data>
+  <data name="Settings_SaveButton" xml:space="preserve"><value>저장</value></data>
+  <data name="Settings_SecurityHeading" xml:space="preserve"><value>보안</value></data>
+  <data name="Settings_SecurityLockHelp" xml:space="preserve"><value>기본적으로 켜져 있습니다. Windows 시작 시 자동 실행은 중단되지 않습니다.</value></data>
+  <data name="Settings_SignInFailed" xml:space="preserve"><value>로그인 실패: {0}</value></data>
+  <data name="Settings_SignInToTastile" xml:space="preserve"><value>Tastile에 로그인</value></data>
+  <data name="Settings_SignOut" xml:space="preserve"><value>로그아웃</value></data>
+  <data name="Settings_SignOutFailed" xml:space="preserve"><value>로그아웃 실패: {0}</value></data>
+  <data name="Settings_SignedInAs" xml:space="preserve"><value>{0}(으)로 로그인됨</value></data>
+  <data name="Settings_SuppressFullscreen" xml:space="preserve"><value>전체 화면 앱에서 표시 안 함</value></data>
+  <data name="Settings_SuppressFullscreenHelp" xml:space="preserve"><value>다른 앱이 모니터 전체를 차지할 때(예: 게임, 동영상 재생) 오버레이를 표시하지 않습니다.</value></data>
+  <data name="Settings_SystemHeading" xml:space="preserve"><value>시스템</value></data>
+  <data name="Settings_SystemTheme" xml:space="preserve"><value>시스템 테마</value></data>
+  <data name="Settings_SystemThemeDescription" xml:space="preserve"><value>Windows 자체에서 사용하는 셸 테마입니다.</value></data>
+  <data name="Settings_TaskbarAlignment" xml:space="preserve"><value>작업 표시줄 정렬</value></data>
+  <data name="Settings_TestOverlay" xml:space="preserve"><value>오버레이 테스트</value></data>
+  <data name="Settings_TestPromptToast" xml:space="preserve"><value>프롬프트 토스트 테스트</value></data>
+  <data name="Settings_TestPromptToastActionComplete" xml:space="preserve"><value>완료</value></data>
+  <data name="Settings_TestPromptToastActionDefer" xml:space="preserve"><value>연기</value></data>
+  <data name="Settings_TestPromptToastActionStart" xml:space="preserve"><value>시작</value></data>
+  <data name="Settings_TestPromptToastBody" xml:space="preserve"><value>이것은 테스트용 토스트 알림입니다</value></data>
+  <data name="Settings_TestPromptToastSound" xml:space="preserve"><value>프롬프트 토스트 사운드 테스트</value></data>
+  <data name="Settings_TestPromptToastTitle" xml:space="preserve"><value>테스트 프롬프트</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>설정</value></data>
+  <data name="Settings_TitleBarHeading" xml:space="preserve"><value>설정</value></data>
+  <data name="Settings_ToastReminder" xml:space="preserve"><value>토스트 알림</value></data>
+  <data name="Settings_TransparencyEffects" xml:space="preserve"><value>투명 효과</value></data>
+  <data name="Settings_UpToDate" xml:space="preserve"><value>최신 버전입니다.</value></data>
+  <data name="Settings_UpdateActionIgnore" xml:space="preserve"><value>무시</value></data>
+  <data name="Settings_UpdateActionInstall" xml:space="preserve"><value>업데이트 설치</value></data>
+  <data name="Settings_UpdateAvailable" xml:space="preserve"><value>업데이트 {0}이(가) 있습니다.</value></data>
+  <data name="Settings_UpdateAvailableTitle" xml:space="preserve"><value>업데이트 사용 가능: {0}</value></data>
+  <data name="Settings_UpdateBodyFallback" xml:space="preserve"><value>설치 프로그램을 다운로드하여 최신 버전을 설치하세요.</value></data>
+  <data name="Settings_UpdateCheckFailed" xml:space="preserve"><value>업데이트 확인 실패: {0}</value></data>
+  <data name="Settings_UpdateIgnored" xml:space="preserve"><value>업데이트 {0}을(를) 무시했습니다.</value></data>
+  <data name="Settings_UpdateInstallFailed" xml:space="preserve"><value>업데이트 설치 실패: {0}</value></data>
+  <data name="Settings_UpdateWhy" xml:space="preserve"><value>새 애플리케이션 업데이트를 사용할 수 있습니다.</value></data>
+  <data name="Settings_UpdatesDescription" xml:space="preserve"><value>업데이트는 Tastile 릴리스 채널을 통해 자동으로 제공됩니다.</value></data>
+  <data name="Settings_UpdatesHeading" xml:space="preserve"><value>업데이트</value></data>
+  <data name="Settings_VerticalPosition" xml:space="preserve"><value>세로 위치</value></data>
+  <data name="Settings_WindowsAccent" xml:space="preserve"><value>Windows 강조 색상</value></data>
+  <data name="Settings_WindowsAccentDescription" xml:space="preserve"><value>개인 설정 &amp;gt; 색상에서 선택한 강조 색상입니다.</value></data>
+  <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Windows UI 강조 색상</value></data>
+  <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>셸 UI API에서 노출하는 강조 색상입니다. 일부 기기는 여기서 다른 강조 색상을 보고할 수 있습니다.</value></data>
+
+</root>

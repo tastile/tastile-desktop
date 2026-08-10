@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Auth" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Auth_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>Continuar en el navegador</value></data>
+  <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>Continúe el inicio de sesión en su navegador…</value></data>
+  <data name="Auth_Description" xml:space="preserve"><value>Su navegador abre la página de inicio de sesión de Tastile. Elija un método de inicio de sesión y Tastile volverá automáticamente.</value></data>
+  <data name="Auth_Heading" xml:space="preserve"><value>Iniciar sesión en Tastile</value></data>
+  <data name="Auth_SignInFailed" xml:space="preserve"><value>No se pudo iniciar la sesión: {0}</value></data>
+  <data name="Auth_TitleBarHeading" xml:space="preserve"><value>Iniciar sesión</value></data>
+
+</root>

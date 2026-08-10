@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Settings.CancelButton" xml:space="preserve"><value>取消</value></data>
+  <data name="Settings.TitleBarHeading" xml:space="preserve"><value>设置</value></data>
+  <data name="Settings_AccentColorHeading" xml:space="preserve"><value>强调色</value></data>
+  <data name="Settings_AccentSource" xml:space="preserve"><value>强调色来源</value></data>
+  <data name="Settings_AccentSourceDefault" xml:space="preserve"><value>使用 Tastile 默认蓝色</value></data>
+  <data name="Settings_AccentSourceHelp" xml:space="preserve"><value>默认使用 Windows 个性化中的强调色，您也可以随时切换到手动指定颜色。</value></data>
+  <data name="Settings_AccentSourceManual" xml:space="preserve"><value>手动指定十六进制颜色</value></data>
+  <data name="Settings_AccentSourceWindowsAccent" xml:space="preserve"><value>跟随 Windows 强调色</value></data>
+  <data name="Settings_AccentSourceWindowsUiAccent" xml:space="preserve"><value>跟随 Windows UI 强调色</value></data>
+  <data name="Settings_AccountHeading" xml:space="preserve"><value>账户</value></data>
+  <data name="Settings_AccountHelp" xml:space="preserve"><value>更改邮箱、添加登录方式或管理 Passkey，请在网页版账户设置中进行。</value></data>
+  <data name="Settings_AnimatePromptToast" xml:space="preserve"><value>提示动画</value></data>
+  <data name="Settings_AnimatePromptToastHelp" xml:space="preserve"><value>提示出现时淡入。若 Windows 动画被关闭，将自动停用。</value></data>
+  <data name="Settings_Animations" xml:space="preserve"><value>动画</value></data>
+  <data name="Settings_AppAccentColor" xml:space="preserve"><value>应用强调色</value></data>
+  <data name="Settings_AppAccentColorDescription" xml:space="preserve"><value>来源选择后 Tastile 当前使用的强调色。</value></data>
+  <data name="Settings_AppDataDirectory" xml:space="preserve"><value>应用数据目录</value></data>
+  <data name="Settings_AppTheme" xml:space="preserve"><value>应用主题</value></data>
+  <data name="Settings_AppThemeDescription" xml:space="preserve"><value>源自 Windows 应用外观。</value></data>
+  <data name="Settings_AppearanceDescription" xml:space="preserve"><value>Tastile 遵循当前 Windows 用户的外观与辅助功能设置。</value></data>
+  <data name="Settings_AppearanceHeading" xml:space="preserve"><value>Windows 外观</value></data>
+  <data name="Settings_AuthCredentials" xml:space="preserve"><value>认证凭据（DPAPI）</value></data>
+  <data name="Settings_BreaksHeading" xml:space="preserve"><value>休息</value></data>
+  <data name="Settings_BrowseButton" xml:space="preserve"><value>浏览</value></data>
+  <data name="Settings_CheckForUpdates" xml:space="preserve"><value>检查更新</value></data>
+  <data name="Settings_CreateTileLog" xml:space="preserve"><value>创建卡片日志</value></data>
+  <data name="Settings_CurrentVersion" xml:space="preserve"><value>当前版本：{0}</value></data>
+  <data name="Settings_CustomSoundFile" xml:space="preserve"><value>自定义音效文件</value></data>
+  <data name="Settings_CustomSoundFilePlaceholder" xml:space="preserve"><value>C:\path\to\sound.mp3</value></data>
+  <data name="Settings_DataLivesHere" xml:space="preserve"><value>本机数据存储位置</value></data>
+  <data name="Settings_DataLivesHereHelp" xml:space="preserve"><value>仅在本地保存您的认证令牌与少量 UI 偏好。卡片数据存储在云端。</value></data>
+  <data name="Settings_DefaultBreakTime" xml:space="preserve"><value>默认休息时间</value></data>
+  <data name="Settings_DesktopApiLog" xml:space="preserve"><value>桌面 API 日志</value></data>
+  <data name="Settings_ForceIntervention" xml:space="preserve"><value>强制干预</value></data>
+  <data name="Settings_HighContrast" xml:space="preserve"><value>高对比度</value></data>
+  <data name="Settings_IdlePromptAfter" xml:space="preserve"><value>空闲提示时长</value></data>
+  <data name="Settings_LanguageChinese" xml:space="preserve"><value>中文</value></data>
+  <data name="Settings_LanguageDescription" xml:space="preserve"><value>选择 Tastile 使用的语言。更改将在重启后生效。</value></data>
+  <data name="Settings_LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_LanguageHeading" xml:space="preserve"><value>语言</value></data>
+  <data name="Settings_LanguageJapanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Settings_LanguageKorean" xml:space="preserve"><value>한국어</value></data>
+  <data name="Settings_LanguageLabel" xml:space="preserve"><value>语言</value></data>
+  <data name="Settings_LanguageRestartHint" xml:space="preserve"><value>重启 Tastile 以应用新语言。</value></data>
+  <data name="Settings_LanguageSpanish" xml:space="preserve"><value>Español</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>开机自启</value></data>
+  <data name="Settings_LaunchAtStartupHelp" xml:space="preserve"><value>Windows 启动时自动运行 Tastile</value></data>
+  <data name="Settings_LocalDatabase" xml:space="preserve"><value>本地数据库</value></data>
+  <data name="Settings_LocalDatabaseNone" xml:space="preserve"><value>（无 — 仅云端）</value></data>
+  <data name="Settings_LockAfterQuit" xml:space="preserve"><value>退出应用后锁定</value></data>
+  <data name="Settings_ManualAccent" xml:space="preserve"><value>手动强调色</value></data>
+  <data name="Settings_ManualAccentHelp" xml:space="preserve"><value>接受 #RRGGBB 或 #AARRGGBB 格式。无效值将回退到 Windows 强调色。</value></data>
+  <data name="Settings_Minutes" xml:space="preserve"><value>分钟</value></data>
+  <data name="Settings_MinutesAfterDismissed" xml:space="preserve"><value>关闭后（分钟）</value></data>
+  <data name="Settings_MinutesAfterWorkStarts" xml:space="preserve"><value>工作开始后（分钟）</value></data>
+  <data name="Settings_MirrorSimplified" xml:space="preserve"><value>镜像简化通知</value></data>
+  <data name="Settings_MirrorSimplifiedHelp" xml:space="preserve"><value>与"所有显示器"一起启用时，其他显示器仅显示仅含标题和队列数量的简化卡片。</value></data>
+  <data name="Settings_NextDisplay" xml:space="preserve"><value>下一显示器</value></data>
+  <data name="Settings_NextDisplayHelp" xml:space="preserve"><value>将面板移动到下一个显示器</value></data>
+  <data name="Settings_NotSignedIn" xml:space="preserve"><value>未登录</value></data>
+  <data name="Settings_NotificationsHeading" xml:space="preserve"><value>通知</value></data>
+  <data name="Settings_OpenWebAccount" xml:space="preserve"><value>打开网页版账户设置</value></data>
+  <data name="Settings_OverlayDuration" xml:space="preserve"><value>悬浮层时长</value></data>
+  <data name="Settings_OverlayDurationHelp" xml:space="preserve"><value>秒</value></data>
+  <data name="Settings_PositionBottom" xml:space="preserve"><value>底部</value></data>
+  <data name="Settings_PositionTop" xml:space="preserve"><value>顶部</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>档案</value></data>
+  <data name="Settings_ProfileAwsRemote" xml:space="preserve"><value>AWS 远程（beta.tastile.app）</value></data>
+  <data name="Settings_PromptEdgeOverlay" xml:space="preserve"><value>提示边缘覆盖</value></data>
+  <data name="Settings_PromptEdgeOverlayHelp" xml:space="preserve"><value>新提示出现时，在每个显示器边缘显示细的强调色边框。</value></data>
+  <data name="Settings_PromptToastDisplay" xml:space="preserve"><value>提示 Toast 显示位置</value></data>
+  <data name="Settings_PromptToastDisplayActiveWindow" xml:space="preserve"><value>活动窗口所在的显示器</value></data>
+  <data name="Settings_PromptToastDisplayAll" xml:space="preserve"><value>所有显示器</value></data>
+  <data name="Settings_PromptToastDisplayHelp" xml:space="preserve"><value>选择提示 Toast 仅显示在一个显示器上，还是镜像到所有显示器。</value></data>
+  <data name="Settings_PromptToastDisplayPrimary" xml:space="preserve"><value>主显示器</value></data>
+  <data name="Settings_PromptToastMaxStack" xml:space="preserve"><value>提示 Toast 最大堆叠数</value></data>
+  <data name="Settings_PromptToastMaxStackHelp" xml:space="preserve"><value>同时可见的卡片数。新提示显示在顶部，旧提示在下方等待。</value></data>
+  <data name="Settings_PromptToastPosition" xml:space="preserve"><value>提示 Toast 位置</value></data>
+  <data name="Settings_PromptToastPositionBottomLeft" xml:space="preserve"><value>左下</value></data>
+  <data name="Settings_PromptToastPositionBottomRight" xml:space="preserve"><value>右下</value></data>
+  <data name="Settings_PromptToastPositionHelp" xml:space="preserve"><value>将主提示 Toast 锚定到所选显示器工作区的某一角。</value></data>
+  <data name="Settings_PromptToastPositionTopCenter" xml:space="preserve"><value>顶部居中</value></data>
+  <data name="Settings_PromptToastPositionTopLeft" xml:space="preserve"><value>左上</value></data>
+  <data name="Settings_PromptToastPositionTopRight" xml:space="preserve"><value>右上</value></data>
+  <data name="Settings_PromptToastRepeat" xml:space="preserve"><value>提示 Toast 重复</value></data>
+  <data name="Settings_PromptToastRepeatHelp" xml:space="preserve"><value>每次提示 Toast 事件的播放次数</value></data>
+  <data name="Settings_PromptToastRepeatInterval" xml:space="preserve"><value>提示 Toast 重复间隔</value></data>
+  <data name="Settings_PromptToastRepeatIntervalHelp" xml:space="preserve"><value>两次播放之间的秒数</value></data>
+  <data name="Settings_PromptToastSound" xml:space="preserve"><value>提示 Toast 声音</value></data>
+  <data name="Settings_PromptToastSoundHelp" xml:space="preserve"><value>每次出现提示 Toast 时播放一段简短的提示音。</value></data>
+  <data name="Settings_PromptToastSoundLength" xml:space="preserve"><value>提示 Toast 声音时长</value></data>
+  <data name="Settings_PromptToastSoundLengthHelp" xml:space="preserve"><value>每次播放的秒数</value></data>
+  <data name="Settings_PromptToastSoundRepeatMode" xml:space="preserve"><value>提示 Toast 声音重复模式</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeFixedCount" xml:space="preserve"><value>固定重复次数</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeUntilResponse" xml:space="preserve"><value>直到提示响应</value></data>
+  <data name="Settings_PromptToastSoundSource" xml:space="preserve"><value>提示 Toast 声音来源</value></data>
+  <data name="Settings_PromptToastSoundSourceCustomFile" xml:space="preserve"><value>自定义音频文件</value></data>
+  <data name="Settings_PromptToastSoundSourceSystemBeep" xml:space="preserve"><value>系统提示音</value></data>
+  <data name="Settings_PromptToastStack" xml:space="preserve"><value>提示 Toast 堆叠</value></data>
+  <data name="Settings_PromptToastStackHelp" xml:space="preserve"><value>在主显示器顶部中央附近显示堆叠的提示通知窗口。</value></data>
+  <data name="Settings_QuickPanelHeading" xml:space="preserve"><value>快捷面板</value></data>
+  <data name="Settings_RepeatIntervention" xml:space="preserve"><value>重复干预</value></data>
+  <data name="Settings_RequireWindowsUnlock" xml:space="preserve"><value>启动时要求 Windows 解锁</value></data>
+  <data name="Settings_RuntimePathsHeading" xml:space="preserve"><value>运行时路径</value></data>
+  <data name="Settings_SaveButton" xml:space="preserve"><value>保存</value></data>
+  <data name="Settings_SecurityHeading" xml:space="preserve"><value>安全</value></data>
+  <data name="Settings_SecurityLockHelp" xml:space="preserve"><value>默认开启。Windows 启动时的启动不会被打断。</value></data>
+  <data name="Settings_SignInFailed" xml:space="preserve"><value>登录失败：{0}</value></data>
+  <data name="Settings_SignInToTastile" xml:space="preserve"><value>登录 Tastile</value></data>
+  <data name="Settings_SignOut" xml:space="preserve"><value>登出</value></data>
+  <data name="Settings_SignOutFailed" xml:space="preserve"><value>登出失败：{0}</value></data>
+  <data name="Settings_SignedInAs" xml:space="preserve"><value>已以 {0} 身份登录</value></data>
+  <data name="Settings_SuppressFullscreen" xml:space="preserve"><value>在全屏应用中抑制</value></data>
+  <data name="Settings_SuppressFullscreenHelp" xml:space="preserve"><value>当其他应用占据整个显示器（如游戏或视频播放）时不显示悬浮层。</value></data>
+  <data name="Settings_SystemHeading" xml:space="preserve"><value>系统</value></data>
+  <data name="Settings_SystemTheme" xml:space="preserve"><value>系统主题</value></data>
+  <data name="Settings_SystemThemeDescription" xml:space="preserve"><value>Windows 本身使用的 Shell 主题。</value></data>
+  <data name="Settings_TaskbarAlignment" xml:space="preserve"><value>任务栏对齐</value></data>
+  <data name="Settings_TestOverlay" xml:space="preserve"><value>测试悬浮层</value></data>
+  <data name="Settings_TestPromptToast" xml:space="preserve"><value>测试提示 Toast</value></data>
+  <data name="Settings_TestPromptToastActionComplete" xml:space="preserve"><value>完成</value></data>
+  <data name="Settings_TestPromptToastActionDefer" xml:space="preserve"><value>推迟</value></data>
+  <data name="Settings_TestPromptToastActionStart" xml:space="preserve"><value>开始</value></data>
+  <data name="Settings_TestPromptToastBody" xml:space="preserve"><value>这是一条测试 Toast 通知</value></data>
+  <data name="Settings_TestPromptToastSound" xml:space="preserve"><value>测试提示 Toast 声音</value></data>
+  <data name="Settings_TestPromptToastTitle" xml:space="preserve"><value>测试提示</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>设置</value></data>
+  <data name="Settings_TitleBarHeading" xml:space="preserve"><value>设置</value></data>
+  <data name="Settings_ToastReminder" xml:space="preserve"><value>Toast 提醒</value></data>
+  <data name="Settings_TransparencyEffects" xml:space="preserve"><value>透明效果</value></data>
+  <data name="Settings_UpToDate" xml:space="preserve"><value>已是最新版本。</value></data>
+  <data name="Settings_UpdateActionIgnore" xml:space="preserve"><value>忽略</value></data>
+  <data name="Settings_UpdateActionInstall" xml:space="preserve"><value>安装更新</value></data>
+  <data name="Settings_UpdateAvailable" xml:space="preserve"><value>更新 {0} 可用。</value></data>
+  <data name="Settings_UpdateAvailableTitle" xml:space="preserve"><value>有可用更新：{0}</value></data>
+  <data name="Settings_UpdateBodyFallback" xml:space="preserve"><value>请下载安装程序并安装最新版本。</value></data>
+  <data name="Settings_UpdateCheckFailed" xml:space="preserve"><value>检查更新失败：{0}</value></data>
+  <data name="Settings_UpdateIgnored" xml:space="preserve"><value>已忽略更新 {0}。</value></data>
+  <data name="Settings_UpdateInstallFailed" xml:space="preserve"><value>安装更新失败：{0}</value></data>
+  <data name="Settings_UpdateWhy" xml:space="preserve"><value>有新的应用更新可用。</value></data>
+  <data name="Settings_UpdatesDescription" xml:space="preserve"><value>更新通过 Tastile 发布渠道自动分发。</value></data>
+  <data name="Settings_UpdatesHeading" xml:space="preserve"><value>更新</value></data>
+  <data name="Settings_VerticalPosition" xml:space="preserve"><value>垂直位置</value></data>
+  <data name="Settings_WindowsAccent" xml:space="preserve"><value>Windows 强调色</value></data>
+  <data name="Settings_WindowsAccentDescription" xml:space="preserve"><value>在 个性化 &amp;gt; 颜色 中选择的强调色。</value></data>
+  <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Windows UI 强调色</value></data>
+  <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>由 Shell UI API 公开的强调色。某些设备在此报告不同的颜色。</value></data>
+
+</root>

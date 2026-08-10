@@ -35,6 +35,15 @@
     <EmbeddedResource Include="Resources\App\Strings.Common.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Common.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Common.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Common.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\App\Strings.Language.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -56,10 +65,28 @@
     <EmbeddedResource Include="Resources\App\Strings.Shell.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Dashboard.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Dashboard.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Timeline.resx">
@@ -68,10 +95,28 @@
     <EmbeddedResource Include="Resources\Features\Strings.Timeline.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Tiles.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Tiles.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Tasks.resx">
@@ -80,10 +125,28 @@
     <EmbeddedResource Include="Resources\Features\Strings.Tasks.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Calendar.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Calendar.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Schedule.resx">
@@ -92,10 +155,28 @@
     <EmbeddedResource Include="Resources\Features\Strings.Schedule.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Projects.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Projects.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.resx">
@@ -104,10 +185,28 @@
     <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Auth.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Auth.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Execution.resx">
@@ -116,10 +215,28 @@
     <EmbeddedResource Include="Resources\System\Strings.Execution.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Prompt.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Prompt.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Settings.resx">
@@ -128,10 +245,28 @@
     <EmbeddedResource Include="Resources\System\Strings.Settings.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Preferences.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Preferences.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Account.resx">
@@ -140,16 +275,43 @@
     <EmbeddedResource Include="Resources\System\Strings.Account.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Notifications.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Notifications.ja.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Integrations.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Integrations.ja.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.zh-CN.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.ko.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>

@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Settings.CancelButton" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Settings.TitleBarHeading" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Settings_AccentColorHeading" xml:space="preserve"><value>Color de acento</value></data>
+  <data name="Settings_AccentSource" xml:space="preserve"><value>Origen del acento</value></data>
+  <data name="Settings_AccentSourceDefault" xml:space="preserve"><value>Usar el azul predeterminado de Tastile</value></data>
+  <data name="Settings_AccentSourceHelp" xml:space="preserve"><value>Use el acento de Windows en Personalización por defecto, o cambie a un color manual en cualquier momento.</value></data>
+  <data name="Settings_AccentSourceManual" xml:space="preserve"><value>Color hexadecimal manual</value></data>
+  <data name="Settings_AccentSourceWindowsAccent" xml:space="preserve"><value>Seguir el acento de Windows</value></data>
+  <data name="Settings_AccentSourceWindowsUiAccent" xml:space="preserve"><value>Seguir el acento de la UI de Windows</value></data>
+  <data name="Settings_AccountHeading" xml:space="preserve"><value>Cuenta</value></data>
+  <data name="Settings_AccountHelp" xml:space="preserve"><value>Cambie el correo, añada métodos de inicio de sesión o gestione passkeys desde la configuración web de la cuenta.</value></data>
+  <data name="Settings_AnimatePromptToast" xml:space="preserve"><value>Animar aviso</value></data>
+  <data name="Settings_AnimatePromptToastHelp" xml:space="preserve"><value>Aparece el aviso con un fundido. Se desactiva automáticamente si las animaciones de Windows están desactivadas.</value></data>
+  <data name="Settings_Animations" xml:space="preserve"><value>Animaciones</value></data>
+  <data name="Settings_AppAccentColor" xml:space="preserve"><value>Color de acento de la app</value></data>
+  <data name="Settings_AppAccentColorDescription" xml:space="preserve"><value>Acento utilizado actualmente por Tastile tras seleccionar el origen.</value></data>
+  <data name="Settings_AppDataDirectory" xml:space="preserve"><value>Directorio de datos de la app</value></data>
+  <data name="Settings_AppTheme" xml:space="preserve"><value>Tema de la app</value></data>
+  <data name="Settings_AppThemeDescription" xml:space="preserve"><value>Derivado de la apariencia de la app de Windows.</value></data>
+  <data name="Settings_AppearanceDescription" xml:space="preserve"><value>Tastile sigue las opciones de apariencia y accesibilidad del usuario actual de Windows.</value></data>
+  <data name="Settings_AppearanceHeading" xml:space="preserve"><value>Apariencia de Windows</value></data>
+  <data name="Settings_AuthCredentials" xml:space="preserve"><value>Credenciales (DPAPI)</value></data>
+  <data name="Settings_BreaksHeading" xml:space="preserve"><value>Descansos</value></data>
+  <data name="Settings_BrowseButton" xml:space="preserve"><value>Examinar</value></data>
+  <data name="Settings_CheckForUpdates" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="Settings_CreateTileLog" xml:space="preserve"><value>Registro de creación de tarjetas</value></data>
+  <data name="Settings_CurrentVersion" xml:space="preserve"><value>Versión actual: {0}</value></data>
+  <data name="Settings_CustomSoundFile" xml:space="preserve"><value>Archivo de sonido personalizado</value></data>
+  <data name="Settings_CustomSoundFilePlaceholder" xml:space="preserve"><value>C:\path\to\sound.mp3</value></data>
+  <data name="Settings_DataLivesHere" xml:space="preserve"><value>Dónde se guardan los datos en este dispositivo</value></data>
+  <data name="Settings_DataLivesHereHelp" xml:space="preserve"><value>Solo el token de autenticación y algunas preferencias de UI se guardan localmente. Los datos de las tarjetas están en la nube.</value></data>
+  <data name="Settings_DefaultBreakTime" xml:space="preserve"><value>Tiempo de descanso predeterminado</value></data>
+  <data name="Settings_DesktopApiLog" xml:space="preserve"><value>Registro de la API de escritorio</value></data>
+  <data name="Settings_ForceIntervention" xml:space="preserve"><value>Forzar intervención</value></data>
+  <data name="Settings_HighContrast" xml:space="preserve"><value>Alto contraste</value></data>
+  <data name="Settings_IdlePromptAfter" xml:space="preserve"><value>Aviso tras inactividad</value></data>
+  <data name="Settings_LanguageChinese" xml:space="preserve"><value>中文</value></data>
+  <data name="Settings_LanguageDescription" xml:space="preserve"><value>Elija el idioma de Tastile. Los cambios se aplican tras reiniciar.</value></data>
+  <data name="Settings_LanguageEnglish" xml:space="preserve"><value>English</value></data>
+  <data name="Settings_LanguageHeading" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Settings_LanguageJapanese" xml:space="preserve"><value>日本語</value></data>
+  <data name="Settings_LanguageKorean" xml:space="preserve"><value>한국어</value></data>
+  <data name="Settings_LanguageLabel" xml:space="preserve"><value>Idioma</value></data>
+  <data name="Settings_LanguageRestartHint" xml:space="preserve"><value>Reinicie Tastile para aplicar el nuevo idioma.</value></data>
+  <data name="Settings_LanguageSpanish" xml:space="preserve"><value>Español</value></data>
+  <data name="Settings_LaunchAtStartup" xml:space="preserve"><value>Iniciar con el sistema</value></data>
+  <data name="Settings_LaunchAtStartupHelp" xml:space="preserve"><value>Iniciar Tastile cuando se inicia Windows</value></data>
+  <data name="Settings_LocalDatabase" xml:space="preserve"><value>Base de datos local</value></data>
+  <data name="Settings_LocalDatabaseNone" xml:space="preserve"><value>(ninguna — solo en la nube)</value></data>
+  <data name="Settings_LockAfterQuit" xml:space="preserve"><value>Bloquear tras cerrar la app</value></data>
+  <data name="Settings_ManualAccent" xml:space="preserve"><value>Acento manual</value></data>
+  <data name="Settings_ManualAccentHelp" xml:space="preserve"><value>Acepta #RRGGBB o #AARRGGBB. Los valores no válidos recurren al acento de Windows.</value></data>
+  <data name="Settings_Minutes" xml:space="preserve"><value>minutos</value></data>
+  <data name="Settings_MinutesAfterDismissed" xml:space="preserve"><value>minutos tras cerrar</value></data>
+  <data name="Settings_MinutesAfterWorkStarts" xml:space="preserve"><value>minutos tras iniciar el trabajo</value></data>
+  <data name="Settings_MirrorSimplified" xml:space="preserve"><value>Reflejar notificaciones simplificadas</value></data>
+  <data name="Settings_MirrorSimplifiedHelp" xml:space="preserve"><value>Activado junto con Todos los monitores, los demás monitores muestran una tarjeta reducida con solo el título y el número en cola.</value></data>
+  <data name="Settings_NextDisplay" xml:space="preserve"><value>Siguiente monitor</value></data>
+  <data name="Settings_NextDisplayHelp" xml:space="preserve"><value>Mover el panel al siguiente monitor</value></data>
+  <data name="Settings_NotSignedIn" xml:space="preserve"><value>Sin sesión iniciada</value></data>
+  <data name="Settings_NotificationsHeading" xml:space="preserve"><value>Notificaciones</value></data>
+  <data name="Settings_OpenWebAccount" xml:space="preserve"><value>Abrir configuración web de la cuenta</value></data>
+  <data name="Settings_OverlayDuration" xml:space="preserve"><value>Duración del overlay</value></data>
+  <data name="Settings_OverlayDurationHelp" xml:space="preserve"><value>segundos</value></data>
+  <data name="Settings_PositionBottom" xml:space="preserve"><value>Inferior</value></data>
+  <data name="Settings_PositionTop" xml:space="preserve"><value>Superior</value></data>
+  <data name="Settings_Profile" xml:space="preserve"><value>Perfil</value></data>
+  <data name="Settings_ProfileAwsRemote" xml:space="preserve"><value>AWS remoto (beta.tastile.app)</value></data>
+  <data name="Settings_PromptEdgeOverlay" xml:space="preserve"><value>Overlay de borde del aviso</value></data>
+  <data name="Settings_PromptEdgeOverlayHelp" xml:space="preserve"><value>Muestra un borde fino de acento alrededor de cada monitor cuando aparece un nuevo aviso.</value></data>
+  <data name="Settings_PromptToastDisplay" xml:space="preserve"><value>Pantalla del aviso</value></data>
+  <data name="Settings_PromptToastDisplayActiveWindow" xml:space="preserve"><value>Monitor con la ventana activa</value></data>
+  <data name="Settings_PromptToastDisplayAll" xml:space="preserve"><value>Todos los monitores</value></data>
+  <data name="Settings_PromptToastDisplayHelp" xml:space="preserve"><value>Elija si el aviso se muestra en un solo monitor o se refleja en todos.</value></data>
+  <data name="Settings_PromptToastDisplayPrimary" xml:space="preserve"><value>Monitor principal</value></data>
+  <data name="Settings_PromptToastMaxStack" xml:space="preserve"><value>Máx. pila de avisos</value></data>
+  <data name="Settings_PromptToastMaxStackHelp" xml:space="preserve"><value>Tarjetas visibles a la vez. Los avisos nuevos quedan arriba y los antiguos esperan debajo.</value></data>
+  <data name="Settings_PromptToastPosition" xml:space="preserve"><value>Posición del aviso</value></data>
+  <data name="Settings_PromptToastPositionBottomLeft" xml:space="preserve"><value>Inferior izquierda</value></data>
+  <data name="Settings_PromptToastPositionBottomRight" xml:space="preserve"><value>Inferior derecha</value></data>
+  <data name="Settings_PromptToastPositionHelp" xml:space="preserve"><value>Ancla el aviso principal a una esquina del área de trabajo del monitor elegido.</value></data>
+  <data name="Settings_PromptToastPositionTopCenter" xml:space="preserve"><value>Superior centro</value></data>
+  <data name="Settings_PromptToastPositionTopLeft" xml:space="preserve"><value>Superior izquierda</value></data>
+  <data name="Settings_PromptToastPositionTopRight" xml:space="preserve"><value>Superior derecha</value></data>
+  <data name="Settings_PromptToastRepeat" xml:space="preserve"><value>Repetición del aviso</value></data>
+  <data name="Settings_PromptToastRepeatHelp" xml:space="preserve"><value>veces por cada aviso</value></data>
+  <data name="Settings_PromptToastRepeatInterval" xml:space="preserve"><value>Intervalo de repetición del aviso</value></data>
+  <data name="Settings_PromptToastRepeatIntervalHelp" xml:space="preserve"><value>segundos entre reproducciones</value></data>
+  <data name="Settings_PromptToastSound" xml:space="preserve"><value>Sonido del aviso</value></data>
+  <data name="Settings_PromptToastSoundHelp" xml:space="preserve"><value>Reproduce un breve sonido de atención cuando aparece un aviso.</value></data>
+  <data name="Settings_PromptToastSoundLength" xml:space="preserve"><value>Duración del sonido del aviso</value></data>
+  <data name="Settings_PromptToastSoundLengthHelp" xml:space="preserve"><value>segundos por reproducción</value></data>
+  <data name="Settings_PromptToastSoundRepeatMode" xml:space="preserve"><value>Modo de repetición del sonido</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeFixedCount" xml:space="preserve"><value>Número fijo de repeticiones</value></data>
+  <data name="Settings_PromptToastSoundRepeatModeUntilResponse" xml:space="preserve"><value>Hasta responder el aviso</value></data>
+  <data name="Settings_PromptToastSoundSource" xml:space="preserve"><value>Origen del sonido del aviso</value></data>
+  <data name="Settings_PromptToastSoundSourceCustomFile" xml:space="preserve"><value>Archivo de audio personalizado</value></data>
+  <data name="Settings_PromptToastSoundSourceSystemBeep" xml:space="preserve"><value>Pitido del sistema</value></data>
+  <data name="Settings_PromptToastStack" xml:space="preserve"><value>Pila de avisos</value></data>
+  <data name="Settings_PromptToastStackHelp" xml:space="preserve"><value>Muestra una ventana de avisos apilada cerca del borde superior central del monitor principal.</value></data>
+  <data name="Settings_QuickPanelHeading" xml:space="preserve"><value>Panel rápido</value></data>
+  <data name="Settings_RepeatIntervention" xml:space="preserve"><value>Repetir intervención</value></data>
+  <data name="Settings_RequireWindowsUnlock" xml:space="preserve"><value>Requerir desbloqueo de Windows al iniciar</value></data>
+  <data name="Settings_RuntimePathsHeading" xml:space="preserve"><value>Rutas en tiempo de ejecución</value></data>
+  <data name="Settings_SaveButton" xml:space="preserve"><value>Guardar</value></data>
+  <data name="Settings_SecurityHeading" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="Settings_SecurityLockHelp" xml:space="preserve"><value>Activado por defecto. Los lanzamientos de inicio de Windows no se interrumpen.</value></data>
+  <data name="Settings_SignInFailed" xml:space="preserve"><value>Error al iniciar sesión: {0}</value></data>
+  <data name="Settings_SignInToTastile" xml:space="preserve"><value>Iniciar sesión en Tastile</value></data>
+  <data name="Settings_SignOut" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="Settings_SignOutFailed" xml:space="preserve"><value>Error al cerrar sesión: {0}</value></data>
+  <data name="Settings_SignedInAs" xml:space="preserve"><value>Sesión iniciada como {0}</value></data>
+  <data name="Settings_SuppressFullscreen" xml:space="preserve"><value>Suprimir en apps a pantalla completa</value></data>
+  <data name="Settings_SuppressFullscreenHelp" xml:space="preserve"><value>Omitir el overlay cuando otra app ocupa todo el monitor (juegos, reproducción de vídeo, etc.).</value></data>
+  <data name="Settings_SystemHeading" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Settings_SystemTheme" xml:space="preserve"><value>Tema del sistema</value></data>
+  <data name="Settings_SystemThemeDescription" xml:space="preserve"><value>Tema del shell utilizado por Windows.</value></data>
+  <data name="Settings_TaskbarAlignment" xml:space="preserve"><value>Alineación de la barra de tareas</value></data>
+  <data name="Settings_TestOverlay" xml:space="preserve"><value>Probar overlay</value></data>
+  <data name="Settings_TestPromptToast" xml:space="preserve"><value>Probar aviso</value></data>
+  <data name="Settings_TestPromptToastActionComplete" xml:space="preserve"><value>Completar</value></data>
+  <data name="Settings_TestPromptToastActionDefer" xml:space="preserve"><value>Posponer</value></data>
+  <data name="Settings_TestPromptToastActionStart" xml:space="preserve"><value>Iniciar</value></data>
+  <data name="Settings_TestPromptToastBody" xml:space="preserve"><value>Esta es una notificación de prueba</value></data>
+  <data name="Settings_TestPromptToastSound" xml:space="preserve"><value>Probar sonido del aviso</value></data>
+  <data name="Settings_TestPromptToastTitle" xml:space="preserve"><value>Aviso de prueba</value></data>
+  <data name="Settings_Title" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Settings_TitleBarHeading" xml:space="preserve"><value>Configuración</value></data>
+  <data name="Settings_ToastReminder" xml:space="preserve"><value>Recordatorio toast</value></data>
+  <data name="Settings_TransparencyEffects" xml:space="preserve"><value>Efectos de transparencia</value></data>
+  <data name="Settings_UpToDate" xml:space="preserve"><value>Está actualizado.</value></data>
+  <data name="Settings_UpdateActionIgnore" xml:space="preserve"><value>Ignorar</value></data>
+  <data name="Settings_UpdateActionInstall" xml:space="preserve"><value>Instalar actualización</value></data>
+  <data name="Settings_UpdateAvailable" xml:space="preserve"><value>Actualización {0} disponible.</value></data>
+  <data name="Settings_UpdateAvailableTitle" xml:space="preserve"><value>Actualización disponible: {0}</value></data>
+  <data name="Settings_UpdateBodyFallback" xml:space="preserve"><value>Descargue el instalador e instale la última versión.</value></data>
+  <data name="Settings_UpdateCheckFailed" xml:space="preserve"><value>Error al comprobar actualizaciones: {0}</value></data>
+  <data name="Settings_UpdateIgnored" xml:space="preserve"><value>Actualización {0} ignorada.</value></data>
+  <data name="Settings_UpdateInstallFailed" xml:space="preserve"><value>Error al instalar la actualización: {0}</value></data>
+  <data name="Settings_UpdateWhy" xml:space="preserve"><value>Hay una actualización de la aplicación disponible.</value></data>
+  <data name="Settings_UpdatesDescription" xml:space="preserve"><value>Las actualizaciones se entregan automáticamente desde el canal de lanzamientos de Tastile.</value></data>
+  <data name="Settings_UpdatesHeading" xml:space="preserve"><value>Actualizaciones</value></data>
+  <data name="Settings_VerticalPosition" xml:space="preserve"><value>Posición vertical</value></data>
+  <data name="Settings_WindowsAccent" xml:space="preserve"><value>Acento de Windows</value></data>
+  <data name="Settings_WindowsAccentDescription" xml:space="preserve"><value>Color de acento seleccionado en Personalización &amp;gt; Colores.</value></data>
+  <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Acento de la UI de Windows</value></data>
+  <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>Acento expuesto por las API de la UI del shell. Algunos dispositivos reportan un color de acento diferente aquí.</value></data>
+
+</root>

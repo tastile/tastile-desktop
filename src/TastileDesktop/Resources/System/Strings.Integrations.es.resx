@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Integrations.Description" xml:space="preserve"><value>Conecte su calendario una vez, elija cómo debe sincronizar Tastile y ejecute una sincronización manual cuando la necesite.</value></data>
+  <data name="Integrations.Heading" xml:space="preserve"><value>Google Calendar</value></data>
+  <data name="Integrations.Loading" xml:space="preserve"><value>Cargando...</value></data>
+  <data name="Integrations.TitleBarHeading" xml:space="preserve"><value>Integraciones</value></data>
+  <data name="Integrations_Calendar" xml:space="preserve"><value>Calendario</value></data>
+  <data name="Integrations_ConnectButton" xml:space="preserve"><value>Conectar Google Calendar</value></data>
+  <data name="Integrations_ConnectionChecking" xml:space="preserve"><value>Comprobando la conexión con Google Calendar...</value></data>
+  <data name="Integrations_ConnectionLoading" xml:space="preserve"><value>Cargando los detalles de su conexión con Google Calendar.</value></data>
+  <data name="Integrations_DisconnectButton" xml:space="preserve"><value>Desconectar</value></data>
+  <data name="Integrations_LastSync" xml:space="preserve"><value>Última sincronización: -</value></data>
+  <data name="Integrations_Permissions" xml:space="preserve"><value>Permisos</value></data>
+  <data name="Integrations_RefreshButton" xml:space="preserve"><value>Actualizar estado</value></data>
+  <data name="Integrations_SavePolicy" xml:space="preserve"><value>Guardar ajustes de sincronización</value></data>
+  <data name="Integrations_SyncBehavior" xml:space="preserve"><value>Comportamiento de sincronización</value></data>
+  <data name="Integrations_SyncBehaviorDesc" xml:space="preserve"><value>Elija si Tastile escribe su agenda en Google Calendar, lee eventos de Google, o ambas.</value></data>
+  <data name="Integrations_SyncHealth" xml:space="preserve"><value>Estado de sincronización: -</value></data>
+  <data name="Integrations_SyncModeBidirectional" xml:space="preserve"><value>Sincronización bidireccional</value></data>
+  <data name="Integrations_SyncModePullOnly" xml:space="preserve"><value>Google Calendar → Tastile</value></data>
+  <data name="Integrations_SyncModePushOnly" xml:space="preserve"><value>Tastile → Google Calendar</value></data>
+  <data name="Integrations_SyncNowButton" xml:space="preserve"><value>Sincronizar ahora</value></data>
+  <data name="Integrations_TargetCalendar" xml:space="preserve"><value>Calendario de destino</value></data>
+  <data name="Integrations_TargetCalendarHelp" xml:space="preserve"><value>Use "primary" para su calendario principal de Google, o pegue un ID de calendario específico para sincronizar en otro lugar.</value></data>
+  <data name="Integrations_TargetCalendarPlaceholder" xml:space="preserve"><value>primary</value></data>
+  <data name="Integrations_Title" xml:space="preserve"><value>Integraciones</value></data>
+
+</root>

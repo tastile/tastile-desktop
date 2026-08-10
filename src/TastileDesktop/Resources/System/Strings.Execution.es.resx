@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Execute.AttachMemo" xml:space="preserve"><value>Adjuntar nota</value></data>
+  <data name="Execute.BreakLabel" xml:space="preserve"><value>Descanso</value></data>
+  <data name="Execute.CompleteButton" xml:space="preserve"><value>Completar</value></data>
+  <data name="Execute.Description" xml:space="preserve"><value>Los avisos se muestran como notificaciones del sistema; aquí puede ver el bloque de enfoque actual, el tiempo de descanso y la siguiente tarjeta.</value></data>
+  <data name="Execute.EndBreakButton" xml:space="preserve"><value>Terminar descanso y continuar</value></data>
+  <data name="Execute.Heading" xml:space="preserve"><value>Estado de ejecución</value></data>
+  <data name="Execute.IdleLabel" xml:space="preserve"><value>Inactivo</value></data>
+  <data name="Execute.IdleTitle" xml:space="preserve"><value>Sin tarjeta activa</value></data>
+  <data name="Execute.QuickMemo" xml:space="preserve"><value>Nota rápida</value></data>
+  <data name="Execute.StartBreakButton" xml:space="preserve"><value>Iniciar descanso de 5 min</value></data>
+  <data name="Execute.TitleBarHeading" xml:space="preserve"><value>Ejecutar</value></data>
+  <data name="Execute.WorkingLabel" xml:space="preserve"><value>Trabajando ahora</value></data>
+  <data name="Execute_Title" xml:space="preserve"><value>Ejecutar</value></data>
+
+</root>

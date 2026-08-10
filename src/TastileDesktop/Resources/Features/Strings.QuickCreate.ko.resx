@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="CreateTile.CancelButton" xml:space="preserve"><value>취소</value></data>
+  <data name="CreateTile.CompletionModeLabel" xml:space="preserve"><value>완료 모드</value></data>
+  <data name="CreateTile.CompletionModeNormal" xml:space="preserve"><value>일반</value></data>
+  <data name="CreateTile.CompletionModeRecurring" xml:space="preserve"><value>반복</value></data>
+  <data name="CreateTile.DeleteButton" xml:space="preserve"><value>삭제</value></data>
+  <data name="CreateTile.DurationLabel" xml:space="preserve"><value>소요 시간</value></data>
+  <data name="CreateTile.EditPrimaryButton" xml:space="preserve"><value>저장</value></data>
+  <data name="CreateTile.EndButton" xml:space="preserve"><value>종료</value></data>
+  <data name="CreateTile.FrequencyDaily" xml:space="preserve"><value>매일</value></data>
+  <data name="CreateTile.FrequencyMonthly" xml:space="preserve"><value>매월</value></data>
+  <data name="CreateTile.FrequencyWeekly" xml:space="preserve"><value>매주</value></data>
+  <data name="CreateTile.Heading" xml:space="preserve"><value>타일 생성</value></data>
+  <data name="CreateTile.HoursLabel" xml:space="preserve"><value>시간</value></data>
+  <data name="CreateTile.KindLabel" xml:space="preserve"><value>종류</value></data>
+  <data name="CreateTile.KindLabelTile" xml:space="preserve"><value>라벨</value></data>
+  <data name="CreateTile.KindTask" xml:space="preserve"><value>작업</value></data>
+  <data name="CreateTile.MaximizeButton" xml:space="preserve"><value>시간 범위 내에서 최대화</value></data>
+  <data name="CreateTile.MemoLabel" xml:space="preserve"><value>메모</value></data>
+  <data name="CreateTile.MemoPlaceholder" xml:space="preserve"><value>보충 메모</value></data>
+  <data name="CreateTile.MinutesLabel" xml:space="preserve"><value>분</value></data>
+  <data name="CreateTile.MonthlyWeek" xml:space="preserve"><value>몇째 주</value></data>
+  <data name="CreateTile.MonthlyWeekday" xml:space="preserve"><value>요일</value></data>
+  <data name="CreateTile.PrimaryButton" xml:space="preserve"><value>생성</value></data>
+  <data name="CreateTile.ProjectLabel" xml:space="preserve"><value>프로젝트</value></data>
+  <data name="CreateTile.ProjectPlaceholder" xml:space="preserve"><value>프로젝트 이름</value></data>
+  <data name="CreateTile.RecurrenceEndTime" xml:space="preserve"><value>종료 시각</value></data>
+  <data name="CreateTile.RecurrencePrefix" xml:space="preserve"><value>매</value></data>
+  <data name="CreateTile.RecurrenceStartTime" xml:space="preserve"><value>시작 시각</value></data>
+  <data name="CreateTile.RecurrenceSuffixDaily" xml:space="preserve"><value>일</value></data>
+  <data name="CreateTile.RecurrenceSuffixMonthly" xml:space="preserve"><value>개월</value></data>
+  <data name="CreateTile.RecurrenceSuffixWeekly" xml:space="preserve"><value>주</value></data>
+  <data name="CreateTile.RecurrenceValidFrom" xml:space="preserve"><value>유효 시작</value></data>
+  <data name="CreateTile.RecurrenceValidTo" xml:space="preserve"><value>유효 종료</value></data>
+  <data name="CreateTile.RecurrenceValidityLabel" xml:space="preserve"><value>유효 기간</value></data>
+  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>분할 허용</value></data>
+  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>분할하지 않음</value></data>
+  <data name="CreateTile.SplitLabel" xml:space="preserve"><value>분할</value></data>
+  <data name="CreateTile.StartButton" xml:space="preserve"><value>시작</value></data>
+  <data name="CreateTile.TagLabel" xml:space="preserve"><value>태그</value></data>
+  <data name="CreateTile.TagPlaceholder" xml:space="preserve"><value>태그 이름</value></data>
+  <data name="CreateTile.TimingLabel" xml:space="preserve"><value>실행 시각</value></data>
+  <data name="CreateTile.TitleLabel" xml:space="preserve"><value>제목</value></data>
+  <data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>작업 25분</value></data>
+  <data name="CreateTile.WeekdayFri" xml:space="preserve"><value>금</value></data>
+  <data name="CreateTile.WeekdayMon" xml:space="preserve"><value>월</value></data>
+  <data name="CreateTile.WeekdaySat" xml:space="preserve"><value>토</value></data>
+  <data name="CreateTile.WeekdaySun" xml:space="preserve"><value>일</value></data>
+  <data name="CreateTile.WeekdayThu" xml:space="preserve"><value>목</value></data>
+  <data name="CreateTile.WeekdayTue" xml:space="preserve"><value>화</value></data>
+  <data name="CreateTile.WeekdayWed" xml:space="preserve"><value>수</value></data>
+  <data name="CreateTile_CreateFailed" xml:space="preserve"><value>타일 생성에 실패했습니다.</value></data>
+  <data name="CreateTile_CreateFailedWithMessage" xml:space="preserve"><value>타일 생성에 실패했습니다: {0}</value></data>
+  <data name="CreateTile_DeleteFailed" xml:space="preserve"><value>타일 삭제에 실패했습니다.</value></data>
+  <data name="CreateTile_EditHeading" xml:space="preserve"><value>타일 편집</value></data>
+  <data name="CreateTile_EditTitle" xml:space="preserve"><value>타일 편집</value></data>
+  <data name="CreateTile_ErrorPrefix" xml:space="preserve"><value>오류: {0}</value></data>
+  <data name="CreateTile_NoResponse" xml:space="preserve"><value>데몬이 응답하지 않았습니다.</value></data>
+  <data name="CreateTile_ProjectCreateNew" xml:space="preserve"><value>"{0}" 새로 만들기</value></data>
+  <data name="CreateTile_QuotaCheckException" xml:space="preserve"><value>타일 한도 확인 실패: {0}</value></data>
+  <data name="CreateTile_QuotaCheckFailed" xml:space="preserve"><value>타일 한도를 확인할 수 없습니다.</value></data>
+  <data name="CreateTile_QuotaLimitReached" xml:space="preserve"><value>무료 플랜 한도(타일 100개)에 도달했습니다. 타일을 정리하거나 플랜을 업그레이드하세요.</value></data>
+  <data name="CreateTile_TagCreateNew" xml:space="preserve"><value>새 태그 추가: #{0}</value></data>
+  <data name="CreateTile_Title" xml:space="preserve"><value>타일 생성</value></data>
+  <data name="CreateTile_UpdateFailed" xml:space="preserve"><value>타일 업데이트에 실패했습니다.</value></data>
+  <data name="CreateTile_UpdateFailedWithMessage" xml:space="preserve"><value>타일 업데이트에 실패했습니다: {0}</value></data>
+  <data name="CreateTile_ValidationDurationRequired" xml:space="preserve"><value>시작 또는 종료 시각을 지정한 경우 소요 시간을 입력해야 합니다.</value></data>
+  <data name="CreateTile_ValidationRecurrenceEndAfterStart" xml:space="preserve"><value>반복 실행의 종료 시각은 시작 시각보다 이후여야 합니다.</value></data>
+  <data name="CreateTile_ValidationRecurrenceIntervalMin" xml:space="preserve"><value>반복 실행의 간격은 최소 1 이상이어야 합니다.</value></data>
+  <data name="CreateTile_ValidationStartEndOrder" xml:space="preserve"><value>시작과 종료 순서를 확인해 주세요.</value></data>
+  <data name="CreateTile_ValidationTitleRequired" xml:space="preserve"><value>제목을 입력해 주세요.</value></data>
+
+</root>
