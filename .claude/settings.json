@@ -1,0 +1,20 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bun",
+            "args": [
+              ".claude/hooks/git-guard.mjs"
+            ],
+            "timeout": 10,
+            "statusMessage": "Scanning for destructive commands"
+          }
+        ]
+      }
+    ]
+  }
+}

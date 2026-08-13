@@ -62,7 +62,7 @@ public sealed class CodeReviewFixesContractTests
     {
         var source = ReadRepoFile("src", "TastileDesktop", "Views", "CreateTileWindow.xaml.cs");
 
-        Assert.Contains("var contract = CreateTileWindowContractResolver.ResolveWindowText(isEditMode, _isJapanese);", source);
+        Assert.Contains("var contract = CreateTileWindowContractResolver.ResolveWindowText(isEditMode, IsJapanese());", source);
         Assert.Contains("CreateButton.Content = contract.PrimaryButtonText;", source);
     }
 

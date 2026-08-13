@@ -1,8 +1,6 @@
 # Per-machine / IDE / agent tooling
 .idea/
 .vs/
-.claude/
-.agents/
 .impeccable/
 .cursor/
 .vscode/
