@@ -317,10 +317,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="Resources\Strings.Designer.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Microsoft.WindowsAppSDK" Version="1.7.250310001" />
     <PackageReference Include="Microsoft.Windows.SDK.BuildTools" Version="10.0.26100.1742" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
