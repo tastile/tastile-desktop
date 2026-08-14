@@ -24,6 +24,14 @@
     <EnableTimelineConnectorValidation>true</EnableTimelineConnectorValidation>
     <NeutralResourcesLanguage>en</NeutralResourcesLanguage>
     <SatelliteResourceLanguages>en;ja;zh-CN;ko;es</SatelliteResourceLanguages>
+    <!--
+      Disable the .NET SDK's implicit *.resx -> EmbeddedResource glob so the
+      explicit EmbeddedResource items below aren't reported as duplicates by
+      recent SDK versions (NETSDK1022). The explicit list is required for
+      PublicResXFileCodeGenerator + DependentUpon wiring, so we can't drop
+      the items and rely on the implicit glob.
+    -->
+    <EnableDefaultEmbeddedResourceItems>false</EnableDefaultEmbeddedResourceItems>
   </PropertyGroup>
 
   <ItemGroup>
