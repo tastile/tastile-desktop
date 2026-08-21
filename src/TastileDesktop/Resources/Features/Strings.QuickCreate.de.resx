@@ -1,0 +1,220 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="CreateTile.AllDay" xml:space="preserve"><value>Ganztﾃ､gig</value></data>
+  <data name="CreateTile.CancelButton" xml:space="preserve"><value>Abbrechen</value></data>
+  <data name="CreateTile.ColorLabel" xml:space="preserve"><value>Farbe</value></data>
+  <data name="CreateTile.CompletionModeLabel" xml:space="preserve"><value>Abschlussmodus</value></data>
+  <data name="CreateTile.CompletionModeNormal" xml:space="preserve"><value>Normal</value></data>
+  <data name="CreateTile.CompletionModeRecurring" xml:space="preserve"><value>Wiederholt</value></data>
+  <data name="CreateTile.CreateError" xml:space="preserve"><value>Erstellungsfehler</value></data>
+  <data name="CreateTile.CreateFailed" xml:space="preserve"><value>Kachel konnte nicht erstellt werden.</value></data>
+  <data name="CreateTile.CreateFailedWithMessage" xml:space="preserve"><value>Kachel konnte nicht erstellt werden: {0}</value></data>
+  <data name="CreateTile.DeleteButton" xml:space="preserve"><value>Lﾃｶschen</value></data>
+  <data name="CreateTile.DeleteFailed" xml:space="preserve"><value>Kachel konnte nicht gelﾃｶscht werden.</value></data>
+  <data name="CreateTile.DetailsDetailedTitle" xml:space="preserve"><value>Erweiterte Optionen</value></data>
+  <data name="CreateTile.DetailsEventTitle" xml:space="preserve"><value>Terminﾂｭdetails</value></data>
+  <data name="CreateTile.DetailsRecurringTitle" xml:space="preserve"><value>Wiederholungsﾂｭdetails</value></data>
+  <data name="CreateTile.DetailsTaskTitle" xml:space="preserve"><value>Aufgabenﾂｭdetails</value></data>
+  <data name="CreateTile.DueDatePlaceholder" xml:space="preserve"><value>Datum (optional)</value></data>
+  <data name="CreateTile.DueTimeLabel" xml:space="preserve"><value>Fﾃ､lligkeitsﾂｭzeit</value></data>
+  <data name="CreateTile.DurationCustom" xml:space="preserve"><value>Benutzerdefiniert窶ｦ</value></data>
+  <data name="CreateTile.DurationLabel" xml:space="preserve"><value>Dauer</value></data>
+  <data name="CreateTile.DurationManual" xml:space="preserve"><value>Minuten eingeben</value></data>
+  <data name="CreateTile.EditHeading" xml:space="preserve"><value>Kachel bearbeiten</value></data>
+  <data name="CreateTile.EditPrimaryButton" xml:space="preserve"><value>Speichern</value></data>
+  <data name="CreateTile.EditTitle" xml:space="preserve"><value>Kachel bearbeiten</value></data>
+  <data name="CreateTile.EndButton" xml:space="preserve"><value>Ende</value></data>
+  <data name="CreateTile.EndDate" xml:space="preserve"><value>Enddatum</value></data>
+  <data name="CreateTile.EndTimeLabel" xml:space="preserve"><value>Endzeit</value></data>
+  <data name="CreateTile.ErrorPrefix" xml:space="preserve"><value>Fehler: {0}</value></data>
+  <data name="CreateTile.FrequencyDaily" xml:space="preserve"><value>Tﾃ､glich</value></data>
+  <data name="CreateTile.FrequencyMonthly" xml:space="preserve"><value>Monatlich</value></data>
+  <data name="CreateTile.FrequencyWeekly" xml:space="preserve"><value>Wﾃｶchentlich</value></data>
+  <data name="CreateTile.Heading" xml:space="preserve"><value>Kachel erstellen</value></data>
+  <data name="CreateTile.HoursLabel" xml:space="preserve"><value>Stunden</value></data>
+  <data name="CreateTile.IntervalUnitDay" xml:space="preserve"><value>Tag</value></data>
+  <data name="CreateTile.IntervalUnitHour" xml:space="preserve"><value>Std.</value></data>
+  <data name="CreateTile.IntervalUnitMin" xml:space="preserve"><value>Min.</value></data>
+  <data name="CreateTile.IntervalValueLabel" xml:space="preserve"><value>Alle</value></data>
+  <data name="CreateTile.KindLabel" xml:space="preserve"><value>Typ</value></data>
+  <data name="CreateTile.KindLabelTile" xml:space="preserve"><value>Label</value></data>
+  <data name="CreateTile.KindTask" xml:space="preserve"><value>Aufgabe</value></data>
+  <data name="CreateTile.MaximizeButton" xml:space="preserve"><value>Im Zeitfenster maximieren</value></data>
+  <data name="CreateTile.MemoLabel" xml:space="preserve"><value>Notiz</value></data>
+  <data name="CreateTile.MemoPlaceholder" xml:space="preserve"><value>Ergﾃ､nzende Notizen</value></data>
+  <data name="CreateTile.MinutesLabel" xml:space="preserve"><value>Minuten</value></data>
+  <data name="CreateTile.MonthlyByDay" xml:space="preserve"><value>Nach Tag</value></data>
+  <data name="CreateTile.MonthlyByWeekday" xml:space="preserve"><value>Nach Wochentag</value></data>
+  <data name="CreateTile.MonthlyDayOfMonthLabel" xml:space="preserve"><value>Tag des Monats</value></data>
+  <data name="CreateTile.MonthlyLastWeek" xml:space="preserve"><value>Letzte</value></data>
+  <data name="CreateTile.MonthlyWeek" xml:space="preserve"><value>Welche Woche</value></data>
+  <data name="CreateTile.MonthlyWeekday" xml:space="preserve"><value>Wochentag</value></data>
+  <data name="CreateTile.MonthlyWeekFirst" xml:space="preserve"><value>1.</value></data>
+  <data name="CreateTile.MonthlyWeekFourth" xml:space="preserve"><value>4.</value></data>
+  <data name="CreateTile.MonthlyWeekOfMonthLabel" xml:space="preserve"><value>Woche des Monats</value></data>
+  <data name="CreateTile.MonthlyWeekSecond" xml:space="preserve"><value>2.</value></data>
+  <data name="CreateTile.MonthlyWeekThird" xml:space="preserve"><value>3.</value></data>
+  <data name="CreateTile.NoResponse" xml:space="preserve"><value>Daemon hat nicht geantwortet.</value></data>
+  <data name="CreateTile.PrimaryButton" xml:space="preserve"><value>Erstellen</value></data>
+  <data name="CreateTile.ProjectCreateNew" xml:space="preserve"><value>窶桀0}窶・erstellen</value></data>
+  <data name="CreateTile.ProjectLabel" xml:space="preserve"><value>Projekt</value></data>
+  <data name="CreateTile.ProjectPlaceholder" xml:space="preserve"><value>Projektname</value></data>
+  <data name="CreateTile.QuotaCheckException" xml:space="preserve"><value>Kachel-Limit konnte nicht geprﾃｼft werden: {0}</value></data>
+  <data name="CreateTile.QuotaCheckFailed" xml:space="preserve"><value>Kachel-Limit konnte nicht ﾃｼberprﾃｼft werden.</value></data>
+  <data name="CreateTile.QuotaLimitReached" xml:space="preserve"><value>Limit des kostenlosen Tarifs erreicht (100 Kacheln). Bitte Kacheln archivieren oder Tarif upgraden.</value></data>
+  <data name="CreateTile.RecurrenceEndTime" xml:space="preserve"><value>Endzeit</value></data>
+  <data name="CreateTile.RecurrencePrefix" xml:space="preserve"><value>Alle</value></data>
+  <data name="CreateTile.RecurrenceStartTime" xml:space="preserve"><value>Startzeit</value></data>
+  <data name="CreateTile.RecurrenceSuffixDaily" xml:space="preserve"><value>Tag(e)</value></data>
+  <data name="CreateTile.RecurrenceSuffixMonthly" xml:space="preserve"><value>Monat(e)</value></data>
+  <data name="CreateTile.RecurrenceSuffixWeekly" xml:space="preserve"><value>Woche(n)</value></data>
+  <data name="CreateTile.RecurrenceValidFrom" xml:space="preserve"><value>Gﾃｼltig ab</value></data>
+  <data name="CreateTile.RecurrenceValidityLabel" xml:space="preserve"><value>Gﾃｼltigkeitszeitraum</value></data>
+  <data name="CreateTile.RecurrenceValidTo" xml:space="preserve"><value>Gﾃｼltig bis</value></data>
+  <data name="CreateTile.RepeatEndLabel" xml:space="preserve"><value>Wiederholen bis</value></data>
+  <data name="CreateTile.RepeatModeDaily" xml:space="preserve"><value>Tﾃ､glich</value></data>
+  <data name="CreateTile.RepeatModeInterval" xml:space="preserve"><value>Intervall</value></data>
+  <data name="CreateTile.RepeatModeMonthly" xml:space="preserve"><value>Monatlich</value></data>
+  <data name="CreateTile.RepeatModeOnce" xml:space="preserve"><value>Keine Wiederholung</value></data>
+  <data name="CreateTile.RepeatModeWeekly" xml:space="preserve"><value>Wﾃｶchentlich</value></data>
+  <data name="CreateTile.SchedulableWindowEndLabel" xml:space="preserve"><value>Spﾃ､tester Zeitpunkt</value></data>
+  <data name="CreateTile.SchedulableWindowStartLabel" xml:space="preserve"><value>Frﾃｼhester Zeitpunkt</value></data>
+  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>Aufteilen erlauben</value></data>
+  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>Nicht aufteilen</value></data>
+  <data name="CreateTile.SplitLabel" xml:space="preserve"><value>Aufteilung</value></data>
+  <data name="CreateTile.StartButton" xml:space="preserve"><value>Start</value></data>
+  <data name="CreateTile.StartDate" xml:space="preserve"><value>Startdatum</value></data>
+  <data name="CreateTile.StartTimeLabel" xml:space="preserve"><value>Startzeit</value></data>
+  <data name="CreateTile.SubmitBlockedHint" xml:space="preserve"><value>Behebe den markierten Fehler, um fortzufahren.</value></data>
+  <data name="CreateTile.SubmitFailedRetry" xml:space="preserve"><value>ﾃ彙ermittlung fehlgeschlagen. Bitte erneut versuchen.</value></data>
+  <data name="CreateTile.SubtasksAdd" xml:space="preserve"><value>Teilaufgabe hinzufﾃｼgen</value></data>
+  <data name="CreateTile.SubtasksEmpty" xml:space="preserve"><value>Keine Teilaufgaben</value></data>
+  <data name="CreateTile.SubtasksLabel" xml:space="preserve"><value>Teilaufgaben</value></data>
+  <data name="CreateTile.TagCreateNew" xml:space="preserve"><value>Neues Tag hinzufﾃｼgen: #{0}</value></data>
+  <data name="CreateTile.TagLabel" xml:space="preserve"><value>Tags</value></data>
+  <data name="CreateTile.TagPlaceholder" xml:space="preserve"><value>Tag-Name</value></data>
+  <data name="CreateTile.TimeModelDurationOnly" xml:space="preserve"><value>Nur Dauer</value></data>
+  <data name="CreateTile.TimeModelDurationOnlyHint" xml:space="preserve"><value>Keine feste Zeit 窶・nur Dauer</value></data>
+  <data name="CreateTile.TimeModelFixedWindow" xml:space="preserve"><value>Festes Zeitfenster</value></data>
+  <data name="CreateTile.TimeModelWindowWithDuration" xml:space="preserve"><value>Zeitfenster + Dauer</value></data>
+  <data name="CreateTile.TimeOfDayLabel" xml:space="preserve"><value>Tageszeit</value></data>
+  <data name="CreateTile.TimingLabel" xml:space="preserve"><value>Ausfﾃｼhrungsﾂｭzeitpunkt</value></data>
+  <data name="CreateTile.Title" xml:space="preserve"><value>Kachel erstellen</value></data>
+  <data name="CreateTile.TitleLabel" xml:space="preserve"><value>Titel</value></data>
+  <data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>Titel hinzufﾃｼgen</value></data>
+  <data name="CreateTile.TitleRequired" xml:space="preserve"><value>Titel ist erforderlich.</value></data>
+  <data name="CreateTile.UpdateError" xml:space="preserve"><value>Aktualisierungsfehler</value></data>
+  <data name="CreateTile.UpdateFailed" xml:space="preserve"><value>Kachel konnte nicht aktualisiert werden.</value></data>
+  <data name="CreateTile.UpdateFailedWithMessage" xml:space="preserve"><value>Kachel konnte nicht aktualisiert werden: {0}</value></data>
+  <data name="CreateTile.ValidationDurationRequired" xml:space="preserve"><value>Dauer ist erforderlich, wenn Start oder Ende angegeben ist.</value></data>
+  <data name="CreateTile.ValidationRecurrenceEndAfterStart" xml:space="preserve"><value>Endzeit der Wiederholung muss nach der Startzeit liegen.</value></data>
+  <data name="CreateTile.ValidationRecurrenceIntervalMin" xml:space="preserve"><value>Wiederholungsintervall muss mindestens 1 sein.</value></data>
+  <data name="CreateTile.ValidationStartEndOrder" xml:space="preserve"><value>Reihenfolge von Start und Ende prﾃｼfen.</value></data>
+  <data name="CreateTile.ValidationTitleRequired" xml:space="preserve"><value>Titel eingeben.</value></data>
+  <data name="CreateTile.WeekdayFri" xml:space="preserve"><value>Fr</value></data>
+  <data name="CreateTile.WeekdayMon" xml:space="preserve"><value>Mo</value></data>
+  <data name="CreateTile.WeekdaySat" xml:space="preserve"><value>Sa</value></data>
+  <data name="CreateTile.WeekdaySun" xml:space="preserve"><value>So</value></data>
+  <data name="CreateTile.WeekdayThu" xml:space="preserve"><value>Do</value></data>
+  <data name="CreateTile.WeekdayTue" xml:space="preserve"><value>Di</value></data>
+  <data name="CreateTile.WeekdayWed" xml:space="preserve"><value>Mi</value></data>
+  <data name="CreateTile.WorkflowDetailed" xml:space="preserve"><value>Erweitert</value></data>
+  <data name="CreateTile.WorkflowDetailedDescription" xml:space="preserve"><value>Alle Felder direkt bearbeiten</value></data>
+  <data name="CreateTile.WorkflowEvent" xml:space="preserve"><value>Termin</value></data>
+  <data name="CreateTile.WorkflowEventDescription" xml:space="preserve"><value>Zeitblock im Kalender</value></data>
+  <data name="CreateTile.WorkflowRecurring" xml:space="preserve"><value>Wiederholt</value></data>
+  <data name="CreateTile.WorkflowRecurringDescription" xml:space="preserve"><value>Sich regelmﾃ､ﾃ殃g wiederholend</value></data>
+  <data name="CreateTile.WorkflowTask" xml:space="preserve"><value>Aufgabe</value></data>
+  <data name="CreateTile.WorkflowTaskDescription" xml:space="preserve"><value>Arbeit mit Zieldauer</value></data>
+  <data name="CreateTile.DurationMinute" xml:space="preserve"><value>{0} Min.</value></data>
+  <data name="CreateTile.DurationHour" xml:space="preserve"><value>{0} Std.</value></data>
+  <data name="CreateTile.TagChipLabel" xml:space="preserve"><value>#{0} ×</value></data>
+
+  <data name="CreateTile_TaskBody_DurationLabel.Text" xml:space="preserve"><value>Dauer</value></data>
+  <data name="CreateTile_TaskBody_SplitAllowButton.Content" xml:space="preserve"><value>Aufteilen erlauben</value></data>
+  <data name="CreateTile_TaskBody_SplitKeepButton.Content" xml:space="preserve"><value>Nicht aufteilen</value></data>
+  <data name="CreateTile_EventBody_AllDayLabel.Text" xml:space="preserve"><value>Ganztägig</value></data>
+  <data name="CreateTile_RecurringBody_RepeatLabel.Text" xml:space="preserve"><value>Wiederholen</value></data>
+  <data name="CreateTile_RecurringBody_IntervalLabel.Text" xml:space="preserve"><value>Alle</value></data>
+  <data name="CreateTile_RecurringBody_MonthlyDayBox.Header" xml:space="preserve"><value>Tag des Monats</value></data>
+  <data name="CreateTile_RecurringBody_TimeModelLabel.Text" xml:space="preserve"><value>Zeitmodell</value></data>
+  <data name="CreateTile_RecurringBody_RepeatUntilLabel.Text" xml:space="preserve"><value>Wiederholen bis</value></data>
+  <data name="CreateTile_RecurringBody_DurationLabel.Text" xml:space="preserve"><value>Dauer</value></data>
+  <data name="CreateTile_DetailedBody_ModeLabel.Text" xml:space="preserve"><value>Modus</value></data>
+  <data name="CreateTile_DetailedBody_MaximizeButton.Content" xml:space="preserve"><value>Im Zeitfenster maximieren</value></data>
+  <data name="CreateTile_DetailedBody_TimingLabel.Text" xml:space="preserve"><value>Ausführungszeitpunkt</value></data>
+  <data name="CreateTile_DetailedBody_UseStartAtButton.Content" xml:space="preserve"><value>Start verwenden</value></data>
+  <data name="CreateTile_DetailedBody_UseEndAtButton.Content" xml:space="preserve"><value>Ende verwenden</value></data>
+  <data name="CreateTile_DetailedBody_RecurrencePrefix.Text" xml:space="preserve"><value>Alle</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceSuffix.Text" xml:space="preserve"><value>Tag(e)</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekBox.Header" xml:space="preserve"><value>Woche des Monats</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekdayComboBox.Header" xml:space="preserve"><value>Wochentag</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseStartAtButton.Content" xml:space="preserve"><value>Startzeit verwenden</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseEndAtButton.Content" xml:space="preserve"><value>Endzeit verwenden</value></data>
+  <data name="CreateTile_DetailedBody_DurationLabel.Text" xml:space="preserve"><value>Dauer</value></data>
+  <data name="CreateTile_DetailedBody_WorkHoursBox.Header" xml:space="preserve"><value>Stunden</value></data>
+  <data name="CreateTile_DetailedBody_WorkMinutesBox.Header" xml:space="preserve"><value>Minuten</value></data>
+  <data name="CreateTile_DetailedBody_SplitLabel.Text" xml:space="preserve"><value>Aufteilung</value></data>
+  <data name="CreateTile_DetailedBody_SplitAllowButton.Content" xml:space="preserve"><value>Aufteilen erlauben</value></data>
+  <data name="CreateTile_DetailedBody_SplitKeepButton.Content" xml:space="preserve"><value>Nicht aufteilen</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidityLabel.Text" xml:space="preserve"><value>Gültigkeitszeitraum</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidFromButton.Content" xml:space="preserve"><value>Gültig ab</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidToButton.Content" xml:space="preserve"><value>Gültig bis</value></data>
+  <data name="CreateTileHeader_CloseButton.ToolTipService.ToolTip" xml:space="preserve"><value>Schließen</value></data>
+  <data name="CreateTileHeader_TitleInput.PlaceholderText" xml:space="preserve"><value>Titel hinzufügen</value></data>
+  <data name="ProjectColorRow_ProjectInput.PlaceholderText" xml:space="preserve"><value>Projektname</value></data>
+  <data name="ProjectColorRow_TagInput.PlaceholderText" xml:space="preserve"><value>Tag-Name</value></data>
+  <data name="CreateTile_CreateError" xml:space="preserve"><value>Erstellungsfehler</value></data>
+  <data name="CreateTile_CreateFailed" xml:space="preserve"><value>Kachel konnte nicht erstellt werden.</value></data>
+  <data name="CreateTile_CreateFailedWithMessage" xml:space="preserve"><value>Kachel konnte nicht erstellt werden: {0}</value></data>
+  <data name="CreateTile_DeleteFailed" xml:space="preserve"><value>Kachel konnte nicht gelöscht werden.</value></data>
+  <data name="CreateTile_EditHeading" xml:space="preserve"><value>Kachel bearbeiten</value></data>
+  <data name="CreateTile_EditTitle" xml:space="preserve"><value>Kachel bearbeiten</value></data>
+  <data name="CreateTile_ErrorPrefix" xml:space="preserve"><value>Fehler: {0}</value></data>
+  <data name="CreateTile_NoResponse" xml:space="preserve"><value>Daemon hat nicht geantwortet.</value></data>
+  <data name="CreateTile_ProjectCreateNew" xml:space="preserve"><value>„{0}" erstellen</value></data>
+  <data name="CreateTile_QuotaCheckException" xml:space="preserve"><value>Kachel-Limit konnte nicht geprüft werden: {0}</value></data>
+  <data name="CreateTile_QuotaCheckFailed" xml:space="preserve"><value>Kachel-Limit konnte nicht überprüft werden.</value></data>
+  <data name="CreateTile_QuotaLimitReached" xml:space="preserve"><value>Limit des kostenlosen Tarifs erreicht (100 Kacheln). Bitte Kacheln archivieren oder Tarif upgraden.</value></data>
+  <data name="CreateTile_SubmitBlockedHint" xml:space="preserve"><value>Behebe den markierten Fehler, um fortzufahren.</value></data>
+  <data name="CreateTile_SubmitFailedRetry" xml:space="preserve"><value>Übermittlung fehlgeschlagen. Bitte erneut versuchen.</value></data>
+  <data name="CreateTile_TagCreateNew" xml:space="preserve"><value>Neues Tag hinzufügen: #{0}</value></data>
+  <data name="CreateTile_TitleRequired" xml:space="preserve"><value>Titel ist erforderlich.</value></data>
+  <data name="CreateTile_UpdateError" xml:space="preserve"><value>Aktualisierungsfehler</value></data>
+  <data name="CreateTile_UpdateFailed" xml:space="preserve"><value>Kachel konnte nicht aktualisiert werden.</value></data>
+  <data name="CreateTile_UpdateFailedWithMessage" xml:space="preserve"><value>Kachel konnte nicht aktualisiert werden: {0}</value></data>
+  <data name="CreateTile_ValidationDurationRequired" xml:space="preserve"><value>Dauer ist erforderlich, wenn Start oder Ende angegeben ist.</value></data>
+  <data name="CreateTile_ValidationRecurrenceEndAfterStart" xml:space="preserve"><value>Endzeit der Wiederholung muss nach der Startzeit liegen.</value></data>
+  <data name="CreateTile_ValidationRecurrenceIntervalMin" xml:space="preserve"><value>Wiederholungsintervall muss mindestens 1 sein.</value></data>
+  <data name="CreateTile_ValidationStartEndOrder" xml:space="preserve"><value>Reihenfolge von Start und Ende prüfen.</value></data>
+  <data name="CreateTile_ValidationTitleRequired" xml:space="preserve"><value>Titel eingeben.</value></data>
+</root>

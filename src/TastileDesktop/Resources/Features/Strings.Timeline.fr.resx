@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <data name="Timeline.Day" xml:space="preserve"><value>Day</value></data>
+  <data name="Timeline.Loading" xml:space="preserve"><value>Loading calendar...</value></data>
+  <data name="Timeline.Month" xml:space="preserve"><value>Month</value></data>
+  <data name="Timeline.Next" xml:space="preserve"><value>→</value></data>
+  <data name="Timeline.Previous" xml:space="preserve"><value>←</value></data>
+  <data name="Timeline.TitleBarHeading" xml:space="preserve"><value>Timeline</value></data>
+  <data name="Timeline.Week" xml:space="preserve"><value>Week</value></data>
+  <data name="Timeline.WeekdayFri" xml:space="preserve"><value>Fri</value></data>
+  <data name="Timeline.WeekdayMon" xml:space="preserve"><value>Mon</value></data>
+  <data name="Timeline.WeekdaySat" xml:space="preserve"><value>Sat</value></data>
+  <data name="Timeline.WeekdaySun" xml:space="preserve"><value>Sun</value></data>
+  <data name="Timeline.WeekdayThu" xml:space="preserve"><value>Thu</value></data>
+  <data name="Timeline.WeekdayTue" xml:space="preserve"><value>Tue</value></data>
+  <data name="Timeline.WeekdayWed" xml:space="preserve"><value>Wed</value></data>
+  <data name="Timeline.Year" xml:space="preserve"><value>Year</value></data>
+  <data name="Timeline.ZoomIn" xml:space="preserve"><value>+</value></data>
+  <data name="Timeline.ZoomOut" xml:space="preserve"><value>-</value></data>
+  <data name="Timeline_Title" xml:space="preserve"><value>Timeline</value></data>
+  <data name="Timeline_TodayTooltip" xml:space="preserve"><value>Return to current time</value></data>
+
+</root>
