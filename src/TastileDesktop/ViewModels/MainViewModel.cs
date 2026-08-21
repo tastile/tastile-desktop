@@ -805,6 +805,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _nextActionableStartAt,
         DateTimeOffset.UtcNow);
 
+    public string DateText => DateTime.Now.ToString("yyyy/MM/dd");
+
+    public string ClockText => DateTime.Now.ToString("HH:mm:ss");
+
     public double MainRunningProgressPercent
     {
         get
@@ -2151,6 +2155,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(MainRunningProgressPercent));
         OnPropertyChanged(nameof(ExecutionStatusDetail));
         OnPropertyChanged(nameof(QuickPanelLeadingText));
+        OnPropertyChanged(nameof(DateText));
+        OnPropertyChanged(nameof(ClockText));
     }
 
     [RelayCommand]

@@ -30,12 +30,18 @@
     </xsd:element>
   </xsd:schema>
   <data name="Auth" xml:space="preserve"><value>登录</value></data>
+  <data name="Auth.Title" xml:space="preserve"><value>登录</value></data>
   <data name="Auth_Cancel" xml:space="preserve"><value>取消</value></data>
+  <data name="Auth_Cancel.Content" xml:space="preserve"><value>取消</value></data>
   <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>在浏览器中继续</value></data>
+  <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>在浏览器中继续</value></data>
   <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>请在浏览器中完成登录…</value></data>
   <data name="Auth_Description" xml:space="preserve"><value>浏览器将打开 Tastile 登录页面。选择登录方式后，完成登录将自动返回。</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>浏览器将打开 Tastile 登录页面。选择登录方式后，完成登录将自动返回。</value></data>
   <data name="Auth_Heading" xml:space="preserve"><value>登录 Tastile</value></data>
+  <data name="Auth_Heading.Text" xml:space="preserve"><value>登录 Tastile</value></data>
   <data name="Auth_SignInFailed" xml:space="preserve"><value>无法开始登录：{0}</value></data>
   <data name="Auth_TitleBarHeading" xml:space="preserve"><value>登录</value></data>
+  <data name="Auth_TitleBarHeading.Text" xml:space="preserve"><value>登录</value></data>
 
 </root>

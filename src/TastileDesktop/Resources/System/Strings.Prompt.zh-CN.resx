@@ -41,6 +41,23 @@
   <data name="Intervention_NoReadyTiles" xml:space="preserve"><value>没有就绪的卡片。请创建新卡片以继续。</value></data>
   <data name="Intervention_ReadyTilesHint" xml:space="preserve"><value>就绪卡片</value></data>
   <data name="Intervention_Title" xml:space="preserve"><value>Tastile - 需要操作</value></data>
+  <data name="Intervention.Title" xml:space="preserve"><value>Tastile - 需要操作</value></data>
   <data name="Intervention_WorkMessage" xml:space="preserve"><value>您已经工作了 25 分钟。</value></data>
 
+  <data name="Intervention_BreakButton.Content" xml:space="preserve"><value>Take a break (5 min)</value></data>
+  <data name="Intervention_BreakOver.Text" xml:space="preserve"><value>Your break is over.</value></data>
+  <data name="Intervention_BreakOverMessage" xml:space="preserve"><value>Your break time is over!</value></data>
+  <data name="Intervention_ChooseNext.Text" xml:space="preserve"><value>Choose the next tile</value></data>
+  <data name="Intervention_CompleteButton.Content" xml:space="preserve"><value>Complete</value></data>
+  <data name="Intervention_ContinueButton.Content" xml:space="preserve"><value>Continue (25 min)</value></data>
+  <data name="Intervention_CreateNewButton.Content" xml:space="preserve"><value>Create new tile</value></data>
+  <data name="Intervention_ElapsedTimeText.Text" xml:space="preserve"><value>Working for {0} minutes</value></data>
+  <data name="Intervention_EndBreakButton.Content" xml:space="preserve"><value>End break and continue</value></data>
+  <data name="Intervention_Footer.Text" xml:space="preserve"><value>This dialog stays on screen until you choose an action.</value></data>
+  <data name="Intervention_Heading.Text" xml:space="preserve"><value>Intervention required</value></data>
+  <data name="Intervention_IdleMessage" xml:space="preserve"><value>What would you like to work on?</value></data>
+  <data name="Intervention_NoReadyTiles.Text" xml:space="preserve"><value>No ready tiles. Create a new one to continue.</value></data>
+  <data name="Intervention_ReadyTilesHint.Text" xml:space="preserve"><value>Ready tiles</value></data>
+  <data name="Intervention_WorkElapsedFormat" xml:space="preserve"><value>Working for {0} minutes</value></data>
+  <data name="Intervention_WorkMessage.Text" xml:space="preserve"><value>You've been working for 25 minutes.</value></data>
 </root>

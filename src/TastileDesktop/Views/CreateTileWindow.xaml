@@ -4,194 +4,48 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:controls="using:TastileDesktop.Controls"
+    xmlns:ct="using:TastileDesktop.Views.CreateTile"
+    xmlns:sections="using:TastileDesktop.Views.CreateTile.Sections"
     mc:Ignorable="d"
     x:Uid="CreateTile"
     Title="Create Tile">
     <Grid x:Name="RootGrid" Background="{StaticResource AppBackgroundBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="32" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
         <Grid x:Name="TitleBarArea" Height="32" Background="Transparent">
-            <TextBlock x:Name="HeadingTextBlock" x:Uid="CreateTile.Heading" Text="Create Tile" Margin="16,0,0,0" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
+            <TextBlock x:Name="HeadingTextBlock" Text="Create Tile" Margin="16,0,0,0" VerticalAlignment="Center" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundBrush}" />
         </Grid>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-            <StackPanel Padding="20" Spacing="14" MaxWidth="620">
+        <ct:CreateTileHeader
+            x:Name="Header"
+            Grid.Row="1"
+            TitleText=""
+            TitlePlaceholder="Add a title" />
 
-                <TextBlock x:Uid="CreateTile.TitleLabel" Text="タイトル" Style="{StaticResource SettingRowLabelTextStyle}" />
-                <TextBox x:Name="TitleTextBox" x:Uid="CreateTile.TitlePlaceholder" PlaceholderText="作業 25分" />
-                <ScrollViewer x:Name="TitleSuggestionScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Visibility="Collapsed">
-                    <StackPanel x:Name="TitleSuggestionPanel" Orientation="Horizontal" Spacing="8" />
-                </ScrollViewer>
+        <ct:WorkflowBatch
+            x:Name="WorkflowTabs"
+            Grid.Row="2"
+            ActiveKind="Event" />
 
-                <TextBlock x:Uid="CreateTile.KindLabel" Text="種類" Style="{StaticResource SettingRowLabelTextStyle}" />
-                <controls:TabSelector x:Name="KindSelector" SelectionChanged="OnKindSelectionChanged" />
-
-                <StackPanel x:Name="ObjectivePanel" Spacing="8">
-                    <TextBlock x:Uid="CreateTile.CompletionModeLabel" Text="完了モード" Style="{StaticResource SettingRowLabelTextStyle}" />
-                    <controls:TabSelector x:Name="ModeSelector" SelectionChanged="OnModeSelectionChanged" />
-                    <ToggleButton x:Name="MaximizeButton" x:Uid="CreateTile.MaximizeButton" Content="時間枠の中で最大化" Style="{StaticResource SelectorButtonStyle}" Click="OnMaximizeClick" Visibility="Collapsed" />
-                </StackPanel>
-
-                <StackPanel x:Name="TimingPanel" Spacing="8">
-                    <TextBlock x:Uid="CreateTile.TimingLabel" Text="実行タイミング" Style="{StaticResource SettingRowLabelTextStyle}" />
-                    <Grid ColumnSpacing="4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ToggleButton x:Name="UseStartAtButton" x:Uid="CreateTile.StartButton" Content="開始" Style="{StaticResource SelectorButtonStyle}" Click="OnUseStartAtClick" />
-                        <ToggleButton x:Name="UseEndAtButton" Grid.Column="1" x:Uid="CreateTile.EndButton" Content="終了" Style="{StaticResource SelectorButtonStyle}" Click="OnUseEndAtClick" />
-                    </Grid>
-                </StackPanel>
-                <Grid x:Name="StartDatePanel" ColumnSpacing="8" Visibility="Collapsed">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <DatePicker x:Name="StartDatePicker" />
-                    <TimePicker x:Name="StartTimePicker" Grid.Column="1" />
-                </Grid>
-                <Grid x:Name="EndDatePanel" ColumnSpacing="8" Visibility="Collapsed">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <DatePicker x:Name="EndDatePicker" />
-                    <TimePicker x:Name="EndTimePicker" Grid.Column="1" />
-                </Grid>
-
-                <StackPanel x:Name="RecurringSchedulePanel" Spacing="8" Visibility="Collapsed">
-                    <controls:TabSelector x:Name="FreqSelector" SelectionChanged="OnFreqSelectionChanged" />
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock x:Uid="CreateTile.RecurrencePrefix" Text="毎" VerticalAlignment="Center" />
-                        <NumberBox x:Name="RecurrenceIntervalBox" Grid.Column="1" Minimum="1" SpinButtonPlacementMode="Inline" />
-                        <TextBlock x:Name="RecurrenceSuffixText" Grid.Column="2" x:Uid="CreateTile.RecurrenceSuffixDaily" Text="日ごと" VerticalAlignment="Center" />
-                    </Grid>
-                    <Grid x:Name="WeeklyDaysGrid" Visibility="Collapsed">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ToggleButton x:Name="WeekdaySun" x:Uid="CreateTile.WeekdaySun" Content="日" Tag="0" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
-                        <ToggleButton x:Name="WeekdayMon" Grid.Column="1" x:Uid="CreateTile.WeekdayMon" Content="月" Tag="1" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
-                        <ToggleButton x:Name="WeekdayTue" Grid.Column="2" x:Uid="CreateTile.WeekdayTue" Content="火" Tag="2" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
-                        <ToggleButton x:Name="WeekdayWed" Grid.Column="3" x:Uid="CreateTile.WeekdayWed" Content="水" Tag="3" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
-                        <ToggleButton x:Name="WeekdayThu" Grid.Column="4" x:Uid="CreateTile.WeekdayThu" Content="木" Tag="4" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
-                        <ToggleButton x:Name="WeekdayFri" Grid.Column="5" x:Uid="CreateTile.WeekdayFri" Content="金" Tag="5" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
-                        <ToggleButton x:Name="WeekdaySat" Grid.Column="6" x:Uid="CreateTile.WeekdaySat" Content="土" Tag="6" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
-                    </Grid>
-                    <Grid x:Name="MonthlyPatternGrid" ColumnSpacing="8" Visibility="Collapsed">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <NumberBox x:Name="MonthlyWeekBox" x:Uid="CreateTile.MonthlyWeek" Header="第何週" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" />
-                        <ComboBox x:Name="MonthlyWeekdayComboBox" Grid.Column="1" x:Uid="CreateTile.MonthlyWeekday" Header="曜日" />
-                    </Grid>
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ToggleButton x:Name="RecurrenceUseStartAtButton" x:Uid="CreateTile.RecurrenceStartTime" Content="開始時刻" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceUseStartAtClick" />
-                        <ToggleButton x:Name="RecurrenceUseEndAtButton" Grid.Column="1" x:Uid="CreateTile.RecurrenceEndTime" Content="終了時刻" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceUseEndAtClick" />
-                    </Grid>
-                    <Grid x:Name="RecurringWindowGrid" ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <TimePicker x:Name="RecurrenceStartTimePicker" />
-                        <TimePicker x:Name="RecurrenceEndTimePicker" Grid.Column="1" />
-                    </Grid>
-                </StackPanel>
-
-                <StackPanel x:Name="WorkTargetPanel" Spacing="8">
-                    <TextBlock x:Uid="CreateTile.DurationLabel" Text="所要時間" Style="{StaticResource SettingRowLabelTextStyle}" />
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <NumberBox x:Name="WorkHoursBox" x:Uid="CreateTile.HoursLabel" Header="時間" Minimum="0" Maximum="99" SpinButtonPlacementMode="Inline" ValueChanged="OnWorkDurationChanged" />
-                        <NumberBox x:Name="WorkMinutesBox" Grid.Column="1" x:Uid="CreateTile.MinutesLabel" Header="分" Minimum="0" Maximum="59" SpinButtonPlacementMode="Inline" ValueChanged="OnWorkDurationChanged" />
-                    </Grid>
-
-                    <TextBlock x:Uid="CreateTile.SplitLabel" Text="分割" Style="{StaticResource SettingRowLabelTextStyle}" />
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ToggleButton x:Name="SplitAllowButton" x:Uid="CreateTile.SplitAllow" Content="分割してよい" Style="{StaticResource SelectorButtonStyle}" Click="OnSplitAllowClick" />
-                        <ToggleButton x:Name="SplitKeepButton" Grid.Column="1" x:Uid="CreateTile.SplitKeep" Content="分割しない" Style="{StaticResource SelectorButtonStyle}" Click="OnSplitKeepClick" />
-                    </Grid>
-                </StackPanel>
-
-                <StackPanel x:Name="RecurrenceValidityPanel" Spacing="8" Visibility="Collapsed">
-                    <TextBlock x:Uid="CreateTile.RecurrenceValidityLabel" Text="有効期間" Style="{StaticResource SettingRowLabelTextStyle}" />
-                    <Grid ColumnSpacing="8">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <ToggleButton x:Name="RecurrenceValidFromButton" x:Uid="CreateTile.RecurrenceValidFrom" Content="有効開始" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceValidFromClick" />
-                        <ToggleButton x:Name="RecurrenceValidToButton" Grid.Column="1" x:Uid="CreateTile.RecurrenceValidTo" Content="有効終了" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceValidToClick" />
-                    </Grid>
-                    <Grid x:Name="RecurrenceValidityGrid" ColumnSpacing="8" Visibility="Collapsed">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <DatePicker x:Name="RecurrenceValidFromDatePicker" />
-                        <DatePicker x:Name="RecurrenceValidToDatePicker" Grid.Column="1" />
-                    </Grid>
-                </StackPanel>
-
-                <TextBlock x:Uid="CreateTile.ProjectLabel" Text="プロジェクト" Style="{StaticResource SettingRowLabelTextStyle}" />
-                <TextBox x:Name="ProjectTextBox" x:Uid="CreateTile.ProjectPlaceholder" PlaceholderText="プロジェクト名" />
-                <Border x:Name="ProjectSuggestionBorder" Padding="4" Visibility="Collapsed">
-                    <StackPanel x:Name="ProjectSuggestionPanel" Spacing="2" />
-                </Border>
-
-                <TextBlock x:Uid="CreateTile.TagLabel" Text="タグ" Style="{StaticResource SettingRowLabelTextStyle}" />
-                <TextBox x:Name="TagTextBox" x:Uid="CreateTile.TagPlaceholder" PlaceholderText="タグ名" />
-                <Border x:Name="TagSuggestionBorder" Padding="4" Visibility="Collapsed">
-                    <StackPanel x:Name="TagSuggestionPanel" Spacing="2" />
-                </Border>
-                <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-                    <StackPanel x:Name="SelectedTagsPanel" Orientation="Horizontal" Spacing="8" />
-                </ScrollViewer>
-
-                <TextBlock x:Uid="CreateTile.MemoLabel" Text="メモ" Style="{StaticResource SettingRowLabelTextStyle}" />
-                <TextBox x:Name="MemoTextBox" x:Uid="CreateTile.MemoPlaceholder" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="90" PlaceholderText="補足メモ" />
-
-                <TextBlock x:Name="ErrorTextBlock" Foreground="#FFD13438" TextWrapping="Wrap" Visibility="Collapsed" />
-
-            </StackPanel>
+        <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <Grid x:Name="BodyHost" />
         </ScrollViewer>
 
-        <Border Grid.Row="2" Padding="20,12" BorderThickness="0,1,0,0" BorderBrush="{StaticResource AppBorderBrush}">
-            <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Right">
-                <Button x:Name="DeleteButton" x:Uid="CreateTile.DeleteButton" MinWidth="80" Content="削除" Click="OnDeleteClick" Visibility="Collapsed" />
-                <Button x:Name="CancelButton" x:Uid="CreateTile.CancelButton" MinWidth="80" Content="キャンセル" Click="OnCancelClick" />
-                <Button x:Name="CreateButton" x:Uid="CreateTile.PrimaryButton" MinWidth="80" Content="作成" Style="{ThemeResource AccentButtonStyle}" Click="OnCreateClick" />
-            </StackPanel>
+        <Border Grid.Row="4" Padding="20,10,20,14" BorderThickness="0,1,0,0" BorderBrush="{StaticResource AppBorderBrush}">
+            <Grid ColumnSpacing="12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <sections:PanelErrorBanner x:Name="ErrorBanner" Visibility="Collapsed" />
+                <Button x:Name="DeleteButton" Grid.Column="1" MinWidth="80" Content="Delete" Click="OnDeleteClick" Visibility="Collapsed" />
+            </Grid>
         </Border>
     </Grid>
 </Window>

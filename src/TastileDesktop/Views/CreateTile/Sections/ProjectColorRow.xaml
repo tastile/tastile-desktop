@@ -1,0 +1,11 @@
+<UserControl
+    x:Class="TastileDesktop.Views.CreateTile.Sections.ProjectColorRow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <StackPanel Padding="20,6,20,6" Spacing="6" BorderThickness="0,1,0,0" BorderBrush="{StaticResource AppBorderBrush}">
+        <TextBox x:Name="ProjectInput" x:Uid="ProjectColorRow_ProjectInput" />
+        <StackPanel x:Name="TagsHost" Spacing="4" Orientation="Horizontal" />
+        <TextBox x:Name="TagInput" x:Uid="ProjectColorRow_TagInput" KeyDown="OnTagInputKeyDown" />
+        <StackPanel x:Name="SwatchesHost" Orientation="Horizontal" Spacing="6" />
+    </StackPanel>
+</UserControl>

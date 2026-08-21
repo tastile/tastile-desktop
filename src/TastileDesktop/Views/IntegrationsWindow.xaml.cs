@@ -2,6 +2,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml.Controls;
 using System.Collections.Generic;
+using TastileDesktop.Resources;
 using TastileDesktop.Services;
 
 namespace TastileDesktop.Views;
@@ -62,7 +63,7 @@ public sealed partial class IntegrationsWindow : Window
         }
         catch (Exception ex)
         {
-            ErrorTextBlock.Text = $"Failed to load integrations: {ex.Message}";
+            ErrorTextBlock.Text = string.Format(Strings.Get("Integrations_LoadError"), ex.Message);
         }
     }
 
@@ -72,7 +73,7 @@ public sealed partial class IntegrationsWindow : Window
         // Cognito-only auth model. The previous daemon-mediated Google
         // OAuth flow relied on a ProviderToken in the AuthSession, which
         // Cognito's Hosted UI does not issue.
-        ErrorTextBlock.Text = "Google Calendar integration is not available in this build.";
+        ErrorTextBlock.Text = Strings.Get("Integrations_NotAvailable");
     }
 
     private async void OnDisconnectClick(object sender, RoutedEventArgs e)
@@ -84,7 +85,7 @@ public sealed partial class IntegrationsWindow : Window
         }
         catch (Exception ex)
         {
-            ErrorTextBlock.Text = $"Disconnect failed: {ex.Message}";
+            ErrorTextBlock.Text = string.Format(Strings.Get("Integrations_DisconnectError"), ex.Message);
         }
     }
 
@@ -92,7 +93,7 @@ public sealed partial class IntegrationsWindow : Window
     {
         // Manual sync was a local-daemon action and is not part of the remote
         // AWS architecture; the integration server handles scheduling itself.
-        ErrorTextBlock.Text = "Manual sync is handled by the integration server.";
+        ErrorTextBlock.Text = Strings.Get("Integrations_SyncNotAvailable");
     }
 
     private async void OnRefreshClick(object sender, RoutedEventArgs e)
@@ -116,7 +117,7 @@ public sealed partial class IntegrationsWindow : Window
         }
         catch (Exception ex)
         {
-            ErrorTextBlock.Text = $"Save policy failed: {ex.Message}";
+            ErrorTextBlock.Text = string.Format(Strings.Get("Integrations_SavePolicyError"), ex.Message);
         }
     }
 

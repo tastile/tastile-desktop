@@ -77,7 +77,7 @@ public sealed partial class MainWindow : Window
         };
         UpdateAccountUI();
         UpdateQuickPanelUI();
-        UpdateClock();
+        OnClockTick();
     }
 
     private static SolidColorBrush ResolveThemeBrush(string key)
@@ -97,8 +97,7 @@ public sealed partial class MainWindow : Window
 
     private void UpdateQuickPanelUI()
     {
-        // Countdown text is data-bound; only keep clock fresh here.
-        UpdateClock();
+        // ViewModel handles clock/date countdown binding; no-op here.
     }
 
     public async Task InitializeAsync()
@@ -474,16 +473,8 @@ public sealed partial class MainWindow : Window
         _ = ViewModel.RefreshAsync();
     }
 
-    private void UpdateClock()
-    {
-        var now = DateTime.Now;
-        DateText.Text = now.ToString("yyyy/MM/dd");
-        ClockText.Text = now.ToString("HH:mm:ss");
-    }
-
     private void OnClockTick()
     {
-        UpdateClock();
         ViewModel.NotifyTimeAdvanced();
     }
 

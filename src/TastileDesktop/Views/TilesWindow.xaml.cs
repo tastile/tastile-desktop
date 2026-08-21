@@ -1,20 +1,33 @@
+using CommunityToolkit.Mvvm.ComponentModel;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TastileDesktop.Services;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using TastileDesktop.Models;
 using TastileDesktop.ViewModels;
 
 namespace TastileDesktop.Views;
 
-public sealed partial class TilesWindow : Window
+public sealed partial class TilesWindow : Window, INotifyPropertyChanged
 {
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    private bool SetField<T>(ref T field, T value, [CallerMemberName] string? name = null)
+    {
+        if (EqualityComparer<T>.Default.Equals(field, value)) return false;
+        field = value;
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
+        return true;
+    }
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
         refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly TilesWindowLiveUpdateBridge _liveUpdateBridge;
+
     public ObservableCollection<TileListItem> ReadyTiles { get; } = new();
     public ObservableCollection<TileListItem> StartedTiles { get; } = new();
     public ObservableCollection<TileListItem> DoneTiles { get; } = new();
@@ -29,12 +42,49 @@ public sealed partial class TilesWindow : Window
     private int _startedTotal = 0;
     private int _doneTotal = 0;
 
+    private string _readyCountDisplay = "0";
+    private string _startedCountDisplay = "0";
+    private string _doneCountDisplay = "0";
+    private string _readyMoreDisplay = string.Empty;
+    private string _startedMoreDisplay = string.Empty;
+    private string _doneMoreDisplay = string.Empty;
+
+    public string ReadyCountDisplay
+    {
+        get => _readyCountDisplay;
+        private set => SetField(ref _readyCountDisplay, value);
+    }
+    public string StartedCountDisplay
+    {
+        get => _startedCountDisplay;
+        private set => SetField(ref _startedCountDisplay, value);
+    }
+    public string DoneCountDisplay
+    {
+        get => _doneCountDisplay;
+        private set => SetField(ref _doneCountDisplay, value);
+    }
+    public string ReadyMoreDisplay
+    {
+        get => _readyMoreDisplay;
+        private set => SetField(ref _readyMoreDisplay, value);
+    }
+    public string StartedMoreDisplay
+    {
+        get => _startedMoreDisplay;
+        private set => SetField(ref _startedMoreDisplay, value);
+    }
+    public string DoneMoreDisplay
+    {
+        get => _doneMoreDisplay;
+        private set => SetField(ref _doneMoreDisplay, value);
+    }
+
     public TilesWindow(EventDrivenPoller tilesChangedSource)
     {
         ArgumentNullException.ThrowIfNull(tilesChangedSource);
         InitializeComponent();
         _liveUpdateBridge = new TilesWindowLiveUpdateBridge(tilesChangedSource, RefreshTilesAsync);
-        RootGrid.DataContext = this;
         FloatingWindowHelper.Configure(this, TitleBarArea, 720, 760);
         _ = RefreshTilesAsync();
         Closed += OnWindowClosed;
@@ -81,17 +131,18 @@ public sealed partial class TilesWindow : Window
             _startedTotal = startedCountTask.Result?.Tiles?.Count ?? 0;
             _doneTotal = doneCountTask.Result?.Tiles?.Count ?? 0;
 
-            ReadyCount.Text = _readyTotal.ToString();
-            StartedCount.Text = _startedTotal.ToString();
-            DoneCount.Text = _doneTotal.ToString();
+            ReadyCountDisplay = _readyTotal.ToString();
+            StartedCountDisplay = _startedTotal.ToString();
+            DoneCountDisplay = _doneTotal.ToString();
 
-            ReadyMore.Text = _readyTotal > _readyLimit ? $"他{_readyTotal - _readyLimit}件 ▼" : "";
-            StartedMore.Text = _startedTotal > _startedLimit ? $"他{_startedTotal - _startedLimit}件 ▼" : "";
-            DoneMore.Text = _doneTotal > _doneLimit ? $"他{_doneTotal - _doneLimit}件 ▼" : "";
+            ReadyMoreDisplay = _readyTotal > _readyLimit ? $"他{_readyTotal - _readyLimit}件 ▼" : string.Empty;
+            StartedMoreDisplay = _startedTotal > _startedLimit ? $"他{_startedTotal - _startedLimit}件 ▼" : string.Empty;
+            DoneMoreDisplay = _doneTotal > _doneLimit ? $"他{_doneTotal - _doneLimit}件 ▼" : string.Empty;
 
-            ReadySection.Visibility = _viewMode == "by_state" ? Visibility.Visible : Visibility.Collapsed;
-            StartedSection.Visibility = _viewMode == "by_state" ? Visibility.Visible : Visibility.Collapsed;
-            DoneSection.Visibility = _viewMode == "by_state" ? Visibility.Visible : Visibility.Collapsed;
+            var showByState = _viewMode == "by_state";
+            ReadySection.Visibility = showByState ? Visibility.Visible : Visibility.Collapsed;
+            StartedSection.Visibility = showByState ? Visibility.Visible : Visibility.Collapsed;
+            DoneSection.Visibility = showByState ? Visibility.Visible : Visibility.Collapsed;
         }
         catch (Exception ex)
         {
@@ -154,7 +205,7 @@ public sealed partial class TilesWindow : Window
 
     private async void OnTileStatusClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.Tag is not string tileId || string.IsNullOrWhiteSpace(tileId)) return;
+        if (sender is not Button button || button.CommandParameter is not string tileId || string.IsNullOrWhiteSpace(tileId)) return;
 
         var allTiles = ReadyTiles.Concat(StartedTiles).Concat(DoneTiles);
         var tile = allTiles.FirstOrDefault(t => t.Id == tileId);
@@ -215,7 +266,7 @@ public sealed partial class TilesWindow : Window
 
     private async void OnTileEditClick(object sender, RoutedEventArgs e)
     {
-        if (sender is not Button button || button.Tag is not string tileId) return;
+        if (sender is not Button button || button.CommandParameter is not string tileId) return;
 
         var freshTile = await _api.GetEditableTileByIdAsync(tileId);
         if (freshTile == null) return;

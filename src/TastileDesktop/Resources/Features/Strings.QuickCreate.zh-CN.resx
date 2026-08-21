@@ -63,15 +63,12 @@
   <data name="CreateTile.RecurrenceValidFrom" xml:space="preserve"><value>有效开始</value></data>
   <data name="CreateTile.RecurrenceValidTo" xml:space="preserve"><value>有效结束</value></data>
   <data name="CreateTile.RecurrenceValidityLabel" xml:space="preserve"><value>有效期</value></data>
-  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>允许拆分</value></data>
-  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>不拆分</value></data>
   <data name="CreateTile.SplitLabel" xml:space="preserve"><value>拆分</value></data>
   <data name="CreateTile.StartButton" xml:space="preserve"><value>开始</value></data>
   <data name="CreateTile.TagLabel" xml:space="preserve"><value>标签</value></data>
   <data name="CreateTile.TagPlaceholder" xml:space="preserve"><value>标签名称</value></data>
   <data name="CreateTile.TimingLabel" xml:space="preserve"><value>运行时机</value></data>
   <data name="CreateTile.TitleLabel" xml:space="preserve"><value>标题</value></data>
-  <data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>工作 25 分钟</value></data>
   <data name="CreateTile.WeekdayFri" xml:space="preserve"><value>五</value></data>
   <data name="CreateTile.WeekdayMon" xml:space="preserve"><value>一</value></data>
   <data name="CreateTile.WeekdaySat" xml:space="preserve"><value>六</value></data>
@@ -99,5 +96,103 @@
   <data name="CreateTile_ValidationRecurrenceIntervalMin" xml:space="preserve"><value>重复执行的间隔至少为 1。</value></data>
   <data name="CreateTile_ValidationStartEndOrder" xml:space="preserve"><value>请检查开始与结束的顺序。</value></data>
   <data name="CreateTile_ValidationTitleRequired" xml:space="preserve"><value>请输入标题。</value></data>
+  <data name="CreateTile.WorkflowEvent" xml:space="preserve"><value>事件</value></data>
+  <data name="CreateTile.WorkflowTask" xml:space="preserve"><value>任务</value></data>
+  <data name="CreateTile.WorkflowRecurring" xml:space="preserve"><value>重复</value></data>
+  <data name="CreateTile.WorkflowDetailed" xml:space="preserve"><value>详细</value></data>
+  <data name="CreateTile.WorkflowEventDescription" xml:space="preserve"><value>日历中的时间段</value></data>
+  <data name="CreateTile.WorkflowTaskDescription" xml:space="preserve"><value>带目标时长的作业</value></data>
+  <data name="CreateTile.WorkflowRecurringDescription" xml:space="preserve"><value>周期性计划</value></data>
+  <data name="CreateTile.WorkflowDetailedDescription" xml:space="preserve"><value>直接编辑所有字段</value></data>
+  <data name="CreateTile.AllDay" xml:space="preserve"><value>全天</value></data>
+  <data name="CreateTile.StartDate" xml:space="preserve"><value>开始日期</value></data>
+  <data name="CreateTile.EndDate" xml:space="preserve"><value>结束日期</value></data>
+  <data name="CreateTile.StartTimeLabel" xml:space="preserve"><value>开始时间</value></data>
+  <data name="CreateTile.EndTimeLabel" xml:space="preserve"><value>结束时间</value></data>
+  <data name="CreateTile.DueDatePlaceholder" xml:space="preserve"><value>日期（可选）</value></data>
+  <data name="CreateTile.DueTimeLabel" xml:space="preserve"><value>截止时间</value></data>
+  <data name="CreateTile.DurationCustom" xml:space="preserve"><value>自定义…</value></data>
+  <data name="CreateTile.DurationManual" xml:space="preserve"><value>按分钟自定义</value></data>
+  <data name="CreateTile.DetailsEventTitle" xml:space="preserve"><value>事件详情</value></data>
+  <data name="CreateTile.DetailsTaskTitle" xml:space="preserve"><value>任务详情</value></data>
+  <data name="CreateTile.DetailsRecurringTitle" xml:space="preserve"><value>重复详情</value></data>
+  <data name="CreateTile.DetailsDetailedTitle" xml:space="preserve"><value>详细选项</value></data>
+  <data name="CreateTile.RepeatModeOnce" xml:space="preserve"><value>不重复</value></data>
+  <data name="CreateTile.RepeatModeDaily" xml:space="preserve"><value>每天</value></data>
+  <data name="CreateTile.RepeatModeWeekly" xml:space="preserve"><value>每周</value></data>
+  <data name="CreateTile.RepeatModeMonthly" xml:space="preserve"><value>每月</value></data>
+  <data name="CreateTile.RepeatModeInterval" xml:space="preserve"><value>间隔</value></data>
+  <data name="CreateTile.IntervalValueLabel" xml:space="preserve"><value>间隔</value></data>
+  <data name="CreateTile.IntervalUnitMin" xml:space="preserve"><value>分</value></data>
+  <data name="CreateTile.IntervalUnitHour" xml:space="preserve"><value>小时</value></data>
+  <data name="CreateTile.IntervalUnitDay" xml:space="preserve"><value>天</value></data>
+  <data name="CreateTile.MonthlyByDay" xml:space="preserve"><value>按日期</value></data>
+  <data name="CreateTile.MonthlyByWeekday" xml:space="preserve"><value>按星期</value></data>
+  <data name="CreateTile.MonthlyDayOfMonthLabel" xml:space="preserve"><value>日期</value></data>
+  <data name="CreateTile.MonthlyWeekOfMonthLabel" xml:space="preserve"><value>第几周</value></data>
+  <data name="CreateTile.MonthlyWeekFirst" xml:space="preserve"><value>第1周</value></data>
+  <data name="CreateTile.MonthlyWeekSecond" xml:space="preserve"><value>第2周</value></data>
+  <data name="CreateTile.MonthlyWeekThird" xml:space="preserve"><value>第3周</value></data>
+  <data name="CreateTile.MonthlyWeekFourth" xml:space="preserve"><value>第4周</value></data>
+  <data name="CreateTile.MonthlyLastWeek" xml:space="preserve"><value>最后一周</value></data>
+  <data name="CreateTile.TimeOfDayLabel" xml:space="preserve"><value>时刻</value></data>
+  <data name="CreateTile.TimeModelDurationOnly" xml:space="preserve"><value>仅时长</value></data>
+  <data name="CreateTile.TimeModelFixedWindow" xml:space="preserve"><value>固定时间</value></data>
+  <data name="CreateTile.TimeModelWindowWithDuration" xml:space="preserve"><value>时间窗+时长</value></data>
+  <data name="CreateTile.TimeModelDurationOnlyHint" xml:space="preserve"><value>不指定时刻 — 仅时长</value></data>
+  <data name="CreateTile.SchedulableWindowStartLabel" xml:space="preserve"><value>最早时间</value></data>
+  <data name="CreateTile.SchedulableWindowEndLabel" xml:space="preserve"><value>最晚时间</value></data>
+  <data name="CreateTile.RepeatEndLabel" xml:space="preserve"><value>重复结束</value></data>
+  <data name="CreateTile.ColorLabel" xml:space="preserve"><value>颜色</value></data>
+  <data name="CreateTile.SubtasksEmpty" xml:space="preserve"><value>无子任务</value></data>
+  <data name="CreateTile.SubtasksAdd" xml:space="preserve"><value>添加子任务</value></data>
+  <data name="CreateTile.SubtasksLabel" xml:space="preserve"><value>子任务</value></data>
+  <data name="CreateTile_TitleRequired" xml:space="preserve"><value>标题为必填项。</value></data>
+  <data name="CreateTile_SubmitBlockedHint" xml:space="preserve"><value>请先解决高亮的错误。</value></data>
+  <data name="CreateTile_SubmitFailedRetry" xml:space="preserve"><value>提交失败，请重试。</value></data>
+  <data name="CreateTile_UpdateError" xml:space="preserve"><value>更新错误</value></data>
+  <data name="CreateTile_CreateError" xml:space="preserve"><value>创建错误</value></data>
 
+<data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>添加标题</value></data>
+  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>允许拆分</value></data>
+  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>不拆分</value></data>
+  <data name="CreateTile.DurationMinute" xml:space="preserve"><value>{0} 分钟</value></data>
+  <data name="CreateTile.DurationHour" xml:space="preserve"><value>{0} 小时</value></data>
+  <data name="CreateTile.TagChipLabel" xml:space="preserve"><value>#{0} ×</value></data>
+  <data name="CreateTile.Title" xml:space="preserve"><value>创建卡片</value></data>
+
+  <data name="CreateTile_TaskBody_DurationLabel.Text" xml:space="preserve"><value>时长</value></data>
+  <data name="CreateTile_TaskBody_SplitAllowButton.Content" xml:space="preserve"><value>允许拆分</value></data>
+  <data name="CreateTile_TaskBody_SplitKeepButton.Content" xml:space="preserve"><value>不拆分</value></data>
+  <data name="CreateTile_EventBody_AllDayLabel.Text" xml:space="preserve"><value>全天</value></data>
+  <data name="CreateTile_RecurringBody_RepeatLabel.Text" xml:space="preserve"><value>重复</value></data>
+  <data name="CreateTile_RecurringBody_IntervalLabel.Text" xml:space="preserve"><value>每</value></data>
+  <data name="CreateTile_RecurringBody_MonthlyDayBox.Header" xml:space="preserve"><value>月的日期</value></data>
+  <data name="CreateTile_RecurringBody_TimeModelLabel.Text" xml:space="preserve"><value>时间模型</value></data>
+  <data name="CreateTile_RecurringBody_RepeatUntilLabel.Text" xml:space="preserve"><value>重复截止</value></data>
+  <data name="CreateTile_RecurringBody_DurationLabel.Text" xml:space="preserve"><value>时长</value></data>
+  <data name="CreateTile_DetailedBody_ModeLabel.Text" xml:space="preserve"><value>模式</value></data>
+  <data name="CreateTile_DetailedBody_MaximizeButton.Content" xml:space="preserve"><value>在区间内最大化</value></data>
+  <data name="CreateTile_DetailedBody_TimingLabel.Text" xml:space="preserve"><value>运行时机</value></data>
+  <data name="CreateTile_DetailedBody_UseStartAtButton.Content" xml:space="preserve"><value>使用开始</value></data>
+  <data name="CreateTile_DetailedBody_UseEndAtButton.Content" xml:space="preserve"><value>使用结束</value></data>
+  <data name="CreateTile_DetailedBody_RecurrencePrefix.Text" xml:space="preserve"><value>每</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceSuffix.Text" xml:space="preserve"><value>天</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekBox.Header" xml:space="preserve"><value>月中的第几周</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekdayComboBox.Header" xml:space="preserve"><value>星期</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseStartAtButton.Content" xml:space="preserve"><value>使用开始时间</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseEndAtButton.Content" xml:space="preserve"><value>使用结束时间</value></data>
+  <data name="CreateTile_DetailedBody_DurationLabel.Text" xml:space="preserve"><value>时长</value></data>
+  <data name="CreateTile_DetailedBody_WorkHoursBox.Header" xml:space="preserve"><value>小时</value></data>
+  <data name="CreateTile_DetailedBody_WorkMinutesBox.Header" xml:space="preserve"><value>分钟</value></data>
+  <data name="CreateTile_DetailedBody_SplitLabel.Text" xml:space="preserve"><value>拆分</value></data>
+  <data name="CreateTile_DetailedBody_SplitAllowButton.Content" xml:space="preserve"><value>允许拆分</value></data>
+  <data name="CreateTile_DetailedBody_SplitKeepButton.Content" xml:space="preserve"><value>不拆分</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidityLabel.Text" xml:space="preserve"><value>有效期</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidFromButton.Content" xml:space="preserve"><value>有效期起始</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidToButton.Content" xml:space="preserve"><value>有效期截止</value></data>
+  <data name="CreateTileHeader_CloseButton.ToolTipService.ToolTip" xml:space="preserve"><value>关闭</value></data>
+  <data name="CreateTileHeader_TitleInput.PlaceholderText" xml:space="preserve"><value>添加标题</value></data>
+  <data name="ProjectColorRow_ProjectInput.PlaceholderText" xml:space="preserve"><value>项目名称</value></data>
+  <data name="ProjectColorRow_TagInput.PlaceholderText" xml:space="preserve"><value>标签名称</value></data>
 </root>

@@ -4,7 +4,7 @@ namespace TastileDesktop.Services;
 
 public static class CreateTileParityResolver
 {
-    public static Func<bool> IsJapaneseFunc { get; set; } = () => System.Globalization.CultureInfo.CurrentCulture.Name.StartsWith("ja");
+    public static Func<bool> IsJapaneseFunc { get; set; } = () => System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ja";
 
     public static bool IsJapanese() => IsJapaneseFunc();
 

@@ -4,6 +4,7 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using System.Runtime.InteropServices;
 using TastileDesktop.Models;
+using TastileDesktop.Resources;
 using TastileDesktop.Services;
 
 namespace TastileDesktop.Views;
@@ -112,11 +113,11 @@ public sealed partial class InterventionWindow : Window
             TileTitleText.Text = _tileTitle;
         }
 
-        if (!string.IsNullOrEmpty(_phaseStartedAt) && 
+        if (!string.IsNullOrEmpty(_phaseStartedAt) &&
             DateTimeOffset.TryParse(_phaseStartedAt, out var startedAt))
         {
             var elapsed = DateTimeOffset.UtcNow - startedAt;
-            ElapsedTimeText.Text = $"Working for {(int)elapsed.TotalMinutes} minutes";
+            ElapsedTimeText.Text = string.Format(Strings.Get("Intervention_WorkElapsedFormat"), (int)elapsed.TotalMinutes);
         }
     }
 
@@ -127,7 +128,7 @@ public sealed partial class InterventionWindow : Window
         IdleButtons.Visibility = Visibility.Collapsed;
         TileInfoPanel.Visibility = Visibility.Collapsed;
 
-        MessageText.Text = "Your break time is over!";
+        MessageText.Text = Strings.Get("Intervention_BreakOverMessage");
     }
 
     private void ConfigureIdleIntervention()
@@ -137,7 +138,7 @@ public sealed partial class InterventionWindow : Window
         IdleButtons.Visibility = Visibility.Visible;
         TileInfoPanel.Visibility = Visibility.Collapsed;
 
-        MessageText.Text = "What would you like to work on?";
+        MessageText.Text = Strings.Get("Intervention_IdleMessage");
 
         // Load ready tiles from provided tiles response
         if (_readyTiles.Count > 0)

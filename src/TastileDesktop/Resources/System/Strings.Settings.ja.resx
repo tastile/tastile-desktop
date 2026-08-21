@@ -177,4 +177,7 @@
   <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Windows UI のアクセント</value></data>
   <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>シェル UI API が公開しているアクセント。端末によって別のハイライト色を返すことがあります。</value></data>
 
+  <data name="Settings_LanguageGerman" xml:space="preserve"><value>ドイツ語</value></data>
+  <data name="Settings_LanguageFrench" xml:space="preserve"><value>フランス語</value></data>
+  <data name="Settings_LanguagePortuguese" xml:space="preserve"><value>ポルトガル語 (ブラジル)</value></data>
 </root>

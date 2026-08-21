@@ -31,4 +31,38 @@
   </xsd:schema>
 
 
+  <data name="CreateTileHeader_CloseButton.ToolTipService.ToolTip" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="CreateTileHeader_TitleInput.PlaceholderText" xml:space="preserve"><value>Añadir título</value></data>
+  <data name="ProjectColorRow_ProjectInput.PlaceholderText" xml:space="preserve"><value>Nombre del proyecto</value></data>
+  <data name="ProjectColorRow_TagInput.PlaceholderText" xml:space="preserve"><value>Nombre de la etiqueta</value></data>
+  <data name="CreateTile_TaskBody_DurationLabel.Text" xml:space="preserve"><value>Duración</value></data>
+  <data name="CreateTile_TaskBody_SplitAllowButton.Content" xml:space="preserve"><value>Permitir división</value></data>
+  <data name="CreateTile_TaskBody_SplitKeepButton.Content" xml:space="preserve"><value>No dividir</value></data>
+  <data name="CreateTile_EventBody_AllDayLabel.Text" xml:space="preserve"><value>Todo el día</value></data>
+  <data name="CreateTile_RecurringBody_RepeatLabel.Text" xml:space="preserve"><value>Repetir</value></data>
+  <data name="CreateTile_RecurringBody_IntervalLabel.Text" xml:space="preserve"><value>Cada</value></data>
+  <data name="CreateTile_RecurringBody_MonthlyDayBox.Header" xml:space="preserve"><value>Día del mes</value></data>
+  <data name="CreateTile_RecurringBody_TimeModelLabel.Text" xml:space="preserve"><value>Modelo de tiempo</value></data>
+  <data name="CreateTile_RecurringBody_RepeatUntilLabel.Text" xml:space="preserve"><value>Repetir hasta</value></data>
+  <data name="CreateTile_RecurringBody_DurationLabel.Text" xml:space="preserve"><value>Duración por instancia</value></data>
+  <data name="CreateTile_DetailedBody_ModeLabel.Text" xml:space="preserve"><value>Modo de finalización</value></data>
+  <data name="CreateTile_DetailedBody_MaximizeButton.Content" xml:space="preserve"><value>Maximizar dentro del intervalo</value></data>
+  <data name="CreateTile_DetailedBody_TimingLabel.Text" xml:space="preserve"><value>Momento de ejecución</value></data>
+  <data name="CreateTile_DetailedBody_UseStartAtButton.Content" xml:space="preserve"><value>Inicio</value></data>
+  <data name="CreateTile_DetailedBody_UseEndAtButton.Content" xml:space="preserve"><value>Fin</value></data>
+  <data name="CreateTile_DetailedBody_RecurrencePrefix.Text" xml:space="preserve"><value>Cada</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceSuffix.Text" xml:space="preserve"><value>día(s)</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekBox.Header" xml:space="preserve"><value>Semana</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekdayComboBox.Header" xml:space="preserve"><value>Día de la semana</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseStartAtButton.Content" xml:space="preserve"><value>Hora de inicio</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseEndAtButton.Content" xml:space="preserve"><value>Hora de fin</value></data>
+  <data name="CreateTile_DetailedBody_DurationLabel.Text" xml:space="preserve"><value>Duración</value></data>
+  <data name="CreateTile_DetailedBody_WorkHoursBox.Header" xml:space="preserve"><value>Horas</value></data>
+  <data name="CreateTile_DetailedBody_WorkMinutesBox.Header" xml:space="preserve"><value>Minutos</value></data>
+  <data name="CreateTile_DetailedBody_SplitLabel.Text" xml:space="preserve"><value>División</value></data>
+  <data name="CreateTile_DetailedBody_SplitAllowButton.Content" xml:space="preserve"><value>Permitir división</value></data>
+  <data name="CreateTile_DetailedBody_SplitKeepButton.Content" xml:space="preserve"><value>No dividir</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidityLabel.Text" xml:space="preserve"><value>Validez</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidFromButton.Content" xml:space="preserve"><value>Válido desde</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidToButton.Content" xml:space="preserve"><value>Válido hasta</value></data>
 </root>

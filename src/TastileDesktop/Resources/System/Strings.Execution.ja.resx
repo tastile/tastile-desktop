@@ -42,5 +42,18 @@
   <data name="Execute.TitleBarHeading" xml:space="preserve"><value>実行</value></data>
   <data name="Execute.WorkingLabel" xml:space="preserve"><value>作業中</value></data>
   <data name="Execute_Title" xml:space="preserve"><value>実行</value></data>
+  <data name="Execute.Title" xml:space="preserve"><value>実行</value></data>
+  <data name="Execute_TitleBarHeading.Text" xml:space="preserve"><value>実行</value></data>
+  <data name="Execute_Heading.Text" xml:space="preserve"><value>実行状況</value></data>
+  <data name="Execute_Description.Text" xml:space="preserve"><value>プロンプトはトースト通知に任せ、現在の集中ブロック・休憩・次のタイルを確認できます。</value></data>
+  <data name="Execute_IdleLabel.Text" xml:space="preserve"><value>アイドル</value></data>
+  <data name="Execute_IdleTitle.Text" xml:space="preserve"><value>アクティブなタイルはありません</value></data>
+  <data name="Execute_WorkingLabel.Text" xml:space="preserve"><value>作業中</value></data>
+  <data name="Execute_BreakLabel.Text" xml:space="preserve"><value>休憩</value></data>
+  <data name="Execute_StartBreakButton.Content" xml:space="preserve"><value>5分休憩を始める</value></data>
+  <data name="Execute_CompleteButton.Content" xml:space="preserve"><value>完了</value></data>
+  <data name="Execute_EndBreakButton.Content" xml:space="preserve"><value>休憩を終えて続行</value></data>
+  <data name="Execute_QuickMemo.Text" xml:space="preserve"><value>クイックメモ</value></data>
+  <data name="Execute_AttachMemo.Content" xml:space="preserve"><value>メモを送信</value></data>
 
 </root>

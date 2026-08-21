@@ -177,4 +177,7 @@
   <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Windows UI 强调色</value></data>
   <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>由 Shell UI API 公开的强调色。某些设备在此报告不同的颜色。</value></data>
 
+  <data name="Settings_LanguageGerman" xml:space="preserve"><value>德语</value></data>
+  <data name="Settings_LanguageFrench" xml:space="preserve"><value>法语</value></data>
+  <data name="Settings_LanguagePortuguese" xml:space="preserve"><value>葡萄牙语 (巴西)</value></data>
 </root>

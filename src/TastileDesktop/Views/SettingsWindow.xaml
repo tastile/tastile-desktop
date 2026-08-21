@@ -4,8 +4,10 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="using:TastileDesktop.Views"
     mc:Ignorable="d"
     x:Uid="Settings"
+    x:DataType="local:SettingsWindow"
     Title="Settings">
 
     <Grid Background="{StaticResource AppBackgroundBrush}">
@@ -419,6 +421,9 @@
                             <ComboBoxItem x:Uid="Settings_LanguageChinese" Content="中文" Tag="zh-CN" />
                             <ComboBoxItem x:Uid="Settings_LanguageKorean" Content="한국어" Tag="ko" />
                             <ComboBoxItem x:Uid="Settings_LanguageSpanish" Content="Español" Tag="es" />
+                            <ComboBoxItem x:Uid="Settings_LanguageGerman" Content="Deutsch" Tag="de" />
+                            <ComboBoxItem x:Uid="Settings_LanguageFrench" Content="Français" Tag="fr" />
+                            <ComboBoxItem x:Uid="Settings_LanguagePortuguese" Content="Português (Brasil)" Tag="pt-BR" />
                         </ComboBox>
                     </Grid>
                     <TextBlock x:Uid="Settings_LanguageRestartHint" Text="Restart Tastile to apply the new language." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" Margin="0,-8,0,0" />
@@ -428,7 +433,7 @@
                     <TextBlock x:Uid="Settings_AccountHeading" Text="Account" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
-                    <TextBlock x:Name="AuthStatusTextBlock" x:Uid="Settings_NotSignedIn" Text="Not signed in" Foreground="{StaticResource AppForegroundSubtleBrush}" />
+                    <TextBlock x:Name="AuthStatusTextBlock" x:Uid="Settings_NotSignedIn" Text="{x:Bind ViewModel.AuthStatusText, Mode=OneWay}" Foreground="{StaticResource AppForegroundSubtleBrush}" />
                     <TextBlock x:Uid="Settings_AccountHelp" Text="Change email, add login methods, or manage passkeys from the Web account settings." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" TextWrapping="Wrap" />
                     <Grid ColumnSpacing="8">
                         <Grid.ColumnDefinitions>
@@ -452,32 +457,32 @@
 
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="Settings_Profile" Text="Profile" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeProfileTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.RuntimeProfileText, Mode=OneTime}" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="Settings_AppDataDirectory" Text="App data directory" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeAppDataDirTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.RuntimeAppDataDirText, Mode=OneTime}" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="Settings_LocalDatabase" Text="Local database" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeDbPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.RuntimeDbPathText, Mode=OneTime}" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="Settings_AuthCredentials" Text="Auth credentials (DPAPI)" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeSessionPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.RuntimeSessionPathText, Mode=OneTime}" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="Settings_DesktopApiLog" Text="Desktop API log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeDesktopApiLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.RuntimeDesktopApiLogPathText, Mode=OneTime}" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
 
                             <StackPanel Spacing="2">
                                 <TextBlock x:Uid="Settings_CreateTileLog" Text="Create Tile log" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
-                                <TextBlock x:Name="RuntimeCreateTileLogPathTextBlock" Text="-" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
+                                <TextBlock Text="{x:Bind ViewModel.RuntimeCreateTileLogPathText, Mode=OneTime}" TextWrapping="WrapWholeWords" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -487,10 +492,10 @@
                     <TextBlock x:Uid="Settings_UpdatesHeading" Text="Updates" Style="{StaticResource SectionTitleTextStyle}" Foreground="{StaticResource AppForegroundBrush}" />
                     <Rectangle Height="1" Fill="{StaticResource AppBorderBrush}" />
 
-                    <TextBlock x:Name="CurrentVersionTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
+                    <TextBlock Text="{x:Bind ViewModel.CurrentVersionText, Mode=OneTime}" Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                     <TextBlock x:Uid="Settings_UpdatesDescription" Text="Updates are delivered automatically from Tastile release channel." Foreground="{StaticResource AppForegroundSubtleBrush}" FontSize="12" />
                     <Button x:Uid="Settings_CheckForUpdates" Content="Check for updates" Click="OnCheckUpdateClick" HorizontalAlignment="Stretch" />
-                    <TextBlock x:Name="UpdateStatusTextBlock" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
+                    <TextBlock Text="{x:Bind ViewModel.UpdateStatusText, Mode=OneWay}" Foreground="{StaticResource AppForegroundSubtleBrush}" TextWrapping="Wrap" />
                 </StackPanel>
 
                 <StackPanel Spacing="12">

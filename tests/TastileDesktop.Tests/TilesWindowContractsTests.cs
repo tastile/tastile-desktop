@@ -42,8 +42,8 @@ public sealed class TilesWindowContractsTests
     {
         var xaml = ReadRepoFile("src", "TastileDesktop", "Views", "TilesWindow.xaml");
 
-        Assert.Contains("Text=\"{Binding TargetDurationText}\"", xaml);
-        Assert.Contains("Text=\"{Binding ScheduledTimeDisplay}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind TargetDurationText, Mode=OneTime}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind ScheduledTimeDisplay, Mode=OneTime}\"", xaml);
     }
 
     [Fact]

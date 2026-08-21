@@ -53,5 +53,34 @@
   <data name="Integrations_TargetCalendarHelp" xml:space="preserve"><value>기본 캘린더는 "primary"를 그대로 사용하거나, 다른 캘린더 ID를 지정해 다른 위치로 동기화할 수 있습니다.</value></data>
   <data name="Integrations_TargetCalendarPlaceholder" xml:space="preserve"><value>primary</value></data>
   <data name="Integrations_Title" xml:space="preserve"><value>연동</value></data>
+  <data name="Integrations.Title" xml:space="preserve"><value>연동</value></data>
 
+  <data name="Integrations_TitleBarHeading.Text" xml:space="preserve"><value>Integrations</value></data>
+  <data name="Integrations_Heading.Text" xml:space="preserve"><value>Google Calendar</value></data>
+  <data name="Integrations_Description.Text" xml:space="preserve"><value>Connect your calendar once, choose how Tastile should sync, and run a manual sync when you need it.</value></data>
+  <data name="Integrations_StatusTextBlock.Text" xml:space="preserve"><value>Loading...</value></data>
+  <data name="Integrations_ConnectionHeadlineTextBlock.Text" xml:space="preserve"><value>Checking Google Calendar connection...</value></data>
+  <data name="Integrations_ConnectionDetailTextBlock.Text" xml:space="preserve"><value>We are loading your Google Calendar connection details.</value></data>
+  <data name="Integrations_Calendar.Text" xml:space="preserve"><value>Calendar</value></data>
+  <data name="Integrations_Permissions.Text" xml:space="preserve"><value>Permissions</value></data>
+  <data name="Integrations_LastSyncTextBlock.Text" xml:space="preserve"><value>Last sync: -</value></data>
+  <data name="Integrations_SyncHealthTextBlock.Text" xml:space="preserve"><value>Sync health: -</value></data>
+  <data name="Integrations_SyncBehavior.Text" xml:space="preserve"><value>Sync behavior</value></data>
+  <data name="Integrations_SyncBehaviorDesc.Text" xml:space="preserve"><value>Choose whether Tastile writes its schedule to Google Calendar, reads Google events back, or does both.</value></data>
+  <data name="Integrations_SyncModePushOnly.Content" xml:space="preserve"><value>Tastile -&gt; Google Calendar</value></data>
+  <data name="Integrations_SyncModePullOnly.Content" xml:space="preserve"><value>Google Calendar -&gt; Tastile</value></data>
+  <data name="Integrations_SyncModeBidirectional.Content" xml:space="preserve"><value>Two-way sync</value></data>
+  <data name="Integrations_TargetCalendar.Text" xml:space="preserve"><value>Target calendar</value></data>
+  <data name="Integrations_TargetCalendarTextBox.PlaceholderText" xml:space="preserve"><value>primary</value></data>
+  <data name="Integrations_TargetCalendarHelp.Text" xml:space="preserve"><value>Use &quot;primary&quot; for your main Google Calendar, or paste a specific calendar ID if Tastile should sync somewhere else.</value></data>
+  <data name="Integrations_SavePolicyButton.Content" xml:space="preserve"><value>Save sync settings</value></data>
+  <data name="Integrations_ConnectButton.Content" xml:space="preserve"><value>Connect Google Calendar</value></data>
+  <data name="Integrations_SyncNowButton.Content" xml:space="preserve"><value>Run sync now</value></data>
+  <data name="Integrations_RefreshButton.Content" xml:space="preserve"><value>Refresh status</value></data>
+  <data name="Integrations_DisconnectButton.Content" xml:space="preserve"><value>Disconnect</value></data>
+  <data name="Integrations_LoadError" xml:space="preserve"><value>Failed to load integrations: {0}</value></data>
+  <data name="Integrations_NotAvailable" xml:space="preserve"><value>Google Calendar integration is not available in this build.</value></data>
+  <data name="Integrations_DisconnectError" xml:space="preserve"><value>Disconnect failed: {0}</value></data>
+  <data name="Integrations_SyncNotAvailable" xml:space="preserve"><value>Manual sync is handled by the integration server.</value></data>
+  <data name="Integrations_SavePolicyError" xml:space="preserve"><value>Save policy failed: {0}</value></data>
 </root>

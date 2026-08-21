@@ -42,5 +42,18 @@
   <data name="Execute.TitleBarHeading" xml:space="preserve"><value>Ejecutar</value></data>
   <data name="Execute.WorkingLabel" xml:space="preserve"><value>Trabajando ahora</value></data>
   <data name="Execute_Title" xml:space="preserve"><value>Ejecutar</value></data>
+  <data name="Execute.Title" xml:space="preserve"><value>Ejecutar</value></data>
+  <data name="Execute_TitleBarHeading.Text" xml:space="preserve"><value>Ejecutar</value></data>
+  <data name="Execute_Heading.Text" xml:space="preserve"><value>Estado de ejecución</value></data>
+  <data name="Execute_Description.Text" xml:space="preserve"><value>Los avisos se muestran como notificaciones del sistema; aquí puede ver el bloque de enfoque actual, el tiempo de descanso y la siguiente tarjeta.</value></data>
+  <data name="Execute_IdleLabel.Text" xml:space="preserve"><value>Inactivo</value></data>
+  <data name="Execute_IdleTitle.Text" xml:space="preserve"><value>Sin tarjeta activa</value></data>
+  <data name="Execute_WorkingLabel.Text" xml:space="preserve"><value>Trabajando ahora</value></data>
+  <data name="Execute_BreakLabel.Text" xml:space="preserve"><value>Descanso</value></data>
+  <data name="Execute_StartBreakButton.Content" xml:space="preserve"><value>Iniciar descanso de 5 min</value></data>
+  <data name="Execute_CompleteButton.Content" xml:space="preserve"><value>Completar</value></data>
+  <data name="Execute_EndBreakButton.Content" xml:space="preserve"><value>Terminar descanso y continuar</value></data>
+  <data name="Execute_QuickMemo.Text" xml:space="preserve"><value>Nota rápida</value></data>
+  <data name="Execute_AttachMemo.Content" xml:space="preserve"><value>Adjuntar nota</value></data>
 
 </root>

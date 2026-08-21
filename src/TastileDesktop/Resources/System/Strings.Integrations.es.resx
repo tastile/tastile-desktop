@@ -53,5 +53,34 @@
   <data name="Integrations_TargetCalendarHelp" xml:space="preserve"><value>Use "primary" para su calendario principal de Google, o pegue un ID de calendario específico para sincronizar en otro lugar.</value></data>
   <data name="Integrations_TargetCalendarPlaceholder" xml:space="preserve"><value>primary</value></data>
   <data name="Integrations_Title" xml:space="preserve"><value>Integraciones</value></data>
+  <data name="Integrations.Title" xml:space="preserve"><value>Integraciones</value></data>
 
+  <data name="Integrations_TitleBarHeading.Text" xml:space="preserve"><value>Integraciones</value></data>
+  <data name="Integrations_Heading.Text" xml:space="preserve"><value>Google Calendar</value></data>
+  <data name="Integrations_Description.Text" xml:space="preserve"><value>Conecte su calendario una vez, elija cómo debe sincronizar Tastile y ejecute una sincronización manual cuando la necesite.</value></data>
+  <data name="Integrations_StatusTextBlock.Text" xml:space="preserve"><value>Cargando...</value></data>
+  <data name="Integrations_ConnectionHeadlineTextBlock.Text" xml:space="preserve"><value>Comprobando la conexión con Google Calendar...</value></data>
+  <data name="Integrations_ConnectionDetailTextBlock.Text" xml:space="preserve"><value>Cargando los detalles de su conexión con Google Calendar.</value></data>
+  <data name="Integrations_Calendar.Text" xml:space="preserve"><value>Calendario</value></data>
+  <data name="Integrations_Permissions.Text" xml:space="preserve"><value>Permisos</value></data>
+  <data name="Integrations_LastSyncTextBlock.Text" xml:space="preserve"><value>Última sincronización: -</value></data>
+  <data name="Integrations_SyncHealthTextBlock.Text" xml:space="preserve"><value>Estado de sincronización: -</value></data>
+  <data name="Integrations_SyncBehavior.Text" xml:space="preserve"><value>Comportamiento de sincronización</value></data>
+  <data name="Integrations_SyncBehaviorDesc.Text" xml:space="preserve"><value>Elija si Tastile escribe su agenda en Google Calendar, lee eventos de Google, o ambas.</value></data>
+  <data name="Integrations_SyncModePushOnly.Content" xml:space="preserve"><value>Tastile → Google Calendar</value></data>
+  <data name="Integrations_SyncModePullOnly.Content" xml:space="preserve"><value>Google Calendar → Tastile</value></data>
+  <data name="Integrations_SyncModeBidirectional.Content" xml:space="preserve"><value>Sincronización bidireccional</value></data>
+  <data name="Integrations_TargetCalendar.Text" xml:space="preserve"><value>Calendario de destino</value></data>
+  <data name="Integrations_TargetCalendarTextBox.PlaceholderText" xml:space="preserve"><value>primary</value></data>
+  <data name="Integrations_TargetCalendarHelp.Text" xml:space="preserve"><value>Use &quot;primary&quot; para su calendario principal de Google, o pegue un ID de calendario específico para sincronizar en otro lugar.</value></data>
+  <data name="Integrations_SavePolicyButton.Content" xml:space="preserve"><value>Guardar ajustes de sincronización</value></data>
+  <data name="Integrations_ConnectButton.Content" xml:space="preserve"><value>Conectar Google Calendar</value></data>
+  <data name="Integrations_SyncNowButton.Content" xml:space="preserve"><value>Sincronizar ahora</value></data>
+  <data name="Integrations_RefreshButton.Content" xml:space="preserve"><value>Actualizar estado</value></data>
+  <data name="Integrations_DisconnectButton.Content" xml:space="preserve"><value>Desconectar</value></data>
+  <data name="Integrations_LoadError" xml:space="preserve"><value>Error al cargar las integraciones: {0}</value></data>
+  <data name="Integrations_NotAvailable" xml:space="preserve"><value>La integración con Google Calendar no está disponible en esta compilación.</value></data>
+  <data name="Integrations_DisconnectError" xml:space="preserve"><value>Error al desconectar: {0}</value></data>
+  <data name="Integrations_SyncNotAvailable" xml:space="preserve"><value>El servidor de integración gestiona la sincronización manual.</value></data>
+  <data name="Integrations_SavePolicyError" xml:space="preserve"><value>Error al guardar la configuración: {0}</value></data>
 </root>

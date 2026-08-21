@@ -1,0 +1,158 @@
+<UserControl
+    x:Class="TastileDesktop.Views.CreateTile.Bodies.DetailedBody"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="using:TastileDesktop.Controls"
+    xmlns:sections="using:TastileDesktop.Views.CreateTile.Sections">
+    <StackPanel Spacing="0">
+        <Grid Padding="20,6,20,6" ColumnSpacing="8">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <controls:TabSelector x:Name="KindSelector" SelectionChanged="OnKindChanged" />
+        </Grid>
+
+        <StackPanel x:Name="ObjectivePanel" Padding="20,6,20,6" Spacing="6">
+            <TextBlock x:Name="ModeLabel" x:Uid="CreateTile_DetailedBody_ModeLabel" Style="{StaticResource SettingRowLabelTextStyle}" />
+            <controls:TabSelector x:Name="ModeSelector" SelectionChanged="OnModeChanged" />
+            <ToggleButton x:Name="MaximizeButton" x:Uid="CreateTile_DetailedBody_MaximizeButton" Style="{StaticResource SelectorButtonStyle}" Click="OnMaximizeClick" Visibility="Collapsed" />
+        </StackPanel>
+
+        <StackPanel x:Name="TimingPanel" Padding="20,6,20,6" Spacing="6">
+            <TextBlock x:Name="TimingLabel" x:Uid="CreateTile_DetailedBody_TimingLabel" Style="{StaticResource SettingRowLabelTextStyle}" />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleButton x:Name="UseStartAtButton" x:Uid="CreateTile_DetailedBody_UseStartAtButton" Style="{StaticResource SelectorButtonStyle}" Click="OnUseStartAtClick" />
+                <ToggleButton x:Name="UseEndAtButton" x:Uid="CreateTile_DetailedBody_UseEndAtButton" Grid.Column="1" Style="{StaticResource SelectorButtonStyle}" Click="OnUseEndAtClick" />
+            </Grid>
+        </StackPanel>
+
+        <Grid x:Name="StartDatePanel" Padding="20,4,20,4" ColumnSpacing="8" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <DatePicker x:Name="StartDatePicker" />
+            <TimePicker x:Name="StartTimePicker" Grid.Column="1" />
+        </Grid>
+
+        <Grid x:Name="EndDatePanel" Padding="20,4,20,4" ColumnSpacing="8" Visibility="Collapsed">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <DatePicker x:Name="EndDatePicker" />
+            <TimePicker x:Name="EndTimePicker" Grid.Column="1" />
+        </Grid>
+
+        <StackPanel x:Name="RecurringSchedulePanel" Padding="20,6,20,6" Spacing="6" Visibility="Collapsed">
+            <controls:TabSelector x:Name="FreqSelector" SelectionChanged="OnFreqChanged" />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="RecurrencePrefix" x:Uid="CreateTile_DetailedBody_RecurrencePrefix" VerticalAlignment="Center" />
+                <NumberBox x:Name="RecurrenceIntervalBox" Grid.Column="1" Minimum="1" SpinButtonPlacementMode="Inline" />
+                <TextBlock x:Name="RecurrenceSuffix" x:Uid="CreateTile_DetailedBody_RecurrenceSuffix" Grid.Column="2" VerticalAlignment="Center" />
+            </Grid>
+            <Grid x:Name="WeeklyDaysGrid">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleButton x:Name="WeekdaySun" Tag="0" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                <ToggleButton x:Name="WeekdayMon" Grid.Column="1" Tag="1" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                <ToggleButton x:Name="WeekdayTue" Grid.Column="2" Tag="2" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                <ToggleButton x:Name="WeekdayWed" Grid.Column="3" Tag="3" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                <ToggleButton x:Name="WeekdayThu" Grid.Column="4" Tag="4" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                <ToggleButton x:Name="WeekdayFri" Grid.Column="5" Tag="5" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+                <ToggleButton x:Name="WeekdaySat" Grid.Column="6" Tag="6" Style="{StaticResource SelectorButtonStyle}" Click="OnWeekdayClick" />
+            </Grid>
+            <Grid x:Name="MonthlyPatternGrid" ColumnSpacing="8" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <NumberBox x:Name="MonthlyWeekBox" x:Uid="CreateTile_DetailedBody_MonthlyWeekBox" Minimum="1" Maximum="5" SpinButtonPlacementMode="Inline" />
+                <ComboBox x:Name="MonthlyWeekdayComboBox" x:Uid="CreateTile_DetailedBody_MonthlyWeekdayComboBox" Grid.Column="1" />
+            </Grid>
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleButton x:Name="RecurrenceUseStartAtButton" x:Uid="CreateTile_DetailedBody_RecurrenceUseStartAtButton" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceUseStartAtClick" />
+                <ToggleButton x:Name="RecurrenceUseEndAtButton" x:Uid="CreateTile_DetailedBody_RecurrenceUseEndAtButton" Grid.Column="1" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceUseEndAtClick" />
+            </Grid>
+            <Grid x:Name="RecurringWindowGrid" ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <TimePicker x:Name="RecurrenceStartTimePicker" />
+                <TimePicker x:Name="RecurrenceEndTimePicker" Grid.Column="1" />
+            </Grid>
+        </StackPanel>
+
+        <StackPanel x:Name="WorkTargetPanel" Padding="20,6,20,6" Spacing="6">
+            <TextBlock x:Name="DurationLabel" x:Uid="CreateTile_DetailedBody_DurationLabel" Style="{StaticResource SettingRowLabelTextStyle}" />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <NumberBox x:Name="WorkHoursBox" x:Uid="CreateTile_DetailedBody_WorkHoursBox" Minimum="0" Maximum="99" SpinButtonPlacementMode="Inline" />
+                <NumberBox x:Name="WorkMinutesBox" x:Uid="CreateTile_DetailedBody_WorkMinutesBox" Grid.Column="1" Minimum="0" Maximum="59" SpinButtonPlacementMode="Inline" />
+            </Grid>
+            <TextBlock x:Name="SplitLabel" x:Uid="CreateTile_DetailedBody_SplitLabel" Style="{StaticResource SettingRowLabelTextStyle}" />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleButton x:Name="SplitAllowButton" x:Uid="CreateTile_DetailedBody_SplitAllowButton" Style="{StaticResource SelectorButtonStyle}" Click="OnSplitAllowClick" />
+                <ToggleButton x:Name="SplitKeepButton" x:Uid="CreateTile_DetailedBody_SplitKeepButton" Grid.Column="1" Style="{StaticResource SelectorButtonStyle}" Click="OnSplitKeepClick" />
+            </Grid>
+        </StackPanel>
+
+        <StackPanel x:Name="RecurrenceValidityPanel" Padding="20,6,20,6" Spacing="6" Visibility="Collapsed">
+            <TextBlock x:Name="RecurrenceValidityLabel" x:Uid="CreateTile_DetailedBody_RecurrenceValidityLabel" Style="{StaticResource SettingRowLabelTextStyle}" />
+            <Grid ColumnSpacing="8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <ToggleButton x:Name="RecurrenceValidFromButton" x:Uid="CreateTile_DetailedBody_RecurrenceValidFromButton" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceValidFromClick" />
+                <ToggleButton x:Name="RecurrenceValidToButton" x:Uid="CreateTile_DetailedBody_RecurrenceValidToButton" Grid.Column="1" Style="{StaticResource SelectorButtonStyle}" Click="OnRecurrenceValidToClick" />
+            </Grid>
+            <Grid x:Name="RecurrenceValidityGrid" ColumnSpacing="8" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <DatePicker x:Name="RecurrenceValidFromDatePicker" />
+                <DatePicker x:Name="RecurrenceValidToDatePicker" Grid.Column="1" />
+            </Grid>
+        </StackPanel>
+
+        <sections:DetailsAffordanceButton x:Name="DetailsButton" LabelKey="CreateTile.DetailsDetailedTitle" />
+
+        <Grid Padding="20,8,20,4" BorderThickness="0,1,0,0" BorderBrush="{StaticResource AppBorderBrush}">
+            <StackPanel Spacing="0">
+                <sections:ProjectColorRow x:Name="ProjectRow" />
+                <sections:MemoSection x:Name="MemoSection" />
+            </StackPanel>
+        </Grid>
+    </StackPanel>
+</UserControl>

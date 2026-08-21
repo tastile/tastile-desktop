@@ -30,12 +30,18 @@
     </xsd:element>
   </xsd:schema>
   <data name="Auth" xml:space="preserve"><value>로그인</value></data>
+  <data name="Auth.Title" xml:space="preserve"><value>로그인</value></data>
   <data name="Auth_Cancel" xml:space="preserve"><value>취소</value></data>
+  <data name="Auth_Cancel.Content" xml:space="preserve"><value>취소</value></data>
   <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>브라우저에서 계속</value></data>
+  <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>브라우저에서 계속</value></data>
   <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>브라우저에서 로그인을 완료해 주세요…</value></data>
   <data name="Auth_Description" xml:space="preserve"><value>브라우저에서 Tastile 로그인 페이지가 열립니다. 로그인 방법을 선택하면 완료 후 자동으로 돌아옵니다.</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>브라우저에서 Tastile 로그인 페이지가 열립니다. 로그인 방법을 선택하면 완료 후 자동으로 돌아옵니다.</value></data>
   <data name="Auth_Heading" xml:space="preserve"><value>Tastile에 로그인</value></data>
+  <data name="Auth_Heading.Text" xml:space="preserve"><value>Tastile에 로그인</value></data>
   <data name="Auth_SignInFailed" xml:space="preserve"><value>로그인을 시작할 수 없습니다: {0}</value></data>
   <data name="Auth_TitleBarHeading" xml:space="preserve"><value>로그인</value></data>
+  <data name="Auth_TitleBarHeading.Text" xml:space="preserve"><value>로그인</value></data>
 
 </root>

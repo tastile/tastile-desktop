@@ -6,19 +6,18 @@ namespace TastileDesktop.Tests;
 public sealed class TimelineWindowLayoutTests
 {
     [Fact]
-    public void TimelineWindow_UsesClassicBinding_ForRootItemsControlsToAvoidXBindConnectorCrash()
+    public void TimelineWindow_UsesCompiledBindings_ForRootItemsControls()
     {
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
         var sourcePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml.cs"));
         var source = File.ReadAllText(sourcePath);
 
-        Assert.Contains("ItemsSource=\"{Binding TimelineHourMarkers, Mode=OneWay}\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding TimelineBlocks, Mode=OneWay}\"", xaml);
-        Assert.Contains("Height=\"{Binding TimelineCanvasHeight, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.TimelineHourMarkers, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.TimelineBlocks, Mode=OneWay}\"", xaml);
+        Assert.Contains("Height=\"{x:Bind ViewModel.TimelineCanvasHeight, Mode=OneWay}\"", xaml);
         Assert.DoesNotContain("SyncTimelineItemsBindings()", source);
-        Assert.DoesNotContain("ItemsSource=\"{x:Bind ViewModel.TimelineHourMarkers, Mode=OneWay}\"", xaml);
-        Assert.DoesNotContain("ItemsSource=\"{x:Bind ViewModel.TimelineBlocks, Mode=OneWay}\"", xaml);
+        Assert.Contains("x:DataType=\"local:TimelineWindow\"", xaml);
     }
 
     [Fact]
@@ -27,8 +26,8 @@ public sealed class TimelineWindowLayoutTests
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("TranslateTransform Y=\"{Binding Top}\"", xaml);
-        Assert.Contains("TranslateTransform X=\"{Binding Left}\" Y=\"{Binding Top}\"", xaml);
+        Assert.Contains("TranslateTransform Y=\"{x:Bind Top, Mode=OneTime}\"", xaml);
+        Assert.Contains("TranslateTransform X=\"{x:Bind Left, Mode=OneTime}\" Y=\"{x:Bind Top, Mode=OneTime}\"", xaml);
     }
 
     [Fact]
@@ -37,8 +36,8 @@ public sealed class TimelineWindowLayoutTests
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("Command=\"{Binding StatusCommand}\"", xaml);
-        Assert.Contains("Command=\"{Binding EditCommand}\"", xaml);
+        Assert.Contains("Command=\"{x:Bind StatusCommand, Mode=OneTime}\"", xaml);
+        Assert.Contains("Command=\"{x:Bind EditCommand, Mode=OneTime}\"", xaml);
         Assert.DoesNotContain("Click=\"OnTimelineBlockStatusClick\"", xaml);
         Assert.DoesNotContain("Click=\"OnTimelineBlockEditClick\"", xaml);
         Assert.DoesNotContain("ToolTipService.ToolTip=\"{x:Bind StatusIconToolTip}\"", xaml);
@@ -65,8 +64,8 @@ public sealed class TimelineWindowLayoutTests
         var xaml = File.ReadAllText(xamlPath);
 
         Assert.Contains("StackPanel Grid.Column=\"1\" Spacing=\"2\" VerticalAlignment=\"Center\"", xaml);
-        Assert.Contains("Text=\"{Binding DurationText}\" Foreground=\"{Binding SecondaryForegroundBrush}\" VerticalAlignment=\"Center\"", xaml);
-        Assert.Contains("Visibility=\"{Binding KindLabelVisibility}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind DurationText, Mode=OneTime}\" Foreground=\"{x:Bind SecondaryForegroundBrush, Mode=OneTime}\" VerticalAlignment=\"Center\"", xaml);
+        Assert.Contains("Visibility=\"{x:Bind KindLabelVisibility, Mode=OneTime}\"", xaml);
     }
 
     [Fact]
@@ -75,11 +74,11 @@ public sealed class TimelineWindowLayoutTests
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("Text=\"{Binding Title}\"", xaml);
-        Assert.Contains("Grid.Column=\"2\" Margin=\"0,0,2,0\" Text=\"{Binding DurationText}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind Title, Mode=OneTime}\"", xaml);
+        Assert.Contains("Grid.Column=\"2\" Margin=\"0,0,2,0\" Text=\"{x:Bind DurationText, Mode=OneTime}\"", xaml);
         Assert.Contains("HorizontalAlignment=\"Right\"", xaml);
         Assert.Contains("<Setter Property=\"HorizontalAlignment\" Value=\"Stretch\" />", xaml);
-        Assert.Contains("Command=\"{Binding StatusCommand}\"", xaml);
+        Assert.Contains("Command=\"{x:Bind StatusCommand, Mode=OneTime}\"", xaml);
     }
 
     [Fact]
@@ -134,17 +133,16 @@ public sealed class TimelineWindowLayoutTests
 
         Assert.Contains("x:Name=\"ToolbarPanel\"", xaml);
         Assert.Contains("Content=\"←\"", xaml);
-        Assert.Contains("Content=\"{Binding TimelineAnchorLabel, Mode=OneWay}\"", xaml);
+        Assert.Contains("Content=\"{x:Bind ViewModel.TimelineAnchorLabel, Mode=OneWay}\"", xaml);
         Assert.Contains("ToolTipService.ToolTip=\"現在時点へ戻る\"", xaml);
         Assert.Contains("Content=\"→\"", xaml);
         Assert.Contains("Content=\"Day\"", xaml);
         Assert.Contains("Content=\"Week\"", xaml);
         Assert.Contains("Content=\"Month\"", xaml);
         Assert.Contains("Content=\"Year\"", xaml);
-        Assert.Contains("Text=\"{Binding TimelineCompactRangeLabel, Mode=OneWay}\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding MonthCalendarRows, Mode=OneWay}\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding Cells}\"", xaml);
-        Assert.DoesNotContain("ItemsSource=\"{x:Bind ViewModel.MonthCalendarRows, Mode=OneWay}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind ViewModel.TimelineCompactRangeLabel, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.MonthCalendarRows, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind Cells, Mode=OneTime}\"", xaml);
         Assert.Contains("Text=\"Mon\"", xaml);
         Assert.Contains("Text=\"Tue\"", xaml);
         Assert.Contains("Text=\"Wed\"", xaml);
@@ -199,8 +197,8 @@ public sealed class TimelineWindowLayoutTests
 
         Assert.Contains("Tag=\"MonthCell\"", xaml);
         Assert.DoesNotContain("Width=\"150\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding MonthCalendarRows, Mode=OneWay}\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding Cells}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.MonthCalendarRows, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind Cells, Mode=OneTime}\"", xaml);
         Assert.Contains("<RowDefinition Height=\"*\" />", xaml);
         Assert.Contains("MonthCalendarHost.LayoutUpdated += OnMonthCalendarHostLayoutUpdated;", source);
         Assert.Contains("MonthCalendarHost.SizeChanged += (_, _) => ApplyCalendarCellDimensions();", source);
@@ -253,9 +251,9 @@ public sealed class TimelineWindowLayoutTests
         var source = File.ReadAllText(sourcePath);
         var sourceVm = File.ReadAllText(sourceVmPath);
 
-        Assert.Contains("ItemsSource=\"{Binding WeekTimelineColumns, Mode=OneWay}\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding Blocks}\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding WeekTimelineHourMarkers, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.WeekTimelineColumns, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind Blocks, Mode=OneTime}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.WeekTimelineHourMarkers, Mode=OneWay}\"", xaml);
         Assert.DoesNotContain("Tag=\"WeekTimelineDayColumn\"", xaml);
         Assert.Contains("StackPanel Orientation=\"Horizontal\" Spacing=\"8\"", xaml);
         Assert.DoesNotContain("x:Name=\"WeekLaneGuidesGrid\"", xaml);
@@ -271,15 +269,14 @@ public sealed class TimelineWindowLayoutTests
     }
 
     [Fact]
-    public void TimelineWindow_WeekView_AvoidsXBindConnectorRegression()
+    public void TimelineWindow_WeekView_UsesCompiledBindings()
     {
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("ItemsSource=\"{Binding WeekTimelineColumns, Mode=OneWay}\"", xaml);
-        Assert.DoesNotContain("ItemsSource=\"{x:Bind ViewModel.WeekTimelineColumns, Mode=OneWay}\"", xaml);
-        Assert.DoesNotContain("Text=\"{x:Bind TimelineNowLabel, Mode=OneWay}\"", xaml);
-        Assert.DoesNotContain("TranslateTransform Y=\"{x:Bind TimelineNowTop, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.WeekTimelineColumns, Mode=OneWay}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind ViewModel.TimelineNowLabel, Mode=OneWay}\"", xaml);
+        Assert.Contains("TranslateTransform Y=\"{x:Bind ViewModel.TimelineNowTop, Mode=OneWay}\"", xaml);
     }
 
     [Fact]
@@ -308,9 +305,9 @@ public sealed class TimelineWindowLayoutTests
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "..", "src", "TastileDesktop", "Views", "TimelineWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
-        Assert.Contains("Width=\"{Binding ActualWidth, ElementName=WeekTimelineColumnsHost}\" Visibility=\"{Binding TimelineNowVisibility, Mode=OneWay}\"", xaml);
-        Assert.Contains("TranslateTransform Y=\"{Binding TimelineNowTop, Mode=OneWay}\"", xaml);
-        Assert.Contains("Text=\"{Binding TimelineNowLabel, Mode=OneWay}\"", xaml);
+        Assert.Contains("Width=\"{Binding ActualWidth, ElementName=WeekTimelineColumnsHost}\" Visibility=\"{x:Bind ViewModel.TimelineNowVisibility, Mode=OneWay}\"", xaml);
+        Assert.Contains("TranslateTransform Y=\"{x:Bind ViewModel.TimelineNowTop, Mode=OneWay}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind ViewModel.TimelineNowLabel, Mode=OneWay}\"", xaml);
     }
 
     [Fact]
@@ -338,8 +335,7 @@ public sealed class TimelineWindowLayoutTests
         var sourceService = File.ReadAllText(sourceServicePath);
 
         Assert.Contains("x:Name=\"YearCalendarHost\"", xaml);
-        Assert.Contains("ItemsSource=\"{Binding YearCalendarRows, Mode=OneWay}\"", xaml);
-        Assert.DoesNotContain("ItemsSource=\"{x:Bind ViewModel.YearCalendarRows, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.YearCalendarRows, Mode=OneWay}\"", xaml);
         Assert.Contains("Tag=\"YearMonthCard\"", xaml);
         Assert.Contains("YearCalendarVisibility", sourceVm);
         Assert.Contains("BuildYearMonthRows", sourceVm);
@@ -359,7 +355,7 @@ public sealed class TimelineWindowLayoutTests
         Assert.Contains("border.Height =", source);
         Assert.Contains("MonthCalendarHost.ActualHeight", source);
         Assert.Contains("MonthCalendarHost.ActualWidth", source);
-        Assert.Contains("ItemsSource=\"{Binding MonthCalendarRows, Mode=OneWay}\"", xaml);
+        Assert.Contains("ItemsSource=\"{x:Bind ViewModel.MonthCalendarRows, Mode=OneWay}\"", xaml);
         Assert.DoesNotContain("WeekCalendarHost.ActualHeight", source);
         Assert.Contains("Week calendar now uses unified timeline", source);
         Assert.Contains("YearCalendarHost.ActualHeight", source);

@@ -63,15 +63,12 @@
   <data name="CreateTile.RecurrenceValidFrom" xml:space="preserve"><value>有効開始</value></data>
   <data name="CreateTile.RecurrenceValidTo" xml:space="preserve"><value>有効終了</value></data>
   <data name="CreateTile.RecurrenceValidityLabel" xml:space="preserve"><value>有効期間</value></data>
-  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>分割してよい</value></data>
-  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>分割しない</value></data>
   <data name="CreateTile.SplitLabel" xml:space="preserve"><value>分割</value></data>
   <data name="CreateTile.StartButton" xml:space="preserve"><value>開始</value></data>
   <data name="CreateTile.TagLabel" xml:space="preserve"><value>タグ</value></data>
   <data name="CreateTile.TagPlaceholder" xml:space="preserve"><value>タグ名</value></data>
   <data name="CreateTile.TimingLabel" xml:space="preserve"><value>実行タイミング</value></data>
   <data name="CreateTile.TitleLabel" xml:space="preserve"><value>タイトル</value></data>
-  <data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>作業 25分</value></data>
   <data name="CreateTile.WeekdayFri" xml:space="preserve"><value>金</value></data>
   <data name="CreateTile.WeekdayMon" xml:space="preserve"><value>月</value></data>
   <data name="CreateTile.WeekdaySat" xml:space="preserve"><value>土</value></data>
@@ -99,5 +96,103 @@
   <data name="CreateTile_ValidationRecurrenceIntervalMin" xml:space="preserve"><value>定期実行の間隔は 1 以上にしてください。</value></data>
   <data name="CreateTile_ValidationStartEndOrder" xml:space="preserve"><value>日時の前後関係を確認してください。</value></data>
   <data name="CreateTile_ValidationTitleRequired" xml:space="preserve"><value>タイトルを入力してください。</value></data>
+  <data name="CreateTile.WorkflowEvent" xml:space="preserve"><value>イベント</value></data>
+  <data name="CreateTile.WorkflowTask" xml:space="preserve"><value>タスク</value></data>
+  <data name="CreateTile.WorkflowRecurring" xml:space="preserve"><value>繰り返し</value></data>
+  <data name="CreateTile.WorkflowDetailed" xml:space="preserve"><value>詳細</value></data>
+  <data name="CreateTile.WorkflowEventDescription" xml:space="preserve"><value>カレンダーの時間ブロック</value></data>
+  <data name="CreateTile.WorkflowTaskDescription" xml:space="preserve"><value>目標時間で完了する作業</value></data>
+  <data name="CreateTile.WorkflowRecurringDescription" xml:space="preserve"><value>定期的に実行するスケジュール</value></data>
+  <data name="CreateTile.WorkflowDetailedDescription" xml:space="preserve"><value>全フィールドを直接編集</value></data>
+  <data name="CreateTile.AllDay" xml:space="preserve"><value>終日</value></data>
+  <data name="CreateTile.StartDate" xml:space="preserve"><value>開始日</value></data>
+  <data name="CreateTile.EndDate" xml:space="preserve"><value>終了日</value></data>
+  <data name="CreateTile.StartTimeLabel" xml:space="preserve"><value>開始時刻</value></data>
+  <data name="CreateTile.EndTimeLabel" xml:space="preserve"><value>終了時刻</value></data>
+  <data name="CreateTile.DueDatePlaceholder" xml:space="preserve"><value>日付（任意）</value></data>
+  <data name="CreateTile.DueTimeLabel" xml:space="preserve"><value>期限時刻</value></data>
+  <data name="CreateTile.DurationCustom" xml:space="preserve"><value>カスタム…</value></data>
+  <data name="CreateTile.DurationManual" xml:space="preserve"><value>分単位で指定</value></data>
+  <data name="CreateTile.DetailsEventTitle" xml:space="preserve"><value>イベント詳細</value></data>
+  <data name="CreateTile.DetailsTaskTitle" xml:space="preserve"><value>タスク詳細</value></data>
+  <data name="CreateTile.DetailsRecurringTitle" xml:space="preserve"><value>繰り返し詳細</value></data>
+  <data name="CreateTile.DetailsDetailedTitle" xml:space="preserve"><value>詳細オプション</value></data>
+  <data name="CreateTile.RepeatModeOnce" xml:space="preserve"><value>繰り返さない</value></data>
+  <data name="CreateTile.RepeatModeDaily" xml:space="preserve"><value>毎日</value></data>
+  <data name="CreateTile.RepeatModeWeekly" xml:space="preserve"><value>毎週</value></data>
+  <data name="CreateTile.RepeatModeMonthly" xml:space="preserve"><value>毎月</value></data>
+  <data name="CreateTile.RepeatModeInterval" xml:space="preserve"><value>間隔</value></data>
+  <data name="CreateTile.IntervalValueLabel" xml:space="preserve"><value>間隔</value></data>
+  <data name="CreateTile.IntervalUnitMin" xml:space="preserve"><value>分</value></data>
+  <data name="CreateTile.IntervalUnitHour" xml:space="preserve"><value>時間</value></data>
+  <data name="CreateTile.IntervalUnitDay" xml:space="preserve"><value>日</value></data>
+  <data name="CreateTile.MonthlyByDay" xml:space="preserve"><value>日付指定</value></data>
+  <data name="CreateTile.MonthlyByWeekday" xml:space="preserve"><value>曜日指定</value></data>
+  <data name="CreateTile.MonthlyDayOfMonthLabel" xml:space="preserve"><value>日にち</value></data>
+  <data name="CreateTile.MonthlyWeekOfMonthLabel" xml:space="preserve"><value>第何週</value></data>
+  <data name="CreateTile.MonthlyWeekFirst" xml:space="preserve"><value>第1</value></data>
+  <data name="CreateTile.MonthlyWeekSecond" xml:space="preserve"><value>第2</value></data>
+  <data name="CreateTile.MonthlyWeekThird" xml:space="preserve"><value>第3</value></data>
+  <data name="CreateTile.MonthlyWeekFourth" xml:space="preserve"><value>第4</value></data>
+  <data name="CreateTile.MonthlyLastWeek" xml:space="preserve"><value>最終</value></data>
+  <data name="CreateTile.TimeOfDayLabel" xml:space="preserve"><value>時刻</value></data>
+  <data name="CreateTile.TimeModelDurationOnly" xml:space="preserve"><value>所要時間のみ</value></data>
+  <data name="CreateTile.TimeModelFixedWindow" xml:space="preserve"><value>時間枠を固定</value></data>
+  <data name="CreateTile.TimeModelWindowWithDuration" xml:space="preserve"><value>時間枠＋所要時間</value></data>
+  <data name="CreateTile.TimeModelDurationOnlyHint" xml:space="preserve"><value>時刻指定なし — 所要時間のみ</value></data>
+  <data name="CreateTile.SchedulableWindowStartLabel" xml:space="preserve"><value>最も早い時刻</value></data>
+  <data name="CreateTile.SchedulableWindowEndLabel" xml:space="preserve"><value>最も遅い時刻</value></data>
+  <data name="CreateTile.RepeatEndLabel" xml:space="preserve"><value>繰り返し終了</value></data>
+  <data name="CreateTile.ColorLabel" xml:space="preserve"><value>色</value></data>
+  <data name="CreateTile.SubtasksEmpty" xml:space="preserve"><value>サブタスクなし</value></data>
+  <data name="CreateTile.SubtasksAdd" xml:space="preserve"><value>サブタスクを追加</value></data>
+  <data name="CreateTile.SubtasksLabel" xml:space="preserve"><value>サブタスク</value></data>
+  <data name="CreateTile_TitleRequired" xml:space="preserve"><value>タイトルは必須です。</value></data>
+  <data name="CreateTile_SubmitBlockedHint" xml:space="preserve"><value>ハイライトされたエラーを解消してください。</value></data>
+  <data name="CreateTile_SubmitFailedRetry" xml:space="preserve"><value>送信に失敗しました。再試行してください。</value></data>
+  <data name="CreateTile_UpdateError" xml:space="preserve"><value>更新エラー</value></data>
+  <data name="CreateTile_CreateError" xml:space="preserve"><value>作成エラー</value></data>
 
+<data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>タイトルを追加</value></data>
+  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>分割を許可</value></data>
+  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>分割しない</value></data>
+  <data name="CreateTile.DurationMinute" xml:space="preserve"><value>{0} 分</value></data>
+  <data name="CreateTile.DurationHour" xml:space="preserve"><value>{0} 時間</value></data>
+  <data name="CreateTile.TagChipLabel" xml:space="preserve"><value>#{0} ×</value></data>
+  <data name="CreateTile.Title" xml:space="preserve"><value>タイルを作成</value></data>
+
+  <data name="CreateTile_TaskBody_DurationLabel.Text" xml:space="preserve"><value>所要時間</value></data>
+  <data name="CreateTile_TaskBody_SplitAllowButton.Content" xml:space="preserve"><value>分割を許可</value></data>
+  <data name="CreateTile_TaskBody_SplitKeepButton.Content" xml:space="preserve"><value>分割しない</value></data>
+  <data name="CreateTile_EventBody_AllDayLabel.Text" xml:space="preserve"><value>終日</value></data>
+  <data name="CreateTile_RecurringBody_RepeatLabel.Text" xml:space="preserve"><value>繰り返し</value></data>
+  <data name="CreateTile_RecurringBody_IntervalLabel.Text" xml:space="preserve"><value>毎</value></data>
+  <data name="CreateTile_RecurringBody_MonthlyDayBox.Header" xml:space="preserve"><value>月の日</value></data>
+  <data name="CreateTile_RecurringBody_TimeModelLabel.Text" xml:space="preserve"><value>時間モデル</value></data>
+  <data name="CreateTile_RecurringBody_RepeatUntilLabel.Text" xml:space="preserve"><value>繰り返し終了</value></data>
+  <data name="CreateTile_RecurringBody_DurationLabel.Text" xml:space="preserve"><value>所要時間</value></data>
+  <data name="CreateTile_DetailedBody_ModeLabel.Text" xml:space="preserve"><value>モード</value></data>
+  <data name="CreateTile_DetailedBody_MaximizeButton.Content" xml:space="preserve"><value>時間内で最大化</value></data>
+  <data name="CreateTile_DetailedBody_TimingLabel.Text" xml:space="preserve"><value>実行タイミング</value></data>
+  <data name="CreateTile_DetailedBody_UseStartAtButton.Content" xml:space="preserve"><value>開始を使用</value></data>
+  <data name="CreateTile_DetailedBody_UseEndAtButton.Content" xml:space="preserve"><value>終了を使用</value></data>
+  <data name="CreateTile_DetailedBody_RecurrencePrefix.Text" xml:space="preserve"><value>毎</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceSuffix.Text" xml:space="preserve"><value>日</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekBox.Header" xml:space="preserve"><value>月の週</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekdayComboBox.Header" xml:space="preserve"><value>曜日</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseStartAtButton.Content" xml:space="preserve"><value>開始時刻を使用</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseEndAtButton.Content" xml:space="preserve"><value>終了時刻を使用</value></data>
+  <data name="CreateTile_DetailedBody_DurationLabel.Text" xml:space="preserve"><value>所要時間</value></data>
+  <data name="CreateTile_DetailedBody_WorkHoursBox.Header" xml:space="preserve"><value>時間</value></data>
+  <data name="CreateTile_DetailedBody_WorkMinutesBox.Header" xml:space="preserve"><value>分</value></data>
+  <data name="CreateTile_DetailedBody_SplitLabel.Text" xml:space="preserve"><value>分割</value></data>
+  <data name="CreateTile_DetailedBody_SplitAllowButton.Content" xml:space="preserve"><value>分割を許可</value></data>
+  <data name="CreateTile_DetailedBody_SplitKeepButton.Content" xml:space="preserve"><value>分割しない</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidityLabel.Text" xml:space="preserve"><value>有効期間</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidFromButton.Content" xml:space="preserve"><value>有効開始</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidToButton.Content" xml:space="preserve"><value>有効終了</value></data>
+  <data name="CreateTileHeader_CloseButton.ToolTipService.ToolTip" xml:space="preserve"><value>閉じる</value></data>
+  <data name="CreateTileHeader_TitleInput.PlaceholderText" xml:space="preserve"><value>タイトルを追加</value></data>
+  <data name="ProjectColorRow_ProjectInput.PlaceholderText" xml:space="preserve"><value>プロジェクト名</value></data>
+  <data name="ProjectColorRow_TagInput.PlaceholderText" xml:space="preserve"><value>タグ名</value></data>
 </root>

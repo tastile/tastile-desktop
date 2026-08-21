@@ -3,7 +3,9 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:TastileDesktop.Views"
+    xmlns:vm="using:TastileDesktop.ViewModels"
     x:Uid="Tiles"
+    x:DataType="local:TilesWindow"
     Title="Tiles">
 
     <Grid x:Name="RootGrid" Background="{StaticResource AppBackgroundBrush}">
@@ -33,12 +35,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" FontSize="14" Foreground="{StaticResource AccentBrush}" />
                             <TextBlock x:Uid="Tiles_Ready" Text="Ready" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AccentBrush}" />
-                            <TextBlock x:Name="ReadyCount" Text="0" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind ReadyCountDisplay, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <ItemsControl ItemsSource="{Binding ReadyTiles}">
+                    <ItemsControl ItemsSource="{x:Bind ReadyTiles, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="vm:TileListItem">
                                 <Border Padding="12" Margin="0,0,0,8" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="4">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -47,17 +49,17 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Width="28" Height="28" Margin="0,0,12,0" Padding="0" Tag="{Binding Id}" Click="OnTileStatusClick" Background="Transparent" BorderThickness="0">
-                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" FontSize="15" Foreground="{Binding StatusBadgeForeground}" />
+                                        <Button Grid.Column="0" Width="28" Height="28" Margin="0,0,12,0" Padding="0" Click="OnTileStatusClick" CommandParameter="{x:Bind Id}" Background="Transparent" BorderThickness="0">
+                                            <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" FontSize="15" Foreground="{x:Bind StatusBadgeForeground, Mode=OneTime}" />
                                         </Button>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Title}" Foreground="{StaticResource AppForegroundBrush}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{x:Bind Title, Mode=OneTime}" Foreground="{StaticResource AppForegroundBrush}" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="2">
-                                            <TextBlock Text="{Binding TargetDurationText}" Foreground="{StaticResource AppForegroundMutedBrush}" FontFamily="Consolas" HorizontalAlignment="Right" />
-                                            <TextBlock Text="{Binding ScheduledTimeDisplay}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="11" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{x:Bind TargetDurationText, Mode=OneTime}" Foreground="{StaticResource AppForegroundMutedBrush}" FontFamily="Consolas" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{x:Bind ScheduledTimeDisplay, Mode=OneTime}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="11" HorizontalAlignment="Right" />
                                         </StackPanel>
-                                        <Button Grid.Column="3" Width="28" Height="28" Margin="12,0,0,0" Padding="0" Tag="{Binding Id}" Click="OnTileEditClick" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
+                                        <Button Grid.Column="3" Width="28" Height="28" Margin="12,0,0,0" Padding="0" Click="OnTileEditClick" CommandParameter="{x:Bind Id, Mode=OneTime}" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70F;" FontSize="12" Foreground="{StaticResource AppForegroundMutedBrush}" />
                                         </Button>
                                     </Grid>
@@ -65,7 +67,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock x:Name="ReadyMore" Text="" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="12" />
+                    <TextBlock Text="{x:Bind ReadyMoreDisplay, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="12" />
                 </StackPanel>
 
                 <StackPanel x:Name="StartedSection" Spacing="12">
@@ -73,12 +75,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE768;" FontSize="14" Foreground="{StaticResource PrimaryForegroundBrush}" />
                             <TextBlock x:Uid="Tiles_Running" Text="Running" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource PrimaryForegroundBrush}" />
-                            <TextBlock x:Name="StartedCount" Text="0" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind StartedCountDisplay, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <ItemsControl ItemsSource="{Binding StartedTiles}">
+                    <ItemsControl ItemsSource="{x:Bind StartedTiles, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="vm:TileListItem">
                                 <Border Padding="12" Margin="0,0,0,8" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="4">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -87,17 +89,17 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Width="28" Height="28" Margin="0,0,12,0" Padding="0" Tag="{Binding Id}" Click="OnTileStatusClick" Background="Transparent" BorderThickness="0">
+                                        <Button Grid.Column="0" Width="28" Height="28" Margin="0,0,12,0" Padding="0" Click="OnTileStatusClick" CommandParameter="{x:Bind Id, Mode=OneTime}" Background="Transparent" BorderThickness="0">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE945;" FontSize="16" Foreground="{StaticResource PrimaryForegroundBrush}" />
                                         </Button>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Title}" Foreground="{StaticResource AppForegroundBrush}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{x:Bind Title, Mode=OneTime}" Foreground="{StaticResource AppForegroundBrush}" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="2">
-                                            <TextBlock Text="{Binding TargetDurationText}" Foreground="{StaticResource AppForegroundMutedBrush}" FontFamily="Consolas" HorizontalAlignment="Right" />
-                                            <TextBlock Text="{Binding ScheduledTimeDisplay}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="11" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{x:Bind TargetDurationText, Mode=OneTime}" Foreground="{StaticResource AppForegroundMutedBrush}" FontFamily="Consolas" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{x:Bind ScheduledTimeDisplay, Mode=OneTime}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="11" HorizontalAlignment="Right" />
                                         </StackPanel>
-                                        <Button Grid.Column="3" Width="28" Height="28" Margin="12,0,0,0" Padding="0" Tag="{Binding Id}" Click="OnTileEditClick" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
+                                        <Button Grid.Column="3" Width="28" Height="28" Margin="12,0,0,0" Padding="0" Click="OnTileEditClick" CommandParameter="{x:Bind Id, Mode=OneTime}" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70F;" FontSize="12" Foreground="{StaticResource AppForegroundMutedBrush}" />
                                         </Button>
                                     </Grid>
@@ -105,7 +107,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock x:Name="StartedMore" Text="" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="12" />
+                    <TextBlock Text="{x:Bind StartedMoreDisplay, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="12" />
                 </StackPanel>
 
                 <StackPanel x:Name="DoneSection" Spacing="12">
@@ -113,12 +115,12 @@
                         <StackPanel Orientation="Horizontal" Spacing="8">
                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE73E;" FontSize="14" Foreground="{StaticResource AppForegroundMutedBrush}" />
                             <TextBlock x:Uid="Tiles_Done" Text="Done" Style="{ThemeResource BodyStrongTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" />
-                            <TextBlock x:Name="DoneCount" Text="0" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{x:Bind DoneCountDisplay, Mode=OneWay}" Style="{ThemeResource CaptionTextBlockStyle}" Foreground="{StaticResource AppForegroundMutedBrush}" VerticalAlignment="Center" />
                         </StackPanel>
                     </Button>
-                    <ItemsControl ItemsSource="{Binding DoneTiles}">
+                    <ItemsControl ItemsSource="{x:Bind DoneTiles, Mode=OneWay}">
                         <ItemsControl.ItemTemplate>
-                            <DataTemplate>
+                            <DataTemplate x:DataType="vm:TileListItem">
                                 <Border Padding="12" Margin="0,0,0,8" Background="{StaticResource AppSurfaceElevatedBrush}" BorderBrush="{StaticResource AppBorderBrush}" BorderThickness="1" CornerRadius="4">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
@@ -127,17 +129,17 @@
                                             <ColumnDefinition Width="Auto" />
                                             <ColumnDefinition Width="Auto" />
                                         </Grid.ColumnDefinitions>
-                                        <Button Grid.Column="0" Width="28" Height="28" Margin="0,0,12,0" Padding="0" Tag="{Binding Id}" Click="OnTileStatusClick" Background="Transparent" BorderThickness="0">
+                                        <Button Grid.Column="0" Width="28" Height="28" Margin="0,0,12,0" Padding="0" Click="OnTileStatusClick" CommandParameter="{x:Bind Id, Mode=OneTime}" Background="Transparent" BorderThickness="0">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE73E;" FontSize="16" Foreground="{StaticResource AppForegroundMutedBrush}" />
                                         </Button>
                                         <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding Title}" Foreground="{StaticResource AppForegroundBrush}" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{x:Bind Title, Mode=OneTime}" Foreground="{StaticResource AppForegroundBrush}" TextTrimming="CharacterEllipsis" />
                                         </StackPanel>
                                         <StackPanel Grid.Column="2" Orientation="Vertical" VerticalAlignment="Center" HorizontalAlignment="Right" Spacing="2">
-                                            <TextBlock Text="{Binding TargetDurationText}" Foreground="{StaticResource AppForegroundMutedBrush}" FontFamily="Consolas" HorizontalAlignment="Right" />
-                                            <TextBlock Text="{Binding ScheduledTimeDisplay}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="11" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{x:Bind TargetDurationText, Mode=OneTime}" Foreground="{StaticResource AppForegroundMutedBrush}" FontFamily="Consolas" HorizontalAlignment="Right" />
+                                            <TextBlock Text="{x:Bind ScheduledTimeDisplay, Mode=OneTime}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="11" HorizontalAlignment="Right" />
                                         </StackPanel>
-                                        <Button Grid.Column="3" Width="28" Height="28" Margin="12,0,0,0" Padding="0" Tag="{Binding Id}" Click="OnTileEditClick" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
+                                        <Button Grid.Column="3" Width="28" Height="28" Margin="12,0,0,0" Padding="0" Click="OnTileEditClick" CommandParameter="{x:Bind Id, Mode=OneTime}" Background="Transparent" BorderThickness="0" VerticalAlignment="Center">
                                             <FontIcon FontFamily="Segoe Fluent Icons" Glyph="&#xE70F;" FontSize="12" Foreground="{StaticResource AppForegroundMutedBrush}" />
                                         </Button>
                                     </Grid>
@@ -145,7 +147,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <TextBlock x:Name="DoneMore" Text="" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="12" />
+                    <TextBlock Text="{x:Bind DoneMoreDisplay, Mode=OneWay}" Foreground="{StaticResource AppForegroundMutedBrush}" FontSize="12" />
                 </StackPanel>
 
             </StackPanel>

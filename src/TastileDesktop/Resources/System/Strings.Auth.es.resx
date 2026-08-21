@@ -30,12 +30,18 @@
     </xsd:element>
   </xsd:schema>
   <data name="Auth" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Auth.Title" xml:space="preserve"><value>Iniciar sesión</value></data>
   <data name="Auth_Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Auth_Cancel.Content" xml:space="preserve"><value>Cancelar</value></data>
   <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>Continuar en el navegador</value></data>
+  <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>Continuar en el navegador</value></data>
   <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>Continúe el inicio de sesión en su navegador…</value></data>
   <data name="Auth_Description" xml:space="preserve"><value>Su navegador abre la página de inicio de sesión de Tastile. Elija un método de inicio de sesión y Tastile volverá automáticamente.</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>Su navegador abre la página de inicio de sesión de Tastile. Elija un método de inicio de sesión y Tastile volverá automáticamente.</value></data>
   <data name="Auth_Heading" xml:space="preserve"><value>Iniciar sesión en Tastile</value></data>
+  <data name="Auth_Heading.Text" xml:space="preserve"><value>Iniciar sesión en Tastile</value></data>
   <data name="Auth_SignInFailed" xml:space="preserve"><value>No se pudo iniciar la sesión: {0}</value></data>
   <data name="Auth_TitleBarHeading" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Auth_TitleBarHeading.Text" xml:space="preserve"><value>Iniciar sesión</value></data>
 
 </root>

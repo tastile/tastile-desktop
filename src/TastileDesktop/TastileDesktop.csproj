@@ -23,7 +23,7 @@
     <ApplicationIcon>Assets\tastile.ico</ApplicationIcon>
     <EnableTimelineConnectorValidation>true</EnableTimelineConnectorValidation>
     <NeutralResourcesLanguage>en</NeutralResourcesLanguage>
-    <SatelliteResourceLanguages>en;ja;zh-CN;ko;es</SatelliteResourceLanguages>
+    <SatelliteResourceLanguages>en;ja;zh-CN;ko;es;de;fr;pt-BR</SatelliteResourceLanguages>
     <!--
       Disable the .NET SDK's implicit *.resx -> EmbeddedResource glob so the
       explicit EmbeddedResource items below aren't reported as duplicates by
@@ -52,6 +52,15 @@
     <EmbeddedResource Include="Resources\App\Strings.Common.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Common.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Common.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Common.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\App\Strings.Language.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -65,6 +74,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\App\Strings.Language.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Language.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\App\Strings.Shell.resx">
@@ -82,6 +100,15 @@
     <EmbeddedResource Include="Resources\App\Strings.Shell.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\App\Strings.Shell.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Dashboard.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -95,6 +122,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Dashboard.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Dashboard.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Timeline.resx">
@@ -112,6 +148,15 @@
     <EmbeddedResource Include="Resources\Features\Strings.Timeline.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Timeline.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Tiles.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -125,6 +170,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Tiles.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tiles.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Tasks.resx">
@@ -142,6 +196,15 @@
     <EmbeddedResource Include="Resources\Features\Strings.Tasks.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Tasks.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Calendar.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -155,6 +218,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Calendar.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Calendar.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Schedule.resx">
@@ -172,6 +244,15 @@
     <EmbeddedResource Include="Resources\Features\Strings.Schedule.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Schedule.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Projects.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -185,6 +266,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.Projects.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.Projects.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.resx">
@@ -202,6 +292,15 @@
     <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Features\Strings.QuickCreate.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Auth.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -215,6 +314,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Auth.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Auth.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Execution.resx">
@@ -232,6 +340,15 @@
     <EmbeddedResource Include="Resources\System\Strings.Execution.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Execution.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Prompt.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -245,6 +362,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Prompt.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Prompt.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Settings.resx">
@@ -262,6 +388,15 @@
     <EmbeddedResource Include="Resources\System\Strings.Settings.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Settings.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Preferences.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -275,6 +410,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Preferences.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Preferences.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Account.resx">
@@ -292,6 +436,15 @@
     <EmbeddedResource Include="Resources\System\Strings.Account.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Account.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Notifications.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -307,6 +460,15 @@
     <EmbeddedResource Include="Resources\System\Strings.Notifications.es.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Notifications.pt-BR.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Integrations.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
@@ -320,6 +482,15 @@
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\System\Strings.Integrations.es.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.de.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.fr.resx">
+      <DependentUpon>Strings.Common.resx</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\System\Strings.Integrations.pt-BR.resx">
       <DependentUpon>Strings.Common.resx</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
@@ -390,7 +561,7 @@
     AfterTargets="MarkupCompilePass2"
     Condition="'$(DesignTimeBuild)' != 'true' and '$(EnableTimelineConnectorValidation)' == 'true'">
     <Exec
-      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$obj = [System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)'); if (!(Test-Path $obj)) { throw ('Intermediate output folder not found: ' + $obj) }; $generated = Join-Path $obj 'Views\TimelineWindow.g.cs'; if (!(Test-Path $generated)) { throw ('TimelineWindow.g.cs not found: ' + $generated) }; $files = @(Get-Item -Path $generated); $forbidden = @('OnNavigatePreviousClick','OnNavigateTodayClick','OnNavigateNextClick','OnViewDayClick','OnViewWeekClick','OnViewMonthClick','OnViewYearClick','OnRangeSelectionChanged','OnZoomOutClick','OnZoomInClick','this.HourMarkersItemsControl =','this.TimelineBlocksItemsControl =','this.WeekHourMarkersItemsControl ='); $allowedAssignedFields = @('TitleBarArea','TimelineRootGrid','ToolbarPanel','TimelineScrollViewer','MonthCalendarHost','WeekTimelineScrollViewer','YearCalendarHost','LoadingOverlay','WeekTimelineColumnsHost','TimelineCanvasHost'); foreach ($f in $files) { $c = Get-Content -Raw -Path $f.FullName; foreach ($m in $forbidden) { if ($c.Contains($m)) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': ' + $m) } }; $assignments = [System.Text.RegularExpressions.Regex]::Matches($c, 'this\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*global::WinRT\.CastExtensions\.As&lt;') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique; $unexpected = @($assignments | Where-Object { $_ -notin $allowedAssignedFields }); if ($unexpected.Count -gt 0) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': unexpected assignments [' + ($unexpected -join ', ') + ']') } }; exit 0&quot;" />
+      Command="powershell -NoProfile -ExecutionPolicy Bypass -Command &quot;$obj = [System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\$(IntermediateOutputPath)'); if (!(Test-Path $obj)) { throw ('Intermediate output folder not found: ' + $obj) }; $generated = Join-Path $obj 'Views\TimelineWindow.g.cs'; if (!(Test-Path $generated)) { throw ('TimelineWindow.g.cs not found: ' + $generated) }; $files = @(Get-Item -Path $generated); $forbidden = @('OnNavigatePreviousClick','OnNavigateTodayClick','OnNavigateNextClick','OnViewDayClick','OnViewWeekClick','OnViewMonthClick','OnViewYearClick','OnRangeSelectionChanged','OnZoomOutClick','OnZoomInClick','this.HourMarkersItemsControl =','this.TimelineBlocksItemsControl =','this.WeekHourMarkersItemsControl ='); $allowedAssignedFields = @('TitleBarArea','TimelineRootGrid','ToolbarPanel','TimelineScrollViewer','MonthCalendarHost','WeekTimelineScrollViewer','YearCalendarHost','LoadingOverlay','WeekTimelineColumnsHost','TimelineCanvasHost'); $generatedFieldPrefixes = @('obj'); foreach ($f in $files) { $c = Get-Content -Raw -Path $f.FullName; foreach ($m in $forbidden) { if ($c.Contains($m)) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': ' + $m) } }; $assignments = [System.Text.RegularExpressions.Regex]::Matches($c, 'this\.([A-Za-z_][A-Za-z0-9_]*)\s*=\s*global::WinRT\.CastExtensions\.As&lt;') | ForEach-Object { $_.Groups[1].Value } | Sort-Object -Unique; $unexpected = @($assignments | Where-Object { $_ -notin $allowedAssignedFields -and $_ -ne 'dataRoot' -and -not ($_ -match '^(' + ($generatedFieldPrefixes -join '|') + ')\d+$') }); if ($unexpected.Count -gt 0) { throw ('TimelineWindow connector wiring regression in ' + $f.FullName + ': unexpected assignments [' + ($unexpected -join ', ') + ']') } }; exit 0&quot;" />
   </Target>
 
   <Target

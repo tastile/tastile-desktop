@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
     <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
@@ -63,15 +63,12 @@
   <data name="CreateTile.RecurrenceValidFrom" xml:space="preserve"><value>Valid from</value></data>
   <data name="CreateTile.RecurrenceValidTo" xml:space="preserve"><value>Valid until</value></data>
   <data name="CreateTile.RecurrenceValidityLabel" xml:space="preserve"><value>Validity period</value></data>
-  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>Allow split</value></data>
-  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>Do not split</value></data>
   <data name="CreateTile.SplitLabel" xml:space="preserve"><value>Split</value></data>
   <data name="CreateTile.StartButton" xml:space="preserve"><value>Start</value></data>
   <data name="CreateTile.TagLabel" xml:space="preserve"><value>Tags</value></data>
   <data name="CreateTile.TagPlaceholder" xml:space="preserve"><value>Tag name</value></data>
   <data name="CreateTile.TimingLabel" xml:space="preserve"><value>Run timing</value></data>
   <data name="CreateTile.TitleLabel" xml:space="preserve"><value>Title</value></data>
-  <data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>Work 25 min</value></data>
   <data name="CreateTile.WeekdayFri" xml:space="preserve"><value>Fri</value></data>
   <data name="CreateTile.WeekdayMon" xml:space="preserve"><value>Mon</value></data>
   <data name="CreateTile.WeekdaySat" xml:space="preserve"><value>Sat</value></data>
@@ -99,5 +96,103 @@
   <data name="CreateTile_ValidationRecurrenceIntervalMin" xml:space="preserve"><value>Recurrence interval must be at least 1.</value></data>
   <data name="CreateTile_ValidationStartEndOrder" xml:space="preserve"><value>Check the start and end order.</value></data>
   <data name="CreateTile_ValidationTitleRequired" xml:space="preserve"><value>Enter a title.</value></data>
+  <data name="CreateTile.WorkflowEvent" xml:space="preserve"><value>Event</value></data>
+  <data name="CreateTile.WorkflowTask" xml:space="preserve"><value>Task</value></data>
+  <data name="CreateTile.WorkflowRecurring" xml:space="preserve"><value>Recurring</value></data>
+  <data name="CreateTile.WorkflowDetailed" xml:space="preserve"><value>Detailed</value></data>
+  <data name="CreateTile.WorkflowEventDescription" xml:space="preserve"><value>Time block in your calendar</value></data>
+  <data name="CreateTile.WorkflowTaskDescription" xml:space="preserve"><value>Work with a target duration</value></data>
+  <data name="CreateTile.WorkflowRecurringDescription" xml:space="preserve"><value>Repeating on a schedule</value></data>
+  <data name="CreateTile.WorkflowDetailedDescription" xml:space="preserve"><value>Edit every field directly</value></data>
+  <data name="CreateTile.AllDay" xml:space="preserve"><value>All day</value></data>
+  <data name="CreateTile.StartDate" xml:space="preserve"><value>Start date</value></data>
+  <data name="CreateTile.EndDate" xml:space="preserve"><value>End date</value></data>
+  <data name="CreateTile.StartTimeLabel" xml:space="preserve"><value>Start time</value></data>
+  <data name="CreateTile.EndTimeLabel" xml:space="preserve"><value>End time</value></data>
+  <data name="CreateTile.DueDatePlaceholder" xml:space="preserve"><value>Date (optional)</value></data>
+  <data name="CreateTile.DueTimeLabel" xml:space="preserve"><value>Due time</value></data>
+  <data name="CreateTile.DurationCustom" xml:space="preserve"><value>Custom…</value></data>
+  <data name="CreateTile.DurationManual" xml:space="preserve"><value>Custom minutes</value></data>
+  <data name="CreateTile.DetailsEventTitle" xml:space="preserve"><value>Event details</value></data>
+  <data name="CreateTile.DetailsTaskTitle" xml:space="preserve"><value>Task details</value></data>
+  <data name="CreateTile.DetailsRecurringTitle" xml:space="preserve"><value>Recurring details</value></data>
+  <data name="CreateTile.DetailsDetailedTitle" xml:space="preserve"><value>Detailed options</value></data>
+  <data name="CreateTile.RepeatModeOnce" xml:space="preserve"><value>Do not repeat</value></data>
+  <data name="CreateTile.RepeatModeDaily" xml:space="preserve"><value>Daily</value></data>
+  <data name="CreateTile.RepeatModeWeekly" xml:space="preserve"><value>Weekly</value></data>
+  <data name="CreateTile.RepeatModeMonthly" xml:space="preserve"><value>Monthly</value></data>
+  <data name="CreateTile.RepeatModeInterval" xml:space="preserve"><value>Interval</value></data>
+  <data name="CreateTile.IntervalValueLabel" xml:space="preserve"><value>Every</value></data>
+  <data name="CreateTile.IntervalUnitMin" xml:space="preserve"><value>min</value></data>
+  <data name="CreateTile.IntervalUnitHour" xml:space="preserve"><value>hour</value></data>
+  <data name="CreateTile.IntervalUnitDay" xml:space="preserve"><value>day</value></data>
+  <data name="CreateTile.MonthlyByDay" xml:space="preserve"><value>By day</value></data>
+  <data name="CreateTile.MonthlyByWeekday" xml:space="preserve"><value>By weekday</value></data>
+  <data name="CreateTile.MonthlyDayOfMonthLabel" xml:space="preserve"><value>Day of month</value></data>
+  <data name="CreateTile.MonthlyWeekOfMonthLabel" xml:space="preserve"><value>Week of month</value></data>
+  <data name="CreateTile.MonthlyWeekFirst" xml:space="preserve"><value>1st</value></data>
+  <data name="CreateTile.MonthlyWeekSecond" xml:space="preserve"><value>2nd</value></data>
+  <data name="CreateTile.MonthlyWeekThird" xml:space="preserve"><value>3rd</value></data>
+  <data name="CreateTile.MonthlyWeekFourth" xml:space="preserve"><value>4th</value></data>
+  <data name="CreateTile.MonthlyLastWeek" xml:space="preserve"><value>Last</value></data>
+  <data name="CreateTile.TimeOfDayLabel" xml:space="preserve"><value>Time of day</value></data>
+  <data name="CreateTile.TimeModelDurationOnly" xml:space="preserve"><value>Duration only</value></data>
+  <data name="CreateTile.TimeModelFixedWindow" xml:space="preserve"><value>Fixed window</value></data>
+  <data name="CreateTile.TimeModelWindowWithDuration" xml:space="preserve"><value>Window + duration</value></data>
+  <data name="CreateTile.TimeModelDurationOnlyHint" xml:space="preserve"><value>No fixed time — duration only</value></data>
+  <data name="CreateTile.SchedulableWindowStartLabel" xml:space="preserve"><value>Earliest time</value></data>
+  <data name="CreateTile.SchedulableWindowEndLabel" xml:space="preserve"><value>Latest time</value></data>
+  <data name="CreateTile.RepeatEndLabel" xml:space="preserve"><value>Repeat until</value></data>
+  <data name="CreateTile.ColorLabel" xml:space="preserve"><value>Color</value></data>
+  <data name="CreateTile.SubtasksEmpty" xml:space="preserve"><value>No sub-tasks</value></data>
+  <data name="CreateTile.SubtasksAdd" xml:space="preserve"><value>Add sub-task</value></data>
+  <data name="CreateTile.SubtasksLabel" xml:space="preserve"><value>Sub-tasks</value></data>
+  <data name="CreateTile_TitleRequired" xml:space="preserve"><value>Title is required.</value></data>
+  <data name="CreateTile_SubmitBlockedHint" xml:space="preserve"><value>Solve the highlighted error to continue.</value></data>
+  <data name="CreateTile_SubmitFailedRetry" xml:space="preserve"><value>Submission failed. Try again.</value></data>
+  <data name="CreateTile_UpdateError" xml:space="preserve"><value>Update error</value></data>
+  <data name="CreateTile_CreateError" xml:space="preserve"><value>Create error</value></data>
 
+<data name="CreateTile.TitlePlaceholder" xml:space="preserve"><value>Add a title</value></data>
+  <data name="CreateTile.SplitAllow" xml:space="preserve"><value>Allow split</value></data>
+  <data name="CreateTile.SplitKeep" xml:space="preserve"><value>Keep continuous</value></data>
+  <data name="CreateTile.DurationMinute" xml:space="preserve"><value>{0} min</value></data>
+  <data name="CreateTile.DurationHour" xml:space="preserve"><value>{0} h</value></data>
+  <data name="CreateTile.TagChipLabel" xml:space="preserve"><value>#{0} ×</value></data>
+  <data name="CreateTile.Title" xml:space="preserve"><value>Create Tile</value></data>
+
+  <data name="CreateTile_TaskBody_DurationLabel.Text" xml:space="preserve"><value>Duration</value></data>
+  <data name="CreateTile_TaskBody_SplitAllowButton.Content" xml:space="preserve"><value>Allow split</value></data>
+  <data name="CreateTile_TaskBody_SplitKeepButton.Content" xml:space="preserve"><value>Keep continuous</value></data>
+  <data name="CreateTile_EventBody_AllDayLabel.Text" xml:space="preserve"><value>All day</value></data>
+  <data name="CreateTile_RecurringBody_RepeatLabel.Text" xml:space="preserve"><value>Repeat</value></data>
+  <data name="CreateTile_RecurringBody_IntervalLabel.Text" xml:space="preserve"><value>Every</value></data>
+  <data name="CreateTile_RecurringBody_MonthlyDayBox.Header" xml:space="preserve"><value>Day of month</value></data>
+  <data name="CreateTile_RecurringBody_TimeModelLabel.Text" xml:space="preserve"><value>Time model</value></data>
+  <data name="CreateTile_RecurringBody_RepeatUntilLabel.Text" xml:space="preserve"><value>Repeat until</value></data>
+  <data name="CreateTile_RecurringBody_DurationLabel.Text" xml:space="preserve"><value>Duration</value></data>
+  <data name="CreateTile_DetailedBody_ModeLabel.Text" xml:space="preserve"><value>Mode</value></data>
+  <data name="CreateTile_DetailedBody_MaximizeButton.Content" xml:space="preserve"><value>Maximize within interval</value></data>
+  <data name="CreateTile_DetailedBody_TimingLabel.Text" xml:space="preserve"><value>Run timing</value></data>
+  <data name="CreateTile_DetailedBody_UseStartAtButton.Content" xml:space="preserve"><value>Use start at</value></data>
+  <data name="CreateTile_DetailedBody_UseEndAtButton.Content" xml:space="preserve"><value>Use end at</value></data>
+  <data name="CreateTile_DetailedBody_RecurrencePrefix.Text" xml:space="preserve"><value>Every</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceSuffix.Text" xml:space="preserve"><value>day(s)</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekBox.Header" xml:space="preserve"><value>Week of month</value></data>
+  <data name="CreateTile_DetailedBody_MonthlyWeekdayComboBox.Header" xml:space="preserve"><value>Weekday</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseStartAtButton.Content" xml:space="preserve"><value>Use start time</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceUseEndAtButton.Content" xml:space="preserve"><value>Use end time</value></data>
+  <data name="CreateTile_DetailedBody_DurationLabel.Text" xml:space="preserve"><value>Duration</value></data>
+  <data name="CreateTile_DetailedBody_WorkHoursBox.Header" xml:space="preserve"><value>Hours</value></data>
+  <data name="CreateTile_DetailedBody_WorkMinutesBox.Header" xml:space="preserve"><value>Minutes</value></data>
+  <data name="CreateTile_DetailedBody_SplitLabel.Text" xml:space="preserve"><value>Split</value></data>
+  <data name="CreateTile_DetailedBody_SplitAllowButton.Content" xml:space="preserve"><value>Allow split</value></data>
+  <data name="CreateTile_DetailedBody_SplitKeepButton.Content" xml:space="preserve"><value>Keep continuous</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidityLabel.Text" xml:space="preserve"><value>Validity period</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidFromButton.Content" xml:space="preserve"><value>Valid from</value></data>
+  <data name="CreateTile_DetailedBody_RecurrenceValidToButton.Content" xml:space="preserve"><value>Valid until</value></data>
+  <data name="CreateTileHeader_CloseButton.ToolTipService.ToolTip" xml:space="preserve"><value>Close</value></data>
+  <data name="CreateTileHeader_TitleInput.PlaceholderText" xml:space="preserve"><value>Add a title</value></data>
+  <data name="ProjectColorRow_ProjectInput.PlaceholderText" xml:space="preserve"><value>Project name</value></data>
+  <data name="ProjectColorRow_TagInput.PlaceholderText" xml:space="preserve"><value>Tag name</value></data>
 </root>

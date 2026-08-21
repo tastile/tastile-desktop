@@ -5,7 +5,6 @@ using TastileDesktop.Models;
 using TastileDesktop.Resources;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
-using System.IO;
 using Windows.Storage.Pickers;
 
 namespace TastileDesktop.Views;
@@ -26,12 +25,7 @@ public sealed partial class SettingsWindow : Window
         ViewModel.UpdateSystemAppearance(_appearanceService.GetCurrentSnapshot());
         _appearanceService.AppearanceChanged += OnAppearanceChanged;
         AuthService.Instance.AuthStateChanged += OnAuthStateChanged;
-        RefreshAuthStatus();
-        PopulateDesktopRuntimePaths();
         Closed += OnClosed;
-
-        var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
-        CurrentVersionTextBlock.Text = string.Format(Strings.Get("Settings_CurrentVersion"), currentVersion);
     }
 
     private void OnSaveClick(object sender, RoutedEventArgs e)
@@ -204,15 +198,7 @@ public sealed partial class SettingsWindow : Window
 
     private void OnAuthStateChanged(object? sender, EventArgs e)
     {
-        DispatcherQueue.TryEnqueue(RefreshAuthStatus);
-    }
-
-    private void RefreshAuthStatus()
-    {
-        var email = AuthService.Instance.UserEmail;
-        AuthStatusTextBlock.Text = string.IsNullOrWhiteSpace(email)
-            ? Strings.Get("Settings_NotSignedIn")
-            : string.Format(Strings.Get("Settings_SignedInAs"), email);
+        DispatcherQueue.TryEnqueue(ViewModel.RefreshAuthStatus);
     }
 
     private async void OnSignInClick(object sender, RoutedEventArgs e)
@@ -226,11 +212,11 @@ public sealed partial class SettingsWindow : Window
             authWindow.Closed += OnClosed;
             await tcs.Task;
             authWindow.Closed -= OnClosed;
-            RefreshAuthStatus();
+            ViewModel.RefreshAuthStatus();
         }
         catch (Exception ex)
         {
-            AuthStatusTextBlock.Text = string.Format(Strings.Get("Settings_SignInFailed"), ex.Message);
+            ViewModel.SetAuthStatusError("Settings_SignInFailed", ex.Message);
             App.DebugLog($"[SettingsWindow] Sign-in failed: {ex}");
         }
     }
@@ -240,11 +226,11 @@ public sealed partial class SettingsWindow : Window
         try
         {
             await AuthService.Instance.SignOutAsync();
-            RefreshAuthStatus();
+            ViewModel.RefreshAuthStatus();
         }
         catch (Exception ex)
         {
-            AuthStatusTextBlock.Text = string.Format(Strings.Get("Settings_SignOutFailed"), ex.Message);
+            ViewModel.SetAuthStatusError("Settings_SignOutFailed", ex.Message);
             App.DebugLog($"[SettingsWindow] Sign-out failed: {ex}");
         }
     }
@@ -262,34 +248,17 @@ public sealed partial class SettingsWindow : Window
             var result = await _updateService.CheckForUpdateAsync(string.Empty, currentVersion);
             if (!result.HasUpdate)
             {
-                UpdateStatusTextBlock.Text = Strings.Get("Settings_UpToDate");
+                ViewModel.SetUpdateStatusMessage(Strings.Get("Settings_UpToDate"));
                 return;
             }
 
-            UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateAvailable"), result.LatestVersion);
+            ViewModel.SetUpdateStatus("Settings_UpdateAvailable", result.LatestVersion);
             ShowUpdateToast(result);
         }
         catch (Exception ex)
         {
-            UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateCheckFailed"), ex.Message);
+            ViewModel.SetUpdateStatus("Settings_UpdateCheckFailed", ex.Message);
         }
-    }
-
-    private void PopulateDesktopRuntimePaths()
-    {
-        var appDataDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Tastile");
-        var localAppDataDir = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Tastile");
-
-        RuntimeProfileTextBlock.Text = Strings.Get("Settings_ProfileAwsRemote");
-        RuntimeAppDataDirTextBlock.Text = appDataDir;
-        RuntimeDbPathTextBlock.Text = Strings.Get("Settings_LocalDatabaseNone");
-        RuntimeSessionPathTextBlock.Text = Path.Combine(localAppDataDir, "Auth", "credentials.bin");
-        RuntimeDesktopApiLogPathTextBlock.Text = CoreApiClient.DebugLogPath;
-        RuntimeCreateTileLogPathTextBlock.Text = CreateTileWindow.DebugLogPath;
     }
 
     private static void OpenExternalUrl(string url)
@@ -335,18 +304,18 @@ public sealed partial class SettingsWindow : Window
                         AppUpdateService.StartSilentInstaller(installerPath);
                         ((App)Application.Current).Shutdown();
                     }
-                    catch (Exception ex)
-                    {
-                        UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateInstallFailed"), ex.Message);
-                    }
-                }
-                else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
+catch (Exception ex)
                 {
-                    var settingsService = new SettingsService();
-                    settingsService.Update(settings => settings.IgnoredUpdateVersion = update.LatestVersion);
-                    UpdateStatusTextBlock.Text = string.Format(Strings.Get("Settings_UpdateIgnored"), update.LatestVersion);
+                    ViewModel.SetUpdateStatus("Settings_UpdateInstallFailed", ex.Message);
                 }
-                await Task.CompletedTask;
-            });
+            }
+            else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
+            {
+                var settingsService = new SettingsService();
+                settingsService.Update(settings => settings.IgnoredUpdateVersion = update.LatestVersion);
+                ViewModel.SetUpdateStatus("Settings_UpdateIgnored", update.LatestVersion);
+            }
+            await Task.CompletedTask;
+        });
     }
 }

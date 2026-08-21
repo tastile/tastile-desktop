@@ -42,5 +42,18 @@
   <data name="Execute.TitleBarHeading" xml:space="preserve"><value>执行</value></data>
   <data name="Execute.WorkingLabel" xml:space="preserve"><value>正在工作</value></data>
   <data name="Execute_Title" xml:space="preserve"><value>执行</value></data>
+  <data name="Execute.Title" xml:space="preserve"><value>执行</value></data>
+  <data name="Execute_TitleBarHeading.Text" xml:space="preserve"><value>执行</value></data>
+  <data name="Execute_Heading.Text" xml:space="preserve"><value>执行状态</value></data>
+  <data name="Execute_Description.Text" xml:space="preserve"><value>提示通过 Toast 通知展示，您可以在这里查看当前专注块、休息时长和下一张卡片。</value></data>
+  <data name="Execute_IdleLabel.Text" xml:space="preserve"><value>空闲</value></data>
+  <data name="Execute_IdleTitle.Text" xml:space="preserve"><value>没有进行中的卡片</value></data>
+  <data name="Execute_WorkingLabel.Text" xml:space="preserve"><value>正在工作</value></data>
+  <data name="Execute_BreakLabel.Text" xml:space="preserve"><value>休息</value></data>
+  <data name="Execute_StartBreakButton.Content" xml:space="preserve"><value>开始 5 分钟休息</value></data>
+  <data name="Execute_CompleteButton.Content" xml:space="preserve"><value>完成</value></data>
+  <data name="Execute_EndBreakButton.Content" xml:space="preserve"><value>结束休息并继续</value></data>
+  <data name="Execute_QuickMemo.Text" xml:space="preserve"><value>快速备注</value></data>
+  <data name="Execute_AttachMemo.Content" xml:space="preserve"><value>附加备注</value></data>
 
 </root>

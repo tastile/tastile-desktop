@@ -30,12 +30,18 @@
     </xsd:element>
   </xsd:schema>
   <data name="Auth" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Auth.Title" xml:space="preserve"><value>Sign in</value></data>
   <data name="Auth_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Auth_Cancel.Content" xml:space="preserve"><value>Cancel</value></data>
   <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>Continue in browser</value></data>
+  <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>Continue in browser</value></data>
   <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>Continue sign-in in your browser…</value></data>
   <data name="Auth_Description" xml:space="preserve"><value>Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically.</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically.</value></data>
   <data name="Auth_Heading" xml:space="preserve"><value>Sign in to Tastile</value></data>
+  <data name="Auth_Heading.Text" xml:space="preserve"><value>Sign in to Tastile</value></data>
   <data name="Auth_SignInFailed" xml:space="preserve"><value>Could not start sign-in: {0}</value></data>
   <data name="Auth_TitleBarHeading" xml:space="preserve"><value>Sign in</value></data>
+  <data name="Auth_TitleBarHeading.Text" xml:space="preserve"><value>Sign in</value></data>
 
 </root>

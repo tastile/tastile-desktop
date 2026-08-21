@@ -72,7 +72,11 @@ function Assert-NoTimelineToolbarConnectorWiring {
         $assignments = [System.Text.RegularExpressions.Regex]::Matches($content, "this\.(?<name>[A-Za-z_][A-Za-z0-9_]*)\s*=\s*global::WinRT\.CastExtensions\.As<") |
             ForEach-Object { $_.Groups["name"].Value } |
             Sort-Object -Unique
-        $unexpected = @($assignments | Where-Object { $_ -notin $allowedAssignedFields })
+        $unexpected = @($assignments | Where-Object {
+            $_ -notin $allowedAssignedFields -and
+            $_ -ne "dataRoot" -and
+            $_ -notmatch "^obj\d+$"
+        })
         if ($unexpected.Count -gt 0) {
             throw "TimelineWindow connector wiring regression detected in '$($generatedFile.FullName)': unexpected assignments [$($unexpected -join ', ')]."
         }

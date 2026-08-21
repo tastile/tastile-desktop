@@ -177,4 +177,7 @@
   <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Windows UI 강조 색상</value></data>
   <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>셸 UI API에서 노출하는 강조 색상입니다. 일부 기기는 여기서 다른 강조 색상을 보고할 수 있습니다.</value></data>
 
+  <data name="Settings_LanguageGerman" xml:space="preserve"><value>독일어</value></data>
+  <data name="Settings_LanguageFrench" xml:space="preserve"><value>프랑스어</value></data>
+  <data name="Settings_LanguagePortuguese" xml:space="preserve"><value>포르투갈어 (브라질)</value></data>
 </root>

@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using Microsoft.UI;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
+using TastileDesktop.Resources;
 using TastileDesktop.Services;
 
 namespace TastileDesktop.ViewModels;
@@ -163,6 +164,115 @@ public sealed partial class SettingsViewModel : ObservableObject
     {
         get => _quickPanelVerticalPosition;
         set => SetProperty(ref _quickPanelVerticalPosition, value);
+    }
+
+    private string _currentVersionText = string.Empty;
+    private string _authStatusText = string.Empty;
+    private string _runtimeProfileText = string.Empty;
+    private string _runtimeAppDataDirText = string.Empty;
+    private string _runtimeDbPathText = string.Empty;
+    private string _runtimeSessionPathText = string.Empty;
+    private string _runtimeDesktopApiLogPathText = string.Empty;
+    private string _runtimeCreateTileLogPathText = string.Empty;
+    private string _updateStatusText = string.Empty;
+
+    public string CurrentVersionText
+    {
+        get => _currentVersionText;
+        private set => SetProperty(ref _currentVersionText, value);
+    }
+
+    public string AuthStatusText
+    {
+        get => _authStatusText;
+        private set => SetProperty(ref _authStatusText, value);
+    }
+
+    public string RuntimeProfileText
+    {
+        get => _runtimeProfileText;
+        private set => SetProperty(ref _runtimeProfileText, value);
+    }
+
+    public string RuntimeAppDataDirText
+    {
+        get => _runtimeAppDataDirText;
+        private set => SetProperty(ref _runtimeAppDataDirText, value);
+    }
+
+    public string RuntimeDbPathText
+    {
+        get => _runtimeDbPathText;
+        private set => SetProperty(ref _runtimeDbPathText, value);
+    }
+
+    public string RuntimeSessionPathText
+    {
+        get => _runtimeSessionPathText;
+        private set => SetProperty(ref _runtimeSessionPathText, value);
+    }
+
+    public string RuntimeDesktopApiLogPathText
+    {
+        get => _runtimeDesktopApiLogPathText;
+        private set => SetProperty(ref _runtimeDesktopApiLogPathText, value);
+    }
+
+    public string RuntimeCreateTileLogPathText
+    {
+        get => _runtimeCreateTileLogPathText;
+        private set => SetProperty(ref _runtimeCreateTileLogPathText, value);
+    }
+
+    public string UpdateStatusText
+    {
+        get => _updateStatusText;
+        private set => SetProperty(ref _updateStatusText, value);
+    }
+
+    public void PopulateRuntimeInfo()
+    {
+        var currentVersion = typeof(App).Assembly.GetName().Version?.ToString() ?? "0.0.0";
+        CurrentVersionText = string.Format(Resources.Strings.Get("Settings_CurrentVersion"), currentVersion);
+
+        var appDataDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "Tastile");
+        var localAppDataDir = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "Tastile");
+
+        RuntimeProfileText = Resources.Strings.Get("Settings_ProfileAwsRemote");
+        RuntimeAppDataDirText = appDataDir;
+        RuntimeDbPathText = Resources.Strings.Get("Settings_LocalDatabaseNone");
+        RuntimeSessionPathText = Path.Combine(localAppDataDir, "Auth", "credentials.bin");
+        RuntimeDesktopApiLogPathText = CoreApiClient.DebugLogPath;
+        RuntimeCreateTileLogPathText = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "tastile-desktop.log");
+
+        RefreshAuthStatus();
+    }
+
+    public void RefreshAuthStatus()
+    {
+        var email = Services.AuthService.Instance.UserEmail;
+        AuthStatusText = string.IsNullOrWhiteSpace(email)
+            ? Resources.Strings.Get("Settings_NotSignedIn")
+            : string.Format(Resources.Strings.Get("Settings_SignedInAs"), email);
+    }
+
+    public void SetAuthStatusError(string messageKey, string detail)
+    {
+        AuthStatusText = string.Format(Resources.Strings.Get(messageKey), detail);
+    }
+
+    public void SetUpdateStatus(string messageKey, string detail)
+    {
+        UpdateStatusText = string.Format(Resources.Strings.Get(messageKey), detail);
+    }
+
+    public void SetUpdateStatusMessage(string message)
+    {
+        UpdateStatusText = message;
     }
 
     public bool IsManualAccentColor => string.Equals(AccentColorMode, AccentColorModes.Manual, StringComparison.Ordinal);
@@ -340,6 +450,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _settingsService = new SettingsService();
         _startupRegistrationService = new StartupRegistrationService();
         LoadSettings();
+        PopulateRuntimeInfo();
     }
 
     public SettingsViewModel(SettingsService settingsService)
@@ -347,6 +458,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _settingsService = settingsService;
         _startupRegistrationService = new StartupRegistrationService();
         LoadSettings();
+        PopulateRuntimeInfo();
     }
 
     private void LoadSettings()
@@ -470,14 +582,20 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>
+    /// Canonical list of UI cultures the desktop ships. Mirrors the
+    /// <c>SatelliteResourceLanguages</c> entry in the csproj and the
+    /// ComboBoxItem Tag values in SettingsWindow.xaml. Add a new entry
+    /// here whenever a new resx folder is introduced so unknown culture
+    /// overrides fall back to English instead of being silently dropped.
+    /// </summary>
+    public static readonly IReadOnlyList<string> SupportedLanguageTags =
+        new[] { "en", "ja", "zh-CN", "ko", "es", "de", "fr", "pt-BR" };
+
     private static string NormalizeLanguageTag(string? tag)
     {
         if (string.IsNullOrWhiteSpace(tag)) return "en";
         var trimmed = tag.Trim();
-        return trimmed switch
-        {
-            "en" or "ja" or "zh-CN" or "ko" or "es" => trimmed,
-            _ => "en",
-        };
+        return SupportedLanguageTags.Contains(trimmed) ? trimmed : "en";
     }
 }

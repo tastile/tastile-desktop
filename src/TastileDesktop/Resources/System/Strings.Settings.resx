@@ -177,4 +177,7 @@
   <data name="Settings_WindowsUiAccent" xml:space="preserve"><value>Windows UI accent</value></data>
   <data name="Settings_WindowsUiAccentDescription" xml:space="preserve"><value>Accent exposed by the shell UI APIs. Some devices report a different highlight color here.</value></data>
 
+  <data name="Settings_LanguageGerman" xml:space="preserve"><value>German</value></data>
+  <data name="Settings_LanguageFrench" xml:space="preserve"><value>French</value></data>
+  <data name="Settings_LanguagePortuguese" xml:space="preserve"><value>Portuguese (Brazil)</value></data>
 </root>

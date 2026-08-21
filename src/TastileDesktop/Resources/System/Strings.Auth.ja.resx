@@ -30,12 +30,18 @@
     </xsd:element>
   </xsd:schema>
   <data name="Auth" xml:space="preserve"><value>サインイン</value></data>
+  <data name="Auth.Title" xml:space="preserve"><value>サインイン</value></data>
   <data name="Auth_Cancel" xml:space="preserve"><value>キャンセル</value></data>
+  <data name="Auth_Cancel.Content" xml:space="preserve"><value>キャンセル</value></data>
   <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>ブラウザで続ける</value></data>
+  <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>ブラウザで続ける</value></data>
   <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>ブラウザでサインインを完了してください…</value></data>
   <data name="Auth_Description" xml:space="preserve"><value>ブラウザで Tastile のサインインページが開きます。ログイン方法を選び、サインインが完了すると自動で戻ります。</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>ブラウザで Tastile のサインインページが開きます。ログイン方法を選び、サインインが完了すると自動で戻ります。</value></data>
   <data name="Auth_Heading" xml:space="preserve"><value>Tastile にサインイン</value></data>
+  <data name="Auth_Heading.Text" xml:space="preserve"><value>Tastile にサインイン</value></data>
   <data name="Auth_SignInFailed" xml:space="preserve"><value>サインインを開始できませんでした: {0}</value></data>
   <data name="Auth_TitleBarHeading" xml:space="preserve"><value>サインイン</value></data>
+  <data name="Auth_TitleBarHeading.Text" xml:space="preserve"><value>サインイン</value></data>
 
 </root>

@@ -33,14 +33,31 @@
   <data name="Intervention.EndBreakButton" xml:space="preserve"><value>Terminar descanso y continuar</value></data>
   <data name="Intervention.Heading" xml:space="preserve"><value>Intervención requerida</value></data>
   <data name="Intervention_BreakButton" xml:space="preserve"><value>Tomar un descanso (5 min)</value></data>
+  <data name="Intervention_BreakButton.Content" xml:space="preserve"><value>Tomar un descanso (5 min)</value></data>
   <data name="Intervention_BreakOver" xml:space="preserve"><value>Su descanso ha terminado.</value></data>
+  <data name="Intervention_BreakOver.Text" xml:space="preserve"><value>Su descanso ha terminado.</value></data>
+  <data name="Intervention_BreakOverMessage" xml:space="preserve"><value>¡Su tiempo de descanso ha terminado!</value></data>
   <data name="Intervention_ChooseNext" xml:space="preserve"><value>Elija la siguiente tarjeta</value></data>
+  <data name="Intervention_ChooseNext.Text" xml:space="preserve"><value>Elija la siguiente tarjeta</value></data>
+  <data name="Intervention_CompleteButton.Content" xml:space="preserve"><value>Completar</value></data>
   <data name="Intervention_ContinueButton" xml:space="preserve"><value>Continuar (25 min)</value></data>
+  <data name="Intervention_ContinueButton.Content" xml:space="preserve"><value>Continuar (25 min)</value></data>
   <data name="Intervention_CreateNewButton" xml:space="preserve"><value>Crear nueva tarjeta</value></data>
+  <data name="Intervention_CreateNewButton.Content" xml:space="preserve"><value>Crear nueva tarjeta</value></data>
+  <data name="Intervention_ElapsedTimeText.Text" xml:space="preserve"><value>Trabajando durante {0} minutos</value></data>
+  <data name="Intervention_EndBreakButton.Content" xml:space="preserve"><value>Terminar descanso y continuar</value></data>
   <data name="Intervention_Footer" xml:space="preserve"><value>Este cuadro de diálogo permanece en pantalla hasta que elija una acción.</value></data>
+  <data name="Intervention_Footer.Text" xml:space="preserve"><value>Este cuadro de diálogo permanece en pantalla hasta que elija una acción.</value></data>
+  <data name="Intervention_Heading.Text" xml:space="preserve"><value>Intervención requerida</value></data>
+  <data name="Intervention_IdleMessage" xml:space="preserve"><value>¿En qué le gustaría trabajar?</value></data>
   <data name="Intervention_NoReadyTiles" xml:space="preserve"><value>No hay tarjetas listas. Cree una nueva para continuar.</value></data>
+  <data name="Intervention_NoReadyTiles.Text" xml:space="preserve"><value>No hay tarjetas listas. Cree una nueva para continuar.</value></data>
   <data name="Intervention_ReadyTilesHint" xml:space="preserve"><value>Tarjetas listas</value></data>
+  <data name="Intervention_ReadyTilesHint.Text" xml:space="preserve"><value>Tarjetas listas</value></data>
   <data name="Intervention_Title" xml:space="preserve"><value>Tastile - Intervención requerida</value></data>
+  <data name="Intervention.Title" xml:space="preserve"><value>Tastile - Intervención requerida</value></data>
+  <data name="Intervention_WorkElapsedFormat" xml:space="preserve"><value>Trabajando durante {0} minutos</value></data>
   <data name="Intervention_WorkMessage" xml:space="preserve"><value>Ha trabajado durante 25 minutos.</value></data>
+  <data name="Intervention_WorkMessage.Text" xml:space="preserve"><value>Ha trabajado durante 25 minutos.</value></data>
 
 </root>

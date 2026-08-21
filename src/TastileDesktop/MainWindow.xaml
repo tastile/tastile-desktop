@@ -2,7 +2,9 @@
     x:Class="TastileDesktop.MainWindow"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:TastileDesktop"
     xmlns:viewModels="using:TastileDesktop.ViewModels"
+    x:DataType="local:MainWindow"
     Title="Tastile"
     x:Uid="MainWindow">
 
@@ -32,12 +34,12 @@
                                x:Uid="MainWindow_DateText"
                                FontSize="10" FontFamily="Consolas"
                                Foreground="{ThemeResource SecondaryForegroundBrush}"
-                               Text="----/--/--" />
+                               Text="{x:Bind ViewModel.DateText, Mode=OneWay}" />
                     <TextBlock x:Name="ClockText"
                                x:Uid="MainWindow_ClockText"
                                FontSize="10" FontFamily="Consolas"
                                Foreground="{ThemeResource SecondaryForegroundBrush}"
-                               Text="--:--:--" />
+                               Text="{x:Bind ViewModel.ClockText, Mode=OneWay}" />
                 </StackPanel>
 
                 <!-- Col 1: Running tasks (fills remaining space, priority display) -->

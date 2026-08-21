@@ -53,9 +53,9 @@ public sealed class SettingsLayoutTests
 
         // The runtime paths panel is the only diagnostic that remains after
         // the daemon-era sync section was removed.
-        Assert.Contains("x:Name=\"RuntimeProfileTextBlock\"", xaml);
-        Assert.Contains("x:Name=\"RuntimeAppDataDirTextBlock\"", xaml);
-        Assert.Contains("x:Name=\"RuntimeSessionPathTextBlock\"", xaml);
+        Assert.Contains("Text=\"{x:Bind ViewModel.RuntimeProfileText, Mode=OneTime}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind ViewModel.RuntimeAppDataDirText, Mode=OneTime}\"", xaml);
+        Assert.Contains("Text=\"{x:Bind ViewModel.RuntimeSessionPathText, Mode=OneTime}\"", xaml);
         Assert.Contains("Auth credentials (DPAPI)", xaml);
         // Sync-specific diagnostics are gone.
         Assert.DoesNotContain("x:Name=\"SyncStateTextBlock\"", xaml);
