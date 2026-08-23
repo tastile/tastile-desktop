@@ -1,8 +1,8 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Dispatching;
-using TastileDesktop.Services;
 using System.Runtime.InteropServices;
 using Microsoft.Toolkit.Uwp.Notifications;
+using Microsoft.UI.Dispatching;
+using Microsoft.UI.Xaml;
+using TastileDesktop.Services;
 using TastileDesktop.Views;
 
 namespace TastileDesktop;

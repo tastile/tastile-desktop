@@ -1,16 +1,16 @@
-using Microsoft.UI.Input;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using Microsoft.UI.Dispatching;
+using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace TastileDesktop.Views;
 

@@ -1,11 +1,11 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Xaml.Controls;
-using TastileDesktop.Services;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.ComponentModel;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
 using TastileDesktop.Models;
+using TastileDesktop.Services;
 using TastileDesktop.ViewModels;
 
 namespace TastileDesktop.Views;

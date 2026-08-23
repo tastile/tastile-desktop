@@ -1,5 +1,5 @@
-using Microsoft.Win32;
 using System.Diagnostics;
+using Microsoft.Win32;
 
 namespace TastileDesktop;
 
@@ -9,7 +9,7 @@ namespace TastileDesktop;
 public static class ProtocolHandler
 {
     private const string ProtocolName = "tastile";
-    
+
     /// <summary>
     /// Register the tastile:// protocol with Windows.
     /// Call this on first app launch.
@@ -22,15 +22,15 @@ public static class ProtocolHandler
             using var key = Registry.CurrentUser.CreateSubKey($@"Software\Classes\{ProtocolName}");
             key.SetValue("", "URL:Tastile Protocol");
             key.SetValue("URL Protocol", "");
-            
+
             using var defaultIcon = key.CreateSubKey("DefaultIcon");
             var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? AppContext.BaseDirectory;
             defaultIcon.SetValue("", exePath);
-            
+
             using var commandKey = key.CreateSubKey(@"shell\open\command");
             var commandValue = $"\"{exePath}\" \"%1\"";
             commandKey.SetValue("", commandValue);
-            
+
             Debug.WriteLine($"Registered {ProtocolName}:// protocol");
         }
         catch (Exception ex)
@@ -38,7 +38,7 @@ public static class ProtocolHandler
             Debug.WriteLine($"Failed to register protocol: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// Check if the protocol is already registered.
     /// </summary>
@@ -48,7 +48,7 @@ public static class ProtocolHandler
         {
             using var key = Registry.CurrentUser.OpenSubKey($@"Software\Classes\{ProtocolName}\shell\open\command");
             if (key == null) return false;
-            
+
             var value = key.GetValue("")?.ToString() ?? "";
             var exePath = Process.GetCurrentProcess().MainModule?.FileName ?? AppContext.BaseDirectory;
             return value.Contains(exePath);
@@ -58,7 +58,7 @@ public static class ProtocolHandler
             return false;
         }
     }
-    
+
     /// <summary>
     /// Parse OAuth callback URL (tastile://auth/callback?code=xxx&state=yyy).
     /// Returns (code, state) tuple or null if invalid.
@@ -69,16 +69,16 @@ public static class ProtocolHandler
         {
             if (!url.StartsWith($"{ProtocolName}://auth/callback"))
                 return null;
-            
+
             var uri = new Uri(url);
             var query = System.Web.HttpUtility.ParseQueryString(uri.Query);
-            
+
             var code = query["code"];
             var state = query["state"];
-            
+
             if (string.IsNullOrEmpty(code) || string.IsNullOrEmpty(state))
                 return null;
-            
+
             return (code, state);
         }
         catch

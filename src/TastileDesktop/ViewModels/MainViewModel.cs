@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
+using System.Linq;
 using System.Text.Json;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -9,8 +11,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Media;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace TastileDesktop.ViewModels;
 
@@ -90,9 +90,9 @@ public sealed class MonthCalendarEntryViewModel : ObservableObject
     public SolidColorBrush StatusForegroundBrush => Lifecycle.Trim().ToLowerInvariant() switch
     {
         "started" => new SolidColorBrush(ColorHelper.FromArgb(255, 16, 200, 16)),
-        "done"    => new SolidColorBrush(ColorHelper.FromArgb(255, 160, 160, 160)),
-        "ready"   => new SolidColorBrush(ColorHelper.FromArgb(255, 100, 180, 255)),
-        _         => new SolidColorBrush(ColorHelper.FromArgb(255, 160, 160, 160)),
+        "done" => new SolidColorBrush(ColorHelper.FromArgb(255, 160, 160, 160)),
+        "ready" => new SolidColorBrush(ColorHelper.FromArgb(255, 100, 180, 255)),
+        _ => new SolidColorBrush(ColorHelper.FromArgb(255, 160, 160, 160)),
     };
     public IAsyncRelayCommand? StatusCommand { get; init; }
 
@@ -173,28 +173,28 @@ public sealed class TileListItem : ObservableObject
     private string? _semanticRole;
     private List<string>? _labels;
 
-    public string Id 
-    { 
-        get => _id; 
-        set => SetProperty(ref _id, value); 
+    public string Id
+    {
+        get => _id;
+        set => SetProperty(ref _id, value);
     }
-    
-    public string Title 
-    { 
-        get => _title; 
-        set => SetProperty(ref _title, value); 
+
+    public string Title
+    {
+        get => _title;
+        set => SetProperty(ref _title, value);
     }
-    
-    public string Lifecycle 
-    { 
-        get => _lifecycle; 
-        set => SetProperty(ref _lifecycle, value); 
+
+    public string Lifecycle
+    {
+        get => _lifecycle;
+        set => SetProperty(ref _lifecycle, value);
     }
-    
-    public long WorkedMinutes 
-    { 
-        get => _workedMinutes; 
-        set => SetProperty(ref _workedMinutes, value); 
+
+    public long WorkedMinutes
+    {
+        get => _workedMinutes;
+        set => SetProperty(ref _workedMinutes, value);
     }
 
     public string? NextAction
@@ -236,7 +236,7 @@ public sealed class TileListItem : ObservableObject
         set => SetProperty(ref _projectedNextStartAt, value);
     }
     public string NextStartDisplay => string.IsNullOrWhiteSpace(NextStartLabel) ? "unscheduled" : NextStartLabel;
-    
+
     public string? FixedStart
     {
         get => _fixedStart;
@@ -448,7 +448,7 @@ public sealed class TileListItem : ObservableObject
 public sealed partial class MainViewModel : ObservableObject, IDisposable
 {
     private readonly CoreApiClient _api;
-    
+
     public CoreApiClient ApiClient => _api;
     public event Action<string>? TimelineBlockEditRequested;
     public event Action<string>? TimelinePromptRequested;
@@ -571,7 +571,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     }
 
     public Visibility ConnectedIndicatorVisibility => IsConnected ? Visibility.Visible : Visibility.Collapsed;
-    
+
     public Visibility DisconnectedIndicatorVisibility => IsConnected ? Visibility.Collapsed : Visibility.Visible;
 
     public string StatusMessage
@@ -787,7 +787,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 ?? runningTiles.FirstOrDefault();
         }
     }
-    
+
     public bool HasMainRunningTask => MainRunningTask != null;
     public Visibility MainRunningTaskVisibility => HasMainRunningTask ? Visibility.Visible : Visibility.Collapsed;
     public IReadOnlyList<TileListItem> SecondaryRunningQuickTiles =>
@@ -835,7 +835,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
 
     public string NextUpStartText => NextUpTile?.NextStartLabel ?? "unscheduled";
-    
+
     // Core が計算した next_start を表示するだけ（UI側で計算しない）
 
     public string IdleGuidanceText
@@ -855,13 +855,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     // Computed properties for UI state
     // These values come directly from Core via ExecutionView - do not calculate in UI
     public bool IsIdle => _executionView?.IsIdle ?? true;
-    
+
     public bool IsWorking => _executionView?.IsWorking ?? false;
-    
+
     public bool IsOnBreak => _executionView?.IsOnBreak ?? false;
 
     public string? ActiveTileTitle => _executionView?.MainTile?.Title;
-    
+
     public string? ActiveTileNextAction => _executionView?.MainTile?.NextAction;
 
     public string WorkElapsedText => "N/A"; // Core が計算するため UI 側では不要
@@ -1107,7 +1107,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         _lastHandledPromptFingerprint = promptFingerprint;
         _toastDismissedByAction = false; // リセット
-        
+
         // UI スレッドでトースト表示
         _promptToastDisplayService?.ShowPrompt(
             prompt.Prompt,
@@ -1118,14 +1118,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 MarkPromptCooldown(promptFingerprint);
                 System.Diagnostics.Debug.WriteLine($"[Toast] Action clicked: {actionId}");
                 App.DebugLog($"[Toast] Action clicked: {actionId}");
-                
+
                 // まずトーストを隠す
                 _promptToastDisplayService?.Hide();
-                
+
                 try
                 {
                     await ExecutePromptActionAsync(actionId, prompt.Prompt, stopAt, settings.Current.DefaultBreakMinutes);
-                    
+
                     // アクション実行後、即座にポーリングして状態を更新
                     System.Diagnostics.Debug.WriteLine($"[Toast] Polling after action");
                     App.DebugLog($"[Toast] Polling after action");
@@ -1143,17 +1143,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 MarkPromptCooldown(promptFingerprint);
                 System.Diagnostics.Debug.WriteLine($"[Toast] Defer: action={actionId}, minutes={minutes}");
                 App.DebugLog($"[Toast] Defer: action={actionId}, minutes={minutes}");
-                
+
                 // まずトーストを隠す
                 _promptToastDisplayService?.Hide();
-                
+
                 try
                 {
                     if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId) && minutes.HasValue)
                     {
                         await _api.DeferTileAsync(prompt.Prompt.TileId, minutes: minutes.Value);
                     }
-                    
+
                     // アクション実行後、即座にポーリングして状態を更新
                     System.Diagnostics.Debug.WriteLine($"[Toast] Polling after defer");
                     App.DebugLog($"[Toast] Polling after defer");
@@ -1960,7 +1960,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         {
             var nextAction = string.IsNullOrWhiteSpace(NewTileNextAction) ? null : NewTileNextAction.Trim();
             var doneDef = string.IsNullOrWhiteSpace(NewTileDoneDefinition) ? null : NewTileDoneDefinition.Trim();
-            
+
             var result = await _api.CreateTileAsync(new CreateTileRequest(
                 Title: title,
                 NextAction: nextAction,
@@ -2288,14 +2288,14 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public void InjectPrompt(PromptView prompt)
     {
         if (prompt == null) return;
-        
+
         System.Diagnostics.Debug.WriteLine($"[InjectPrompt] Injecting prompt: {prompt.Title}");
         App.DebugLog($"[InjectPrompt] Injecting prompt: {prompt.Title}");
-        
+
         // PendingPromptを更新
         var response = new PendingPromptResponse(prompt);
         OnPendingPromptChanged(this, response);
-        
+
         // トースト通知も直接トリガー
         OnPromptToastPromptChanged(this, response);
     }

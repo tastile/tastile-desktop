@@ -1,6 +1,6 @@
+using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using Microsoft.UI.Windowing;
 using TastileDesktop.Models;
 using TastileDesktop.Resources;
 using TastileDesktop.Services;
@@ -304,18 +304,18 @@ public sealed partial class SettingsWindow : Window
                         AppUpdateService.StartSilentInstaller(installerPath);
                         ((App)Application.Current).Shutdown();
                     }
-catch (Exception ex)
-                {
-                    ViewModel.SetUpdateStatus("Settings_UpdateInstallFailed", ex.Message);
+                    catch (Exception ex)
+                    {
+                        ViewModel.SetUpdateStatus("Settings_UpdateInstallFailed", ex.Message);
+                    }
                 }
-            }
-            else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
-            {
-                var settingsService = new SettingsService();
-                settingsService.Update(settings => settings.IgnoredUpdateVersion = update.LatestVersion);
-                ViewModel.SetUpdateStatus("Settings_UpdateIgnored", update.LatestVersion);
-            }
-            await Task.CompletedTask;
-        });
+                else if (string.Equals(actionId, "ignore_update", StringComparison.OrdinalIgnoreCase))
+                {
+                    var settingsService = new SettingsService();
+                    settingsService.Update(settings => settings.IgnoredUpdateVersion = update.LatestVersion);
+                    ViewModel.SetUpdateStatus("Settings_UpdateIgnored", update.LatestVersion);
+                }
+                await Task.CompletedTask;
+            });
     }
 }

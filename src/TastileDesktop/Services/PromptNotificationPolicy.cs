@@ -16,7 +16,7 @@ public static class PromptNotificationPolicy
     {
         return "Show";
     }
-    
+
     public static Decision Decide(PromptView? prompt, bool isFullscreen)
     {
         if (prompt == null)

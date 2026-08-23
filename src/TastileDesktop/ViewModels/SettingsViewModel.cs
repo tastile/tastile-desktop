@@ -559,7 +559,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             IgnoredUpdateVersion = current.IgnoredUpdateVersion,
         };
         _settingsService.Save(settings);
-        
+
         // Handle startup task
         UpdateStartupTask(LaunchAtStartup);
     }
