@@ -98,9 +98,10 @@ Idle phase:
 
 ## Commands
 ```bash
-# Canonical local validation (unit tests + dual desktop build + TimelineWindow
-# connector safety check). This is what CI runs and what the workspace-level
-# verify-tastile-change skill expects.
+# Canonical local validation (dotnet format + NuGet vulnerability scan +
+# unit tests + dual desktop build + TimelineWindow connector safety check).
+# This is what CI runs and what the workspace-level verify-tastile-change
+# skill expects.
 .\scripts\check.ps1
 
 # Unit tests only (no desktop build — useful without a sibling tastile-core):
@@ -130,9 +131,10 @@ dotnet run --project src/TastileDesktop
 Use the same version string for the app build, installer filename, and
 hosted update manifest so the desktop's version compare stays correct.
 
-Two test projects exist: `tests/TastileDesktop.Tests` (broad resolver /
-service coverage) and `tests/TastileDesktop.Task2.Tests` (focused Task2
-suite). `check.ps1` runs both when present.
+One test project exists: `tests/TastileDesktop.Tests` (broad resolver /
+service / contract coverage, ~196 cases). `check.ps1` runs it together
+with `dotnet format --verify-no-changes` and a NuGet vulnerability scan
+before the desktop build and the `TimelineWindow` connector wiring check.
 
 ## Local data footprint
 
