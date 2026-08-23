@@ -1,0 +1,60 @@
+# Dependabot configuration for tastile-desktop.
+#
+# Keep PR cadence sane:
+#   * weekly batch (open PR count is bounded, avoid mid-week churn)
+#   * separate groups so NuGet updates don't get bundled with GitHub
+#     Actions bumps
+#   * minor + patch only for NuGet by default — MAJOR version jumps
+#     need a human review of breaking changes (especially
+#     Microsoft.WindowsAppSDK)
+#
+# See https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
+version: 2
+
+updates:
+  - package-ecosystem: "nuget"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "nuget"
+    groups:
+      windows-app-sdk:
+        patterns:
+          - "Microsoft.WindowsAppSDK"
+          - "Microsoft.Windows.SDK.BuildTools"
+          - "Microsoft.Web.WebView2"
+          - "Microsoft.Toolkit.Uwp.Notifications"
+          - "CommunityToolkit.*"
+      dotnet-runtime:
+        patterns:
+          - "Microsoft.NET.Test.Sdk"
+          - "coverlet.*"
+          - "xunit*"
+    # MAJOR updates still PR but require human eyes — never auto-merge.
+    # The CI workflow's `desktop-build` job will validate each PR.
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Tokyo"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "github-actions"
+    groups:
+      actions-core:
+        patterns:
+          - "actions/checkout"
+          - "actions/setup-dotnet"
+          - "actions/upload-artifact"
+          - "actions/download-artifact"

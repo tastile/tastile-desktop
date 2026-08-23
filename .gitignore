@@ -36,6 +36,14 @@ bin/
 obj/
 publish/
 
+# Test artifacts (dotnet test / coverlet / vstest output)
+**/TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage.*.xml
+coverage.opencover.xml
+
 # OS
 .DS_Store
 Thumbs.db

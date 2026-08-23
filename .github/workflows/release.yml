@@ -14,6 +14,12 @@ permissions:
   id-token: write
   contents: write
 
+# A single ref may only have one in-flight release build; second
+# dispatches (e.g. re-running a failed release) wait in line.
+concurrency:
+  group: release-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   build-installer:
     runs-on: windows-latest
