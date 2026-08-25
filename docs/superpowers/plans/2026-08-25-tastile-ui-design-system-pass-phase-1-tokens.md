@@ -35,6 +35,8 @@
 | `src/TastileDesktop/Services/PromptToastWindow.cs` | 1 | Modify (Task 2a) | Rename 5 brush-key lookups |
 | `src/TastileDesktop/Services/QuickPanelIconStyleResolver.cs` | 1 | Modify (Task 2a) | Rename 2 brush-key lookups |
 | `src/TastileDesktop/ViewModels/MainViewModel.cs` | 1 | Modify (Task 2a) | Rename 5 brush-key lookups |
+| `src/TastileDesktop/Views/AuthWindow.xaml.cs` | 1 | Modify (Task 2a, R5) | Rename 1 brush-key lookup (line 70, AppPrimaryBrush) |
+| `src/TastileDesktop/MainWindow.xaml.cs` | 1 | Modify (Task 2a, R5) | Rename 1 brush-key lookup (line 86, PrimaryForegroundBrush) |
 | `src/TastileDesktop/App.xaml` | 1 | Modify | Drop 14 custom brushes; keep 3 override brushes; add 6 layout tokens |
 | `src/TastileDesktop/Services/ThemeManager.cs` | 1 | Modify | Write to `OverrideAccentFill*Brush` instead of `AccentBrush`/`AppPrimaryBrush` |
 | `src/TastileDesktop/Views/InterventionWindow.xaml` | 1 | Modify | Replace `Background="#66000000"` with `InterventionScrimBrush` |
