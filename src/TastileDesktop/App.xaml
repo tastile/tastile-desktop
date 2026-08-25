@@ -44,7 +44,6 @@
             <!-- Layout Tokens -->
             <Thickness x:Key="WindowPagePadding">32,24,32,24</Thickness>
             <CornerRadius x:Key="CardCornerRadius">8</CornerRadius>
-            <Thickness x:Key="CardBorderThickness">1</Thickness>
             <x:Double x:Key="QuickPanelCornerRadius">8</x:Double>
             <x:Double x:Key="ControlCornerRadius">4</x:Double>
 
