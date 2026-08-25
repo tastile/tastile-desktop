@@ -56,9 +56,8 @@ public static class ThemeManager
         if (!resources.ThemeDictionaries.TryGetValue(themeKey, out var themeObj) || themeObj is not ResourceDictionary themeDict)
             return;
 
-        SetBrush(themeDict, "AccentBrush", accentHex);
-        SetBrush(themeDict, "AppPrimaryBrush", accentHex);
-        SetBrush(themeDict, "AppPrimaryHoverBrush", accentHoverHex);
+        SetBrush(themeDict, "OverrideAccentFillBrush", accentHex);
+        SetBrush(themeDict, "OverrideAccentFillSecondaryBrush", accentHoverHex);
     }
 
     public static void ApplyTheme(string mode, ResourceDictionary? resources = null)
