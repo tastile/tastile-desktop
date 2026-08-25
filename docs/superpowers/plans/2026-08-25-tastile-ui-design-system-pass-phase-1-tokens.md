@@ -30,6 +30,11 @@
 |---|---|---|---|
 | `docs/adr/0007-ui-design-system-pass.md` | 0 | Create | ADR recording Native Fluent First + override-accent decision |
 | `docs/adr/0007-ui-design-system-pass.md` | 0 | Create | Re-interpretation of "hand-rolled segmented" hard rule (R12) |
+| `src/TastileDesktop/Services/FloatingWindowHelper.cs` | 1 | Modify (Task 2a) | Rename 8 brush-key lookups to System tokens |
+| `src/TastileDesktop/Services/PromptAttentionOverlayWindow.cs` | 1 | Modify (Task 2a) | Rename 1 brush-key lookup |
+| `src/TastileDesktop/Services/PromptToastWindow.cs` | 1 | Modify (Task 2a) | Rename 5 brush-key lookups |
+| `src/TastileDesktop/Services/QuickPanelIconStyleResolver.cs` | 1 | Modify (Task 2a) | Rename 2 brush-key lookups |
+| `src/TastileDesktop/ViewModels/MainViewModel.cs` | 1 | Modify (Task 2a) | Rename 5 brush-key lookups |
 | `src/TastileDesktop/App.xaml` | 1 | Modify | Drop 14 custom brushes; keep 3 override brushes; add 6 layout tokens |
 | `src/TastileDesktop/Services/ThemeManager.cs` | 1 | Modify | Write to `OverrideAccentFill*Brush` instead of `AccentBrush`/`AppPrimaryBrush` |
 | `src/TastileDesktop/Views/InterventionWindow.xaml` | 1 | Modify | Replace `Background="#66000000"` with `InterventionScrimBrush` |
@@ -155,6 +160,88 @@ If matches are found, **stop** and surface them in the PR description; do not
 proceed with Task 3 until collisions are resolved.
 
 **Step 3: No commit** — this is a verification task.
+
+---
+
+## Task 2a: Rename 21 C# brush-key lookups to System tokens
+
+> **Origin:** Task 2 surfaced 21 hard-runtime collisions: 21 string-literal
+> `Application.Current.Resources["…"]` / `ThemeManager.GetColor("…")` /
+> `TryGetResourceBrush(app, "…")` calls across 7 files that reference brush
+> keys Task 4 is about to remove. Without this task, Task 4 leaves a window
+> where the XAML resources are gone but the C# consumers still request them
+> by old name → `KeyNotFoundException` / null brushes / silent fallback on
+> first run. This task lands the consumer rename in the same logical commit
+> scope as Task 4 (one reviewer, one logical unit) but in a separate commit so
+> `git log --reverse` shows the rename before the removal.
+
+**Files (read each before editing; preserve indentation and string literal quotes):**
+
+- Modify: `src/TastileDesktop/Services/FloatingWindowHelper.cs` (8 lookups, lines 320, 322, 325, 326, 327, 328, 329, 330)
+- Modify: `src/TastileDesktop/Services/PromptAttentionOverlayWindow.cs` (1 lookup, line 53)
+- Modify: `src/TastileDesktop/Services/PromptToastWindow.cs` (5 lookups, lines 46, 55, 62, 146, 147)
+- Modify: `src/TastileDesktop/Services/QuickPanelIconStyleResolver.cs` (2 lookups, lines 17, 18)
+- Modify: `src/TastileDesktop/ViewModels/MainViewModel.cs` (5 lookups, lines 1342, 1343, 1344, 1345, 1346)
+
+**Step 1: Apply the rename map**
+
+Use the mapping below (derived from the Spec "Tokens (Layer 1) — Removed" table, with the override-layer adjustment for `AppPrimaryBrush` per ADR 0007). Edit each file in place; preserve everything except the string literal inside the bracket/argument.
+
+| Old token key | New token key | Rationale |
+|---|---|---|
+| `"AppForegroundBrush"` | `"TextFillColorPrimaryBrush"` | Body text |
+| `"AppForegroundMutedBrush"` | `"TextFillColorSecondaryBrush"` | Caption |
+| `"AppSurface1Brush"` | `"LayerFillColorAltBrush"` | Card / Toolbar |
+| `"AppSurface2Brush"` | `"LayerOnAccentAcrylicFillColorDefaultBrush"` | Elevated surface |
+| `"AppPrimaryBrush"` | `"OverrideAccentFillBrush"` | Runtime accent (override layer), NOT the static `AccentFillColorDefaultBrush` |
+| `"PrimaryForegroundBrush"` | `"TextFillColorPrimaryBrush"` | Consolidated (Spec row 103) |
+| `"SecondaryForegroundBrush"` | `"TextFillColorSecondaryBrush"` | Consolidated (Spec row 104) |
+| `"AppBorderBrush"` | `"ControlStrokeColorDefaultBrush"` | 1px border |
+| `"AppSurfaceElevatedBrush"` | `"SolidBackgroundFillColorSecondaryBrush"` | Dialog / Popup |
+| `"TertiaryForegroundBrush"` | `"TextFillColorTertiaryBrush"` | Consolidated (Spec row 105) |
+
+**Step 2: Verify no remaining references**
+
+Run:
+```bash
+grep -rnE '"AppBackgroundBrush"|"AppSurface0Brush"|"AppSurface1Brush"|"AppSurface2Brush"|"AppSurfaceElevatedBrush"|"AppForegroundBrush"|"AppForegroundMutedBrush"|"AppForegroundSubtleBrush"|"AppBorderBrush"|"AppBorderStrongBrush"|"AppPrimaryBrush"|"AppPrimaryForegroundBrush"|"AppPrimaryHoverBrush"|"QuickPanelBackgroundBrush"|"QuickPanelBorderBrush"|"PrimaryForegroundBrush"|"SecondaryForegroundBrush"|"TertiaryForegroundBrush"|"AccentBrush"' src/TastileDesktop/Services/ src/TastileDesktop/ViewModels/ src/TastileDesktop/Controls/ src/TastileDesktop/Views/ src/TastileDesktop/MainWindow.xaml.cs 2>/dev/null
+```
+
+Expected: **no matches** in any C# file. (Note: the search above adds `Controls/`, `Views/`, and `MainWindow.xaml.cs` because the original Task 2 only covered Services/ and ViewModels/ — be thorough.)
+
+Note: the substring matches in `ViewModels/SettingsViewModel.cs` (`AccentBrush`, `WindowsAccentBrush`, `UiAccentBrush` — CLR properties), `ViewModels/MainViewModel.cs:54,1373,1496,1706` (`SecondaryForegroundBrush` CLR property assignments), and any other C# identifier that *contains* the brush-name substring are **not** collisions — they are CLR property/field names, not XAML resource lookups. Leave them untouched. The grep pattern uses double-quoted literal strings (`"AppForegroundBrush"` etc.) to exclude those.
+
+**Step 3: Run format + build**
+
+```bash
+dotnet format src/TastileDesktop/TastileDesktop.csproj --verify-no-changes --no-restore --verbosity minimal
+dotnet build src/TastileDesktop/TastileDesktop.csproj
+```
+
+Expected: clean build. The renamed string literals are still XAML resource keys, but `App.xaml` still defines both the old and new keys at this stage, so the consumers' runtime lookups continue to resolve. Task 4 strips the old keys.
+
+**Step 4: Commit**
+
+```bash
+git add src/TastileDesktop/Services/FloatingWindowHelper.cs \
+        src/TastileDesktop/Services/PromptAttentionOverlayWindow.cs \
+        src/TastileDesktop/Services/PromptToastWindow.cs \
+        src/TastileDesktop/Services/QuickPanelIconStyleResolver.cs \
+        src/TastileDesktop/ViewModels/MainViewModel.cs
+git commit -m "refactor(desktop): rename 21 C# brush-key lookups to System tokens
+
+Surfaces Task 2 collision inventory. 21 hard-runtime string-lookup
+call sites across 5 files (FloatingWindowHelper, PromptAttentionOverlay,
+PromptToast, QuickPanelIconStyleResolver, MainViewModel) referenced
+brush keys Task 4 will remove. Renamed to the System token keys per
+the Spec 'Tokens (Layer 1) — Removed' table, with AppPrimaryBrush
+mapped to OverrideAccentFillBrush (runtime override) per ADR 0007.
+
+App.xaml is unchanged; both old and new keys still resolve until
+Task 4 strips the old set.
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+```
 
 ---
 
