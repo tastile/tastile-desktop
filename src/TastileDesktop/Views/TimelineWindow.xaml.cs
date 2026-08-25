@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -48,6 +49,7 @@ public sealed partial class TimelineWindow : Window
     public TimelineWindow()
     {
         InitializeComponent();
+        SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
         EnsureNamedElementsBound();
         WireToolbarControls();
         FloatingWindowHelper.Configure(this, TitleBarArea, 1100, 760);

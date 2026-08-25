@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -51,6 +52,7 @@ public sealed partial class CreateTileWindow : Window
         {
             Log("CreateTileWindow ctor start");
             InitializeComponent();
+            SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
             Log("CreateTileWindow after InitializeComponent");
             FloatingWindowHelper.Configure(this, TitleBarArea, 720, 880);
             Header.CreateButton.Click += OnCreateClick;

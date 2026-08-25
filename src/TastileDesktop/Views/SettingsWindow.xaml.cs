@@ -1,3 +1,4 @@
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
@@ -21,6 +22,7 @@ public sealed partial class SettingsWindow : Window
     public SettingsWindow()
     {
         this.InitializeComponent();
+        SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
         FloatingWindowHelper.Configure(this, TitleBarArea, 520, 700);
         ViewModel.UpdateSystemAppearance(_appearanceService.GetCurrentSnapshot());
         _appearanceService.AppearanceChanged += OnAppearanceChanged;
