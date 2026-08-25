@@ -125,6 +125,10 @@ try {
 
     Write-Host "==> Validating TimelineWindow generated connector wiring"
     Assert-NoTimelineToolbarConnectorWiring -DesktopObjDir $desktopObjDir
+
+    Write-Host "==> Verifying UI tokens (no hex literals, no removed brush references)"
+    $checkUiTokensScript = Join-Path $PSScriptRoot "check-ui-tokens.ps1"
+    Invoke-Step -Action { & pwsh -NoProfile -File $checkUiTokensScript } -FailureMessage "UI token checks failed. See output above."
 }
 finally {
     Pop-Location
