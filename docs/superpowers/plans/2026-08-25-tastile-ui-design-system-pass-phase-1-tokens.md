@@ -266,6 +266,11 @@ namespace TastileDesktop.Tests;
 
 public class UiTokensTests
 {
+    // WPF / WinUI XAML uses the x: prefix for resource keys, which is bound to
+    // the http://schemas.microsoft.com/winfx/2006/xaml namespace. A namespace-
+    // aware lookup is required — e.Attribute("Key") returns null for every key.
+    private static readonly XName KeyAttr = XName.Get("Key", "http://schemas.microsoft.com/winfx/2006/xaml");
+
     private static readonly string AppXamlPath =
         Path.Combine(AppContext.BaseDirectory,
             "..", "..", "..", "..", "..",
@@ -277,7 +282,7 @@ public class UiTokensTests
         var doc = XDocument.Load(AppXamlPath);
         var keys = doc.Descendants()
             .Where(e => e.Name.LocalName == "SolidColorBrush")
-            .Select(e => (string?)e.Attribute("Key") ?? "")
+            .Select(e => (string?)e.Attribute(KeyAttr) ?? "")
             .ToHashSet();
 
         Assert.Contains("OverrideAccentFillBrush", keys);
@@ -290,7 +295,7 @@ public class UiTokensTests
         var doc = XDocument.Load(AppXamlPath);
         var keys = doc.Descendants()
             .Where(e => e.Name.LocalName == "SolidColorBrush")
-            .Select(e => (string?)e.Attribute("Key") ?? "")
+            .Select(e => (string?)e.Attribute(KeyAttr) ?? "")
             .ToHashSet();
 
         var removed = new[]
@@ -314,7 +319,7 @@ public class UiTokensTests
     {
         var doc = XDocument.Load(AppXamlPath);
         var tokens = doc.Descendants()
-            .Select(e => (string?)e.Attribute("Key") ?? "")
+            .Select(e => (string?)e.Attribute(KeyAttr) ?? "")
             .Where(k => !string.IsNullOrEmpty(k))
             .ToHashSet();
 
