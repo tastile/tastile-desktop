@@ -1,3 +1,4 @@
+using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -46,6 +47,7 @@ public sealed partial class MainWindow : Window
         CreateActionIconForegroundBrush = ResolveThemeBrush(QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.PrimaryCreation).ForegroundBrushKey);
         IntegrationsActionIconForegroundBrush = ResolveThemeBrush(QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.SecondaryUtility).ForegroundBrushKey);
         InitializeComponent();
+        SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
         RunningTasksScrollViewer.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnRunningTasksDragStart), true);
         RunningTasksScrollViewer.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnRunningTasksDragMove), true);
         RunningTasksScrollViewer.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(OnRunningTasksDragEnd), true);
