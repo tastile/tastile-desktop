@@ -16,5 +16,21 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "winui@win-dev-skills": true,
+    "microsoft-docs@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "win-dev-skills": {
+      "source": {
+        "source": "github",
+        "repo": "microsoft/win-dev-skills",
+        "sparsePaths": [
+          ".claude-plugin",
+          "plugins/winui"
+        ]
+      }
+    }
   }
 }
