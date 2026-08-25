@@ -317,17 +317,17 @@ internal static class FloatingWindowHelper
 
         var chrome = appWindow.TitleBar;
         chrome.BackgroundColor = Color.FromArgb(0, 0, 0, 0);
-        chrome.ForegroundColor = ThemeManager.GetColor("AppForegroundBrush");
+        chrome.ForegroundColor = ThemeManager.GetColor("TextFillColorPrimaryBrush");
         chrome.InactiveBackgroundColor = Color.FromArgb(0, 0, 0, 0);
-        chrome.InactiveForegroundColor = ThemeManager.GetColor("AppForegroundMutedBrush");
+        chrome.InactiveForegroundColor = ThemeManager.GetColor("TextFillColorSecondaryBrush");
         chrome.ButtonBackgroundColor = Color.FromArgb(0, 0, 0, 0);
         chrome.ButtonInactiveBackgroundColor = Color.FromArgb(0, 0, 0, 0);
-        chrome.ButtonForegroundColor = ThemeManager.GetColor("AppForegroundBrush");
-        chrome.ButtonInactiveForegroundColor = ThemeManager.GetColor("AppForegroundMutedBrush");
-        chrome.ButtonHoverBackgroundColor = ThemeManager.GetColor("AppSurface2Brush");
-        chrome.ButtonHoverForegroundColor = ThemeManager.GetColor("AppForegroundBrush");
-        chrome.ButtonPressedBackgroundColor = ThemeManager.GetColor("AppSurface1Brush");
-        chrome.ButtonPressedForegroundColor = ThemeManager.GetColor("AppForegroundBrush");
+        chrome.ButtonForegroundColor = ThemeManager.GetColor("TextFillColorPrimaryBrush");
+        chrome.ButtonInactiveForegroundColor = ThemeManager.GetColor("TextFillColorSecondaryBrush");
+        chrome.ButtonHoverBackgroundColor = ThemeManager.GetColor("LayerOnAccentAcrylicFillColorDefaultBrush");
+        chrome.ButtonHoverForegroundColor = ThemeManager.GetColor("TextFillColorPrimaryBrush");
+        chrome.ButtonPressedBackgroundColor = ThemeManager.GetColor("LayerFillColorAltBrush");
+        chrome.ButtonPressedForegroundColor = ThemeManager.GetColor("TextFillColorPrimaryBrush");
     }
 
     public static bool SetAlwaysOnTop(Window window, bool alwaysOnTop)
