@@ -271,16 +271,16 @@ Inside `src/TastileDesktop/App.xaml`, locate the `<ResourceDictionary.ThemeDicti
 <ResourceDictionary.ThemeDictionaries>
     <ResourceDictionary x:Key="Dark">
         <!-- Override-accent layer: ThemeManager writes here at runtime -->
-        <SolidColorBrush x:Key="OverrideAccentFillBrush" Color="{ThemeResource SystemAccentColorLight2}" />
-        <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="{ThemeResource SystemAccentColorLight3}" />
+        <SolidColorBrush x:Key="OverrideAccentFillBrush" Color="#FF0078D4" />
+        <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="#FF1A88DE" />
         <!-- Intervention-only emergency resources -->
         <SolidColorBrush x:Key="InterventionScrimBrush" Color="#A6000000" />
         <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCriticalBrush}" />
     </ResourceDictionary>
 
     <ResourceDictionary x:Key="Light">
-        <SolidColorBrush x:Key="OverrideAccentFillBrush" Color="{ThemeResource SystemAccentColorDark1}" />
-        <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="{ThemeResource SystemAccentColorDark2}" />
+        <SolidColorBrush x:Key="OverrideAccentFillBrush" Color="#FF0078D4" />
+        <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="#FF1A88DE" />
         <SolidColorBrush x:Key="InterventionScrimBrush" Color="#66000000" />
         <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCriticalBrush}" />
     </ResourceDictionary>
@@ -537,64 +537,51 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 
 ---
 
-## Task 8: Add `Styles/Backdrop.xaml` and `MicaBackdrop` resource
+## Task 8: Reserve `Styles/Backdrop.xaml` placeholder (comment-only)
 
 **Files:**
 - Create: `src/TastileDesktop/Styles/Backdrop.xaml`
-- Modify: `src/TastileDesktop/App.xaml:9-13` (add Backdrop to merged dictionaries)
 
-**Step 1: Create Backdrop.xaml**
+**Step 1: Create Backdrop.xaml as a comment-only placeholder**
 
 Create `src/TastileDesktop/Styles/Backdrop.xaml`:
 
 ```xaml
 <?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Backdrop resources for tastile-desktop.
+
+    Phase 1 applies Mica via Window.SystemBackdrop in code-behind (see
+    Tasks 9-10). Phase 2+ may introduce shared backdrop Styles here
+    (e.g. DefaultMicaBackdrop, DefaultAcrylicBackdrop) that windows
+    reference via Style="{StaticResource ...}".
+
+    This file is intentionally empty so the merged-dictionaries slot is
+    reserved; do not add resources here without a consumer.
+-->
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-
-    <!-- Default Mica backdrop used by Settings, CreateTile, Timeline, MainWindow -->
-    <Style x:Key="DefaultMicaBackdrop" TargetType="Window">
-        <Setter Property="SystemBackdrop">
-            <Setter.Value>
-                <MicaBackdrop Kind="Base" />
-            </Setter.Value>
-        </Setter>
-    </Style>
-
-</ResourceDictionary>
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" />
 ```
 
-**Step 2: Wire Backdrop.xaml into App.xaml**
-
-In `src/TastileDesktop/App.xaml`, replace the `<ResourceDictionary.MergedDictionaries>` block (currently lines 9-13 with `XamlControlsResources` and `Styles/Button.xaml`) with:
-
-```xaml
-<ResourceDictionary.MergedDictionaries>
-    <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
-    <ResourceDictionary Source="Styles/Button.xaml" />
-    <ResourceDictionary Source="Styles/Backdrop.xaml" />
-</ResourceDictionary.MergedDictionaries>
-```
-
-**Step 3: Run format + build (no tests)**
+**Step 2: Run format + build (no tests)**
 
 ```bash
 dotnet format src/TastileDesktop/TastileDesktop.csproj --verify-no-changes --no-restore --verbosity minimal
 dotnet build src/TastileDesktop/TastileDesktop.csproj
 ```
 
-Expected: clean build. (The `DefaultMicaBackdrop` style is defined but unused until Task 9.)
+Expected: clean build. (No consumer in Phase 1 — Tasks 9-10 set Mica via `SystemBackdrop` in code-behind. `App.xaml` `MergedDictionaries` is **not** modified here.)
 
-**Step 4: Commit**
+**Step 3: Commit**
 
 ```bash
-git add src/TastileDesktop/Styles/Backdrop.xaml src/TastileDesktop/App.xaml
-git commit -m "feat(desktop): add Mica backdrop resource style
+git add src/TastileDesktop/Styles/Backdrop.xaml
+git commit -m "feat(desktop): reserve Styles/Backdrop.xaml placeholder
 
-Styles/Backdrop.xaml exposes DefaultMicaBackdrop (Style target=Window,
-MicaBackdrop Kind=Base). Wired into App.xaml merged dictionaries.
-The four target windows (Main, Settings, CreateTile, Timeline) apply
-it in the next tasks.
+Empty ResourceDictionary with a comment header explaining that
+Phase 1 applies Mica via Window.SystemBackdrop in code-behind
+(Tasks 9-10). Phase 2+ may populate this file with shared Mica /
+Acrylic Styles that windows reference via Style.
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
 ```
