@@ -77,6 +77,28 @@
             </Style>
 
             <StaticResource x:Key="AccentButtonStyle" ResourceKey="AccentButtonStyle"/>
+
+            <!-- Aliases: removed-by-cea3111 brushes forwarded to System tokens (R14 / F1 fix). -->
+            <!-- Spec: docs/superpowers/specs/2026-08-25-tastile-ui-design-system-pass-design.md §Tokens -->
+            <StaticResource x:Key="AppBackgroundBrush"           ResourceKey="SolidBackgroundFillColorBaseBrush"/>
+            <StaticResource x:Key="AppSurface0Brush"             ResourceKey="LayerFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppSurface1Brush"             ResourceKey="LayerFillColorAltBrush"/>
+            <StaticResource x:Key="AppSurface2Brush"             ResourceKey="LayerOnAccentAcrylicFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppSurfaceElevatedBrush"      ResourceKey="SolidBackgroundFillColorSecondaryBrush"/>
+            <StaticResource x:Key="AppForegroundBrush"           ResourceKey="TextFillColorPrimaryBrush"/>
+            <StaticResource x:Key="AppForegroundMutedBrush"      ResourceKey="TextFillColorSecondaryBrush"/>
+            <StaticResource x:Key="AppForegroundSubtleBrush"     ResourceKey="TextFillColorTertiaryBrush"/>
+            <StaticResource x:Key="AppBorderBrush"               ResourceKey="ControlStrokeColorDefaultBrush"/>
+            <StaticResource x:Key="AppBorderStrongBrush"         ResourceKey="ControlStrokeColorSecondaryBrush"/>
+            <StaticResource x:Key="AccentBrush"                  ResourceKey="AccentFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppPrimaryBrush"              ResourceKey="AccentFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppPrimaryForegroundBrush"    ResourceKey="TextOnAccentFillColorPrimaryBrush"/>
+            <StaticResource x:Key="AppPrimaryHoverBrush"         ResourceKey="AccentFillColorSecondaryBrush"/>
+            <StaticResource x:Key="PrimaryForegroundBrush"       ResourceKey="TextFillColorPrimaryBrush"/>
+            <StaticResource x:Key="SecondaryForegroundBrush"     ResourceKey="TextFillColorSecondaryBrush"/>
+            <StaticResource x:Key="TertiaryForegroundBrush"      ResourceKey="TextFillColorTertiaryBrush"/>
+            <StaticResource x:Key="QuickPanelBackgroundBrush"    ResourceKey="ControlFillColorTertiaryBrush"/>
+            <StaticResource x:Key="QuickPanelBorderBrush"        ResourceKey="ControlStrokeColorDefaultBrush"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
