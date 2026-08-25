@@ -83,7 +83,7 @@ public sealed partial class MainWindow : Window
     private static SolidColorBrush ResolveThemeBrush(string key)
     {
         return Application.Current.Resources[key] as SolidColorBrush
-            ?? (SolidColorBrush)Application.Current.Resources["PrimaryForegroundBrush"];
+            ?? (SolidColorBrush)Application.Current.Resources["TextFillColorPrimaryBrush"];
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)

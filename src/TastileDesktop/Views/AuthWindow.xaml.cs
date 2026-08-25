@@ -67,7 +67,7 @@ public sealed partial class AuthWindow : Window
         {
             StatusTextBlock.Text = message;
             StatusTextBlock.Foreground = new Microsoft.UI.Xaml.Media.SolidColorBrush(
-                ThemeManager.GetColor("AppPrimaryBrush"));
+                ThemeManager.GetColor("OverrideAccentFillBrush"));
         });
     }
 }
