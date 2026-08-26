@@ -57,8 +57,13 @@
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
+  <!--
+    Global using directives are emitted via tests/TastileDesktop.Tests/GlobalUsings.cs
+    instead of the MSBuild `<Using Include="..." />` ItemGroup. SDK 10.0.202 (pinned via
+    global.json) does not always project the ItemGroup into the generated
+    GlobalUsings.g.cs on windows-latest runners, which causes CS0246 on [Fact] /
+    [Theory] across all test files. A hand-written `global using` in source is
+    portable across every SDK that supports the language version.
+  -->
 
 </Project>
