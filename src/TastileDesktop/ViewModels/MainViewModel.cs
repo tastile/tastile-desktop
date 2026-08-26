@@ -889,7 +889,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _api = new CoreApiClient(
             getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-            refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
+            refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
         _pollingService = new EventDrivenPoller(_api, _dispatcher);
         _pollingService.SetTimelineViewport(_timelineViewport);
 

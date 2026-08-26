@@ -21,7 +21,7 @@ public sealed partial class TimelineWindow : Window
     private ComboBox? RangeComboBox;
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
+        refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
 

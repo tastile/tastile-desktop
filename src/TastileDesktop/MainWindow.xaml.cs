@@ -104,7 +104,7 @@ public sealed partial class MainWindow : Window
 
     public async Task InitializeAsync()
     {
-        await CognitoAuthService.Instance.TryLoadFromStoreAsync();
+        await BetterAuthAuthService.Instance.TryLoadFromStoreAsync();
         await ViewModel.InitializeAsync();
         RefreshNativePanel();
         UpdateAccountUI();

@@ -31,7 +31,7 @@ public sealed partial class CreateTileWindow : Window
 
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
+        refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly string? _editTileId;
     private CreateTileCatalog _catalog = new([], [], []);

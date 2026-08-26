@@ -1,5 +1,4 @@
 using System;
-using TastileDesktop.Models;
 
 namespace TastileDesktop.Services;
 
@@ -39,7 +38,34 @@ public static class AppSettings
         }
     }
 
-    public static CognitoConfig Cognito => CognitoConfig.FromEnv();
+    /// <summary>
+    /// Root URL of the <c>tastile-web</c> deployment. Used as the base for
+    /// BetterAuth (<c>/api/auth/*</c>) and the mobile API-token bridge
+    /// (<c>/api/mobile/api-token</c>). Replaces the Cognito Hosted UI URL,
+    /// WebLoginUrl, and CallbackUrl from the pre-BetterAuth era.
+    /// </summary>
+    public static string WebBaseUrl
+    {
+        get
+        {
+            var raw = Environment.GetEnvironmentVariable("TASTILE_WEB_BASE_URL")?.Trim();
+            if (!string.IsNullOrEmpty(raw))
+            {
+                return raw.TrimEnd('/');
+            }
+
+            // Fallback: derive from WebAccountUrl (the user-account dashboard).
+            // The auth endpoints live under the same origin.
+            var accountUrl = Environment.GetEnvironmentVariable("TASTILE_WEB_ACCOUNT_URL")?.Trim();
+            if (!string.IsNullOrEmpty(accountUrl))
+            {
+                return accountUrl.TrimEnd('/');
+            }
+
+            throw new InvalidOperationException(
+                "Missing environment variable TASTILE_WEB_BASE_URL — please set it before running. See .env.example for the contract.");
+        }
+    }
 
     /// <summary>0 disables the idle refresh timer entirely.</summary>
     public static int PollIdleSeconds
