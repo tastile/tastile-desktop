@@ -19,15 +19,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  decrypt:
-    uses: ./.github/workflows/sops-decrypt.yml
-    with:
-      env: development
-    secrets:
-      aws_role_to_assume: ${{ secrets.AWS_OIDC_ROLE_DEVELOPMENT }}
-
   unit-tests:
-    needs: decrypt
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -35,20 +27,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Download decrypted .env artifact
-        uses: actions/download-artifact@v4
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
         with:
-          name: env-development
-          path: env-artifacts
+          bun-version: 1.4.0
 
-      - name: Stage .env for build
-        run: |
-          cp env-artifacts/.env.development ./.env.development 2>/dev/null || true
-          cp env-artifacts/.env.dev ./.env.dev 2>/dev/null || true
-          cp env-artifacts/.env.production ./.env.production 2>/dev/null || true
-          cp env-artifacts/.env.product ./.env.product 2>/dev/null || true
-          cp env-artifacts/.env.staging ./.env.staging 2>/dev/null || true
-          cp env-artifacts/.env ./.env 2>/dev/null || true
+      - name: Run loader unit tests
+        run: bun test scripts/sops-decrypt.test.ts
 
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
@@ -65,7 +50,6 @@ jobs:
 
   desktop-build:
     if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-    needs: decrypt
     runs-on: windows-latest
     steps:
       - name: Checkout desktop repo
@@ -99,21 +83,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: x86_64-pc-windows-msvc
-
-      - name: Download decrypted .env artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: env-development
-          path: env-artifacts
-
-      - name: Stage .env for build
-        run: |
-          cp env-artifacts/.env.development ./.env.development 2>/dev/null || true
-          cp env-artifacts/.env.dev ./.env.dev 2>/dev/null || true
-          cp env-artifacts/.env.production ./.env.production 2>/dev/null || true
-          cp env-artifacts/.env.product ./.env.product 2>/dev/null || true
-          cp env-artifacts/.env.staging ./.env.staging 2>/dev/null || true
-          cp env-artifacts/.env ./.env 2>/dev/null || true
 
       - name: Build desktop application
         shell: pwsh
