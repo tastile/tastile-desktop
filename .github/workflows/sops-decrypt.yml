@@ -1,0 +1,96 @@
+name: sops-decrypt
+on:
+  workflow_call:
+    inputs:
+      env:
+        type: choice
+        required: true
+        options: [development, staging, production]
+    secrets:
+      aws_role_to_assume:
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  decrypt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role_to_assume }}
+          aws-region: ap-northeast-1
+
+      - name: Install sops
+        env:
+          SOPS_VERSION: v3.9.0
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
+          curl -fsSL -o /tmp/sops.sha256 "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64.sha256"
+          cd /tmp && sha256sum -c sops.sha256
+          sudo mv /tmp/sops /usr/local/bin/sops
+          sudo chmod +x /usr/local/bin/sops
+          sops --version
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Run loader
+        env:
+          TASTILE_ENV: ${{ inputs.env }}
+        run: bun run scripts/sops-decrypt.ts --env=${{ inputs.env }}
+
+      - name: Upload decrypted .env
+        uses: actions/upload-artifact@v4
+        with:
+          name: env-${{ inputs.env }}
+          path: |
+            .env
+            .env.development
+            .env.dev
+            .env.staging
+            .env.production
+            .env.product
+          retention-days: 1
+          if-no-files-found: error
+
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assume AWS role
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.aws_role_to_assume }}
+          aws-region: ap-northeast-1
+
+      - name: Install sops
+        env:
+          SOPS_VERSION: v3.9.0
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/sops "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64"
+          curl -fsSL -o /tmp/sops.sha256 "https://github.com/getsops/sops/releases/download/${SOPS_VERSION}/sops-${SOPS_VERSION}.linux.amd64.sha256"
+          cd /tmp && sha256sum -c sops.sha256
+          sudo mv /tmp/sops /usr/local/bin/sops
+          sudo chmod +x /usr/local/bin/sops
+          sops --version
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Verify decryptability (no plaintext artifact)
+        env:
+          TASTILE_ENV: ${{ inputs.env }}
+        run: bun run scripts/sops-decrypt.ts --env=${{ inputs.env }} --check
