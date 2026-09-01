@@ -111,9 +111,6 @@ public partial class App : Application
     protected override async void OnLaunched(LaunchActivatedEventArgs args)
     {
         var cmdArgs = Environment.GetCommandLineArgs();
-        // The tastile:// protocol is no longer used for sign-in (BetterAuth
-        // sign-in is native), but we still drain any legacy handoff that
-        // another instance may have written so old shortcuts don't crash.
         var oauthCallback = cmdArgs.FirstOrDefault(a => a.StartsWith("tastile://", StringComparison.OrdinalIgnoreCase));
 
         // シングルインスタンスチェック
@@ -124,8 +121,8 @@ public partial class App : Application
         {
             if (oauthCallback != null)
             {
-                DebugLog("Secondary instance received legacy OAuth callback (ignored after BetterAuth migration)");
-                TryConsumeCallbackHandoff();
+                DebugLog("Secondary instance received OAuth callback");
+                TryStoreCallbackHandoff(oauthCallback);
             }
             DebugLog("Another instance is already running. Exiting.");
             Exit();
@@ -136,30 +133,31 @@ public partial class App : Application
         {
             DebugLog("OnLaunched starting...");
 
-            // Register custom URL protocol (tastile://) for backwards compat
-            // with any installed shortcuts. Sign-in no longer relies on this
-            // (BetterAuth is native); the handler is kept registered so the
-            // app still opens when an old deep link is launched.
+            // Register custom URL protocol (tastile://) for OAuth callbacks
             if (!ProtocolHandler.IsProtocolRegistered())
             {
                 DebugLog("Registering tastile:// protocol...");
                 ProtocolHandler.RegisterProtocol();
             }
 
-            // Drain any callback that was handoffed from a previous secondary
-            // instance. Post-BetterAuth there is nothing useful to do with it,
-            // but we still consume the file so it doesn't accumulate.
+            // Drain any callback that was handoffed from a previous secondary instance
             var handoffCallback = TryConsumeCallbackHandoff();
             if (handoffCallback != null)
             {
-                DebugLog("Drained legacy OAuth callback handoff (no-op post-BetterAuth)");
+                DebugLog("Consumed OAuth callback handoff from secondary instance");
+                await HandleOAuthCallbackAsync(handoffCallback);
+            }
+            if (oauthCallback != null && handoffCallback == null)
+            {
+                DebugLog("Received OAuth callback");
+                await HandleOAuthCallbackAsync(oauthCallback);
             }
 
             var isStartupLaunch = cmdArgs.Contains("--minimized");
 
             // Hydrate session from DPAPI store
-            await BetterAuthAuthService.Instance.TryLoadFromStoreAsync();
-            if (!BetterAuthAuthService.Instance.IsAuthenticated)
+            await CognitoAuthService.Instance.TryLoadFromStoreAsync();
+            if (!CognitoAuthService.Instance.IsAuthenticated)
             {
                 var authWindow = new AuthWindow();
                 authWindow.Activate();
@@ -167,18 +165,25 @@ public partial class App : Application
                 var tcs = new TaskCompletionSource<AuthResult>();
                 EventHandler onAuthStateChanged = (_, _) =>
                 {
-                    if (BetterAuthAuthService.Instance.IsAuthenticated)
+                    if (CognitoAuthService.Instance.IsAuthenticated)
                     {
                         tcs.TrySetResult(new AuthResult(true));
                     }
                 };
-                BetterAuthAuthService.Instance.AuthStateChanged += onAuthStateChanged;
+                CognitoAuthService.Instance.AuthStateChanged += onAuthStateChanged;
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                 await using var registration = cts.Token.Register(() => tcs.TrySetResult(new AuthResult(false, "timeout")));
 
-                var result = await tcs.Task;
+                // Poll the callback handoff file while waiting for auth to complete.
+                // The secondary instance (launched by the tastile:// protocol redirect)
+                // writes the callback URL here; the primary instance must pick it up.
+                var pollCts = CancellationTokenSource.CreateLinkedTokenSource(cts.Token);
+                var pollTask = PollCallbackHandoffAsync(pollCts.Token, tcs);
 
-                BetterAuthAuthService.Instance.AuthStateChanged -= onAuthStateChanged;
+                var result = await tcs.Task;
+                pollCts.Cancel();
+
+                CognitoAuthService.Instance.AuthStateChanged -= onAuthStateChanged;
                 authWindow.Close();
                 if (!result.Success)
                 {
@@ -198,7 +203,7 @@ public partial class App : Application
             var apiClient = new Services.CoreApiClient(
                 AppSettings.ApiBaseUrl,
                 AuthService.Instance.GetAccessTokenAsync,
-                BetterAuthAuthService.Instance.RefreshAsync);
+                CognitoAuthService.Instance.RefreshAsync);
 
             // Debug: verify token validity against API
             try
@@ -270,22 +275,48 @@ public partial class App : Application
 
     private async Task HandleOAuthCallbackAsync(string callbackUrl)
     {
-        // No-op post-BetterAuth. Kept as a private method so callers that
-        // forward a legacy tastile://auth/callback URL (old desktop deep
-        // links) can compile without bouncing the user. The BetterAuth flow
-        // is purely in-process: no WebView, no protocol activation.
-        _ = callbackUrl;
-        await Task.CompletedTask;
+        var result = ProtocolHandler.ParseOAuthCallback(callbackUrl);
+        if (result != null)
+        {
+            var (code, state) = result.Value;
+            DebugLog("OAuth callback parsed");
+            await CognitoAuthService.Instance.HandleAuthorizationCodeAsync(code, state);
+            return;
+        }
+
+        var tokenResult = ProtocolHandler.ParseTokenCallback(callbackUrl);
+        if (tokenResult != null)
+        {
+            DebugLog($"Token callback parsed, state={tokenResult.State[..8]}..., calling HandleTokenCallbackAsync");
+            var authResult = await CognitoAuthService.Instance.HandleTokenCallbackAsync(
+                tokenResult.IdToken,
+                tokenResult.AccessToken,
+                tokenResult.RefreshToken,
+                tokenResult.ExpiresIn,
+                tokenResult.State);
+            DebugLog($"HandleTokenCallbackAsync result: success={authResult.Success}, error={authResult.ErrorCode}");
+            return;
+        }
+
+        if (result == null)
+        {
+            DebugLog("Invalid OAuth callback URL");
+            return;
+        }
     }
 
     private static void TryStoreCallbackHandoff(string url)
     {
-        // Legacy shim. Pre-BetterAuth the desktop wrote the OAuth callback
-        // URL here so the primary instance could pick it up after the system
-        // browser redirected back via tastile://. The migration removed the
-        // protocol activation path entirely; this is now a no-op so legacy
-        // shortcuts don't crash.
-        _ = url;
+        try
+        {
+            var dir = Path.GetDirectoryName(CallbackHandoffPath);
+            if (!string.IsNullOrEmpty(dir)) Directory.CreateDirectory(dir);
+            File.WriteAllText(CallbackHandoffPath, url);
+        }
+        catch (Exception ex)
+        {
+            DebugLog($"Failed to store callback handoff: {ex.Message}");
+        }
     }
 
     private static string? TryConsumeCallbackHandoff()
@@ -293,15 +324,39 @@ public partial class App : Application
         try
         {
             if (!File.Exists(CallbackHandoffPath)) return null;
-            // Drain the file but don't surface the URL — nothing to do with
-            // it under the native BetterAuth sign-in flow.
+            var url = File.ReadAllText(CallbackHandoffPath).Trim();
             File.Delete(CallbackHandoffPath);
-            return null;
+            return string.IsNullOrEmpty(url) ? null : url;
         }
         catch (Exception ex)
         {
             DebugLog($"Failed to consume callback handoff: {ex.Message}");
             return null;
+        }
+    }
+
+    private async Task PollCallbackHandoffAsync(CancellationToken ct, TaskCompletionSource<AuthResult> tcs)
+    {
+        while (!ct.IsCancellationRequested && !tcs.Task.IsCompleted)
+        {
+            try
+            {
+                await Task.Delay(500, ct).ConfigureAwait(false);
+                var handoff = TryConsumeCallbackHandoff();
+                if (handoff != null)
+                {
+                    DebugLog("Polled OAuth callback handoff from secondary instance");
+                    await HandleOAuthCallbackAsync(handoff);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                break;
+            }
+            catch (Exception ex)
+            {
+                DebugLog($"Poll callback handoff error: {ex.Message}");
+            }
         }
     }
 

@@ -56,8 +56,9 @@ public static class ThemeManager
         if (!resources.ThemeDictionaries.TryGetValue(themeKey, out var themeObj) || themeObj is not ResourceDictionary themeDict)
             return;
 
-        SetBrush(themeDict, "OverrideAccentFillBrush", accentHex);
-        SetBrush(themeDict, "OverrideAccentFillSecondaryBrush", accentHoverHex);
+        SetBrush(themeDict, "AccentBrush", accentHex);
+        SetBrush(themeDict, "AppPrimaryBrush", accentHex);
+        SetBrush(themeDict, "AppPrimaryHoverBrush", accentHoverHex);
     }
 
     public static void ApplyTheme(string mode, ResourceDictionary? resources = null)
@@ -87,6 +88,73 @@ public static class ThemeManager
         }
 
         return Colors.White;
+    }
+
+    private static ThemePalette CreateDarkPalette(SystemAppearanceSnapshot snapshot)
+    {
+        var primary = snapshot.AccentColorValueHex;
+        return new ThemePalette(
+            Background: "#202020",
+            Surface0: "#1C1C1C",
+            Surface1: "#262626",
+            Surface2: "#2F2F2F",
+            SurfaceElevated: "#2B2B2B",
+            Foreground: "#FFFFFF",
+            ForegroundMuted: "#D6D6D6",
+            ForegroundSubtle: "#A6A6A6",
+            Border: "#3D3D3D",
+            BorderStrong: "#575757",
+            Interactive: "#FFFFFF",
+            InteractiveHover: "#F4F4F4",
+            InteractiveActive: "#E5E5E5",
+            Primary: primary,
+            PrimaryForeground: "#FFFFFF",
+            PrimaryHover: Lighten(snapshot.AccentColorValue, 0.10));
+    }
+
+    private static ThemePalette CreateLightPalette(SystemAppearanceSnapshot snapshot)
+    {
+        var primary = snapshot.AccentColorValueHex;
+        return new ThemePalette(
+            Background: "#F3F3F3",
+            Surface0: "#F9F9F9",
+            Surface1: "#F3F3F3",
+            Surface2: "#FFFFFF",
+            SurfaceElevated: "#FFFFFF",
+            Foreground: "#111111",
+            ForegroundMuted: "#444444",
+            ForegroundSubtle: "#666666",
+            Border: "#D9D9D9",
+            BorderStrong: "#C7C7C7",
+            Interactive: "#111111",
+            InteractiveHover: "#2A2A2A",
+            InteractiveActive: "#3B3B3B",
+            Primary: primary,
+            PrimaryForeground: "#FFFFFF",
+            PrimaryHover: Lighten(snapshot.AccentColorValue, 0.08));
+    }
+
+    private static ThemePalette CreateHighContrastPalette(SystemAppearanceSnapshot snapshot)
+    {
+        var background = snapshot.AppTheme == ElementTheme.Dark ? "#000000" : "#FFFFFF";
+        var foreground = snapshot.AppTheme == ElementTheme.Dark ? "#FFFFFF" : "#000000";
+        return new ThemePalette(
+            Background: background,
+            Surface0: background,
+            Surface1: background,
+            Surface2: background,
+            SurfaceElevated: background,
+            Foreground: foreground,
+            ForegroundMuted: foreground,
+            ForegroundSubtle: foreground,
+            Border: foreground,
+            BorderStrong: foreground,
+            Interactive: foreground,
+            InteractiveHover: foreground,
+            InteractiveActive: foreground,
+            Primary: snapshot.AccentColorValueHex,
+            PrimaryForeground: "#FFFFFF",
+            PrimaryHover: snapshot.AccentColorValueHex);
     }
 
     private static void SetBrush(ResourceDictionary resources, string key, string hex)
@@ -135,4 +203,22 @@ public static class ThemeManager
 
         return $"#{Shift(color.R):X2}{Shift(color.G):X2}{Shift(color.B):X2}";
     }
+
+    private sealed record ThemePalette(
+        string Background,
+        string Surface0,
+        string Surface1,
+        string Surface2,
+        string SurfaceElevated,
+        string Foreground,
+        string ForegroundMuted,
+        string ForegroundSubtle,
+        string Border,
+        string BorderStrong,
+        string Interactive,
+        string InteractiveHover,
+        string InteractiveActive,
+        string Primary,
+        string PrimaryForeground,
+        string PrimaryHover);
 }

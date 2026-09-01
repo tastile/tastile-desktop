@@ -19,34 +19,17 @@
         </Grid>
 
         <Grid Grid.Row="1" Padding="{StaticResource WindowPagePadding}">
-            <Border Style="{StaticResource WindowCardBorderStyle}" Padding="24" MaxWidth="460" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="360">
-                <StackPanel Spacing="14">
+            <Border Style="{StaticResource WindowCardBorderStyle}" Padding="24" MaxWidth="460" HorizontalAlignment="Center" VerticalAlignment="Center" MinHeight="320">
+                <StackPanel Spacing="18">
                     <StackPanel Spacing="6">
                         <TextBlock x:Uid="Auth_Heading" Text="Sign in to Tastile" Style="{StaticResource PageTitleTextStyle}" TextAlignment="Center" />
-                        <TextBlock x:Uid="Auth_Description" Text="Enter the email and password for your Tastile account. New here? Create an account on the web." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" TextWrapping="Wrap" />
+                        <TextBlock x:Uid="Auth_Description" Text="Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically." Style="{StaticResource SectionBodyTextStyle}" TextAlignment="Center" TextWrapping="Wrap" />
                     </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock x:Uid="Auth_EmailLabel" Text="Email" Foreground="{StaticResource AppForegroundBrush}" />
-                        <TextBox x:Name="EmailTextBox" x:Uid="Auth_EmailInput" PlaceholderText="you@example.com" IsEnabled="False" KeyDown="OnInputKeyDown" />
-                    </StackPanel>
-
-                    <StackPanel Spacing="6">
-                        <TextBlock x:Uid="Auth_PasswordLabel" Text="Password" Foreground="{StaticResource AppForegroundBrush}" />
-                        <PasswordBox x:Name="PasswordInput" x:Uid="Auth_PasswordInput" PlaceholderText="••••••••" IsEnabled="False" KeyDown="OnInputKeyDown" />
-                    </StackPanel>
-
                     <TextBlock x:Name="StatusTextBlock" Text="" TextWrapping="Wrap" Foreground="{StaticResource AppForegroundSubtleBrush}" TextAlignment="Center" />
-                    <ProgressRing x:Name="BusyRing" IsActive="False" Width="20" Height="20" HorizontalAlignment="Center" />
-
-                    <Button x:Name="SignInButton" x:Uid="Auth_SignIn" Content="Sign in" Click="OnSignInClick" HorizontalAlignment="Stretch" IsEnabled="False" Style="{ThemeResource AccentButtonStyle}" />
-
-                    <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
-                        <HyperlinkButton x:Name="CreateAccountLink" x:Uid="Auth_CreateAccount" Content="Create account" Click="OnCreateAccountClick" />
-                        <HyperlinkButton x:Name="SocialSignInLink" x:Uid="Auth_SocialSignIn" Content="Sign in with Google" Click="OnSocialSignInClick" />
+                    <StackPanel Orientation="Horizontal" Spacing="12" HorizontalAlignment="Center">
+                        <Button x:Name="SignInButton" x:Uid="Auth_ContinueInBrowser" Content="Continue in browser" Click="OnSignInClick" />
+                        <Button x:Name="CancelButton" x:Uid="Auth_Cancel" Content="Cancel" Click="OnCancelClick" />
                     </StackPanel>
-
-                    <Button x:Name="CancelButton" x:Uid="Auth_Cancel" Content="Cancel" Click="OnCancelClick" HorizontalAlignment="Stretch" />
                 </StackPanel>
             </Border>
         </Grid>

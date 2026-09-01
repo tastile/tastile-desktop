@@ -21,13 +21,36 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  decrypt:
+    uses: ./.github/workflows/sops-decrypt.yml
+    with:
+      env: production
+    secrets:
+      aws_role_to_assume: ${{ secrets.AWS_OIDC_ROLE_PRODUCTION }}
+
   build-installer:
+    needs: decrypt
     runs-on: windows-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
       installer_name: ${{ steps.installer.outputs.installer_name }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Download decrypted .env artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: env-production
+          path: env-artifacts
+
+      - name: Stage .env for build
+        run: |
+          cp env-artifacts/.env.production ./.env.production 2>/dev/null || true
+          cp env-artifacts/.env.product ./.env.product 2>/dev/null || true
+          cp env-artifacts/.env.development ./.env.development 2>/dev/null || true
+          cp env-artifacts/.env.dev ./.env.dev 2>/dev/null || true
+          cp env-artifacts/.env.staging ./.env.staging 2>/dev/null || true
+          cp env-artifacts/.env ./.env 2>/dev/null || true
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -87,7 +110,7 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: build-installer
+    needs: [build-installer, decrypt]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

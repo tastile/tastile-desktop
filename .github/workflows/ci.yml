@@ -27,6 +27,14 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.0
+
+      - name: Run loader unit tests
+        run: bun test scripts/sops-decrypt.test.ts
+
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v4
         with:

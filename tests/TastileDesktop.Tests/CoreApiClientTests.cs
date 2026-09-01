@@ -38,7 +38,7 @@ public sealed class CoreApiClientTests
     {
         var seenAuthorization = new List<string?>();
         var attempts = 0;
-        string currentToken = "expired-session-token";
+        string currentToken = "expired-access-token";
         var client = new CoreApiClient(
             new HttpClient(new StubHandler(request =>
             {
@@ -57,11 +57,12 @@ public sealed class CoreApiClientTests
             getAccessToken: () => Task.FromResult<string?>(currentToken),
             refreshTokens: () =>
             {
-                currentToken = "fresh-session-token";
+                currentToken = "fresh-access-token";
                 return Task.FromResult<AuthSession?>(new AuthSession(
-                    SessionToken: "fresh-session-token",
-                    ApiToken: "fresh-api-token",
-                    UserId: "user-1",
+                    IdToken: "fresh-id-token-must-not-leak",
+                    AccessToken: "fresh-access-token",
+                    RefreshToken: "refresh-token",
+                    Sub: "user-1",
                     Email: "user@example.com",
                     ExpiresAt: DateTimeOffset.UtcNow.AddHours(1)));
             });
@@ -70,11 +71,10 @@ public sealed class CoreApiClientTests
 
         Assert.NotNull(response);
         Assert.Equal(2, attempts);
-        // The 401 retry path must use the BetterAuth session token as Bearer
-        // (PROJECT-TRUTH §Authentication). The legacy id_token / refresh
-        // token fields are no longer part of AuthSession.
-        Assert.Equal(["Bearer expired-session-token", "Bearer fresh-session-token"], seenAuthorization);
-        Assert.DoesNotContain(seenAuthorization, header => header?.Contains("fresh-api-token", StringComparison.Ordinal) == true);
+        // The 401 retry path must use the OAuth2 access token, never the
+        // Cognito id_token (PROJECT-TRUTH §Authentication).
+        Assert.Equal(["Bearer expired-access-token", "Bearer fresh-access-token"], seenAuthorization);
+        Assert.DoesNotContain(seenAuthorization, header => header?.Contains("id-token-must-not-leak", StringComparison.Ordinal) == true);
     }
 
     [Fact]

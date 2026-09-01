@@ -43,7 +43,7 @@ public sealed class PromptToastWindow : Window
             FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.NoWrap,
             TextTrimming = TextTrimming.CharacterEllipsis,
-            Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"],
+            Foreground = (Brush)Application.Current.Resources["PrimaryForegroundBrush"],
         };
 
         _bodyText = new TextBlock
@@ -52,14 +52,14 @@ public sealed class PromptToastWindow : Window
             TextWrapping = TextWrapping.Wrap,
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxLines = 2,
-            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            Foreground = (Brush)Application.Current.Resources["SecondaryForegroundBrush"],
             Margin = new Thickness(0, 4, 0, 0),
         };
         _countdownText = new TextBlock
         {
             FontSize = 11,
             TextWrapping = TextWrapping.NoWrap,
-            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
+            Foreground = (Brush)Application.Current.Resources["SecondaryForegroundBrush"],
             Margin = new Thickness(0, 4, 0, 0),
             Visibility = Visibility.Collapsed,
         };
@@ -143,8 +143,8 @@ public sealed class PromptToastWindow : Window
         {
             CornerRadius = new CornerRadius(8),
             BorderThickness = new Thickness(1),
-            BorderBrush = (Brush)Application.Current.Resources["ControlStrokeColorDefaultBrush"],
-            Background = (Brush)Application.Current.Resources["SolidBackgroundFillColorSecondaryBrush"],
+            BorderBrush = (Brush)Application.Current.Resources["AppBorderBrush"],
+            Background = (Brush)Application.Current.Resources["AppSurfaceElevatedBrush"],
             Padding = new Thickness(10, 8, 10, 8),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,

@@ -50,7 +50,7 @@ public sealed class PromptAttentionOverlayWindow : Window
 
     private static SolidColorBrush GetAccentColorBrush()
     {
-        if (Application.Current?.Resources.TryGetValue("OverrideAccentFillBrush", out var resource) == true
+        if (Application.Current?.Resources.TryGetValue("AppPrimaryBrush", out var resource) == true
             && resource is SolidColorBrush brush && brush.Color.A != 0)
         {
             return brush;

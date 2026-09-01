@@ -6,19 +6,19 @@ namespace TastileDesktop.Tests;
 public sealed class QuickPanelIconStyleResolverTests
 {
     [Fact]
-    public void Resolve_PrimaryCreationAction_UsesTextFillColorPrimaryBrush()
+    public void Resolve_PrimaryCreationAction_UsesPrimaryForegroundBrush()
     {
         var style = QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.PrimaryCreation);
 
-        Assert.Equal("TextFillColorPrimaryBrush", style.ForegroundBrushKey);
+        Assert.Equal("PrimaryForegroundBrush", style.ForegroundBrushKey);
     }
 
     [Fact]
-    public void Resolve_SecondaryUtilityAction_UsesTextFillColorTertiaryBrush()
+    public void Resolve_SecondaryUtilityAction_UsesTertiaryBrush()
     {
         var style = QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.SecondaryUtility);
 
-        Assert.Equal("TextFillColorTertiaryBrush", style.ForegroundBrushKey);
+        Assert.Equal("TertiaryForegroundBrush", style.ForegroundBrushKey);
     }
 
     [Fact]

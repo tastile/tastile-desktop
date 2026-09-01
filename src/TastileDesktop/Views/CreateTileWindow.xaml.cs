@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Media;
@@ -31,7 +30,7 @@ public sealed partial class CreateTileWindow : Window
 
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-        refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
+        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly string? _editTileId;
     private CreateTileCatalog _catalog = new([], [], []);
@@ -52,7 +51,6 @@ public sealed partial class CreateTileWindow : Window
         {
             Log("CreateTileWindow ctor start");
             InitializeComponent();
-            SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
             Log("CreateTileWindow after InitializeComponent");
             FloatingWindowHelper.Configure(this, TitleBarArea, 720, 880);
             Header.CreateButton.Click += OnCreateClick;

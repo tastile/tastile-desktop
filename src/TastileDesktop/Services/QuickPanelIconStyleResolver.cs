@@ -14,8 +14,8 @@ public static class QuickPanelIconStyleResolver
     {
         return role switch
         {
-            QuickPanelActionRole.PrimaryCreation => new QuickPanelIconStyle("TextFillColorPrimaryBrush"),
-            _ => new QuickPanelIconStyle("TextFillColorTertiaryBrush")
+            QuickPanelActionRole.PrimaryCreation => new QuickPanelIconStyle("PrimaryForegroundBrush"),
+            _ => new QuickPanelIconStyle("TertiaryForegroundBrush")
         };
     }
 }

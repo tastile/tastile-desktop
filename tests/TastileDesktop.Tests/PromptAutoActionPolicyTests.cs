@@ -1,6 +1,5 @@
 using TastileDesktop.Models;
 using TastileDesktop.Services;
-using Xunit;
 
 namespace TastileDesktop.Tests;
 

@@ -33,27 +33,14 @@
   <data name="Auth.Title" xml:space="preserve"><value>Sign in</value></data>
   <data name="Auth_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Auth_Cancel.Content" xml:space="preserve"><value>Cancel</value></data>
-  <data name="Auth_CreateAccount" xml:space="preserve"><value>Create account</value></data>
-  <data name="Auth_CreateAccount.Content" xml:space="preserve"><value>Create account</value></data>
-  <data name="Auth_Description" xml:space="preserve"><value>Enter the email and password for your Tastile account. New here? Create an account on the web.</value></data>
-  <data name="Auth_Description.Text" xml:space="preserve"><value>Enter the email and password for your Tastile account. New here? Create an account on the web.</value></data>
-  <data name="Auth_EmailInput" xml:space="preserve"><value>Email</value></data>
-  <data name="Auth_EmailInput.PlaceholderText" xml:space="preserve"><value>you@example.com</value></data>
-  <data name="Auth_EmailLabel" xml:space="preserve"><value>Email</value></data>
-  <data name="Auth_EmailLabel.Text" xml:space="preserve"><value>Email</value></data>
+  <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>Continue in browser</value></data>
+  <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>Continue in browser</value></data>
+  <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>Continue sign-in in your browser…</value></data>
+  <data name="Auth_Description" xml:space="preserve"><value>Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically.</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>Your browser opens Tastile sign-in. Choose a login method, then Tastile returns here automatically.</value></data>
   <data name="Auth_Heading" xml:space="preserve"><value>Sign in to Tastile</value></data>
   <data name="Auth_Heading.Text" xml:space="preserve"><value>Sign in to Tastile</value></data>
-  <data name="Auth_MissingFields" xml:space="preserve"><value>Please enter both email and password.</value></data>
-  <data name="Auth_PasswordInput" xml:space="preserve"><value>Password</value></data>
-  <data name="Auth_PasswordInput.PlaceholderText" xml:space="preserve"><value>••••••••</value></data>
-  <data name="Auth_PasswordLabel" xml:space="preserve"><value>Password</value></data>
-  <data name="Auth_PasswordLabel.Text" xml:space="preserve"><value>Password</value></data>
-  <data name="Auth_SignIn" xml:space="preserve"><value>Sign in</value></data>
-  <data name="Auth_SignIn.Content" xml:space="preserve"><value>Sign in</value></data>
-  <data name="Auth_SignInFailed" xml:space="preserve"><value>Sign-in failed: {0}</value></data>
-  <data name="Auth_SignInInProgress" xml:space="preserve"><value>Signing in…</value></data>
-  <data name="Auth_SocialSignIn" xml:space="preserve"><value>Sign in with Google</value></data>
-  <data name="Auth_SocialSignIn.Content" xml:space="preserve"><value>Sign in with Google</value></data>
+  <data name="Auth_SignInFailed" xml:space="preserve"><value>Could not start sign-in: {0}</value></data>
   <data name="Auth_TitleBarHeading" xml:space="preserve"><value>Sign in</value></data>
   <data name="Auth_TitleBarHeading.Text" xml:space="preserve"><value>Sign in</value></data>
 

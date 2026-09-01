@@ -58,3 +58,7 @@ signing.cert
 # Development overrides
 appsettings.Development.json
 appsettings.Local.json
+
+# sops loader output (plain text .env files)
+!.env.*.example
+!.env.*.sops

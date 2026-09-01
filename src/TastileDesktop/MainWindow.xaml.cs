@@ -1,4 +1,3 @@
-using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
@@ -47,7 +46,6 @@ public sealed partial class MainWindow : Window
         CreateActionIconForegroundBrush = ResolveThemeBrush(QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.PrimaryCreation).ForegroundBrushKey);
         IntegrationsActionIconForegroundBrush = ResolveThemeBrush(QuickPanelIconStyleResolver.Resolve(QuickPanelActionRole.SecondaryUtility).ForegroundBrushKey);
         InitializeComponent();
-        SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
         RunningTasksScrollViewer.AddHandler(UIElement.PointerPressedEvent, new PointerEventHandler(OnRunningTasksDragStart), true);
         RunningTasksScrollViewer.AddHandler(UIElement.PointerMovedEvent, new PointerEventHandler(OnRunningTasksDragMove), true);
         RunningTasksScrollViewer.AddHandler(UIElement.PointerReleasedEvent, new PointerEventHandler(OnRunningTasksDragEnd), true);
@@ -85,7 +83,7 @@ public sealed partial class MainWindow : Window
     private static SolidColorBrush ResolveThemeBrush(string key)
     {
         return Application.Current.Resources[key] as SolidColorBrush
-            ?? (SolidColorBrush)Application.Current.Resources["TextFillColorPrimaryBrush"];
+            ?? (SolidColorBrush)Application.Current.Resources["PrimaryForegroundBrush"];
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -104,7 +102,7 @@ public sealed partial class MainWindow : Window
 
     public async Task InitializeAsync()
     {
-        await BetterAuthAuthService.Instance.TryLoadFromStoreAsync();
+        await CognitoAuthService.Instance.TryLoadFromStoreAsync();
         await ViewModel.InitializeAsync();
         RefreshNativePanel();
         UpdateAccountUI();

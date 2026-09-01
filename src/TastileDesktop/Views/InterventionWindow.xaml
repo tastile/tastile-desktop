@@ -5,7 +5,7 @@
     x:Uid="Intervention"
     Title="Tastile - Intervention Required">
 
-    <Grid Background="{ThemeResource InterventionScrimBrush}">
+    <Grid Background="#66000000">
         <Border
             Background="{StaticResource AppSurfaceElevatedBrush}"
             CornerRadius="0"

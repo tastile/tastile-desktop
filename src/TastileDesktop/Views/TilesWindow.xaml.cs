@@ -23,7 +23,7 @@ public sealed partial class TilesWindow : Window, INotifyPropertyChanged
     }
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-        refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
+        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly TilesWindowLiveUpdateBridge _liveUpdateBridge;
@@ -220,7 +220,7 @@ public sealed partial class TilesWindow : Window, INotifyPropertyChanged
         {
             var api = new CoreApiClient(
                 getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-                refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
+                refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
             await api.StartTileAsync(tileId);
             await RefreshTilesAsync();
         }

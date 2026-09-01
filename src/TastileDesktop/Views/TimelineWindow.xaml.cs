@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Microsoft.UI.Composition.SystemBackdrops;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Input;
 using Microsoft.UI.Xaml;
@@ -21,7 +20,7 @@ public sealed partial class TimelineWindow : Window
     private ComboBox? RangeComboBox;
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-        refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
+        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
     private readonly SettingsService _settings = new();
     private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
 
@@ -49,7 +48,6 @@ public sealed partial class TimelineWindow : Window
     public TimelineWindow()
     {
         InitializeComponent();
-        SystemBackdrop = new MicaBackdrop { Kind = MicaKind.Base };
         EnsureNamedElementsBound();
         WireToolbarControls();
         FloatingWindowHelper.Configure(this, TitleBarArea, 1100, 760);
