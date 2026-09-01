@@ -26,6 +26,10 @@ artifacts/
 .env.local
 .env.*.local
 
+# sops loader output (plain text .env files)
+!.env.*.example
+!.env.*.sops
+
 # Project-local transient output and reference clones (must NEVER be committed
 # or referenced as a build/runtime dependency — see docs/decisions.md)
 .tmp/
@@ -58,7 +62,3 @@ signing.cert
 # Development overrides
 appsettings.Development.json
 appsettings.Local.json
-
-# sops loader output (plain text .env files)
-!.env.*.example
-!.env.*.sops
