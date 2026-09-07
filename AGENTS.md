@@ -9,7 +9,7 @@ new AWS-hosted `tastile-core` API with Cognito Hosted UI sign-in; no local
 daemon process.
 
 ## Tech Stack
-- C# / WinUI 3 (Windows App SDK 1.7)
+- C# / WinUI 3 (Windows App SDK 1.8)
 - Target framework `net9.0-windows10.0.26100.0`, SDK pinned via `global.json` (`rollForward: latestFeature`)
 - CommunityToolkit.Mvvm, H.NotifyIcon.WinUI (tray), Microsoft.Toolkit.Uwp.Notifications (toast)
 - `System.Security.Cryptography.ProtectedData` (DPAPI), System.Text.Json (API)
