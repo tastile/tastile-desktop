@@ -35,10 +35,10 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       installer_name: ${{ steps.installer.outputs.installer_name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download decrypted .env artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: env-production
           path: env-artifacts
@@ -52,7 +52,7 @@ jobs:
           cp env-artifacts/.env.staging ./.env.staging 2>/dev/null || true
           cp env-artifacts/.env ./.env 2>/dev/null || true
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -103,7 +103,7 @@ jobs:
           "installer_name=$name" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding utf8
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: desktop-installer
           path: artifacts\installer\${{ steps.installer.outputs.installer_name }}
@@ -113,10 +113,10 @@ jobs:
     needs: [build-installer, decrypt]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Download installer artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: desktop-installer
           path: dist/update
