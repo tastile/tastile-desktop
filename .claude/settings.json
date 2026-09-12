@@ -8,7 +8,7 @@
             "type": "command",
             "command": "bun",
             "args": [
-              ".claude/hooks/git-guard.mjs"
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/git-guard.mjs"
             ],
             "timeout": 10,
             "statusMessage": "Scanning for destructive commands"
