@@ -268,6 +268,10 @@ internal static class FloatingWindowHelper
             try
             {
                 ApplyWindowTheme(window, ThemeManager.CurrentElementTheme);
+                if (window is PromptToastWindow promptToast)
+                {
+                    promptToast.RefreshThemeResources();
+                }
                 ApplyBackdrop(window);
                 ApplyTitleBarTheme(window);
             }
