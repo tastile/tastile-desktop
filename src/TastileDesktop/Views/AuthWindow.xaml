@@ -43,7 +43,6 @@
 
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                         <HyperlinkButton x:Name="CreateAccountLink" x:Uid="Auth_CreateAccount" Content="Create account" Click="OnCreateAccountClick" />
-                        <HyperlinkButton x:Name="SocialSignInLink" x:Uid="Auth_SocialSignIn" Content="Sign in with Google" Click="OnSocialSignInClick" />
                     </StackPanel>
 
                     <Button x:Name="CancelButton" x:Uid="Auth_Cancel" Content="Cancel" Click="OnCancelClick" HorizontalAlignment="Stretch" />
