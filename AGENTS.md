@@ -25,7 +25,7 @@ TastileDesktop/                                AWS remote API
 │   ├── BetterAuthAuthService.cs    # Native BetterAuth session + refresh + signout\n│   ├── BetterAuthHttpClient.cs     # BetterAuth HTTP endpoints + API-token bridge
 │   ├── SecureTokenStore.cs         # DPAPI-protected credentials
 │   ├── EventDrivenPoller.cs        # User-action / focus / idle refresh (no wall-clock tick)
-│   ├── AuthService.cs              # Facade over CognitoAuthService
+│   ├── AuthService.cs              # Facade over BetterAuthAuthService
 │   ├── AppSettings.cs              # env-var-driven runtime config
 │   ├── InterventionEngine.cs       # Escalation logic (toast → intervention)
 │   ├── NotificationService.cs      # Windows toast notifications
@@ -33,7 +33,6 @@ TastileDesktop/                                AWS remote API
 │   └── TrayIconService.cs          # System tray icon + context menu
 ├── Models/
 │   ├── ApiModels.cs                # AWS API DTOs
-│   ├── CognitoConfig.cs            # Hosted UI / user pool config
 │   └── AuthSession.cs              # id_token / refresh_token / sub / email / exp
 ├── ViewModels/
 │   ├── MainViewModel.cs            # Main window state + commands
