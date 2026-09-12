@@ -189,11 +189,20 @@ Custom labels created for sprint and Kanban bookkeeping:
 Milestones track per-release sprints. Current active milestone:
 `v0.4.1`.
 
-Project v2 board is **deferred**: setup requires GraphQL field
-configuration that exceeds the gh CLI surface for this repo. A
-follow-up Issue will reintroduce it when a second repo contributor
-exists, or when a project-board Skill adapter can drive the setup
-deterministically.
+Project v2 board is **active**: <https://github.com/orgs/tastile/projects/2>
+("Tastile Desktop Sprint Board", linked to this repo). Default Status
+field (`Todo` / `In Progress` / `Done`) drives the Kanban. Required
+custom fields per ADR-0009:
+
+- **Priority** — `P0` / `P1` / `P2`
+- **Size** — `S` / `M` / `L`
+- **Target Version** — `0.4.1` / `0.4.2` / `0.5.0`
+- **Area** — `auth` / `api` / `ui` / `test` / `build` / `release` / `i18n`
+- **Execution Generation** — numeric, used for fencing per
+  PROMPT.ja.md §17
+
+Status cannot transition to `Ready` until all required custom fields
+are populated. WIP cap on `In Progress` is a follow-up.
 
 ## Branch and PR rules (ADR-0007)
 
