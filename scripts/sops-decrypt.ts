@@ -27,14 +27,13 @@ export function parseArgs(argv: string[]): { env: string; check: boolean } {
     else if (arg.startsWith("--env=")) env = arg.slice("--env=".length);
   }
   if (!env) throw die(2, "--env=<development|staging|production> or TASTILE_ENV is required");
-  if (!(env in config)) throw die(2, `unknown env "${env}"; valid: ${Object.keys(config).join(", ")}`);
+  if (!Object.hasOwn(config, env)) throw die(2, `unknown env "${env}"; valid: ${Object.keys(config).join(", ")}`);
   return { env, check };
 }
 
 export function loadConfig(env: string): SopsEnvConfig {
-  const entry = config[env];
-  if (!entry) throw die(2, `config missing for env "${env}"`);
-  return entry;
+  if (!Object.hasOwn(config, env)) throw die(2, `config missing for env "${env}"`);
+  return config[env];
 }
 
 export async function assertSopsInstalled(): Promise<void> {
