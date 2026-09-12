@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   verify-head:
-    name: Verify PR head matches release-X-Y-Z
+    name: verify-head
     runs-on: ubuntu-latest
     if: github.event.pull_request.base.ref == 'main'
     steps:
