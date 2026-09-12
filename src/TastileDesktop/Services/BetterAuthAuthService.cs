@@ -203,6 +203,12 @@ public sealed class BetterAuthAuthService
             // Network unreachable, DNS failure, TLS error, etc.
             return _current;
         }
+        catch (OperationCanceledException)
+        {
+            // BetterAuthHttpClient uses an HTTP timeout. Preserve the current
+            // session on timeout so CoreApiClient keeps its guarded retry path.
+            return _current;
+        }
 
         if (validated is null)
         {
