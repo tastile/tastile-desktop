@@ -162,8 +162,6 @@ public partial class App : Application
             if (!BetterAuthAuthService.Instance.IsAuthenticated)
             {
                 var authWindow = new AuthWindow();
-                authWindow.Activate();
-
                 var tcs = new TaskCompletionSource<AuthResult>();
                 EventHandler onAuthStateChanged = (_, _) =>
                 {
@@ -172,13 +170,23 @@ public partial class App : Application
                         tcs.TrySetResult(new AuthResult(true));
                     }
                 };
+                WindowEventHandler onAuthWindowClosed = (_, _) =>
+                {
+                    if (!BetterAuthAuthService.Instance.IsAuthenticated)
+                    {
+                        tcs.TrySetResult(new AuthResult(false, "cancelled"));
+                    }
+                };
                 BetterAuthAuthService.Instance.AuthStateChanged += onAuthStateChanged;
+                authWindow.Closed += onAuthWindowClosed;
+                authWindow.Activate();
+
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                 await using var registration = cts.Token.Register(() => tcs.TrySetResult(new AuthResult(false, "timeout")));
-
                 var result = await tcs.Task;
 
                 BetterAuthAuthService.Instance.AuthStateChanged -= onAuthStateChanged;
+                authWindow.Closed -= onAuthWindowClosed;
                 authWindow.Close();
                 if (!result.Success)
                 {
