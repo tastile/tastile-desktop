@@ -165,8 +165,8 @@ available. Per the canonical contract, the following alternative review
 path is in force on every PR:
 
 - **AI reviewers** — Copilot + coderabbitai (configured at repo level)
-- **Required status checks** — `release-head-check / verify-head` on
-  `main`-targeting PRs (enforces `release-X-Y-Z` head pattern, see
+- **Required status checks** — `verify-head` on `main`-targeting PRs
+  (enforces `release-X-Y-Z` head pattern, see
   `.github/workflows/release-head-check.yml`) + existing CI
 - **Manual verification** — the workspace-level `verify-tastile-change`
   Skill is invoked immediately before marking a PR ready-to-merge
@@ -203,8 +203,8 @@ custom fields per ADR-0009:
 - **Execution Generation** — numeric, used for fencing per
   PROMPT.ja.md §17
 
-Status cannot transition to `Ready` until all required custom fields
-are populated. WIP cap on `In Progress` is a follow-up.
+Status cannot transition from `Todo` to `In Progress` until all required
+custom fields are populated. WIP cap on `In Progress` is a follow-up.
 
 ## Branch and PR rules (ADR-0007)
 
