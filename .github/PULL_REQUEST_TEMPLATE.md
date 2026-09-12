@@ -30,8 +30,8 @@
 Per the canonical contract, the following alternative review path is in force:
 
 - **AI reviewers** — Copilot + coderabbitai (configured at repo level)
-- **Required status checks** — `release-head-check / verify-head` (release-X-Y-Z
-  pattern on `main`-targeting PRs) + CI
+- **Required status checks** — `verify-head` (release-X-Y-Z pattern on
+  `main`-targeting PRs) + CI
 - **Manual verification** — `verify-tastile-change` Skill invoked immediately
   before marking ready-to-merge
 - **Final review** — PR author self-attests via the verification steps above;
