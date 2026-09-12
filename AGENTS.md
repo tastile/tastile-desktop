@@ -5,11 +5,11 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 # Tastile Desktop
 
 Windows native client for Tastile execution control system. Connects to the
-new AWS-hosted `tastile-core` API with Cognito Hosted UI sign-in; no local
-daemon process.
+AWS-hosted `tastile-core` API with native BetterAuth email/password sign-in;
+no local daemon process.
 
 ## Tech Stack
-- C# / WinUI 3 (Windows App SDK 1.7)
+- C# / WinUI 3 (Windows App SDK 1.8)
 - Target framework `net9.0-windows10.0.26100.0`, SDK pinned via `global.json` (`rollForward: latestFeature`)
 - CommunityToolkit.Mvvm, H.NotifyIcon.WinUI (tray), Microsoft.Toolkit.Uwp.Notifications (toast)
 - `System.Security.Cryptography.ProtectedData` (DPAPI), System.Text.Json (API)
@@ -22,7 +22,7 @@ TastileDesktop/                                AWS remote API
 ├── App.xaml.cs                               ──HTTPS + Bearer JWT──▶  beta.tastile.app  ─▶  tastile-core
 ├── Services/                                                                       (no local daemon)
 │   ├── CoreApiClient.cs            # Bearer + 401-refresh-retry HTTPS client
-│   ├── CognitoAuthService.cs       # PKCE Hosted UI flow + refresh + signout
+│   ├── BetterAuthAuthService.cs    # Native BetterAuth session + refresh + signout\n│   ├── BetterAuthHttpClient.cs     # BetterAuth HTTP endpoints + API-token bridge
 │   ├── SecureTokenStore.cs         # DPAPI-protected credentials
 │   ├── EventDrivenPoller.cs        # User-action / focus / idle refresh (no wall-clock tick)
 │   ├── AuthService.cs              # Facade over CognitoAuthService
@@ -55,16 +55,15 @@ owns outside the API.
 
 ## Connection Model
 
-- **Auth**: Cognito Hosted UI + PKCE (RFC 7636). Tokens saved via DPAPI in
-  `%LOCALAPPDATA%\Tastile\Auth\credentials.bin`. `CoreApiClient` adds
-  `Authorization: Bearer <id_token>` to every request and retries once on
-  401 after refreshing.
+- **Auth**: BetterAuth native email/password flow. Session/API tokens are saved
+  via DPAPI in `%LOCALAPPDATA%\Tastile\Auth\credentials.bin`.
+  `CoreApiClient` adds the BetterAuth session token as Bearer and retries once
+  on 401 after validating the session.
 - **API base URL**: `TASTILE_API_BASE_URL` (default `https://beta.tastile.app`).
   For local dev, set `TASTILE_API_BASE_URL=http://127.0.0.1:3140`.
-- **Cognito**: configurable via `TASTILE_COGNITO_CLIENT_ID`,
-  `TASTILE_COGNITO_USER_POOL_ID`, `TASTILE_COGNITO_HOSTED_UI_DOMAIN`,
-  `TASTILE_COGNITO_REGION`, `TASTILE_COGNITO_CALLBACK_URL`. Default client ID
-  is `2b9fkkb4u5di8veelnmjkmnldj` (shared with tastile-web).
+- **Web auth base URL**: `TASTILE_WEB_BASE_URL` (see `AppSettings`). Social
+  sign-in is intentionally not exposed until an installed-app handoff can
+  persist the BetterAuth session.
 - **Refresh strategy**: `EventDrivenPoller` issues the 4-endpoint refresh
   bundle only in response to (a) user commands, (b) window activation
   (`MainWindow.Activated` / `TilesWindow.Activated` with 1s debounce), or
@@ -202,4 +201,65 @@ WinUI Gallery / Community Toolkit の既存パターンを優先し、
 - `microsoft-learn` MCP は Claude Code 側で `microsoft-docs` plugin 経由で取得する
   (本 repo `opencode.json` の `microsoft-learn` は `opencode` CLI 用で別物)。
 - `frontend-design` (Web frontend 向け) は **有効化しない**。WinUI には `winui-design` を主役に据える。
-- `ui-ux-pro-max` / `figma` / `csharp-lsp` 等の追加は要 ADR。
+- `ui-ux-pro-max` / `figma` / `csharp-lsp` 等の追加は要 ADR。\n\n## Reviewer policy (PROMPT.ja.md §26)
+
+`tastile/tastile-desktop` is a solo project — `@rebuildup` is the only
+contributor with merge authority. There is no separate human reviewer
+available. Per the canonical contract, the following alternative review
+path is in force on every PR:
+
+- **AI reviewers** — Copilot + coderabbitai (configured at repo level)
+- **Required status checks** — `verify-head` on `main`-targeting PRs
+  (enforces `release-X-Y-Z` head pattern, see
+  `.github/workflows/release-head-check.yml`) + existing CI
+- **Manual verification** — the workspace-level `verify-tastile-change`
+  Skill is invoked immediately before marking a PR ready-to-merge
+- **Final review** — the PR author self-attests via the verification
+  steps above; the lack of a separate human reviewer is recorded
+  honestly in `.github/PULL_REQUEST_TEMPLATE.md`
+
+`CODEOWNERS` is intentionally **not** created: a single-owner file
+would be a formal self-reviewer, which PROMPT.ja.md §26 explicitly
+rejects. The alternative path above substitutes.
+
+## Repository labels and milestones (ADR-0009)
+
+Custom labels created for sprint and Kanban bookkeeping:
+
+- **Priority** — `priority: P0` / `P1` / `P2`
+- **Size** — `size: S` / `M` / `L`
+- **Area** — `area: auth` / `api` / `ui` / `test` / `build` / `release` / `i18n`
+- **Target version** — `target-version: 0.6.0`
+- **Workflow flags** — `release-only`, `breaking-change`
+
+Milestones track per-release sprints. Current active milestone:
+`v0.6.0`.
+
+Project v2 board is **active**: <https://github.com/orgs/tastile/projects/2>
+("Tastile Desktop Sprint Board", linked to this repo). Default Status
+field (`Todo` / `In Progress` / `Done`) drives the Kanban. Required
+custom fields per ADR-0009:
+
+- **Priority** — `P0` / `P1` / `P2`
+- **Size** — `S` / `M` / `L`
+- **Target Version** — `0.6.0`
+- **Area** — `auth` / `api` / `ui` / `test` / `build` / `release` / `i18n`
+- **Execution Generation** — numeric, used for fencing per
+  PROMPT.ja.md §17
+
+Status cannot transition from `Todo` to `In Progress` until all required
+custom fields are populated. WIP cap on `In Progress` is a follow-up.
+
+## Branch and PR rules (ADR-0007)
+
+- `main` is the released / integrated state. No direct push.
+- `release-<major>-<minor>-<patch>` is the active sprint trunk.
+- Ticket branch name = Issue number only (no `feature/`, `fix/`, `docs/`
+  prefix, no slug). See Issue #20 for the policy rationale and
+  exception list.
+- Every durable ticket branch gets a published remote head + Draft PR
+  immediately after its first meaningful commit (canonical start
+  procedure from PROMPT.ja.md §12).
+- Stacked ticket PRs are allowed within the same target release;
+  intermediate predecessor-branch merges never close a downstream
+  Issue — only `release-x-y-z -> main` landing closes it.\n
