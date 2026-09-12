@@ -97,7 +97,8 @@ This spec is the binding contract for that direction.
 | `AppForegroundSubtleBrush` | `TextFillColorTertiaryBrush` | Hint / disabled |
 | `AppBorderBrush` | `ControlStrokeColorDefaultBrush` | 1px border |
 | `AppBorderStrongBrush` | `ControlStrokeColorSecondaryBrush` | Emphasis border |
-| `AccentBrush` / `AppPrimaryBrush` | `AccentFillColorDefaultBrush` | Brand accent |
+| `AccentBrush` | `AccentFillColorDefaultBrush` | System accent |
+| `AppPrimaryBrush` | `OverrideAccentFillBrush` | Runtime-overridable brand accent |
 | `AppPrimaryForegroundBrush` | `TextOnAccentFillColorPrimaryBrush` | On-accent text |
 | `AppPrimaryHoverBrush` | `AccentFillColorSecondaryBrush` | Hover |
 | `PrimaryForegroundBrush` ≡ `AppForegroundBrush` | (consolidated) | — |
