@@ -280,13 +280,19 @@ public class UiTokensTests
     public void AppXaml_DefinesOverrideAccentFillBrush_BothThemes()
     {
         var doc = XDocument.Load(AppXamlPath);
-        var keys = doc.Descendants()
-            .Where(e => e.Name.LocalName == "SolidColorBrush")
-            .Select(e => (string?)e.Attribute(KeyAttr) ?? "")
-            .ToHashSet();
+        foreach (var theme in new[] { "Light", "Dark" })
+        {
+            var dictionary = doc.Descendants()
+                .Single(e => e.Name.LocalName == "ResourceDictionary"
+                    && (string?)e.Attribute(KeyAttr) == theme);
+            var keys = dictionary.Elements()
+                .Where(e => e.Name.LocalName == "SolidColorBrush")
+                .Select(e => (string?)e.Attribute(KeyAttr) ?? "")
+                .ToHashSet();
 
-        Assert.Contains("OverrideAccentFillBrush", keys);
-        Assert.Contains("OverrideAccentFillSecondaryBrush", keys);
+            Assert.Contains("OverrideAccentFillBrush", keys);
+            Assert.Contains("OverrideAccentFillSecondaryBrush", keys);
+        }
     }
 
     [Fact]
@@ -854,13 +860,6 @@ function Test-File {
             $failures.Add("$rel`:$lineNumber`: literal hex '$($m.Value)' (use ThemeResource instead).") | Out-Null
         }
     }
-
-    foreach ($key in $removedBrushKeys) {
-        if ($content -match "\{\s*(Static|Theme)Resource\s+$key\s*\}") {
-            $lineNumber = ($content.Substring(0, $content.IndexOf("{$key}")) -split "`n").Count
-            $failures.Add("$rel`:$lineNumber`: removed brush key '$key' is still referenced.") | Out-Null
-        }
-    }
 }
 
 function Search-Files {
@@ -887,7 +886,7 @@ if ($failures.Count -gt 0) {
     exit 1
 }
 
-Write-Host "==> UI token checks passed (0 hex literals, 0 removed brush references)"
+Write-Host "==> UI token checks passed (0 hex literals outside App.xaml)"
 exit 0
 ```
 
@@ -897,7 +896,7 @@ exit 0
 pwsh scripts/check-ui-tokens.ps1
 ```
 
-Expected: `UI token checks passed (0 hex literals, 0 removed brush references)`.
+Expected: `UI token checks passed (0 hex literals outside App.xaml)`.
 
 (Note: the script intentionally **skips** `App.xaml` for hex-literal scans. `App.xaml` is the single source of truth for token definitions; the two `InterventionScrimBrush` literals there are intentional and reviewed per PR. Removing that exemption would force token definitions into a separate file, deferred to Phase 4.)
 
@@ -909,7 +908,9 @@ git commit -m "build(desktop): add check-ui-tokens.ps1 for hex-literal + removed
 
 Greps MainWindow.xaml, Styles/, Views/ for:
 - hex literal colors (App.xaml is exempted as the token source of truth)
-- StaticResource/ThemeResource references to the 19 removed brush keys
+
+Phase 1 deliberately keeps the reviewed compatibility aliases for legacy brush
+consumers. Direct consumer migration and alias removal are Phase 2 scope.
 
 Phase 1 ships with the script active and green.
 
