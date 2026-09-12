@@ -19,13 +19,19 @@ public class UiTokensTests
     public void AppXaml_DefinesOverrideAccentFillBrush_BothThemes()
     {
         var doc = XDocument.Load(AppXamlPath);
-        var keys = doc.Descendants()
-            .Where(e => e.Name.LocalName == "SolidColorBrush")
-            .Select(e => (string?)e.Attribute(KeyAttr) ?? "")
-            .ToHashSet();
+        foreach (var theme in new[] { "Light", "Dark" })
+        {
+            var dictionary = doc.Descendants()
+                .Single(e => e.Name.LocalName == "ResourceDictionary"
+                    && (string?)e.Attribute(KeyAttr) == theme);
+            var keys = dictionary.Elements()
+                .Where(e => e.Name.LocalName == "SolidColorBrush")
+                .Select(e => (string?)e.Attribute(KeyAttr) ?? "")
+                .ToHashSet();
 
-        Assert.Contains("OverrideAccentFillBrush", keys);
-        Assert.Contains("OverrideAccentFillSecondaryBrush", keys);
+            Assert.Contains("OverrideAccentFillBrush", keys);
+            Assert.Contains("OverrideAccentFillSecondaryBrush", keys);
+        }
     }
 
     [Fact]
