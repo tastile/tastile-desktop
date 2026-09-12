@@ -159,12 +159,12 @@ Stored in `%APPDATA%/Tastile/settings.json`:
 
 ## Claude Code Plugins (project scope)
 
-この repository の `.claude/settings.json` に pinned:
+この repository の `.claude/settings.json` で enabled:
 
 | Plugin | 提供元 | 主用途 |
 | --- | --- | --- |
-| `winui@win-dev-skills` (v0.3.0) | `microsoft/win-dev-skills` | WinUI 3 / Fluent Design 設計・実装・レビュー・UI テスト |
-| `microsoft-docs@claude-plugins-official` (v0.3.1) | 同 marketplace 内 | Microsoft Learn docs + Microsoft Learn MCP server |
+| `winui@win-dev-skills` | `microsoft/win-dev-skills` | WinUI 3 / Fluent Design 設計・実装・レビュー・UI テスト |
+| `microsoft-docs@claude-plugins-official` | 同 marketplace 内 | Microsoft Learn docs + Microsoft Learn MCP server |
 
 ### 起動トリガー
 
@@ -195,7 +195,7 @@ WinUI Gallery / Community Toolkit の既存パターンを優先し、
 
 ### 制約 (hard rule)
 
-- 色は `#RRGGBB` 直書き禁止。`ThemeResource` 経由。
+- View / Control XAML では色の `#RRGGBB` 直書き禁止。中央の token 定義 (`App.xaml`) 以外は `ThemeResource` 経由。
 - `NavigationView` を全画面で使うのは避ける。`SelectorBar` があるのに独自 segmented control を作らない。
 - 独自 `ControlTemplate` で標準 Control を再実装しない (Fluent 標準を優先)。
 - `ContentDialog` / `TeachingTip` / `InfoBar` を用途で使い分ける。
