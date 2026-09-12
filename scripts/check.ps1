@@ -116,6 +116,10 @@ try {
     Write-Host "==> Running desktop unit tests"
     Invoke-Step -Action { dotnet test $testProject -c Debug -warnaserror } -FailureMessage "Desktop unit tests failed."
 
+    Write-Host "==> Verifying UI tokens (no literal colors outside the token dictionary)"
+    $checkUiTokensScript = Join-Path $PSScriptRoot "check-ui-tokens.ps1"
+    Invoke-Step -Action { & pwsh -NoProfile -File $checkUiTokensScript } -FailureMessage "UI token checks failed. See output above."
+
     if ($SkipDesktopBuild) {
         Write-Host "==> Skipping desktop build"
         return
@@ -139,9 +143,6 @@ try {
     Write-Host "==> Validating TimelineWindow generated connector wiring"
     Assert-NoTimelineToolbarConnectorWiring -DesktopObjDir $desktopObjDir
 
-    Write-Host "==> Verifying UI tokens (no hex literals, no removed brush references)"
-    $checkUiTokensScript = Join-Path $PSScriptRoot "check-ui-tokens.ps1"
-    Invoke-Step -Action { & pwsh -NoProfile -File $checkUiTokensScript } -FailureMessage "UI token checks failed. See output above."
 }
 finally {
     Pop-Location
