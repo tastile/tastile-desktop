@@ -156,8 +156,18 @@ public sealed class PromptToastWindow : Window
         FloatingWindowHelper.SetAlwaysOnTop(this, true);
     }
 
+    public void RefreshThemeResources()
+    {
+        _titleText.Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"];
+        _bodyText.Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+        _countdownText.Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+        _rootBorder.BorderBrush = (Brush)Application.Current.Resources["ControlStrokeColorDefaultBrush"];
+        _rootBorder.Background = (Brush)Application.Current.Resources["SolidBackgroundFillColorSecondaryBrush"];
+    }
+
     public void ShowPrompt(Models.PromptView prompt, int maxActions, Func<string, DateTimeOffset?, Task> actionHandler, Func<string, int?, Task>? deferHandler = null)
     {
+        RefreshThemeResources();
         _actionHandler = actionHandler;
         _deferHandler = deferHandler;
         _timeoutActionId = PromptTimeoutActionResolver.Resolve(prompt);
@@ -285,6 +295,7 @@ public sealed class PromptToastWindow : Window
 
     public void ShowBackdrop(Models.PromptView prompt, int waitingBehind)
     {
+        RefreshThemeResources();
         _actionHandler = null;
         _deferHandler = null;
         _timeoutActionId = null;
