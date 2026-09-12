@@ -1,0 +1,45 @@
+name: release-head-check
+
+# Per PROMPT.ja.md §1: public repository main only receives changes via
+# release-* -> main PRs. This check enforces that pattern as a required
+# status check on the `Protect main` ruleset.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: release-head-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify-head:
+    name: Verify PR head matches release-X-Y-Z
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.base.ref == 'main'
+    steps:
+      - name: Check head ref pattern
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          if [[ ! "$HEAD_REF" =~ ^release-[0-9]+-[0-9]+-[0-9]+(-[A-Za-z0-9.-]+)?$ ]]; then
+            {
+              echo "::error title=PR head does not match release-* pattern::PR head '$HEAD_REF' must match 'release-X-Y-Z' (semantic version, optional pre-release suffix). Per PROMPT.ja.md §1, public repository main only receives changes via release-* -> main PRs."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "::error::PR head '$HEAD_REF' must match 'release-X-Y-Z'"
+            exit 1
+          fi
+          echo "OK: PR '$PR_TITLE' head '$HEAD_REF' on base '$BASE_REF' matches release-X-Y-Z pattern"
+          {
+            echo "## release-head-check"
+            echo
+            echo "- base: \`$BASE_REF\`"
+            echo "- head: \`$HEAD_REF\` (matches \`^release-X-Y-Z\`)"
+          } >> "$GITHUB_STEP_SUMMARY"

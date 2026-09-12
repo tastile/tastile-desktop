@@ -154,3 +154,66 @@ Stored in `%APPDATA%/Tastile/settings.json`:
 - `IdlePromptMinutes`: 5
 - `InterventionRepeatMinutes`: 5
 - `LaunchAtStartup`: false
+
+## Reviewer policy (PROMPT.ja.md §26)
+
+`tastile/tastile-desktop` is a solo project — `@rebuildup` is the only
+contributor with merge authority. There is no separate human reviewer
+available. Per the canonical contract, the following alternative review
+path is in force on every PR:
+
+- **AI reviewers** — Copilot + coderabbitai (configured at repo level)
+- **Required status checks** — `release-head-check / verify-head` on
+  `main`-targeting PRs (enforces `release-X-Y-Z` head pattern, see
+  `.github/workflows/release-head-check.yml`) + existing CI
+- **Manual verification** — the workspace-level `verify-tastile-change`
+  Skill is invoked immediately before marking a PR ready-to-merge
+- **Final review** — the PR author self-attests via the verification
+  steps above; the lack of a separate human reviewer is recorded
+  honestly in `.github/PULL_REQUEST_TEMPLATE.md`
+
+`CODEOWNERS` is intentionally **not** created: a single-owner file
+would be a formal self-reviewer, which PROMPT.ja.md §26 explicitly
+rejects. The alternative path above substitutes.
+
+## Repository labels and milestones (ADR-0009)
+
+Custom labels created for sprint and Kanban bookkeeping:
+
+- **Priority** — `priority: P0` / `P1` / `P2`
+- **Size** — `size: S` / `M` / `L`
+- **Area** — `area: auth` / `api` / `ui` / `test` / `build` / `release` / `i18n`
+- **Target version** — `target-version: 0.4.1` / `0.4.2` / `0.5.0`
+- **Workflow flags** — `release-only`, `breaking-change`
+
+Milestones track per-release sprints. Current active milestone:
+`v0.4.1`.
+
+Project v2 board is **active**: <https://github.com/orgs/tastile/projects/2>
+("Tastile Desktop Sprint Board", linked to this repo). Default Status
+field (`Todo` / `In Progress` / `Done`) drives the Kanban. Required
+custom fields per ADR-0009:
+
+- **Priority** — `P0` / `P1` / `P2`
+- **Size** — `S` / `M` / `L`
+- **Target Version** — `0.4.1` / `0.4.2` / `0.5.0`
+- **Area** — `auth` / `api` / `ui` / `test` / `build` / `release` / `i18n`
+- **Execution Generation** — numeric, used for fencing per
+  PROMPT.ja.md §17
+
+Status cannot transition to `Ready` until all required custom fields
+are populated. WIP cap on `In Progress` is a follow-up.
+
+## Branch and PR rules (ADR-0007)
+
+- `main` is the released / integrated state. No direct push.
+- `release-<major>-<minor>-<patch>` is the active sprint trunk.
+- Ticket branch name = Issue number only (no `feature/`, `fix/`, `docs/`
+  prefix, no slug). See Issue #20 for the policy rationale and
+  exception list.
+- Every durable ticket branch gets a published remote head + Draft PR
+  immediately after its first meaningful commit (canonical start
+  procedure from PROMPT.ja.md §12).
+- Stacked ticket PRs are allowed within the same target release;
+  intermediate predecessor-branch merges never close a downstream
+  Issue — only `release-x-y-z -> main` landing closes it.
