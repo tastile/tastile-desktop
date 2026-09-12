@@ -9,10 +9,8 @@ namespace TastileDesktop.Views;
 /// <summary>
 /// Native BetterAuth sign-in window. The user enters their email + password
 /// here; on submit we POST to <c>/api/auth/sign-in/email</c> on the web
-/// backend (no embedded WebView, no OAuth callback handler). Social sign-in
-/// (Google/Apple) still opens the system browser to the web sign-in page
-/// because the redirect-to-desktop follow-up is owned by tastile-web and is
-/// not implemented yet (see ADR 2026-08-22).
+/// backend (no embedded WebView and no OAuth callback handler). Social sign-in
+/// stays hidden until an installed-app handoff can persist a desktop session.
 /// </summary>
 public sealed partial class AuthWindow : Window
 {
@@ -83,17 +81,6 @@ public sealed partial class AuthWindow : Window
     private async void OnCreateAccountClick(object sender, RoutedEventArgs e)
     {
         OpenExternalUrl($"{AppSettings.WebBaseUrl}/auth/signup");
-        await System.Threading.Tasks.Task.CompletedTask;
-    }
-
-    private async void OnSocialSignInClick(object sender, RoutedEventArgs e)
-    {
-        // MVP social fallback: hand off to the web sign-in surface so the
-        // existing provider-based sign-in keeps working. The follow-up that
-        // routes the success back to the desktop client (via the tastile://
-        // protocol or an installed-app handoff) lives in tastile-web and is
-        // tracked under the same ADR-2026-08-22 work item.
-        OpenExternalUrl($"{AppSettings.WebBaseUrl}/login?provider=google");
         await System.Threading.Tasks.Task.CompletedTask;
     }
 
