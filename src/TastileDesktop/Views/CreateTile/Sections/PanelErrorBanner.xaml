@@ -4,8 +4,8 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Border Background="{ThemeResource SystemFillColorCriticalBrush}" BorderBrush="{ThemeResource SystemFillColorCriticalBrush}" BorderThickness="1" CornerRadius="4" Padding="12,8">
         <StackPanel Spacing="2">
-            <TextBlock x:Name="TitleTextBlock" Foreground="{ThemeResource SystemFillColorCriticalBrush}" FontWeight="SemiBold" />
-            <TextBlock x:Name="BodyTextBlock" Foreground="{ThemeResource SystemFillColorCriticalBrush}" TextWrapping="Wrap" />
+            <TextBlock x:Name="TitleTextBlock" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" FontWeight="SemiBold" />
+            <TextBlock x:Name="BodyTextBlock" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" TextWrapping="Wrap" />
         </StackPanel>
     </Border>
 </UserControl>
