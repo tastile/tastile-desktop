@@ -98,9 +98,10 @@ Idle phase:
 
 ## Commands
 ```bash
-# Canonical local validation (unit tests + dual desktop build + TimelineWindow
-# connector safety check). This is what CI runs and what the workspace-level
-# verify-tastile-change skill expects.
+# Canonical local validation (dotnet format + NuGet vulnerability scan +
+# unit tests + dual desktop build + TimelineWindow connector safety check).
+# This is what CI runs and what the workspace-level verify-tastile-change
+# skill expects.
 .\scripts\check.ps1
 
 # Unit tests only (no desktop build — useful without a sibling tastile-core):
@@ -130,9 +131,10 @@ dotnet run --project src/TastileDesktop
 Use the same version string for the app build, installer filename, and
 hosted update manifest so the desktop's version compare stays correct.
 
-Two test projects exist: `tests/TastileDesktop.Tests` (broad resolver /
-service coverage) and `tests/TastileDesktop.Task2.Tests` (focused Task2
-suite). `check.ps1` runs both when present.
+One test project exists: `tests/TastileDesktop.Tests` (broad resolver /
+service / contract coverage, ~196 cases). `check.ps1` runs it together
+with `dotnet format --verify-no-changes` and a NuGet vulnerability scan
+before the desktop build and the `TimelineWindow` connector wiring check.
 
 ## Local data footprint
 
@@ -183,11 +185,11 @@ Custom labels created for sprint and Kanban bookkeeping:
 - **Priority** — `priority: P0` / `P1` / `P2`
 - **Size** — `size: S` / `M` / `L`
 - **Area** — `area: auth` / `api` / `ui` / `test` / `build` / `release` / `i18n`
-- **Target version** — `target-version: 0.4.1` / `0.4.2` / `0.5.0`
+- **Target version** — `target-version: 0.6.0`
 - **Workflow flags** — `release-only`, `breaking-change`
 
 Milestones track per-release sprints. Current active milestone:
-`v0.4.1`.
+`v0.6.0`.
 
 Project v2 board is **active**: <https://github.com/orgs/tastile/projects/2>
 ("Tastile Desktop Sprint Board", linked to this repo). Default Status
@@ -196,7 +198,7 @@ custom fields per ADR-0009:
 
 - **Priority** — `P0` / `P1` / `P2`
 - **Size** — `S` / `M` / `L`
-- **Target Version** — `0.4.1` / `0.4.2` / `0.5.0`
+- **Target Version** — `0.6.0`
 - **Area** — `auth` / `api` / `ui` / `test` / `build` / `release` / `i18n`
 - **Execution Generation** — numeric, used for fencing per
   PROMPT.ja.md §17

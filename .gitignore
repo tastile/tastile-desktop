@@ -5,15 +5,49 @@
 .cursor/
 .vscode/
 
+# Local agent metadata (project-local .claude/settings.json + .claude/hooks/
+# are explicitly tracked via the implicit positive rules below — do not blanket
+# ignore .claude/ here).
+.agent-loop/
+.agent-loop/cache/
+.agent-loop/tests/
+
+# Worktrees — never create, but ignore if a host environment produces one
+.worktrees/
+
 # Local / test artifacts
 artifacts/
 *.log
+
+# Actual environment values (examples remain tracked)
 .env
+.env.development
+.env.production
+.env.local
+.env.*.local
+
+# Project-local transient output and reference clones (must NEVER be committed
+# or referenced as a build/runtime dependency — see docs/decisions.md)
+.tmp/
+.reference/
 
 # Build outputs
 bin/
 obj/
 publish/
+
+# Test artifacts (dotnet test / coverlet / vstest output)
+**/TestResults/
+*.trx
+*.coverage
+*.coveragexml
+coverage.*.xml
+coverage.opencover.xml
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
 
 # Windows signing — must never be committed
 *.pfx
@@ -24,3 +58,7 @@ signing.cert
 # Development overrides
 appsettings.Development.json
 appsettings.Local.json
+
+# sops loader output (plain text .env files)
+!.env.*.example
+!.env.*.sops

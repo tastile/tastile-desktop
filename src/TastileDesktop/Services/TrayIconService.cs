@@ -59,7 +59,7 @@ public class TrayIconService : IDisposable
             ContextMenuMode = ContextMenuMode.SecondWindow,
             NoLeftClickDelay = true,
         };
-        
+
         // Resolve icon path across unpackaged, packaged, and legacy install layouts
         var iconCandidates = new[]
         {
@@ -92,10 +92,10 @@ public class TrayIconService : IDisposable
         // Subscribe to VM changes to update menu and icon
         _viewModel.PropertyChanged += OnViewModelPropertyChanged;
         AuthService.Instance.AuthStateChanged += OnAuthStateChanged;
-        
+
         // Set initial connection status
         UpdateTrayIconStatus();
-        
+
         // Force create the tray icon first, WITHOUT context menu
         try
         {
@@ -124,14 +124,14 @@ public class TrayIconService : IDisposable
             System.Diagnostics.Debug.WriteLine($"Failed to assign context flyout: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// Update tray icon and tooltip based on connection status
     /// </summary>
     private void UpdateTrayIconStatus()
     {
         if (_trayIcon == null) return;
-        
+
         try
         {
             if (_viewModel.IsConnected)
@@ -147,7 +147,7 @@ public class TrayIconService : IDisposable
             {
                 _trayIcon.ToolTipText = "Tastile - Offline";
             }
-            
+
             // Icon stays fixed after initialization; only tooltip text changes
         }
         catch (Exception ex)
@@ -296,7 +296,7 @@ public class TrayIconService : IDisposable
         {
             RefreshContextMenuState();
         }
-        
+
         // Update icon when connection status changes
         if (string.IsNullOrEmpty(e.PropertyName) ||
             e.PropertyName == nameof(MainViewModel.IsConnected) ||

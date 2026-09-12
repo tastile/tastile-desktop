@@ -1,5 +1,5 @@
-using TastileDesktop.Services;
 using System.IO;
+using TastileDesktop.Services;
 
 namespace TastileDesktop.Tests;
 

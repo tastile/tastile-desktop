@@ -79,36 +79,36 @@ public static class MonthCalendarResolver
     IReadOnlyList<TimelineItemView> items,
     DateTimeOffset anchorLocal,
     double hoursPerPixel)
-{
-    var todayLocal = DateTimeOffset.Now.ToLocalTime();
-    var weekStart = GetWeekStart(anchorLocal);
-    var columns = new List<WeekTimelineColumn>(7);
-
-    for (int i = 0; i < 7; i++)
     {
-        var dayDate = weekStart.AddDays(i);
-        var dayItems = items
-            .Where(item => IsItemOnDate(item, dayDate))
-            .ToList();
+        var todayLocal = DateTimeOffset.Now.ToLocalTime();
+        var weekStart = GetWeekStart(anchorLocal);
+        var columns = new List<WeekTimelineColumn>(7);
 
-        var blocks = ResolveDayBlocks(dayItems, dayDate, hoursPerPixel);
-
-        columns.Add(new WeekTimelineColumn
+        for (int i = 0; i < 7; i++)
         {
-            DayOfWeekIndex = i,
-            DayLabel = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }[i],
-            DayNumber = $"{dayDate.Month}/{dayDate.Day}",
-            IsToday = dayDate.Date == todayLocal.Date,
-            Blocks = blocks
-        });
+            var dayDate = weekStart.AddDays(i);
+            var dayItems = items
+                .Where(item => IsItemOnDate(item, dayDate))
+                .ToList();
+
+            var blocks = ResolveDayBlocks(dayItems, dayDate, hoursPerPixel);
+
+            columns.Add(new WeekTimelineColumn
+            {
+                DayOfWeekIndex = i,
+                DayLabel = new[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }[i],
+                DayNumber = $"{dayDate.Month}/{dayDate.Day}",
+                IsToday = dayDate.Date == todayLocal.Date,
+                Blocks = blocks
+            });
+        }
+
+        return columns;
     }
 
-    return columns;
-}
-
-public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows(
-        IReadOnlyList<TimelineItemView> items,
-        DateTimeOffset anchorLocal)
+    public static IReadOnlyList<IReadOnlyList<YearCalendarMonth>> BuildYearMonthRows(
+            IReadOnlyList<TimelineItemView> items,
+            DateTimeOffset anchorLocal)
     {
         var entriesByDate = BuildEntriesByDate(items);
         var months = BuildYearMonths(entriesByDate, anchorLocal).ToList();

@@ -1,0 +1,34 @@
+<Project>
+
+  <!--
+    Project-wide MSBuild defaults for every .csproj under this repository.
+    This file is automatically imported by MSBuild before each project file
+    is evaluated, so individual csproj entries can still override it.
+
+    Keep this file minimal. Project-specific workarounds (XamlCompiler exit
+    code, embedded resource globbing, etc.) belong in
+    src/TastileDesktop/Directory.Build.{props,targets}, NOT here.
+  -->
+
+  <PropertyGroup>
+    <!--
+      TreatWarningsAsErrors: per project-agent-init policy §28, every project-
+      addressable warning must be fixed, not suppressed. The current
+      `dotnet build` of the desktop + test projects reports 0 warnings /
+      0 errors with this flag set. If a future dependency upgrade surfaces
+      a non-suppressible warning, fix it at the source — do NOT add
+      `<NoWarn>` or `<WarningsNotAsErrors>` to bypass it.
+    -->
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+    <!--
+      AnalysisLevel + EnforceCodeStyleInBuild: opt into the latest SDK
+      analyzer rules and treat code-style violations as build warnings.
+      Combined with TreatWarningsAsErrors above, code-style drift becomes
+      a build-time gate.
+    -->
+    <AnalysisLevel>latest</AnalysisLevel>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+
+</Project>

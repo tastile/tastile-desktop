@@ -1,10 +1,10 @@
-using Microsoft.UI.Xaml;
-using Microsoft.UI.Windowing;
-using Microsoft.UI.Xaml.Media;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using Windows.UI;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Media;
 using Windows.Graphics;
+using Windows.UI;
 
 namespace TastileDesktop.Services;
 
@@ -38,7 +38,7 @@ internal static class FloatingWindowHelper
         ApplyWindowTheme(window);
 
         var hwnd = WinRT.Interop.WindowNative.GetWindowHandle(window);
-        
+
         var appWindow = GetAppWindow(window);
         if (appWindow is null)
         {
@@ -78,7 +78,7 @@ internal static class FloatingWindowHelper
     private static IReadOnlyList<DisplayInfo>? _lastDisplays;
     private static string? _lastVerticalPosition;
     private static bool _forcePositionUpdate;
-    
+
     public static void PlaceQuickPanel(Window window, TastileSettings settings)
     {
         var appWindow = GetAppWindow(window);
@@ -116,23 +116,23 @@ internal static class FloatingWindowHelper
         // Check if we need to move: first time, force update, or vertical position changed
         var displayChanged = _lastWorkArea == null || _displayIndex != _lastDisplays?.Count;
         var verticalPositionChanged = _lastVerticalPosition != settings.QuickPanelVerticalPosition;
-        
+
         if (_lastWorkArea == null || displayChanged || verticalPositionChanged || _forcePositionUpdate)
         {
             var width = 892;
             var height = 88;
             var x = workArea.X + (workArea.Width - width) / 2;
-            
+
             var y = string.Equals(settings.QuickPanelVerticalPosition, QuickPanelVerticalPositions.Bottom, StringComparison.Ordinal)
                 ? workArea.Y + workArea.Height - height - 24
                 : workArea.Y + 24;
-            
+
             System.Diagnostics.Debug.WriteLine($"[PlaceQuickPanel] Display {_displayIndex}: L={workArea.X}, T={workArea.Y}, R={workArea.X + workArea.Width}, B={workArea.Y + workArea.Height}");
             System.Diagnostics.Debug.WriteLine($"[PlaceQuickPanel] Position: X={x}, Y={y}, W={width}, H={height}");
-            
+
             appWindow.Resize(new SizeInt32(width, height));
             appWindow.Move(new Windows.Graphics.PointInt32(x, y));
-            
+
             _lastWorkArea = workArea;
             _lastDisplays = displays;
             _lastVerticalPosition = settings.QuickPanelVerticalPosition;
@@ -143,7 +143,7 @@ internal static class FloatingWindowHelper
     public static void RotateToNextDisplay(Window window, TastileSettings settings)
     {
         _forcePositionUpdate = true;
-        
+
         var displays = PromptToastDisplayEnumerator.GetDisplays();
         if (displays.Count == 0)
         {
@@ -152,7 +152,7 @@ internal static class FloatingWindowHelper
 
         // Rotate to next display
         _displayIndex = (_displayIndex + 1) % displays.Count;
-        
+
         var appWindow = GetAppWindow(window);
         if (appWindow is null)
         {
@@ -163,16 +163,16 @@ internal static class FloatingWindowHelper
         var width = 892;
         var height = 88;
         var x = workArea.X + (workArea.Width - width) / 2;
-        
+
         var y = string.Equals(settings.QuickPanelVerticalPosition, QuickPanelVerticalPositions.Bottom, StringComparison.Ordinal)
             ? workArea.Y + workArea.Height - height - 24
             : workArea.Y + 24;
-        
+
         System.Diagnostics.Debug.WriteLine($"[RotateToNextDisplay] Display {_displayIndex}: L={workArea.X}, T={workArea.Y}");
-        
+
         appWindow.Resize(new SizeInt32(width, height));
         appWindow.Move(new Windows.Graphics.PointInt32(x, y));
-        
+
         _lastWorkArea = workArea;
         _lastDisplays = displays;
         _lastVerticalPosition = settings.QuickPanelVerticalPosition;
@@ -183,22 +183,22 @@ internal static class FloatingWindowHelper
         _forcePositionUpdate = true;
         PlaceQuickPanel(window, settings);
     }
-    
+
     // PowerToys方式: GetMonitorInfoを使用してワークエリアを取得
     private static RECT GetMonitorWorkArea(IntPtr hwnd)
     {
         // ウィンドウがあるモニターを取得
         var hMonitor = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
-        
+
         // MONITORINFOを取得
         var mi = new MONITORINFO();
         mi.cbSize = Marshal.SizeOf(typeof(MONITORINFO));
-        
+
         if (GetMonitorInfo(hMonitor, ref mi))
         {
             return mi.rcWork; // ワークエリア（タスクバー除く）
         }
-        
+
         // フォールバック: プライマリディスプレイ
         return new RECT { Left = 0, Top = 0, Right = 1920, Bottom = 1080 };
     }
@@ -485,7 +485,7 @@ internal static class FloatingWindowHelper
     private const uint DwmWindowCornerPreferenceRoundSmall = 3;  // 4px
     private const uint DwmWindowCornerPreferenceDoNotRound = 1;
     private const uint DwmColorNone = 0xFFFFFFFE;
-    
+
     // Monitor API constants
     private const uint MONITOR_DEFAULTTONEAREST = 2;
 

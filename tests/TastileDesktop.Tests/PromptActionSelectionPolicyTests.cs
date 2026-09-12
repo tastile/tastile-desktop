@@ -1,5 +1,5 @@
-using TastileDesktop.Services;
 using TastileDesktop.Models;
+using TastileDesktop.Services;
 
 namespace TastileDesktop.Tests;
 

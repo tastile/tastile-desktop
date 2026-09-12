@@ -14,7 +14,7 @@ public static class QuickBarPresentationResolver
     {
         return new QuickBarPresentation(title, null, null, false);
     }
-    
+
     public static QuickBarPresentation Resolve(
         bool isConnected,
         bool isWorking,

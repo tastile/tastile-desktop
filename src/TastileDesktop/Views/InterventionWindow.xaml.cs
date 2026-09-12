@@ -1,8 +1,8 @@
+using System.Runtime.InteropServices;
 using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
-using System.Runtime.InteropServices;
 using TastileDesktop.Models;
 using TastileDesktop.Resources;
 using TastileDesktop.Services;

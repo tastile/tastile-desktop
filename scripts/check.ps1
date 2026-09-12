@@ -86,23 +86,22 @@ function Assert-NoTimelineToolbarConnectorWiring {
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $desktopProject = Join-Path $repoRoot "src\TastileDesktop\TastileDesktop.csproj"
 $testProject = Join-Path $repoRoot "tests\TastileDesktop.Tests\TastileDesktop.Tests.csproj"
-$task2TestProject = Join-Path $repoRoot "tests\TastileDesktop.Task2.Tests\TastileDesktop.Task2.Tests.csproj"
 $desktopProjectDir = Split-Path -Parent $desktopProject
 $desktopObjDir = Join-Path $desktopProjectDir "obj"
 $desktopBinDir = Join-Path $desktopProjectDir "bin"
 
 Push-Location $repoRoot
 try {
+    Write-Host "==> Verifying .editorconfig formatting (dotnet format --verify-no-changes)"
+    Invoke-Step -Action { dotnet format $desktopProject --verify-no-changes --no-restore --verbosity minimal } -FailureMessage "dotnet format found violations in the desktop project. Run 'dotnet format' locally and re-run this script."
+    Invoke-Step -Action { dotnet format $testProject --verify-no-changes --no-restore --verbosity minimal } -FailureMessage "dotnet format found violations in the test project. Run 'dotnet format' locally and re-run this script."
+
+    Write-Host "==> Scanning NuGet dependencies for known vulnerabilities"
+    Invoke-Step -Action { dotnet list $desktopProject package --vulnerable --include-transitive } -FailureMessage "Vulnerable NuGet packages detected in the desktop project. Update the affected packages and re-run."
+    Invoke-Step -Action { dotnet list $testProject package --vulnerable --include-transitive } -FailureMessage "Vulnerable NuGet packages detected in the test project. Update the affected packages and re-run."
+
     Write-Host "==> Running desktop unit tests"
     Invoke-Step -Action { dotnet test $testProject -c Debug -warnaserror } -FailureMessage "Desktop unit tests failed."
-
-    if (Test-Path $task2TestProject) {
-        Write-Host "==> Running desktop Task2 unit tests"
-        Invoke-Step -Action { dotnet test $task2TestProject -c Debug -warnaserror } -FailureMessage "Desktop Task2 unit tests failed."
-    }
-    else {
-        Write-Host "==> Skipping desktop Task2 tests (project not found: $task2TestProject)"
-    }
 
     if ($SkipDesktopBuild) {
         Write-Host "==> Skipping desktop build"

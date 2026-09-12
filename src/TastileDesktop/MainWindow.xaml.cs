@@ -316,12 +316,12 @@ public sealed partial class MainWindow : Window
         {
             Log($"[RequestPromptForTileAsync] Requesting prompt for tile: {tileId}");
             App.DebugLog($"[RequestPromptForTileAsync] Requesting prompt for tile: {tileId}");
-            
+
             var response = await ViewModel.ApiClient.RequestPromptAsync(tileId);
-            
+
             Log($"[RequestPromptForTileAsync] Response: ok={response?.Ok}, hasPrompt={response?.Prompt != null}, error={response?.Error}");
             App.DebugLog($"[RequestPromptForTileAsync] Response: ok={response?.Ok}, hasPrompt={response?.Prompt != null}, error={response?.Error}");
-            
+
             if (response?.Ok == true && response.Prompt != null)
             {
                 Log($"[RequestPromptForTileAsync] Injecting prompt: {response.Prompt.Title}");

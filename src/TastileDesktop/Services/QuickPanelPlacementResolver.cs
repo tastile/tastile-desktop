@@ -25,11 +25,11 @@ public static class QuickPanelPlacementResolver
         var x = workArea.X + ((workArea.Width - width) / 2);
         // 上から24pxの位置
         var y = workArea.Y + topMargin;
-        
+
         // デバッグ出力
         System.Diagnostics.Debug.WriteLine($"[QuickPanelPlacement] workArea: X={workArea.X}, Y={workArea.Y}, W={workArea.Width}, H={workArea.Height}");
         System.Diagnostics.Debug.WriteLine($"[QuickPanelPlacement] computed: X={x}, Y={y}, W={width}, H={height}");
-        
+
         return new RectInt32(x, y, width, height);
     }
 }

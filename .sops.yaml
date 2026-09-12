@@ -1,0 +1,11 @@
+creation_rules:
+  - path_regex: \.env\.development\.sops$
+    kms: 'arn:aws:kms:ap-northeast-1:<account>:key/<dev-key-id>'
+  - path_regex: \.env\.dev\.sops$
+    kms: 'arn:aws:kms:ap-northeast-1:<account>:key/<dev-key-id>'
+  - path_regex: \.env\.staging\.sops$
+    kms: 'arn:aws:kms:ap-northeast-1:<account>:key/<staging-key-id>'
+  - path_regex: \.env\.production\.sops$
+    kms: 'arn:aws:kms:ap-northeast-1:<account>:key/<production-key-id>'
+  - path_regex: \.env\.product\.sops$
+    kms: 'arn:aws:kms:ap-northeast-1:<account>:key/<production-key-id>'
