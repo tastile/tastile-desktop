@@ -18,14 +18,14 @@
                     <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="#FF1A88DE" />
                     <!-- Intervention-only emergency resources -->
                     <SolidColorBrush x:Key="InterventionScrimBrush" Color="#A6000000" />
-                    <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCriticalBrush}" />
+                    <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCritical}" />
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
                     <SolidColorBrush x:Key="OverrideAccentFillBrush" Color="#FF0078D4" />
                     <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="#FF1A88DE" />
                     <SolidColorBrush x:Key="InterventionScrimBrush" Color="#66000000" />
-                    <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCriticalBrush}" />
+                    <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCritical}" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
 
@@ -90,7 +90,7 @@
             <StaticResource x:Key="AppBorderBrush"               ResourceKey="ControlStrokeColorDefaultBrush"/>
             <StaticResource x:Key="AppBorderStrongBrush"         ResourceKey="ControlStrokeColorSecondaryBrush"/>
             <StaticResource x:Key="AccentBrush"                  ResourceKey="AccentFillColorDefaultBrush"/>
-            <StaticResource x:Key="AppPrimaryBrush"              ResourceKey="AccentFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppPrimaryBrush"              ResourceKey="OverrideAccentFillBrush"/>
             <StaticResource x:Key="AppPrimaryForegroundBrush"    ResourceKey="TextOnAccentFillColorPrimaryBrush"/>
             <StaticResource x:Key="AppPrimaryHoverBrush"         ResourceKey="AccentFillColorSecondaryBrush"/>
             <StaticResource x:Key="PrimaryForegroundBrush"       ResourceKey="TextFillColorPrimaryBrush"/>
