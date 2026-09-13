@@ -19,6 +19,7 @@ public static class AppSettings
                     "Missing environment variable TASTILE_WEB_ACCOUNT_URL — please set it before running. See .env.example for the contract.");
             }
 
+            RequireHttpsForRemoteUrl(raw, "TASTILE_WEB_ACCOUNT_URL");
             return raw;
         }
     }
@@ -34,7 +35,9 @@ public static class AppSettings
                     "Missing environment variable TASTILE_API_BASE_URL — please set it before running. See .env.example for the contract.");
             }
 
-            return raw.TrimEnd('/');
+            var trimmed = raw.TrimEnd('/');
+            RequireHttpsForRemoteUrl(trimmed, "TASTILE_API_BASE_URL");
+            return trimmed;
         }
     }
 
@@ -51,7 +54,9 @@ public static class AppSettings
             var raw = Environment.GetEnvironmentVariable("TASTILE_WEB_BASE_URL")?.Trim();
             if (!string.IsNullOrEmpty(raw))
             {
-                return raw.TrimEnd('/');
+                var trimmed = raw.TrimEnd('/');
+                RequireHttpsForRemoteUrl(trimmed, "TASTILE_WEB_BASE_URL");
+                return trimmed;
             }
 
             // Fallback: derive from WebAccountUrl (the user-account dashboard).
@@ -59,7 +64,9 @@ public static class AppSettings
             var accountUrl = Environment.GetEnvironmentVariable("TASTILE_WEB_ACCOUNT_URL")?.Trim();
             if (!string.IsNullOrEmpty(accountUrl))
             {
-                return accountUrl.TrimEnd('/');
+                var trimmed = accountUrl.TrimEnd('/');
+                RequireHttpsForRemoteUrl(trimmed, "TASTILE_WEB_BASE_URL");
+                return trimmed;
             }
 
             throw new InvalidOperationException(
@@ -79,4 +86,34 @@ public static class AppSettings
 
     public static bool EnableSse =>
         Environment.GetEnvironmentVariable("TASTILE_ENABLE_SSE") == "1";
+
+    /// <summary>
+    /// Reject cleartext http:// URLs unless the host is a loopback address used
+    /// for local development. Production deploys must always use https:// so
+    /// the desktop does not transmit BetterAuth session/api tokens in cleartext
+    /// (CWE-319). Loopback hosts are exempt so <c>127.0.0.1</c>, <c>localhost</c>,
+    /// and <c>[::1]</c> remain usable for the local tastile-core daemon flow.
+    /// </summary>
+    private static void RequireHttpsForRemoteUrl(string raw, string envVarName)
+    {
+        if (!Uri.TryCreate(raw, UriKind.Absolute, out var uri))
+        {
+            throw new InvalidOperationException(
+                $"{envVarName} is not a valid absolute URL: '{raw}'.");
+        }
+        if (uri.Scheme != Uri.UriSchemeHttps && !IsLoopbackHost(uri))
+        {
+            throw new InvalidOperationException(
+                $"{envVarName} must use https:// unless pointing at a loopback host; got '{raw}'.");
+        }
+    }
+
+    private static bool IsLoopbackHost(Uri uri)
+    {
+        var host = uri.Host;
+        return host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("127.0.0.1", StringComparison.Ordinal)
+            || host.Equals("[::1]", StringComparison.OrdinalIgnoreCase)
+            || host.Equals("::1", StringComparison.OrdinalIgnoreCase);
+    }
 }

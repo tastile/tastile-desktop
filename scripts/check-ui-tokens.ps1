@@ -17,7 +17,9 @@ $excludeRegex = '\\(bin|obj)\\'
 # This excludes string-content attributes like `PlaceholderText="#0078D4"` where the
 # `#` is inside a quoted string but is not a brush value. Earlier attempt used just
 # `="` as the boundary, which incorrectly matched string content.
-$hexPattern = '(?<=(?:Background|Foreground|BorderBrush|Fill|Color|Stroke)\s*=\s*")#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?'
+# R13 fix: replace variable-length lookbehind with named capture groups for
+# portability across .NET runtimes that do not support variable-length lookbehind.
+$hexPattern = '(?<attr>Background|Foreground|BorderBrush|Fill|Color|Stroke)\s*=\s*"(?<hex>#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?)'
 
 $failures = New-Object System.Collections.Generic.List[string]
 
@@ -31,7 +33,7 @@ function Test-File {
         $hexMatches = [regex]::Matches($content, $hexPattern)
         foreach ($m in $hexMatches) {
             $lineNumber = ($content.Substring(0, $m.Index) -split "`n").Count
-            $failures.Add("$rel`:$lineNumber`: literal hex '$($m.Value)' (use ThemeResource instead).") | Out-Null
+            $failures.Add("$rel`:$lineNumber`: literal hex '$($m.Groups['hex'].Value)' (use ThemeResource instead).") | Out-Null
         }
     }
 }
