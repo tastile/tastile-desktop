@@ -8,7 +8,7 @@
             "type": "command",
             "command": "bun",
             "args": [
-              ".claude/hooks/git-guard.mjs"
+              "${CLAUDE_PROJECT_DIR}/.claude/hooks/git-guard.mjs"
             ],
             "timeout": 10,
             "statusMessage": "Scanning for destructive commands"
@@ -16,5 +16,21 @@
         ]
       }
     ]
+  },
+  "enabledPlugins": {
+    "winui@win-dev-skills": true,
+    "microsoft-docs@claude-plugins-official": true
+  },
+  "extraKnownMarketplaces": {
+    "win-dev-skills": {
+      "source": {
+        "source": "github",
+        "repo": "microsoft/win-dev-skills",
+        "sparsePaths": [
+          ".claude-plugin",
+          "plugins/winui"
+        ]
+      }
+    }
   }
 }
