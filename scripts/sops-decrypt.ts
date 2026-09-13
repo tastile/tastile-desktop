@@ -1,12 +1,12 @@
 #!/usr/bin/env bun
 // Canonical source: tastile-root/scripts/sops-decrypt.ts @ 0745d6c
 // Local copy per spec §1 (no npm publishing infra in v1).
+// Local extension (release-0-6-0): AWS SDK modules are lazy-imported inside the
+// functions that need them so unit tests can load this module without
+// @aws-sdk/* installed. Canonical will be re-synced; this note must be kept.
 import { spawn } from "node:child_process";
 import { chmod, mkdir, writeFile, stat } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
-import { STSClient, GetCallerIdentityCommand } from "@aws-sdk/client-sts";
-import { KMSClient } from "@aws-sdk/client-kms";
-import { defaultProvider } from "@aws-sdk/credential-provider-node";
 import { config, type SopsEnvConfig } from "./sops.config";
 
 export type DecryptResult = {
@@ -45,6 +45,8 @@ export async function assertSopsInstalled(): Promise<void> {
 }
 
 export async function assertCredentials(region: string): Promise<string> {
+  const { STSClient, GetCallerIdentityCommand } = await import("@aws-sdk/client-sts");
+  const { defaultProvider } = await import("@aws-sdk/credential-provider-node");
   const sts = new STSClient({ region, credentials: await defaultProvider()() });
   try {
     const identity = await sts.send(new GetCallerIdentityCommand({}));
@@ -103,6 +105,8 @@ async function main(): Promise<void> {
   const cfg = loadConfig(env);
   const callerArn = await assertCredentials(cfg.awsRegion);
   // Validate KMS access once with a no-op describe (cheap, surfaces AccessDenied)
+  const { KMSClient } = await import("@aws-sdk/client-kms");
+  const { defaultProvider } = await import("@aws-sdk/credential-provider-node");
   const kms = new KMSClient({ region: cfg.awsRegion, credentials: await defaultProvider()() });
   try {
     await kms.send({ DescribeKeyCommand: undefined as never } as never); // placeholder; replaced in Task 3
