@@ -34,7 +34,21 @@ public sealed class SecureTokenStore : ITokenStore
         {
             var encrypted = await File.ReadAllBytesAsync(FilePath).ConfigureAwait(false);
             var plain = ProtectedData.Unprotect(encrypted, optionalEntropy: null, DataProtectionScope.CurrentUser);
-            return JsonSerializer.Deserialize<TastileDesktop.Models.AuthSession>(plain, JsonOptions);
+            var session = JsonSerializer.Deserialize<TastileDesktop.Models.AuthSession>(plain, JsonOptions);
+            // Reject legacy or malformed sessions missing BetterAuth required fields.
+            // System.Text.Json may return a record with null defaults for non-nullable
+            // record parameters when JSON keys are absent (e.g. pre-migration Cognito
+            // credentials.bin contents). Returning null here forces re-auth instead of
+            // handing downstream code an AuthSession that looks valid but cannot
+            // authenticate.
+            if (session is null
+                || string.IsNullOrWhiteSpace(session.SessionToken)
+                || string.IsNullOrWhiteSpace(session.ApiToken)
+                || string.IsNullOrWhiteSpace(session.UserId))
+            {
+                return null;
+            }
+            return session;
         }
         catch
         {

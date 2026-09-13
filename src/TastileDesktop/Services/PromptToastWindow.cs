@@ -43,7 +43,7 @@ public sealed class PromptToastWindow : Window
             FontWeight = FontWeights.SemiBold,
             TextWrapping = TextWrapping.NoWrap,
             TextTrimming = TextTrimming.CharacterEllipsis,
-            Foreground = (Brush)Application.Current.Resources["PrimaryForegroundBrush"],
+            Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"],
         };
 
         _bodyText = new TextBlock
@@ -52,14 +52,14 @@ public sealed class PromptToastWindow : Window
             TextWrapping = TextWrapping.Wrap,
             TextTrimming = TextTrimming.CharacterEllipsis,
             MaxLines = 2,
-            Foreground = (Brush)Application.Current.Resources["SecondaryForegroundBrush"],
+            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
             Margin = new Thickness(0, 4, 0, 0),
         };
         _countdownText = new TextBlock
         {
             FontSize = 11,
             TextWrapping = TextWrapping.NoWrap,
-            Foreground = (Brush)Application.Current.Resources["SecondaryForegroundBrush"],
+            Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"],
             Margin = new Thickness(0, 4, 0, 0),
             Visibility = Visibility.Collapsed,
         };
@@ -143,8 +143,8 @@ public sealed class PromptToastWindow : Window
         {
             CornerRadius = new CornerRadius(8),
             BorderThickness = new Thickness(1),
-            BorderBrush = (Brush)Application.Current.Resources["AppBorderBrush"],
-            Background = (Brush)Application.Current.Resources["AppSurfaceElevatedBrush"],
+            BorderBrush = (Brush)Application.Current.Resources["ControlStrokeColorDefaultBrush"],
+            Background = (Brush)Application.Current.Resources["SolidBackgroundFillColorSecondaryBrush"],
             Padding = new Thickness(10, 8, 10, 8),
             HorizontalAlignment = HorizontalAlignment.Stretch,
             VerticalAlignment = VerticalAlignment.Stretch,
@@ -156,8 +156,18 @@ public sealed class PromptToastWindow : Window
         FloatingWindowHelper.SetAlwaysOnTop(this, true);
     }
 
+    public void RefreshThemeResources()
+    {
+        _titleText.Foreground = (Brush)Application.Current.Resources["TextFillColorPrimaryBrush"];
+        _bodyText.Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+        _countdownText.Foreground = (Brush)Application.Current.Resources["TextFillColorSecondaryBrush"];
+        _rootBorder.BorderBrush = (Brush)Application.Current.Resources["ControlStrokeColorDefaultBrush"];
+        _rootBorder.Background = (Brush)Application.Current.Resources["SolidBackgroundFillColorSecondaryBrush"];
+    }
+
     public void ShowPrompt(Models.PromptView prompt, int maxActions, Func<string, DateTimeOffset?, Task> actionHandler, Func<string, int?, Task>? deferHandler = null)
     {
+        RefreshThemeResources();
         _actionHandler = actionHandler;
         _deferHandler = deferHandler;
         _timeoutActionId = PromptTimeoutActionResolver.Resolve(prompt);
@@ -285,6 +295,7 @@ public sealed class PromptToastWindow : Window
 
     public void ShowBackdrop(Models.PromptView prompt, int waitingBehind)
     {
+        RefreshThemeResources();
         _actionHandler = null;
         _deferHandler = null;
         _timeoutActionId = null;

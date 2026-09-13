@@ -23,7 +23,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
@@ -36,7 +36,7 @@ jobs:
         run: bun test scripts/sops-decrypt.test.ts
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
           cache: true
@@ -53,12 +53,12 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: Checkout desktop repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           persist-credentials: false
 
       - name: Checkout core repo at sibling path
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: tastile/tastile-core
           token: ${{ secrets.CORE_REPO_READ_TOKEN }}
@@ -71,7 +71,7 @@ jobs:
           New-Item -ItemType Junction -Path "$env:GITHUB_WORKSPACE\..\tastile-core" -Target "$env:GITHUB_WORKSPACE\.deps\tastile-core" -Force | Out-Null
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v4
+        uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
           cache: true

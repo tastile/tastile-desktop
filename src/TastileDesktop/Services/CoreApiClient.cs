@@ -83,8 +83,11 @@ public class CoreApiClient
 
     /// <summary>
     /// Sends a request with an attached Bearer token (if a provider is configured).
-    /// On 401, attempts a token refresh once and retries using the OAuth2
-    /// access token (never the Cognito id_token, which is not valid v1 auth).
+    /// On 401, asks the configured refresh hook to validate the BetterAuth
+    /// session against <c>GET /api/auth/session</c> and retries the request
+    /// once with the (re-validated) BetterAuth session token. The refresh
+    /// hook returns <c>null</c> when the session is genuinely dead — in that
+    /// case we surface 401 to the caller so the UI can re-prompt for sign-in.
     /// </summary>
     private async Task<HttpResponseMessage> SendWithAuthAsync(
         HttpClient client,
@@ -103,9 +106,11 @@ public class CoreApiClient
             return response;
         }
 
-        // 401 → serialize refresh attempts to avoid Cognito revocation race.
-        // Reuse the *same* access token model the v1 API speaks; the Cognito
-        // id_token is never sent as a v1 bearer (PROJECT-TRUTH §Authentication).
+        // 401 → serialize refresh attempts so a single in-flight session
+        // validation is shared across concurrent callers. The refresh hook
+        // (BetterAuthAuthService.RefreshAsync) round-trips the session token
+        // against /api/auth/session and clears the local session on a hard
+        // 401, so a dead token cannot loop forever.
         response.Dispose();
         await _refreshLock.WaitAsync(cancellationToken);
         try
@@ -132,7 +137,7 @@ public class CoreApiClient
 
             var retryWithRefresh = new HttpRequestMessage(request.Method, request.RequestUri);
             if (request.Content is not null) retryWithRefresh.Content = request.Content;
-            retryWithRefresh.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.AccessToken);
+            retryWithRefresh.Headers.Authorization = new AuthenticationHeaderValue("Bearer", refreshed.SessionToken);
             return await client.SendAsync(retryWithRefresh, cancellationToken);
         }
         finally

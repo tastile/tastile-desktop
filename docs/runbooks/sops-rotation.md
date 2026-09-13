@@ -9,10 +9,11 @@
 
 2. **Edit the plain file** to reflect the new secret(s).
 
-3. **Re-encrypt in place**
+3. **Re-encrypt to the ciphertext file**
 
    ```bash
-   sops --encrypt --in-place --kms "arn:aws:kms:ap-northeast-1:<account>:key/<dev-key-id>" .env.development
+   sops --encrypt --kms "arn:aws:kms:ap-northeast-1:<account>:key/<dev-key-id>" --output .env.development.sops .env.development
+   rm .env.development
    ```
 
 4. **Verify diff**

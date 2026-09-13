@@ -20,6 +20,12 @@ describe("parseArgs", () => {
   it("rejects unknown env", () => {
     expect(() => parseArgs(["--env=bogus"])).toThrow();
   });
+  it("rejects inherited environment names", () => {
+    expect(() => parseArgs(["--env=constructor"])).toThrow();
+    expect(() => parseArgs(["--env=__proto__"])).toThrow();
+    expect(() => loadConfig("constructor")).toThrow();
+    expect(() => loadConfig("__proto__")).toThrow();
+  });
   it("emits check flag", () => {
     expect(parseArgs(["--env=production", "--check"]).check).toBe(true);
   });

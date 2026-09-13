@@ -73,7 +73,7 @@
                     </StackPanel>
                 </Border>
 
-                <TextBlock x:Name="ErrorTextBlock" Text="" Foreground="#FFB00020" TextWrapping="Wrap" />
+                <TextBlock x:Name="ErrorTextBlock" Text="" Foreground="{ThemeResource InterventionEmergencyBrush}" TextWrapping="Wrap" />
             </StackPanel>
         </ScrollViewer>
     </Grid>

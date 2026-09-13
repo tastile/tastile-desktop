@@ -13,7 +13,7 @@ Windows native client for the Tastile execution control system.
 ## Tech stack
 
 - C# / WinUI 3
-- Windows App SDK 1.7
+- Windows App SDK 1.8
 - .NET 9 application target, built with SDK pinned in `global.json`
 - CommunityToolkit.Mvvm
 - H.NotifyIcon.WinUI

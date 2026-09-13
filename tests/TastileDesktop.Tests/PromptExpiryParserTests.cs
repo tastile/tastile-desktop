@@ -1,6 +1,7 @@
-namespace TastileDesktop.Tests;
-
 using TastileDesktop.Services;
+using Xunit;
+
+namespace TastileDesktop.Tests;
 
 public sealed class PromptExpiryParserTests
 {

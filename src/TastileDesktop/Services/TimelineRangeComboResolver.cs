@@ -38,6 +38,7 @@ public static class TimelineRangeComboResolver
         return scaleUnit switch
         {
             TimelineScaleUnit.Day =>
+            (TimelineRangeOption[])
             [
                 new TimelineRangeOption(TimelineRangeMode.Day24, "24h"),
                 new TimelineRangeOption(TimelineRangeMode.AroundNow24, "±12h"),
@@ -45,12 +46,14 @@ public static class TimelineRangeComboResolver
                 new TimelineRangeOption(TimelineRangeMode.Custom, "Custom"),
             ],
             TimelineScaleUnit.Week =>
+            (TimelineRangeOption[])
             [
                 new TimelineRangeOption(TimelineRangeMode.Week1, "1w"),
                 new TimelineRangeOption(TimelineRangeMode.Week2, "2w"),
                 new TimelineRangeOption(TimelineRangeMode.Week4, "4w"),
             ],
             _ =>
+            (TimelineRangeOption[])
             [
                 new TimelineRangeOption(TimelineRangeMode.Month1, "1m"),
                 new TimelineRangeOption(TimelineRangeMode.Month3, "3m"),

@@ -92,6 +92,19 @@ $desktopBinDir = Join-Path $desktopProjectDir "bin"
 
 Push-Location $repoRoot
 try {
+    # Explicit `dotnet restore` before the --no-restore format steps.
+    # The CI runner uses actions/setup-dotnet@v4 with `cache: true`, which
+    # only restores a previously-uploaded NuGet cache. On a fresh cache hit
+    # (`Dotnet cache is not found` in setup-dotnet), `dotnet format
+    # --verify-no-changes --no-restore` runs against a non-existent
+    # project.assets.json and fails with CS0246 on every namespace that
+    # comes from a NuGet package (e.g. `using Xunit;` — the xunit assembly
+    # is never restored). Forcing a restore here is cheap on warm caches
+    # and prevents the false failure on cold ones.
+    Write-Host "==> Restoring NuGet packages"
+    Invoke-Step -Action { dotnet restore $desktopProject } -FailureMessage "dotnet restore failed for the desktop project."
+    Invoke-Step -Action { dotnet restore $testProject } -FailureMessage "dotnet restore failed for the test project."
+
     Write-Host "==> Verifying .editorconfig formatting (dotnet format --verify-no-changes)"
     Invoke-Step -Action { dotnet format $desktopProject --verify-no-changes --no-restore --verbosity minimal } -FailureMessage "dotnet format found violations in the desktop project. Run 'dotnet format' locally and re-run this script."
     Invoke-Step -Action { dotnet format $testProject --verify-no-changes --no-restore --verbosity minimal } -FailureMessage "dotnet format found violations in the test project. Run 'dotnet format' locally and re-run this script."
@@ -102,6 +115,10 @@ try {
 
     Write-Host "==> Running desktop unit tests"
     Invoke-Step -Action { dotnet test $testProject -c Debug -warnaserror } -FailureMessage "Desktop unit tests failed."
+
+    Write-Host "==> Verifying UI tokens (no literal colors outside the token dictionary)"
+    $checkUiTokensScript = Join-Path $PSScriptRoot "check-ui-tokens.ps1"
+    Invoke-Step -Action { & pwsh -NoProfile -File $checkUiTokensScript } -FailureMessage "UI token checks failed. See output above."
 
     if ($SkipDesktopBuild) {
         Write-Host "==> Skipping desktop build"
@@ -125,6 +142,7 @@ try {
 
     Write-Host "==> Validating TimelineWindow generated connector wiring"
     Assert-NoTimelineToolbarConnectorWiring -DesktopObjDir $desktopObjDir
+
 }
 finally {
     Pop-Location

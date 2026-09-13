@@ -2,6 +2,7 @@ using H.NotifyIcon;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 using TastileDesktop.ViewModels;
+using TastileDesktop.Views;
 
 namespace TastileDesktop.Services;
 
@@ -505,9 +506,17 @@ public class TrayIconService : IDisposable
 
     private async Task SignInAsync()
     {
+        // Tray-driven sign-in: present the native BetterAuth sign-in window.
+        // The window drives the email/password flow itself; we just spawn it
+        // on the UI thread and let it close itself once auth completes.
         try
         {
-            await CognitoAuthService.Instance.StartHostedUiAsync();
+            _mainWindow?.DispatcherQueue.TryEnqueue(() =>
+            {
+                var authWindow = new AuthWindow();
+                authWindow.Activate();
+            });
+            await System.Threading.Tasks.Task.CompletedTask;
         }
         catch (Exception ex)
         {

@@ -4,8 +4,8 @@ using TastileDesktop.Models;
 namespace TastileDesktop.Services;
 
 /// <summary>
-/// Persistence boundary for the active Cognito
-/// <see cref="TastileDesktop.Models.AuthSession"/>.
+/// Persistence boundary for the active
+/// <see cref="TastileDesktop.Models.AuthSession"/> (BetterAuth-shaped).
 /// Implementations must guarantee the persisted bytes are unreadable to
 /// other Windows users (DPAPI CurrentUser scope is the desktop's contract).
 /// </summary>

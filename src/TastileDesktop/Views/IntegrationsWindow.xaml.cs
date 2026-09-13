@@ -11,7 +11,7 @@ public sealed partial class IntegrationsWindow : Window
 {
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-        refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
+        refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
     private const string GoogleCalendarOAuthScopes = "https://www.googleapis.com/auth/calendar.events";
     private static readonly List<string> GrantedGoogleCalendarScopes =
     [
@@ -69,10 +69,12 @@ public sealed partial class IntegrationsWindow : Window
 
     private async void OnConnectClick(object sender, RoutedEventArgs e)
     {
-        // Google Calendar integration is not yet implemented for the
-        // Cognito-only auth model. The previous daemon-mediated Google
-        // OAuth flow relied on a ProviderToken in the AuthSession, which
-        // Cognito's Hosted UI does not issue.
+        // Google Calendar integration is excluded from the current v1
+        // recovery phase (the v1 /auth/integrations/* endpoints are not
+        // yet exposed by tastile-core). The native BetterAuth flow does
+        // not carry a Google ProviderToken, so re-enabling this will
+        // require a v1-shaped integration endpoint — not a client-side
+        // change here.
         ErrorTextBlock.Text = Strings.Get("Integrations_NotAvailable");
     }
 

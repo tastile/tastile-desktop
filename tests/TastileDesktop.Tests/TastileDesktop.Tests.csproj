@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net9.0-windows10.0.26100.0</TargetFramework>
@@ -10,11 +10,10 @@
 
   <ItemGroup>
     <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="AuthService.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\CognitoAuthService.cs" Link="CognitoAuthService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\BetterAuthAuthService.cs" Link="BetterAuthAuthService.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\BetterAuthHttpClient.cs" Link="BetterAuthHttpClient.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\SecureTokenStore.cs" Link="SecureTokenStore.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\ITokenStore.cs" Link="ITokenStore.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\JwtClaims.cs" Link="JwtClaims.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Services\Pkce.cs" Link="Pkce.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AppSettings.cs" Link="AppSettings.cs" />
     <Compile Include="..\..\src\TastileDesktop\ProtocolHandler.cs" Link="ProtocolHandler.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\CoreApiClient.cs" Link="CoreApiClient.cs" />
@@ -44,7 +43,6 @@
     <Compile Include="..\..\src\TastileDesktop\Services\PromptToastSoundPlanBuilder.cs" Link="PromptToastSoundPlanBuilder.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\GoogleCalendarIntegrationPresentationResolver.cs" Link="GoogleCalendarIntegrationPresentationResolver.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\AuthSession.cs" Link="AuthSession.cs" />
-    <Compile Include="..\..\src\TastileDesktop\Models\CognitoConfig.cs" Link="CognitoConfig.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\CreateTileModels.cs" Link="CreateTileModels.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="ApiModels.cs" />
   </ItemGroup>
@@ -53,12 +51,17 @@
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Using Include="Xunit" />
-  </ItemGroup>
+  <!--
+    Global using directives are emitted via tests/TastileDesktop.Tests/GlobalUsings.cs
+    instead of the MSBuild `<Using Include="..." />` ItemGroup. SDK 10.0.202 (pinned via
+    global.json) does not always project the ItemGroup into the generated
+    GlobalUsings.g.cs on windows-latest runners, which causes CS0246 on [Fact] /
+    [Theory] across all test files. A hand-written `global using` in source is
+    portable across every SDK that supports the language version.
+  -->
 
 </Project>

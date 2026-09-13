@@ -64,15 +64,18 @@ public sealed class DesktopUiLayoutTests
     }
 
     [Fact]
-    public void AuthWindow_UsesStepByStepCalendarConnectionCopy()
+    public void AuthWindow_UsesNativeBetterAuthEmailPasswordCopy()
     {
         var xamlPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Views\AuthWindow.xaml"));
         var xaml = File.ReadAllText(xamlPath);
 
         Assert.Contains("Sign in to Tastile", xaml);
-        Assert.Contains("Your browser opens Tastile sign-in", xaml);
+        Assert.Contains("Enter the email and password", xaml);
+        Assert.DoesNotContain("Your browser opens Tastile sign-in", xaml);
         Assert.DoesNotContain("Cognito Hosted UI", xaml);
         Assert.DoesNotContain("Connect Google Calendar", xaml);
+        Assert.Contains("EmailTextBox", xaml);
+        Assert.Contains("PasswordInput", xaml);
     }
 
     [Fact]

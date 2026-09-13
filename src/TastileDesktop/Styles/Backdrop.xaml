@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!--
+    Backdrop resources for tastile-desktop.
+
+    Phase 1 applies Mica via Window.SystemBackdrop in code-behind (see
+    Tasks 9-10). Phase 2+ may introduce shared backdrop Styles here
+    (e.g. DefaultMicaBackdrop, DefaultAcrylicBackdrop) that windows
+    reference via Style="{StaticResource ...}".
+
+    This file is intentionally empty so the merged-dictionaries slot is
+    reserved; do not add resources here without a consumer.
+-->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" />
