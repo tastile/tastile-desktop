@@ -1,5 +1,6 @@
 using System;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using TastileDesktop.Models;
 
@@ -68,18 +69,27 @@ public sealed class BetterAuthAuthService
     /// <summary>
     /// Sign in with email + password via BetterAuth's native endpoint.
     /// </summary>
-    public async Task<AuthResult> SignInWithEmailAsync(string email, string password)
+    /// <param name="cancellationToken">
+    /// Cancels the in-flight HTTP request. <c>ThrowIfCancellationRequested</c>
+    /// is also checked before persisting the session, so a caller that has
+    /// already discarded the sign-in (for example the auth window closing
+    /// after the user pressed Cancel) cannot end up with the user signed in
+    /// against their intent.
+    /// </param>
+    public async Task<AuthResult> SignInWithEmailAsync(string email, string password, CancellationToken cancellationToken = default)
     {
         try
         {
-            var signIn = await _client.SignInAsync(email, password).ConfigureAwait(false);
+            var signIn = await _client.SignInAsync(email, password, cancellationToken).ConfigureAwait(false);
             var sessionToken = ExtractSessionToken(signIn.SetCookie, signIn.User);
             if (string.IsNullOrEmpty(sessionToken))
             {
                 return new AuthResult(false, "missing_session_cookie", null);
             }
 
-            var apiTokenResult = await _client.MintApiTokenAsync(sessionToken).ConfigureAwait(false);
+            var apiTokenResult = await _client.MintApiTokenAsync(sessionToken, cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+
             var userId = signIn.User?.Id ?? string.Empty;
             var emailClaim = signIn.User?.Email ?? email;
             var expiresAt = apiTokenResult.ExpiresAt ?? DateTimeOffset.UtcNow.AddHours(24);
@@ -94,6 +104,13 @@ public sealed class BetterAuthAuthService
             await _store.SaveAsync(_current).ConfigureAwait(false);
             AuthStateChanged?.Invoke(this, EventArgs.Empty);
             return new AuthResult(true);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            // Caller cancelled (e.g. the auth window closed after Cancel).
+            // _current is intentionally NOT assigned: we must not leave the
+            // app authenticated against the user's stated intent.
+            throw;
         }
         catch (BetterAuthHttpException ex)
         {
@@ -112,15 +129,16 @@ public sealed class BetterAuthAuthService
     /// with the same credentials. If sign-up fails because the account
     /// already exists, fall back to sign-in.
     /// </summary>
-    public async Task<AuthResult> SignUpWithEmailAsync(string email, string password, string name)
+    public async Task<AuthResult> SignUpWithEmailAsync(string email, string password, string name, CancellationToken cancellationToken = default)
     {
         try
         {
-            var signUp = await _client.SignUpAsync(email, password, name).ConfigureAwait(false);
+            var signUp = await _client.SignUpAsync(email, password, name, cancellationToken).ConfigureAwait(false);
             var sessionToken = ExtractSessionToken(signUp.SetCookie, signUp.User);
             if (!string.IsNullOrEmpty(sessionToken))
             {
-                var apiTokenResult = await _client.MintApiTokenAsync(sessionToken).ConfigureAwait(false);
+                var apiTokenResult = await _client.MintApiTokenAsync(sessionToken, cancellationToken).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
                 _current = new Models.AuthSession(
                     SessionToken: sessionToken,
                     ApiToken: apiTokenResult.Token,
@@ -132,6 +150,10 @@ public sealed class BetterAuthAuthService
                 return new AuthResult(true);
             }
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (BetterAuthHttpException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Conflict)
         {
             // Account already exists → fall through to sign-in.
@@ -141,7 +163,7 @@ public sealed class BetterAuthAuthService
             return new AuthResult(false, ex.ErrorCode, ex.Detail);
         }
 
-        return await SignInWithEmailAsync(email, password).ConfigureAwait(false);
+        return await SignInWithEmailAsync(email, password, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task SignOutAsync()
