@@ -22,7 +22,8 @@ TastileDesktop/                                AWS remote API
 ├── App.xaml.cs                               ──HTTPS + Bearer JWT──▶  beta.tastile.app  ─▶  tastile-core
 ├── Services/                                                                       (no local daemon)
 │   ├── CoreApiClient.cs            # Bearer + 401-refresh-retry HTTPS client
-│   ├── BetterAuthAuthService.cs    # Native BetterAuth session + refresh + signout\n│   ├── BetterAuthHttpClient.cs     # BetterAuth HTTP endpoints + API-token bridge
+│   ├── BetterAuthAuthService.cs    # Native BetterAuth session + refresh + signout
+│   ├── BetterAuthHttpClient.cs     # BetterAuth HTTP endpoints + API-token bridge
 │   ├── SecureTokenStore.cs         # DPAPI-protected credentials
 │   ├── EventDrivenPoller.cs        # User-action / focus / idle refresh (no wall-clock tick)
 │   ├── AuthService.cs              # Facade over BetterAuthAuthService
@@ -33,7 +34,7 @@ TastileDesktop/                                AWS remote API
 │   └── TrayIconService.cs          # System tray icon + context menu
 ├── Models/
 │   ├── ApiModels.cs                # AWS API DTOs
-│   └── AuthSession.cs              # id_token / refresh_token / sub / email / exp
+│   └── AuthSession.cs              # session_token / api_token / user_id / email / expires_at
 ├── ViewModels/
 │   ├── MainViewModel.cs            # Main window state + commands
 │   └── SettingsViewModel.cs        # Settings form binding
@@ -139,7 +140,7 @@ before the desktop build and the `TimelineWindow` connector wiring check.
 | Path | Purpose |
 |---|---|
 | `%APPDATA%\Tastile\settings.json` | UI preferences (theme, prompt toast, quick panel) |
-| `%LOCALAPPDATA%\Tastile\Auth\credentials.bin` | DPAPI-protected id/refresh token |
+| `%LOCALAPPDATA%\Tastile\Auth\credentials.bin` | DPAPI-protected session/api token |
 | `%TEMP%\tastile-desktop.log` | Best-effort debug log |
 | `%TEMP%\tastile-update-*.exe` | Downloaded installer (release upgrades) |
 
@@ -200,7 +201,9 @@ WinUI Gallery / Community Toolkit の既存パターンを優先し、
 - `microsoft-learn` MCP は Claude Code 側で `microsoft-docs` plugin 経由で取得する
   (本 repo `opencode.json` の `microsoft-learn` は `opencode` CLI 用で別物)。
 - `frontend-design` (Web frontend 向け) は **有効化しない**。WinUI には `winui-design` を主役に据える。
-- `ui-ux-pro-max` / `figma` / `csharp-lsp` 等の追加は要 ADR。\n\n## Reviewer policy (PROMPT.ja.md §26)
+- `ui-ux-pro-max` / `figma` / `csharp-lsp` 等の追加は要 ADR。
+
+## Reviewer policy (PROMPT.ja.md §26)
 
 `tastile/tastile-desktop` is a solo project — `@rebuildup` is the only
 contributor with merge authority. There is no separate human reviewer
@@ -261,4 +264,4 @@ custom fields are populated. WIP cap on `In Progress` is a follow-up.
   procedure from PROMPT.ja.md §12).
 - Stacked ticket PRs are allowed within the same target release;
   intermediate predecessor-branch merges never close a downstream
-  Issue — only `release-x-y-z -> main` landing closes it.\n
+  Issue — only `release-x-y-z -> main` landing closes it.

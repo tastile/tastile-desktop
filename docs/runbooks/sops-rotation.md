@@ -12,7 +12,8 @@
 3. **Re-encrypt to the ciphertext file**
 
    ```bash
-   sops --encrypt --kms "arn:aws:kms:ap-northeast-1:<account>:key/<dev-key-id>" --output .env.development.sops .env.development\n   rm .env.development
+   sops --encrypt --kms "arn:aws:kms:ap-northeast-1:<account>:key/<dev-key-id>" --output .env.development.sops .env.development
+   rm .env.development
    ```
 
 4. **Verify diff**
