@@ -5,8 +5,8 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 # Tastile Desktop
 
 Windows native client for Tastile execution control system. Connects to the
-new AWS-hosted `tastile-core` API with Cognito Hosted UI sign-in; no local
-daemon process.
+AWS-hosted `tastile-core` API with native BetterAuth email/password sign-in;
+no local daemon process.
 
 ## Tech Stack
 - C# / WinUI 3 (Windows App SDK 1.8)
@@ -22,10 +22,10 @@ TastileDesktop/                                AWS remote API
 ├── App.xaml.cs                               ──HTTPS + Bearer JWT──▶  beta.tastile.app  ─▶  tastile-core
 ├── Services/                                                                       (no local daemon)
 │   ├── CoreApiClient.cs            # Bearer + 401-refresh-retry HTTPS client
-│   ├── CognitoAuthService.cs       # PKCE Hosted UI flow + refresh + signout
+│   ├── BetterAuthAuthService.cs    # Native BetterAuth session + refresh + signout\n│   ├── BetterAuthHttpClient.cs     # BetterAuth HTTP endpoints + API-token bridge
 │   ├── SecureTokenStore.cs         # DPAPI-protected credentials
 │   ├── EventDrivenPoller.cs        # User-action / focus / idle refresh (no wall-clock tick)
-│   ├── AuthService.cs              # Facade over CognitoAuthService
+│   ├── AuthService.cs              # Facade over BetterAuthAuthService
 │   ├── AppSettings.cs              # env-var-driven runtime config
 │   ├── InterventionEngine.cs       # Escalation logic (toast → intervention)
 │   ├── NotificationService.cs      # Windows toast notifications
@@ -33,7 +33,6 @@ TastileDesktop/                                AWS remote API
 │   └── TrayIconService.cs          # System tray icon + context menu
 ├── Models/
 │   ├── ApiModels.cs                # AWS API DTOs
-│   ├── CognitoConfig.cs            # Hosted UI / user pool config
 │   └── AuthSession.cs              # id_token / refresh_token / sub / email / exp
 ├── ViewModels/
 │   ├── MainViewModel.cs            # Main window state + commands
@@ -55,16 +54,15 @@ owns outside the API.
 
 ## Connection Model
 
-- **Auth**: Cognito Hosted UI + PKCE (RFC 7636). Tokens saved via DPAPI in
-  `%LOCALAPPDATA%\Tastile\Auth\credentials.bin`. `CoreApiClient` adds
-  `Authorization: Bearer <id_token>` to every request and retries once on
-  401 after refreshing.
+- **Auth**: BetterAuth native email/password flow. Session/API tokens are saved
+  via DPAPI in `%LOCALAPPDATA%\Tastile\Auth\credentials.bin`.
+  `CoreApiClient` adds the BetterAuth session token as Bearer and retries once
+  on 401 after validating the session.
 - **API base URL**: `TASTILE_API_BASE_URL` (default `https://beta.tastile.app`).
   For local dev, set `TASTILE_API_BASE_URL=http://127.0.0.1:3140`.
-- **Cognito**: configurable via `TASTILE_COGNITO_CLIENT_ID`,
-  `TASTILE_COGNITO_USER_POOL_ID`, `TASTILE_COGNITO_HOSTED_UI_DOMAIN`,
-  `TASTILE_COGNITO_REGION`, `TASTILE_COGNITO_CALLBACK_URL`. Default client ID
-  is `2b9fkkb4u5di8veelnmjkmnldj` (shared with tastile-web).
+- **Web auth base URL**: `TASTILE_WEB_BASE_URL` (see `AppSettings`). Social
+  sign-in is intentionally not exposed until an installed-app handoff can
+  persist the BetterAuth session.
 - **Refresh strategy**: `EventDrivenPoller` issues the 4-endpoint refresh
   bundle only in response to (a) user commands, (b) window activation
   (`MainWindow.Activated` / `TilesWindow.Activated` with 1s debounce), or
@@ -157,7 +155,52 @@ Stored in `%APPDATA%/Tastile/settings.json`:
 - `InterventionRepeatMinutes`: 5
 - `LaunchAtStartup`: false
 
-## Reviewer policy (PROMPT.ja.md §26)
+## Claude Code Plugins (project scope)
+
+この repository の `.claude/settings.json` で enabled:
+
+| Plugin | 提供元 | 主用途 |
+| --- | --- | --- |
+| `winui@win-dev-skills` | `microsoft/win-dev-skills` | WinUI 3 / Fluent Design 設計・実装・レビュー・UI テスト |
+| `microsoft-docs@claude-plugins-official` | 同 marketplace 内 | Microsoft Learn docs + Microsoft Learn MCP server |
+
+### 起動トリガー
+
+UI 改善 / Fluent Design 整合性レビュー / XAML レイアウト相談 / accessibility 確認 /
+新画面追加 / 既存 Control の置き換え検討が出たら、`@winui-dev` agent または
+`winui-design` / `winui-code-review` / `winui-ui-testing` skill を起動する。
+
+### 典型プロンプト
+
+```text
+@winui-dev
+
+現在のWinUI 3アプリのUIをレビューしてください。
+
+Fluent Design / Windows 11のネイティブアプリとして、
+- layout / spacing / typography / control selection / visual hierarchy
+- Light / Dark / High Contrast
+- accessibility
+- responsive window sizing
+を確認してください。
+
+winui-design と winui-search を使い、
+WinUI Gallery / Community Toolkit の既存パターンを優先し、
+独自 UI を増やすのではなく WinUI 標準の表現に寄せてください。
+
+必要なら実装まで修正し、最後に UI testing とスクリーンショットで確認してください。
+```
+
+### 制約 (hard rule)
+
+- View / Control XAML では色の `#RRGGBB` 直書き禁止。中央の token 定義 (`App.xaml`) 以外は `ThemeResource` 経由。
+- `NavigationView` を全画面で使うのは避ける。`SelectorBar` があるのに独自 segmented control を作らない。
+- 独自 `ControlTemplate` で標準 Control を再実装しない (Fluent 標準を優先)。
+- `ContentDialog` / `TeachingTip` / `InfoBar` を用途で使い分ける。
+- `microsoft-learn` MCP は Claude Code 側で `microsoft-docs` plugin 経由で取得する
+  (本 repo `opencode.json` の `microsoft-learn` は `opencode` CLI 用で別物)。
+- `frontend-design` (Web frontend 向け) は **有効化しない**。WinUI には `winui-design` を主役に据える。
+- `ui-ux-pro-max` / `figma` / `csharp-lsp` 等の追加は要 ADR。\n\n## Reviewer policy (PROMPT.ja.md §26)
 
 `tastile/tastile-desktop` is a solo project — `@rebuildup` is the only
 contributor with merge authority. There is no separate human reviewer
@@ -218,4 +261,4 @@ custom fields are populated. WIP cap on `In Progress` is a follow-up.
   procedure from PROMPT.ja.md §12).
 - Stacked ticket PRs are allowed within the same target release;
   intermediate predecessor-branch merges never close a downstream
-  Issue — only `release-x-y-z -> main` landing closes it.
+  Issue — only `release-x-y-z -> main` landing closes it.\n

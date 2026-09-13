@@ -13,69 +13,30 @@
 
             <ResourceDictionary.ThemeDictionaries>
                 <ResourceDictionary x:Key="Dark">
-                    <!-- Quick Panel chrome -->
-                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#E0242424"/>
-                    <SolidColorBrush x:Key="QuickPanelBorderBrush"     Color="#FF373737"/>
-                    <!-- Foreground -->
-                    <SolidColorBrush x:Key="PrimaryForegroundBrush"    Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="SecondaryForegroundBrush"  Color="#FF9A9A9A"/>
-                    <SolidColorBrush x:Key="TertiaryForegroundBrush"   Color="#FF6B6B6B"/>
-                    <!-- Surfaces -->
-                    <SolidColorBrush x:Key="AppBackgroundBrush"        Color="#FF202020"/>
-                    <SolidColorBrush x:Key="AppSurface0Brush"          Color="#FF1C1C1C"/>
-                    <SolidColorBrush x:Key="AppSurface1Brush"          Color="#FF262626"/>
-                    <SolidColorBrush x:Key="AppSurface2Brush"          Color="#FF2F2F2F"/>
-                    <SolidColorBrush x:Key="AppSurfaceElevatedBrush"   Color="#FF2B2B2B"/>
-                    <!-- Foreground aliases -->
-                    <SolidColorBrush x:Key="AppForegroundBrush"        Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="AppForegroundMutedBrush"   Color="#FFD6D6D6"/>
-                    <SolidColorBrush x:Key="AppForegroundSubtleBrush"  Color="#FFA6A6A6"/>
-                    <!-- Borders -->
-                    <SolidColorBrush x:Key="AppBorderBrush"            Color="#FF3D3D3D"/>
-                    <SolidColorBrush x:Key="AppBorderStrongBrush"      Color="#FF575757"/>
-                    <!-- Interactive -->
-                    <SolidColorBrush x:Key="AppInteractiveBrush"       Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="AppInteractiveHoverBrush"  Color="#FFF4F4F4"/>
-                    <SolidColorBrush x:Key="AppInteractiveActiveBrush" Color="#FFE5E5E5"/>
-                    <!-- Accent (updated at runtime by ThemeManager) -->
-                    <SolidColorBrush x:Key="AccentBrush"               Color="#FF0078D4"/>
-                    <SolidColorBrush x:Key="AppPrimaryBrush"           Color="#FF0078D4"/>
-                    <SolidColorBrush x:Key="AppPrimaryForegroundBrush" Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="AppPrimaryHoverBrush"      Color="#FF1A88DE"/>
+                    <!-- Override-accent layer: ThemeManager writes here at runtime -->
+                    <SolidColorBrush x:Key="OverrideAccentFillBrush" Color="#FF0078D4" />
+                    <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="#FF1A88DE" />
+                    <!-- Intervention-only emergency resources -->
+                    <SolidColorBrush x:Key="InterventionScrimBrush" Color="#A6000000" />
+                    <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCritical}" />
                 </ResourceDictionary>
 
                 <ResourceDictionary x:Key="Light">
-                    <!-- Quick Panel chrome -->
-                    <SolidColorBrush x:Key="QuickPanelBackgroundBrush" Color="#E0F9F9F9"/>
-                    <SolidColorBrush x:Key="QuickPanelBorderBrush"     Color="#FFE5E5E5"/>
-                    <!-- Foreground -->
-                    <SolidColorBrush x:Key="PrimaryForegroundBrush"    Color="#FF111111"/>
-                    <SolidColorBrush x:Key="SecondaryForegroundBrush"  Color="#FF6A6A6A"/>
-                    <SolidColorBrush x:Key="TertiaryForegroundBrush"   Color="#FF9A9A9A"/>
-                    <!-- Surfaces -->
-                    <SolidColorBrush x:Key="AppBackgroundBrush"        Color="#FFF3F3F3"/>
-                    <SolidColorBrush x:Key="AppSurface0Brush"          Color="#FFF9F9F9"/>
-                    <SolidColorBrush x:Key="AppSurface1Brush"          Color="#FFF3F3F3"/>
-                    <SolidColorBrush x:Key="AppSurface2Brush"          Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="AppSurfaceElevatedBrush"   Color="#FFFFFFFF"/>
-                    <!-- Foreground aliases -->
-                    <SolidColorBrush x:Key="AppForegroundBrush"        Color="#FF111111"/>
-                    <SolidColorBrush x:Key="AppForegroundMutedBrush"   Color="#FF444444"/>
-                    <SolidColorBrush x:Key="AppForegroundSubtleBrush"  Color="#FF666666"/>
-                    <!-- Borders -->
-                    <SolidColorBrush x:Key="AppBorderBrush"            Color="#FFD9D9D9"/>
-                    <SolidColorBrush x:Key="AppBorderStrongBrush"      Color="#FFC7C7C7"/>
-                    <!-- Interactive -->
-                    <SolidColorBrush x:Key="AppInteractiveBrush"       Color="#FF111111"/>
-                    <SolidColorBrush x:Key="AppInteractiveHoverBrush"  Color="#FF2A2A2A"/>
-                    <SolidColorBrush x:Key="AppInteractiveActiveBrush" Color="#FF3B3B3B"/>
-                    <!-- Accent (updated at runtime by ThemeManager) -->
-                    <SolidColorBrush x:Key="AccentBrush"               Color="#FF0078D4"/>
-                    <SolidColorBrush x:Key="AppPrimaryBrush"           Color="#FF0078D4"/>
-                    <SolidColorBrush x:Key="AppPrimaryForegroundBrush" Color="#FFFFFFFF"/>
-                    <SolidColorBrush x:Key="AppPrimaryHoverBrush"      Color="#FF1A88DE"/>
+                    <SolidColorBrush x:Key="OverrideAccentFillBrush" Color="#FF0078D4" />
+                    <SolidColorBrush x:Key="OverrideAccentFillSecondaryBrush" Color="#FF1A88DE" />
+                    <SolidColorBrush x:Key="InterventionScrimBrush" Color="#66000000" />
+                    <SolidColorBrush x:Key="InterventionEmergencyBrush" Color="{ThemeResource SystemFillColorCritical}" />
                 </ResourceDictionary>
             </ResourceDictionary.ThemeDictionaries>
+
+            <!-- Layout Tokens -->
+            <x:Double x:Key="WindowTitleBarHeight">32</x:Double>
+            <CornerRadius x:Key="WindowCardCornerRadius">8</CornerRadius>
+            <Thickness x:Key="CardBorderThickness">1</Thickness>
+            <x:Double x:Key="SettingRowHeight">48</x:Double>
+            <x:Double x:Key="ControlSpacingTight">8</x:Double>
+            <x:Double x:Key="ControlSpacingNormal">12</x:Double>
+            <x:Double x:Key="ControlSpacingLoose">20</x:Double>
 
             <!-- Converters -->
             <converters:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
@@ -83,7 +44,6 @@
             <!-- Layout Tokens -->
             <Thickness x:Key="WindowPagePadding">32,24,32,24</Thickness>
             <CornerRadius x:Key="CardCornerRadius">8</CornerRadius>
-            <Thickness x:Key="CardBorderThickness">1</Thickness>
             <x:Double x:Key="QuickPanelCornerRadius">8</x:Double>
             <x:Double x:Key="ControlCornerRadius">4</x:Double>
 
@@ -116,6 +76,28 @@
             </Style>
 
             <StaticResource x:Key="AccentButtonStyle" ResourceKey="AccentButtonStyle"/>
+
+            <!-- Aliases: removed-by-cea3111 brushes forwarded to System tokens (R14 / F1 fix). -->
+            <!-- Spec: docs/superpowers/specs/2026-08-25-tastile-ui-design-system-pass-design.md §Tokens -->
+            <StaticResource x:Key="AppBackgroundBrush"           ResourceKey="SolidBackgroundFillColorBaseBrush"/>
+            <StaticResource x:Key="AppSurface0Brush"             ResourceKey="LayerFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppSurface1Brush"             ResourceKey="LayerFillColorAltBrush"/>
+            <StaticResource x:Key="AppSurface2Brush"             ResourceKey="LayerOnAccentAcrylicFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppSurfaceElevatedBrush"      ResourceKey="SolidBackgroundFillColorSecondaryBrush"/>
+            <StaticResource x:Key="AppForegroundBrush"           ResourceKey="TextFillColorPrimaryBrush"/>
+            <StaticResource x:Key="AppForegroundMutedBrush"      ResourceKey="TextFillColorSecondaryBrush"/>
+            <StaticResource x:Key="AppForegroundSubtleBrush"     ResourceKey="TextFillColorTertiaryBrush"/>
+            <StaticResource x:Key="AppBorderBrush"               ResourceKey="ControlStrokeColorDefaultBrush"/>
+            <StaticResource x:Key="AppBorderStrongBrush"         ResourceKey="ControlStrokeColorSecondaryBrush"/>
+            <StaticResource x:Key="AccentBrush"                  ResourceKey="AccentFillColorDefaultBrush"/>
+            <StaticResource x:Key="AppPrimaryBrush"              ResourceKey="OverrideAccentFillBrush"/>
+            <StaticResource x:Key="AppPrimaryForegroundBrush"    ResourceKey="TextOnAccentFillColorPrimaryBrush"/>
+            <StaticResource x:Key="AppPrimaryHoverBrush"         ResourceKey="AccentFillColorSecondaryBrush"/>
+            <StaticResource x:Key="PrimaryForegroundBrush"       ResourceKey="TextFillColorPrimaryBrush"/>
+            <StaticResource x:Key="SecondaryForegroundBrush"     ResourceKey="TextFillColorSecondaryBrush"/>
+            <StaticResource x:Key="TertiaryForegroundBrush"      ResourceKey="TextFillColorTertiaryBrush"/>
+            <StaticResource x:Key="QuickPanelBackgroundBrush"    ResourceKey="ControlFillColorTertiaryBrush"/>
+            <StaticResource x:Key="QuickPanelBorderBrush"        ResourceKey="ControlStrokeColorDefaultBrush"/>
         </ResourceDictionary>
     </Application.Resources>
 </Application>

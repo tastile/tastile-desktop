@@ -889,7 +889,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _api = new CoreApiClient(
             getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-            refreshTokens: Services.CognitoAuthService.Instance.RefreshAsync);
+            refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
         _pollingService = new EventDrivenPoller(_api, _dispatcher);
         _pollingService.SetTimelineViewport(_timelineViewport);
 
@@ -1339,11 +1339,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
             // Safely get brushes with fallbacks
             var app = Application.Current;
-            var surface1Brush = TryGetResourceBrush(app, "AppSurface1Brush", Colors.Gray);
-            var surfaceElevatedBrush = TryGetResourceBrush(app, "AppSurfaceElevatedBrush", Colors.DarkGray);
-            var borderBrush = TryGetResourceBrush(app, "AppBorderBrush", Colors.LightGray);
-            var foregroundBrush = TryGetResourceBrush(app, "AppForegroundBrush", Colors.White);
-            var foregroundMutedBrush = TryGetResourceBrush(app, "AppForegroundMutedBrush", Colors.LightGray);
+            var surface1Brush = TryGetResourceBrush(app, "LayerFillColorAltBrush", Colors.Gray);
+            var surfaceElevatedBrush = TryGetResourceBrush(app, "SolidBackgroundFillColorSecondaryBrush", Colors.DarkGray);
+            var borderBrush = TryGetResourceBrush(app, "ControlStrokeColorDefaultBrush", Colors.LightGray);
+            var foregroundBrush = TryGetResourceBrush(app, "TextFillColorPrimaryBrush", Colors.White);
+            var foregroundMutedBrush = TryGetResourceBrush(app, "TextFillColorSecondaryBrush", Colors.LightGray);
 
             TimelineBlocks = new ObservableCollection<TimelineAbsoluteBlockViewModel>(
                 layout.Blocks.Select(block => new TimelineAbsoluteBlockViewModel
