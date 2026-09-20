@@ -1,0 +1,89 @@
+# CODEOWNERS for tastile-desktop
+#
+# Format reference: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-repository-settings/about-code-owners
+# Consumed by GitHub branch protection rules; pair with
+# `.github/workflows/release-source-check.yml` (`Release-source check / release-source`)
+# as a required check on `main`.
+#
+# When merging a PR, the owners below receive an automatic review request.
+# Roles here mirror the Codex / Claude agent trio catalogued in
+# `.agents/skills/subagent-coordination/SKILL.md` (parent) and ADR-0005.
+#
+# canonical references:
+#   - docs/decisions.md (desktop-local ADR foundation)
+#   - parent docs/adr/0007-release-branch-and-ticket-workflow.md (branch / PR workflow)
+#   - parent docs/agent-orchestration.md §11 (agent lifecycle)
+#   - .agents/skills/tastile-precommit-review/SKILL.md (desktop-local pre-commit gate)
+#   - .agents/skills/plugin-version-audit/SKILL.md (dependency maintenance)
+
+# ===== PLACEHOLDER roster =====
+# Per recon audit 2026-09-20, all owners are temporarily pinned to @rebuildup
+# until the org/team roster is established. Each path entry below should be
+# reassigned to a `tastile/tastile-desktop-*` team once the maintainer roster
+# is ratified; tracked in docs/decisions.md follow-up.
+
+# Default owners for everything not matched below.
+*                          @rebuildup
+
+# Release / security / deployment critical paths (require org-level review).
+/.github/                  @rebuildup
+/.github/workflows/        @rebuildup
+/CONTRIBUTING.md           @rebuildup
+/SECURITY.md               @rebuildup
+/Directory.Build.props     @rebuildup
+/global.json               @rebuildup
+/.sops.yaml                @rebuildup
+
+# Auth / token / DPAPI / SSO surface (Cognito Hosted UI + DPAPI credentials).
+/src/TastileDesktop/Services/CognitoAuthService.cs   @rebuildup
+/src/TastileDesktop/Services/SecureTokenStore.cs     @rebuildup
+/src/TastileDesktop/Services/CoreApiClient.cs        @rebuildup
+/src/TastileDesktop/Services/AuthService.cs          @rebuildup
+/src/TastileDesktop/Models/CognitoConfig.cs          @rebuildup
+/src/TastileDesktop/Models/AuthSession.cs            @rebuildup
+/src/TastileDesktop/ProtocolHandler.cs               @rebuildup
+
+# Update-manifest / installer / release contract.
+/src/TastileDesktop/Services/AppUpdateService.cs     @rebuildup
+/scripts/build-desktop-installer.ps1                  @rebuildup
+/scripts/publish-update-manifest.ps1                  @rebuildup
+/installer/                                          @rebuildup
+/artifacts/                                          @rebuildup
+
+# Cross-repo contract surface (changes ripple to tastile-core / web / android).
+/src/TastileDesktop/Models/ApiModels.cs              @rebuildup
+/src/TastileDesktop/Services/InterventionEngine.cs   @rebuildup
+
+# Generated / vendored i18n (must remain translate-quickcreate-clean).
+/src/TastileDesktop/Resources/                       @rebuildup
+/src/TastileDesktop/Resources/App/                   @rebuildup
+/src/TastileDesktop/Resources/Features/              @rebuildup
+/src/TastileDesktop/Resources/System/                @rebuildup
+
+# Quality gate / scripts (changes affect CI determinism).
+/scripts/                  @rebuildup
+/scripts/check.ps1         @rebuildup
+/scripts/sops-decrypt.ts   @rebuildup
+/scripts/sops-decrypt.test.ts @rebuildup
+/scripts/sops.config.ts    @rebuildup
+
+# AGENTS.md / CLAUDE.md / canonical contract.
+/AGENTS.md                 @rebuildup
+/CLAUDE.md                 @rebuildup
+/.claude/                  @rebuildup
+/.claude/hooks/            @rebuildup
+/.agents/skills/           @rebuildup
+
+# ADR / design (workspace-level ADRs are normally owned at the workspace root).
+/docs/decisions.md         @rebuildup
+/docs/runbooks/            @rebuildup
+
+# Tests.
+/tests/TastileDesktop.Tests/ @rebuildup
+
+# Desktop entry project.
+/src/TastileDesktop/                      @rebuildup
+/src/TastileDesktop/App.xaml.cs           @rebuildup
+/src/TastileDesktop/App.xaml              @rebuildup
+/src/TastileDesktop/Views/                @rebuildup
+/src/TastileDesktop/ViewModels/           @rebuildup
