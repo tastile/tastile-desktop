@@ -16,6 +16,7 @@ permissions:
 jobs:
   decrypt:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v7
@@ -75,6 +76,7 @@ jobs:
 
   check:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.env }}
     timeout-minutes: 3
     steps:
       - uses: actions/checkout@v7

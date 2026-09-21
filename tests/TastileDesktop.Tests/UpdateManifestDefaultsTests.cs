@@ -14,7 +14,7 @@ public sealed class UpdateManifestDefaultsTests
     {
         var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
         {
-            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/updates/desktop/manifest.json")
+            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/channels/stable/desktop.json")
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {
@@ -45,7 +45,7 @@ public sealed class UpdateManifestDefaultsTests
     {
         var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
         {
-            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/updates/desktop/manifest.json")
+            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/channels/stable/desktop.json")
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {

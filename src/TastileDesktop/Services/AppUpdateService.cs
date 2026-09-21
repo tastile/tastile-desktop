@@ -32,10 +32,10 @@ public sealed class AppUpdateService
         var raw = Environment.GetEnvironmentVariable(UpdateBaseUrlEnvVar)?.Trim();
         if (string.IsNullOrEmpty(raw))
         {
-            return BuildManifestUrl("https://download.tastile.app");
+            return "https://download.tastile.app/channels/stable/desktop.json";
         }
 
-        return BuildManifestUrl(raw);
+        return ResolveConfiguredManifestUrl(raw);
     }
 
     private static string BuildManifestUrl(string baseUrl)
@@ -223,7 +223,7 @@ public sealed class AppUpdateService
                 return DefaultUpdateEndpoint;
             }
 
-            return configuredUrl;
+            return ResolveConfiguredManifestUrl(configuredUrl);
         }
 
         var runtimeConfigured = Environment.GetEnvironmentVariable("TASTILE_UPDATE_URL");
@@ -233,7 +233,14 @@ public sealed class AppUpdateService
         }
 
         var runtimeUrl = runtimeConfigured.Trim();
-        return IsLegacyVersionEndpoint(runtimeUrl) ? DefaultUpdateEndpoint : runtimeUrl;
+        return IsLegacyVersionEndpoint(runtimeUrl) ? DefaultUpdateEndpoint : ResolveConfiguredManifestUrl(runtimeUrl);
+    }
+
+    private static string ResolveConfiguredManifestUrl(string value)
+    {
+        return value.EndsWith(".json", StringComparison.OrdinalIgnoreCase)
+            ? value
+            : BuildManifestUrl(value);
     }
 
     private static bool IsLegacyVersionEndpoint(string url)
