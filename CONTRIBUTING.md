@@ -34,7 +34,7 @@ If you do not have a sibling `tastile-core` checkout, run unit tests only:
 ## Release workflow
 
 - Installer packaging uses [installer/TastileDesktop.iss](installer/TastileDesktop.iss).
-- Manual update publication uses `.github/workflows/publish-update-manifest.yml`.
+- Manual update publication uses `.github/workflows/release.yml` and Cloudflare R2.
 - Shipping changes should include:
   - passing unit tests
   - a successful desktop build

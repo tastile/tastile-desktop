@@ -48,8 +48,8 @@ Sibling support dirs under `src/TastileDesktop/`: `Controls/`, `Converters/`,
 `Helpers/`, `Styles/`, `Properties/`, `Assets/`. `ProtocolHandler.cs` lives at
 the project root and handles `tastile://` URL activation.
 
-`AppUpdateService` + `AppUpdateServiceTests` add a hosted-manifest update
-pipeline (see `scripts/publish-update-manifest.ps1` and
+`AppUpdateService` + `AppUpdateServiceTests` add the hosted Cloudflare R2
+manifest update pipeline (see `docs/r2-distribution.md` and
 `.github/workflows/release.yml`); this is the only piece of state the desktop
 owns outside the API.
 
