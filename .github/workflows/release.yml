@@ -44,13 +44,22 @@ jobs:
           path: env-artifacts
 
       - name: Stage .env for build
+        shell: pwsh
         run: |
-          cp env-artifacts/.env.production ./.env.production 2>/dev/null || true
-          cp env-artifacts/.env.product ./.env.product 2>/dev/null || true
-          cp env-artifacts/.env.development ./.env.development 2>/dev/null || true
-          cp env-artifacts/.env.dev ./.env.dev 2>/dev/null || true
-          cp env-artifacts/.env.staging ./.env.staging 2>/dev/null || true
-          cp env-artifacts/.env ./.env 2>/dev/null || true
+          $envFiles = @(
+            ".env.production",
+            ".env.product",
+            ".env.development",
+            ".env.dev",
+            ".env.staging",
+            ".env"
+          )
+          foreach ($envFile in $envFiles) {
+            $source = Join-Path "env-artifacts" $envFile
+            if (Test-Path -LiteralPath $source) {
+              Copy-Item -LiteralPath $source -Destination (Join-Path $PWD $envFile) -Force
+            }
+          }
 
       - uses: actions/setup-dotnet@v6
         with:
