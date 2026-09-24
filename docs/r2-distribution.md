@@ -18,7 +18,14 @@ The legacy manifest URL `/updates/desktop/manifest.json` is published as the
 same stable manifest during the migration window so already-installed clients
 continue to receive updates.
 
-Configure these GitHub Environment (`production`) secrets:
+The release workflow reads the production values from Infisical at
+`/tastile/desktop` using the repository's GitHub OIDC identity. The one-time
+`migrate-production-secrets.yml` workflow compares the existing GitHub
+environment values with Infisical and imports only missing values. A differing
+existing Infisical value stops the import without overwriting it. After a
+successful OIDC fetch, the obsolete GitHub environment copies can be deleted.
+
+The previous production values were:
 
 ```text
 CLOUDFLARE_ACCOUNT_ID
@@ -28,9 +35,9 @@ CLOUDFLARE_R2_SECRET_ACCESS_KEY
 DOWNLOAD_PUBLIC_BASE_URL=https://download.tastile.app
 ```
 
-The existing `AWS_OIDC_ROLE_PRODUCTION` secret is used only by the reusable
-SOPS decryption job that prepares the Windows build environment. It is not
-used to publish or serve desktop artifacts.
+The release workflow does not use `AWS_OIDC_ROLE_PRODUCTION`; it publishes to
+Cloudflare R2 with the scoped R2 credentials fetched from Infisical. It does
+not materialize a dotenv file.
 
 Release order is deliberately one-way:
 

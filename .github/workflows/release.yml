@@ -21,45 +21,13 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  decrypt:
-    uses: ./.github/workflows/sops-decrypt.yml
-    with:
-      env: production
-    secrets:
-      aws_role_to_assume: ${{ secrets.AWS_OIDC_ROLE_PRODUCTION }}
-
   build-installer:
-    needs: decrypt
     runs-on: windows-latest
     outputs:
       version: ${{ steps.version.outputs.version }}
       installer_name: ${{ steps.installer.outputs.installer_name }}
     steps:
       - uses: actions/checkout@v7
-
-      - name: Download decrypted .env artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: env-production
-          path: env-artifacts
-
-      - name: Stage .env for build
-        shell: pwsh
-        run: |
-          $envFiles = @(
-            ".env.production",
-            ".env.product",
-            ".env.development",
-            ".env.dev",
-            ".env.staging",
-            ".env"
-          )
-          foreach ($envFile in $envFiles) {
-            $source = Join-Path "env-artifacts" $envFile
-            if (Test-Path -LiteralPath $source) {
-              Copy-Item -LiteralPath $source -Destination (Join-Path $PWD $envFile) -Force
-            }
-          }
 
       - uses: actions/setup-dotnet@v6
         with:
@@ -119,11 +87,20 @@ jobs:
           if-no-files-found: error
 
   publish:
-    needs: [build-installer, decrypt]
+    needs: build-installer
     runs-on: ubuntu-latest
     environment: production
     steps:
       - uses: actions/checkout@v7
+
+      - name: Fetch release secrets from Infisical
+        uses: ./.github/actions/infisical-secrets
+        with:
+          domain: ${{ vars.INFISICAL_DOMAIN }}
+          project-id: ${{ vars.INFISICAL_PROJECT_ID_PROD }}
+          identity-id: ${{ vars.INFISICAL_IDENTITY_ID_PROD }}
+          environment: prod
+          path: /tastile/desktop
 
       - name: Download installer artifact
         uses: actions/download-artifact@v8
@@ -134,15 +111,14 @@ jobs:
       - name: Materialize immutable release metadata
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
-          PUBLIC_BASE: ${{ secrets.DOWNLOAD_PUBLIC_BASE_URL }}
           NOTES: ${{ github.event.release.body }}
         run: |
           set -euo pipefail
-          test -n "$PUBLIC_BASE"
+          test -n "$DOWNLOAD_PUBLIC_BASE_URL"
           INSTALLER_PATH="dist/update/tastile-desktop-${VERSION}-setup.exe"
           INSTALLER_SHA256=$(sha256sum "$INSTALLER_PATH" | awk '{print $1}')
           ARTIFACT_KEY="releases/desktop/${VERSION}/tastile-desktop-${VERSION}-setup.exe"
-          DOWNLOAD_URL="${PUBLIC_BASE%/}/${ARTIFACT_KEY}"
+          DOWNLOAD_URL="${DOWNLOAD_PUBLIC_BASE_URL%/}/${ARTIFACT_KEY}"
           jq -n \
             --arg version "$VERSION" \
             --arg download_url "$DOWNLOAD_URL" \
@@ -159,8 +135,6 @@ jobs:
           cat dist/update/manifest.json
 
       - name: Configure Cloudflare R2 endpoint
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
           test -n "$CLOUDFLARE_ACCOUNT_ID"
@@ -169,21 +143,18 @@ jobs:
           echo "AWS_EC2_METADATA_DISABLED=true" >> "$GITHUB_ENV"
 
       - name: Upload immutable versioned artifact to R2
-        env:
-          R2_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
           VERSION="${{ needs.build-installer.outputs.version }}"
-          R2_BUCKET="${{ secrets.CLOUDFLARE_R2_BUCKET }}"
-          PUBLIC_BASE="${{ secrets.DOWNLOAD_PUBLIC_BASE_URL }}"
+          R2_BUCKET="$CLOUDFLARE_R2_BUCKET"
+          PUBLIC_BASE="$DOWNLOAD_PUBLIC_BASE_URL"
           INSTALLER_PATH="dist/update/tastile-desktop-${VERSION}-setup.exe"
           ARTIFACT_KEY=$(cat dist/update/artifact-key)
           CONTENT_DISPOSITION="attachment; filename=\"$(basename "$INSTALLER_PATH")\""
-          test -n "$R2_ACCESS_KEY_ID" -a -n "$R2_SECRET_ACCESS_KEY"
-          case "$PUBLIC_BASE" in https://*) : ;; *) echo "DOWNLOAD_PUBLIC_BASE_URL must use HTTPS" >&2; exit 2 ;; esac
-          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
-          export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+          test -n "$CLOUDFLARE_R2_ACCESS_KEY_ID" -a -n "$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
+          case "$DOWNLOAD_PUBLIC_BASE_URL" in https://*) : ;; *) echo "DOWNLOAD_PUBLIC_BASE_URL must use HTTPS" >&2; exit 2 ;; esac
+          export AWS_ACCESS_KEY_ID="$CLOUDFLARE_R2_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
           UPLOAD_ERROR=$(mktemp)
           if aws s3api put-object \
               --bucket "$R2_BUCKET" \
@@ -203,7 +174,7 @@ jobs:
             fi
             EXPECTED_SHA256=$(sha256sum "$INSTALLER_PATH" | awk '{print $1}')
             curl --fail --silent --show-error --location \
-              "${PUBLIC_BASE%/}/${ARTIFACT_KEY}" -o /tmp/existing-installer.exe
+              "${DOWNLOAD_PUBLIC_BASE_URL%/}/${ARTIFACT_KEY}" -o /tmp/existing-installer.exe
             ACTUAL_SHA256=$(sha256sum /tmp/existing-installer.exe | awk '{print $1}')
             test "${ACTUAL_SHA256,,}" = "${EXPECTED_SHA256,,}"
             rm -f "$UPLOAD_ERROR"
@@ -212,10 +183,9 @@ jobs:
       - name: Verify immutable artifact before changing stable pointer
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
-          PUBLIC_BASE: ${{ secrets.DOWNLOAD_PUBLIC_BASE_URL }}
         run: |
           set -euo pipefail
-          DOWNLOAD_URL="${PUBLIC_BASE%/}/$(cat dist/update/artifact-key)"
+          DOWNLOAD_URL="${DOWNLOAD_PUBLIC_BASE_URL%/}/$(cat dist/update/artifact-key)"
           EXPECTED_SHA256=$(cat dist/update/artifact-sha256)
           curl --fail --silent --show-error --location "$DOWNLOAD_URL" -o /tmp/public-installer.exe
           ACTUAL_SHA256=$(sha256sum /tmp/public-installer.exe | awk '{print $1}')
@@ -224,13 +194,12 @@ jobs:
       - name: Publish stable manifests last
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
-          R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
+          export AWS_ACCESS_KEY_ID="$CLOUDFLARE_R2_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
           for MANIFEST_KEY in channels/stable/desktop.json updates/desktop/manifest.json; do
-            aws s3 cp dist/update/manifest.json "s3://${R2_BUCKET}/${MANIFEST_KEY}" \
+            aws s3 cp dist/update/manifest.json "s3://${CLOUDFLARE_R2_BUCKET}/${MANIFEST_KEY}" \
               --endpoint-url "$R2_ENDPOINT" \
               --content-type application/json \
               --cache-control 'public,max-age=60,must-revalidate' \
@@ -240,17 +209,16 @@ jobs:
       - name: Verify public stable manifest
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
-          PUBLIC_BASE: ${{ secrets.DOWNLOAD_PUBLIC_BASE_URL }}
         run: |
           set -euo pipefail
           for MANIFEST_PATH in channels/stable/desktop.json updates/desktop/manifest.json; do
-            PUBLIC_MANIFEST=$(curl --fail --silent --show-error --location "${PUBLIC_BASE%/}/${MANIFEST_PATH}")
+            PUBLIC_MANIFEST=$(curl --fail --silent --show-error --location "${DOWNLOAD_PUBLIC_BASE_URL%/}/${MANIFEST_PATH}")
             echo "$PUBLIC_MANIFEST"
             ACTUAL_VERSION=$(jq -r '.latest_version // empty' <<< "$PUBLIC_MANIFEST")
             DOWNLOAD_URL=$(jq -r '.download_url // empty' <<< "$PUBLIC_MANIFEST")
             EXPECTED_SHA256=$(jq -r '.sha256 // empty' <<< "$PUBLIC_MANIFEST")
             test "$ACTUAL_VERSION" = "$VERSION"
-            test "$DOWNLOAD_URL" = "${PUBLIC_BASE%/}/$(cat dist/update/artifact-key)"
+            test "$DOWNLOAD_URL" = "${DOWNLOAD_PUBLIC_BASE_URL%/}/$(cat dist/update/artifact-key)"
             test "${EXPECTED_SHA256,,}" = "$(cat dist/update/artifact-sha256)"
           done
 
