@@ -265,3 +265,22 @@ custom fields are populated. WIP cap on `In Progress` is a follow-up.
 - Stacked ticket PRs are allowed within the same target release;
   intermediate predecessor-branch merges never close a downstream
   Issue — only `release-x-y-z -> main` landing closes it.
+
+
+## Constitution / operating profile
+
+- [`constitution/CONSTITUTION.md`](constitution/CONSTITUTION.md)
+- [`organization/profiles/release-driven-solo.md`](organization/profiles/release-driven-solo.md)
+
+
+## Agent Skills lifecycle
+
+project-init 由来の Agent Skills は project-local に管理する。
+
+- 初回導入 / 全体 reconcile: `bunx skills add rebuildup/project-init --skill '*' --agent claude-code opencode codex -y`
+- fresh clone: `bunx skills install`
+- 継続更新: `bunx skills update -p -y`
+- `skills-lock.json` は CLI 生成物として commit し、source/hash を手編集しない
+- upstream-managed Skill は直接編集せず、project 固有差分は別 Skill / adapter / ADR / docs へ置く
+
+Bun は Agent Skills 管理用 tooling であり、product runtime/toolchain の既存 decision を置換しない。
