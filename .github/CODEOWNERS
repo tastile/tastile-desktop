@@ -32,7 +32,6 @@
 /SECURITY.md               @rebuildup
 /Directory.Build.props     @rebuildup
 /global.json               @rebuildup
-/.sops.yaml                @rebuildup
 
 # Auth / token / DPAPI / SSO surface (Cognito Hosted UI + DPAPI credentials).
 /src/TastileDesktop/Services/CognitoAuthService.cs   @rebuildup
@@ -63,9 +62,6 @@
 # Quality gate / scripts (changes affect CI determinism).
 /scripts/                  @rebuildup
 /scripts/check.ps1         @rebuildup
-/scripts/sops-decrypt.ts   @rebuildup
-/scripts/sops-decrypt.test.ts @rebuildup
-/scripts/sops.config.ts    @rebuildup
 
 # AGENTS.md / CLAUDE.md / canonical contract.
 /AGENTS.md                 @rebuildup

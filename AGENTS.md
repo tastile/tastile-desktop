@@ -4,6 +4,12 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 # Tastile Desktop
 
+## Environment and secrets
+
+- Infisical is the only source of secret values. Local builds and remote workflows select the same project/environment and `/tastile/desktop` path.
+- Run local commands with Infisical CLI after interactive login. Do not read secret values from `.env` or machine-specific files.
+- Release workflows fetch scoped publishing secrets through GitHub OIDC. Platform copies exist only as deployment/runtime replicas synchronized from Infisical.
+
 Windows native client for Tastile execution control system. Connects to the
 AWS-hosted `tastile-core` API with native BetterAuth email/password sign-in;
 no local daemon process.

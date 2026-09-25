@@ -16,12 +16,8 @@ Write-Host "  version        = $Version"
 Write-Host "  artifact_key  = releases/desktop/$Version/tastile-desktop-$Version-setup.exe"
 Write-Host "  manifest_keys = channels/stable/desktop.json, updates/desktop/manifest.json"
 Write-Host ""
-Write-Host "Required repo secrets:"
-Write-Host "  CLOUDFLARE_ACCOUNT_ID"
-Write-Host "  CLOUDFLARE_R2_BUCKET"
-Write-Host "  CLOUDFLARE_R2_ACCESS_KEY_ID"
-Write-Host "  CLOUDFLARE_R2_SECRET_ACCESS_KEY"
-Write-Host "  DOWNLOAD_PUBLIC_BASE_URL"
+Write-Host "The release workflow obtains publishing values from Infisical using GitHub OIDC."
+Write-Host "Run migrate-production-secrets.yml once before the first release to transfer and verify existing values."
 
 gh workflow run release.yml --repo tastile/tastile-desktop --ref $Ref --field version=$Version
 if ($LASTEXITCODE -ne 0) {

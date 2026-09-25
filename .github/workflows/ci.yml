@@ -32,9 +32,6 @@ jobs:
         with:
           bun-version: 1.4.0
 
-      - name: Run loader unit tests
-        run: bun test scripts/sops-decrypt.test.ts
-
       - name: Setup .NET SDK
         uses: actions/setup-dotnet@v6
         with:
