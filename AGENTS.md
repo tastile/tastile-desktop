@@ -109,7 +109,7 @@ Idle phase:
 # skill expects.
 .\scripts\check.ps1
 
-# Unit tests only (no desktop build — useful without a sibling tastile-core):
+# Unit tests only (skip both desktop builds for faster feedback):
 .\scripts\check.ps1 -SkipDesktopBuild
 
 # Run a single xUnit test class / case:
