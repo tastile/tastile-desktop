@@ -265,3 +265,9 @@ custom fields are populated. WIP cap on `In Progress` is a follow-up.
 - Stacked ticket PRs are allowed within the same target release;
   intermediate predecessor-branch merges never close a downstream
   Issue — only `release-x-y-z -> main` landing closes it.
+
+## Constitution / operating profile
+
+- 最上位 contract: [`constitution/CONSTITUTION.md`](constitution/CONSTITUTION.md)
+- current Operating Model: [`organization/profiles/release-driven-solo.md`](organization/profiles/release-driven-solo.md)
+- repository / workspace 固有の architecture・quality・release decision は、Constitution と両立する限り generic Practice より具体的な authority として維持する。
