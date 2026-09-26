@@ -1,35 +1,25 @@
 param(
-    [Parameter(Mandatory = $true)][string]$LatestVersion,
-    [Parameter(Mandatory = $true)][string]$DownloadUrl,
-    [Parameter(Mandatory = $false)][string]$Notes = "",
-    [Parameter(Mandatory = $false)][string]$Platform = "desktop",
-    [Parameter(Mandatory = $false)][string]$StoragePath = "",
-    [Parameter(Mandatory = $false)][string]$AppStoragePath = ""
+    [Parameter(Mandatory = $true)][string]$Version,
+    [Parameter(Mandatory = $false)][string]$Ref = "release-0-7-0"
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-Write-Host "Trigger workflow: Publish update manifest"
-Write-Host "Use GitHub Actions workflow_dispatch for ad hoc publishes, or create a GitHub Release to publish automatically."
-Write-Host "workflow_dispatch inputs:"
-Write-Host "  platform       = $Platform"
-Write-Host "  latest_version = $LatestVersion"
-Write-Host "  download_url   = $DownloadUrl"
-Write-Host "  notes          = $Notes"
-if ([string]::IsNullOrWhiteSpace($StoragePath)) {
-    Write-Host "  storage_path   = (empty => updates/$Platform/manifest.json)"
-} else {
-    Write-Host "  storage_path   = $StoragePath"
+if ($Version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$') {
+    throw "Version must use four numeric components, for example 0.3.13.0."
 }
-if ([string]::IsNullOrWhiteSpace($AppStoragePath)) {
-    Write-Host "  app_storage_path = (empty => $Platform/tastile-$Platform-$LatestVersion.exe)"
-} else {
-    Write-Host "  app_storage_path = $AppStoragePath"
-}
+
+Write-Host "Trigger workflow: Cloudflare R2 desktop release"
+Write-Host "Dispatching release.yml on ref $Ref"
+Write-Host "  version        = $Version"
+Write-Host "  artifact_key  = releases/desktop/$Version/tastile-desktop-$Version-setup.exe"
+Write-Host "  manifest_keys = channels/stable/desktop.json, updates/desktop/manifest.json"
 Write-Host ""
-Write-Host "Required repo secrets:"
-Write-Host "  AWS_ACCESS_KEY_ID"
-Write-Host "  AWS_SECRET_ACCESS_KEY"
-Write-Host "  S3_UPDATE_BUCKET"
-Write-Host "  CORE_REPO_READ_TOKEN"
+Write-Host "The release workflow obtains publishing values from Infisical using GitHub OIDC."
+Write-Host "Run migrate-production-secrets.yml once before the first release to transfer and verify existing values."
+
+gh workflow run release.yml --repo tastile/tastile-desktop --ref $Ref --field version=$Version
+if ($LASTEXITCODE -ne 0) {
+    throw "GitHub Actions workflow dispatch failed."
+}

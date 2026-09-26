@@ -72,7 +72,15 @@ For local unpackaged runs we recommend
 ```powershell
 $env:TASTILE_PROFILE="dev"
 $env:TASTILE_API_BASE_URL="http://127.0.0.1:3140"
-dotnet run --project .\src\TastileDesktop\TastileDesktop.csproj
+infisical --domain=https://secrets.rebuildup.dev run --env=dev --path=/tastile/desktop -- dotnet run --project .\src\TastileDesktop\TastileDesktop.csproj
+```
+
+Authenticate to Infisical with `infisical login` before building. Run the
+installer build with the shared development values so local builds use the
+same remote source as CI:
+
+```powershell
+infisical --domain=https://secrets.rebuildup.dev run --env=dev --path=/tastile/desktop -- pwsh -File .\scripts\build-desktop-installer.ps1 -Version 0.2.0
 ```
 
 Create a release installer:
@@ -85,13 +93,27 @@ Use the same version for the app build, installer filename, and hosted update ma
 
 ## Update publication
 
-Installer upload and update-manifest publication are handled by the GitHub Actions workflow:
+Installer upload and update-manifest publication are handled by
+`.github/workflows/release.yml`. The workflow uploads the installer to
+Cloudflare R2 under an immutable versioned key, verifies the public URL and
+SHA-256, and only then updates `channels/stable/desktop.json`.
 
-- `.github/workflows/publish-update-manifest.yml`
+The public distribution layout is:
 
-The workflow runs on GitHub release publication and also supports manual `workflow_dispatch`. For release events, it derives the version from the release tag, attaches the matching installer to the GitHub Release, uploads the same installer to hosted storage, and writes the hosted `manifest.json`.
+```text
+releases/desktop/<version>/tastile-desktop-<version>-setup.exe
+channels/stable/desktop.json
+channels/beta/desktop.json
+```
 
-The app checks a hosted `manifest.json` and opens the installer download URL when an update is available.
+The GitHub Release remains the archival source. A rollback changes only the
+stable manifest pointer to a previously verified version; it never overwrites
+an installer object. The R2 custom domain `download.tastile.app` must be
+configured in Cloudflare before enabling the workflow.
+
+The app checks `channels/stable/desktop.json` (and the legacy
+`updates/desktop/manifest.json` during migration) and opens the installer
+download URL when an update is available.
 
 ## Architecture notes
 

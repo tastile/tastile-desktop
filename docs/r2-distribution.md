@@ -1,0 +1,52 @@
+# Desktop distribution on Cloudflare R2
+
+The desktop release workflow publishes directly to the R2 S3-compatible API.
+The old S3 transfer bucket, presigned URL, SSM, and nginx path are not part of
+the distribution path anymore.
+
+Create an R2 bucket and a scoped API token that can read and write only that
+bucket. Attach the custom domain `download.tastile.app` to the bucket and
+verify that both the immutable artifact path and the stable manifest path are
+publicly readable:
+
+```text
+https://download.tastile.app/releases/desktop/<version>/tastile-desktop-<version>-setup.exe
+https://download.tastile.app/channels/stable/desktop.json
+```
+
+The legacy manifest URL `/updates/desktop/manifest.json` is published as the
+same stable manifest during the migration window so already-installed clients
+continue to receive updates.
+
+The release workflow reads the production values from Infisical at
+`/tastile/desktop` using the repository's GitHub OIDC identity. The one-time
+`migrate-production-secrets.yml` workflow compares the existing GitHub
+environment values with Infisical and imports only missing values. A differing
+existing Infisical value stops the import without overwriting it. After a
+successful OIDC fetch, the obsolete GitHub environment copies can be deleted.
+
+The previous production values were:
+
+```text
+CLOUDFLARE_ACCOUNT_ID
+CLOUDFLARE_R2_BUCKET
+CLOUDFLARE_R2_ACCESS_KEY_ID
+CLOUDFLARE_R2_SECRET_ACCESS_KEY
+DOWNLOAD_PUBLIC_BASE_URL=https://download.tastile.app
+```
+
+The release workflow does not use `AWS_OIDC_ROLE_PRODUCTION`; it publishes to
+Cloudflare R2 with the scoped R2 credentials fetched from Infisical. It does
+not materialize a dotenv file.
+
+Release order is deliberately one-way:
+
+1. conditionally upload the versioned installer, rejecting an existing key;
+2. fetch the public installer and compare SHA-256;
+3. update `channels/stable/desktop.json` last;
+4. fetch the public manifest and verify its pointer and hash;
+5. attach the same installer to the GitHub Release.
+
+To roll back, upload or restore a previously verified stable manifest that
+points to an existing immutable artifact. Do not delete or overwrite the
+versioned installer.
