@@ -72,7 +72,15 @@ For local unpackaged runs we recommend
 ```powershell
 $env:TASTILE_PROFILE="dev"
 $env:TASTILE_API_BASE_URL="http://127.0.0.1:3140"
-dotnet run --project .\src\TastileDesktop\TastileDesktop.csproj
+infisical --domain=https://secrets.rebuildup.dev run --env=dev --path=/tastile/desktop -- dotnet run --project .\src\TastileDesktop\TastileDesktop.csproj
+```
+
+Authenticate to Infisical with `infisical login` before building. Run the
+installer build with the shared development values so local builds use the
+same remote source as CI:
+
+```powershell
+infisical --domain=https://secrets.rebuildup.dev run --env=dev --path=/tastile/desktop -- pwsh -File .\scripts\build-desktop-installer.ps1 -Version 0.2.0
 ```
 
 Create a release installer:

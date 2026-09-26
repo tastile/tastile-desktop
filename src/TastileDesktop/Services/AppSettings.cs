@@ -16,7 +16,7 @@ public static class AppSettings
             if (string.IsNullOrEmpty(raw))
             {
                 throw new InvalidOperationException(
-                    "Missing environment variable TASTILE_WEB_ACCOUNT_URL — please set it before running. See .env.example for the contract.");
+                    "Missing environment variable TASTILE_WEB_ACCOUNT_URL — authenticate to Infisical and run the app with the desktop environment.");
             }
 
             RequireHttpsForRemoteUrl(raw, "TASTILE_WEB_ACCOUNT_URL");
@@ -32,7 +32,7 @@ public static class AppSettings
             if (string.IsNullOrEmpty(raw))
             {
                 throw new InvalidOperationException(
-                    "Missing environment variable TASTILE_API_BASE_URL — please set it before running. See .env.example for the contract.");
+                    "Missing environment variable TASTILE_API_BASE_URL — authenticate to Infisical and run the app with the desktop environment.");
             }
 
             var trimmed = raw.TrimEnd('/');
@@ -70,7 +70,7 @@ public static class AppSettings
             }
 
             throw new InvalidOperationException(
-                "Missing environment variable TASTILE_WEB_BASE_URL — please set it before running. See .env.example for the contract.");
+                "Missing environment variable TASTILE_WEB_BASE_URL — authenticate to Infisical and run the app with the desktop environment.");
         }
     }
 
