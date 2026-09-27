@@ -1,0 +1,60 @@
+name: Release-source check
+
+# Guards the public `main` branch: the only canonical delivery path into
+# `main` is a `release-x-y-z -> main` release PR (parent ADR-0007;
+# tastile-android ADR-0012 / ADR-0014 are not desktop-scoped but the
+# human-authorization boundary is implicit in the `release-branch-workflow`
+# Skill). Branch protection / rulesets alone cannot constrain the PR head
+# pattern, so this required check validates `base == main` => `head == release-*`.
+# Mark this check as required in the protect-main ruleset at
+# https://github.com/tastile/tastile-desktop/settings/branches.
+#
+# canonical Tastile references:
+#   - parent docs/adr/0007-release-branch-and-ticket-workflow.md
+#   - parent docs/agent-orchestration.md §2 sprint workflow
+#   - .agents/skills/release-branch-workflow/SKILL.md
+#   - .agents/skills/github-delivery/SKILL.md
+#   - docs/decisions.md (desktop ADR foundation)
+#
+# Mirrors the same workflow in tastile-web and tastile-android; sibling
+# drift is tracked via the workspace release-branch-workflow Skill.
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, reopened, synchronize, edited]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  release-source:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify PR head matches release-* pattern
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          set -euo pipefail
+          if [[ "${BASE_REF}" != "main" ]]; then
+            echo "::notice::base is ${BASE_REF}, not main — skipping release-source check"
+            exit 0
+          fi
+          if [[ ! "${HEAD_REF}" =~ ^release-[0-9]+-[0-9]+-[0-9]+$ ]]; then
+            echo "::error::PR to main requires head_ref matching ^release-[0-9]+-[0-9]+-[0-9]+\$"
+            echo "::error::actual head_ref=${HEAD_REF} head_sha=${HEAD_SHA}"
+            exit 1
+          fi
+          echo "OK: head_ref=${HEAD_REF} matches release-* pattern"
+      - name: Annotate head SHA on PR
+        if: success()
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          echo "Head ref: ${HEAD_REF}"
+          echo "Head SHA: ${HEAD_SHA}"

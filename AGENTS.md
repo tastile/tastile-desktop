@@ -4,6 +4,12 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 
 # Tastile Desktop
 
+## Environment and secrets
+
+- Infisical is the only source of secret values. Local builds and remote workflows select the same project/environment and `/tastile/desktop` path.
+- Run local commands with Infisical CLI after interactive login. Do not read secret values from `.env` or machine-specific files.
+- Release workflows fetch scoped publishing secrets through GitHub OIDC. Platform copies exist only as deployment/runtime replicas synchronized from Infisical.
+
 Windows native client for Tastile execution control system. Connects to the
 AWS-hosted `tastile-core` API with native BetterAuth email/password sign-in;
 no local daemon process.
@@ -48,8 +54,8 @@ Sibling support dirs under `src/TastileDesktop/`: `Controls/`, `Converters/`,
 `Helpers/`, `Styles/`, `Properties/`, `Assets/`. `ProtocolHandler.cs` lives at
 the project root and handles `tastile://` URL activation.
 
-`AppUpdateService` + `AppUpdateServiceTests` add a hosted-manifest update
-pipeline (see `scripts/publish-update-manifest.ps1` and
+`AppUpdateService` + `AppUpdateServiceTests` add the hosted Cloudflare R2
+manifest update pipeline (see `docs/r2-distribution.md` and
 `.github/workflows/release.yml`); this is the only piece of state the desktop
 owns outside the API.
 
@@ -103,7 +109,7 @@ Idle phase:
 # skill expects.
 .\scripts\check.ps1
 
-# Unit tests only (no desktop build — useful without a sibling tastile-core):
+# Unit tests only (skip both desktop builds for faster feedback):
 .\scripts\check.ps1 -SkipDesktopBuild
 
 # Run a single xUnit test class / case:

@@ -92,16 +92,21 @@ public sealed class InstallerConfigTests
         var workflowPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\.github\workflows\release.yml"));
         var workflow = File.ReadAllText(workflowPath);
 
-        Assert.Contains("ACTUAL_VERSION=$(jq -r '.latest_version // .latest // empty'", workflow);
+        Assert.Contains("ARTIFACT_KEY=\"releases/desktop/${VERSION}/tastile-desktop-${VERSION}-setup.exe\"", workflow);
+        Assert.Contains("channels/stable/desktop.json", workflow);
+        Assert.Contains("environment: production", workflow);
+        Assert.Contains("ACTUAL_VERSION=$(jq -r '.latest_version // empty'", workflow);
         Assert.Contains("DOWNLOAD_URL=$(jq -r '.download_url // empty'", workflow);
         Assert.Contains("EXPECTED_SHA256=$(jq -r '.sha256 // empty'", workflow);
-        Assert.Contains("[0-9A-Fa-f]{64}", workflow);
-        Assert.Contains("[[ \"$DOWNLOAD_URL\" =~ ^https:// ]]", workflow);
-        Assert.Contains("LOCAL_INSTALLER=\"dist/update/tastile-desktop-${VERSION}-setup.exe\"", workflow);
-        Assert.Contains("LOCAL_SHA256=$(sha256sum \"$LOCAL_INSTALLER\"", workflow);
-        Assert.Contains("\"${EXPECTED_SHA256,,}\" != \"${LOCAL_SHA256,,}\"", workflow);
-        Assert.Contains("curl -fsSL \"$DOWNLOAD_URL\" -o \"$PUBLIC_INSTALLER\"", workflow);
-        Assert.Contains("ACTUAL_SHA256=$(sha256sum \"$PUBLIC_INSTALLER\"", workflow);
-        Assert.Contains("\"${ACTUAL_SHA256,,}\" != \"${LOCAL_SHA256,,}\"", workflow);
+        Assert.Contains("curl --fail --silent --show-error --location \"$DOWNLOAD_URL\" -o /tmp/public-installer.exe", workflow);
+        Assert.Contains("test \"${ACTUAL_SHA256,,}\" = \"${EXPECTED_SHA256,,}\"", workflow);
+        Assert.Contains("Publish stable manifests last", workflow);
+        Assert.Contains("updates/desktop/manifest.json", workflow);
+        Assert.Contains("--if-none-match '*'", workflow);
+        Assert.Contains("--content-disposition", workflow);
+        Assert.Contains("DOWNLOAD_PUBLIC_BASE_URL must use HTTPS", workflow);
+        Assert.Contains("--target \"$GITHUB_SHA\"", workflow);
+        Assert.Contains("Verify GitHub Release asset", workflow);
+        Assert.Contains("environment: production", workflow);
     }
 }

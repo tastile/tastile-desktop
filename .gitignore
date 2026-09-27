@@ -59,6 +59,4 @@ signing.cert
 appsettings.Development.json
 appsettings.Local.json
 
-# sops loader output (plain text .env files)
-!.env.*.example
-!.env.*.sops
+!.env.example
