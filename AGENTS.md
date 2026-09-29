@@ -25,7 +25,7 @@ no local daemon process.
 
 ```
 TastileDesktop/                                AWS remote API
-├── App.xaml.cs                               ──HTTPS + Bearer JWT──▶  beta.tastile.app  ─▶  tastile-core
+├── App.xaml.cs                               ──HTTPS + Bearer token─▶  api.<env>.tastile.app  ─▶  tastile-core
 ├── Services/                                                                       (no local daemon)
 │   ├── CoreApiClient.cs            # Bearer + 401-refresh-retry HTTPS client
 │   ├── BetterAuthAuthService.cs    # Native BetterAuth session + refresh + signout
@@ -65,7 +65,7 @@ owns outside the API.
   via DPAPI in `%LOCALAPPDATA%\Tastile\Auth\credentials.bin`.
   `CoreApiClient` adds the BetterAuth session token as Bearer and retries once
   on 401 after validating the session.
-- **API base URL**: `TASTILE_API_BASE_URL` (default `https://beta.tastile.app`).
+- **API base URL**: `TASTILE_API_BASE_URL` (no default; must be supplied by the installer or environment — staging: `https://staging-api.tastile.app`, production: `https://api.tastile.app`).
   For local dev, set `TASTILE_API_BASE_URL=http://127.0.0.1:3140`.
 - **Web auth base URL**: `TASTILE_WEB_BASE_URL` (see `AppSettings`). Social
   sign-in is intentionally not exposed until an installed-app handoff can
@@ -119,7 +119,7 @@ dotnet test tests/TastileDesktop.Tests/TastileDesktop.Tests.csproj \
 # Build a single RID (packaging/runtime parity with the installer):
 dotnet build src/TastileDesktop/TastileDesktop.csproj -r win-x64
 
-# Run unpackaged against prod API (default beta.tastile.app):
+# Run unpackaged against an explicit API base URL (no default):
 dotnet run --project src/TastileDesktop
 
 # Run against the local tastile-core daemon during development:

@@ -23,7 +23,7 @@ Windows native client for the Tastile execution control system.
 
 - Windows 11
 - .NET SDK `10.0.104` or newer in the same feature band
-- AWS Cognito Hosted UI credentials (Google OAuth federated identity) — see `CLAUDE.md`
+- Better Auth credentials (email+password, obtained from the web login surface) — see `CLAUDE.md`
 - Inno Setup 6 for installer builds
 
 ## Local development
@@ -123,7 +123,7 @@ The desktop client is intentionally thin. Scheduling, prompting, and execution d
 - surfacing prompts and interventions
 - handling desktop-only UX such as tray, overlays, and startup integration
 
-The desktop connects to a `tastile-core` API instance via `TASTILE_API_BASE_URL` (default `https://beta.tastile.app`). In production the API is the EC2-hosted `tastile-core` daemon; in dev it can point at `http://localhost:3140`. Auth uses AWS Cognito Hosted UI (Google OAuth federated identity) — see `CLAUDE.md` for the connection model and env-var key list.
+The desktop connects to a `tastile-core` API instance via `TASTILE_API_BASE_URL` (no default; `https://api.tastile.app` in production, `https://staging-api.tastile.app` in staging). In production the API is the EC2-hosted `tastile-core` daemon; in dev it can point at `http://localhost:3140`. Auth uses Better Auth (email+password through the web login surface; social sign-in is disabled) and a Core API token minted at `/api/mobile/api-token` — see `CLAUDE.md` for the connection model and env-var key list.
 
 ## Contribution flow
 
