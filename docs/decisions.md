@@ -463,3 +463,7 @@ release は **失敗時のみ retry すべき** workflow。同一 tag への複�
 - `dtolnay/rust-toolchain@stable`: float tag。同上の理由で一旦 deferred。
 - Dependabot が生成する MAJOR bump PR の review / merge rotation は
   別途運用設計が必要。本 ADR は file 配置のみ。
+
+## 2026-09-30: 旧 per-commit reviewer loop の廃止
+
+上記の歴史decisionで記録された旧reviewer Skillとcommit review gateはroot ADR-0021によりsupersedeされた。現在はroot ../.agents/skills/verify-tastile-change/SKILL.md のbinding verificationと通常の独立reviewを用いる。ADR-0008のdurable checkpoint/schemaは維持する。Skillのlocal copyを削除し、CLAUDE/CODEOWNERSのactive pointerを同期した。
