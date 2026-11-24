@@ -20,4 +20,34 @@ public sealed record AuthSession(
     [property: JsonPropertyName("api_token")] string ApiToken,
     [property: JsonPropertyName("user_id")] string UserId,
     [property: JsonPropertyName("email")] string? Email,
-    [property: JsonPropertyName("expires_at")] DateTimeOffset ExpiresAt);
+    [property: JsonPropertyName("expires_at")] DateTimeOffset ExpiresAt)
+{
+    /// <summary>
+    /// Which sign-in produced this session: <see cref="AuthFlows.Password"/>
+    /// (BetterAuth email/password, SessionToken is the web session cookie
+    /// token) or <see cref="AuthFlows.Pkce"/> (browser Authorization Code +
+    /// PKCE, both token fields carry the scoped Core API token minted by
+    /// <c>POST /api/cli/token</c>). <c>null</c> on credentials written before
+    /// the PKCE flow existed — treated as <see cref="AuthFlows.Password"/>.
+    /// </summary>
+    [property: JsonPropertyName("flow")]
+    public string? Flow { get; init; }
+}
+
+/// <summary>Values for <see cref="AuthSession.Flow"/>.</summary>
+public static class AuthFlows
+{
+    /// <summary>BetterAuth email/password sign-in via <c>/api/auth/sign-in/email</c>.</summary>
+    public const string Password = "password";
+
+    /// <summary>
+    /// System-browser Authorization Code + PKCE (NF04-D01). The session
+    /// carries a Core API token with <c>tastile.read</c>/<c>tastile.write</c>
+    /// scopes instead of a BetterAuth web session.
+    /// </summary>
+    public const string Pkce = "pkce";
+
+    /// <summary>Normalizes a stored <see cref="AuthSession.Flow"/> value.</summary>
+    public static string EffectiveFlow(AuthSession? session) =>
+        session?.Flow ?? Password;
+}

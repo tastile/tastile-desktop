@@ -29,7 +29,9 @@ TastileDesktop/                                AWS remote API
 ├── Services/                                                                       (no local daemon)
 │   ├── CoreApiClient.cs            # Bearer + 401-refresh-retry HTTPS client
 │   ├── BetterAuthAuthService.cs    # Native BetterAuth session + refresh + signout
-│   ├── BetterAuthHttpClient.cs     # BetterAuth HTTP endpoints + API-token bridge
+│   ├── BetterAuthHttpClient.cs     # BetterAuth HTTP endpoints + API-token bridge + /api/cli/token
+│   ├── Pkce.cs                     # RFC 7636 verifier/challenge/state + /cli/authorize URL (NF04-D01)
+│   ├── LoopbackCallbackListener.cs # 127.0.0.1:<port>/callback receiver for the PKCE redirect
 │   ├── SecureTokenStore.cs         # DPAPI-protected credentials
 │   ├── EventDrivenPoller.cs        # User-action / focus / idle refresh (no wall-clock tick)
 │   ├── AuthService.cs              # Facade over BetterAuthAuthService
@@ -61,10 +63,14 @@ owns outside the API.
 
 ## Connection Model
 
-- **Auth**: BetterAuth native email/password flow. Session/API tokens are saved
+- **Auth**: two flows share `BetterAuthAuthService` (see `AuthSession.Flow`):
+  BetterAuth native email/password, and NF04-D01 system-browser Authorization
+  Code + PKCE (`client_id=tastile-desktop`, loopback `/callback`, scoped Core
+  API token via `/api/cli/token`; contract: tastile-web
+  `docs/auth/desktop-auth-contract.md`). Session/API tokens are saved
   via DPAPI in `%LOCALAPPDATA%\Tastile\Auth\credentials.bin`.
-  `CoreApiClient` adds the BetterAuth session token as Bearer and retries once
-  on 401 after validating the session.
+  `CoreApiClient` adds the session bearer (web session token for password
+  flow, Core API token for PKCE) and retries once on 401 after validating.
 - **API base URL**: `TASTILE_API_BASE_URL` (no default; must be supplied by the installer or environment — staging: `https://staging-api.tastile.app`, production: `https://api.tastile.app`).
   For local dev, set `TASTILE_API_BASE_URL=http://127.0.0.1:3140`.
 - **Web auth base URL**: `TASTILE_WEB_BASE_URL` (see `AppSettings`). Social

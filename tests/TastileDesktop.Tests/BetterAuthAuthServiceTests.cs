@@ -375,19 +375,33 @@ internal static class BetterAuthAuthServiceTestExtensions
 internal sealed class StubHttpHandler : HttpMessageHandler
 {
     public Dictionary<string, HttpResponseMessage> Responses { get; } = new();
+    public HashSet<string> SeenPaths { get; } = new();
+    public string? LastRequestBody { get; private set; }
+    public string? LastAuthorizationScheme { get; private set; }
+    public string? LastAuthorizationParameter { get; private set; }
 
-    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    public bool SawRequest(string path) => SeenPaths.Contains(path);
+
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var key = request.RequestUri?.AbsolutePath ?? string.Empty;
-        if (Responses.TryGetValue(key, out var response))
+        SeenPaths.Add(key);
+        LastAuthorizationScheme = request.Headers.Authorization?.Scheme;
+        LastAuthorizationParameter = request.Headers.Authorization?.Parameter;
+        if (request.Content is not null)
         {
-            return Task.FromResult(response);
+            LastRequestBody = await request.Content.ReadAsStringAsync(cancellationToken);
         }
 
-        return Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)
+        if (Responses.TryGetValue(key, out var response))
+        {
+            return response;
+        }
+
+        return new HttpResponseMessage(HttpStatusCode.NotFound)
         {
             Content = new StringContent($"no stub for {key}"),
-        });
+        };
     }
 }
 

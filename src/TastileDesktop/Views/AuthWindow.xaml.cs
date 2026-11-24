@@ -25,6 +25,7 @@ public sealed partial class AuthWindow : Window
         this.InitializeComponent();
         FloatingWindowHelper.Configure(this, TitleBarArea, 460, 540);
         SignInButton.Click += OnSignInClick;
+        BrowserSignInButton.Click += OnBrowserSignInClick;
         CancelButton.Click += OnCancelClick;
 
         _authStateChangedHandler = (_, _) =>
@@ -55,6 +56,7 @@ public sealed partial class AuthWindow : Window
         EmailTextBox.IsEnabled = true;
         PasswordInput.IsEnabled = true;
         SignInButton.IsEnabled = true;
+        BrowserSignInButton.IsEnabled = true;
         EmailTextBox.Focus(FocusState.Programmatic);
     }
 
@@ -97,13 +99,32 @@ public sealed partial class AuthWindow : Window
         await RunSignInAsync(ct => BetterAuthAuthService.Instance.SignInWithEmailAsync(email, password, ct));
     }
 
+    /// <summary>
+    /// NF04-D01: Authorization Code + PKCE via the system browser. The web
+    /// side runs the consent screen; the code returns on a loopback
+    /// listener owned by <see cref="BetterAuthAuthService"/>.
+    /// </summary>
+    private async void OnBrowserSignInClick(object sender, RoutedEventArgs e)
+    {
+        if (_busy)
+        {
+            return;
+        }
+
+        await RunSignInAsync(
+            ct => BetterAuthAuthService.Instance.SignInWithBrowserAsync(ct),
+            "Auth_ContinueInBrowserStatus");
+    }
+
     private async void OnCreateAccountClick(object sender, RoutedEventArgs e)
     {
         OpenExternalUrl($"{AppSettings.WebBaseUrl}/auth/signup");
         await Task.CompletedTask;
     }
 
-    private async Task RunSignInAsync(Func<CancellationToken, Task<AuthResult>> operation)
+    private async Task RunSignInAsync(
+        Func<CancellationToken, Task<AuthResult>> operation,
+        string? statusKey = null)
     {
         // Each attempt gets its own CTS so a previous cancellation does not
         // poison the next sign-in.
@@ -113,7 +134,9 @@ public sealed partial class AuthWindow : Window
         previousCts?.Dispose();
 
         SetBusy(true);
-        StatusTextBlock.Text = Strings.Get("Auth_SignInInProgress");
+        StatusTextBlock.Text = statusKey is null
+            ? Strings.Get("Auth_SignInInProgress")
+            : Strings.Get(statusKey);
         try
         {
             var result = await operation(cts.Token);
@@ -163,6 +186,7 @@ public sealed partial class AuthWindow : Window
     {
         _busy = busy;
         SignInButton.IsEnabled = !busy;
+        BrowserSignInButton.IsEnabled = !busy;
         EmailTextBox.IsEnabled = !busy;
         PasswordInput.IsEnabled = !busy;
         CancelButton.IsEnabled = !busy;

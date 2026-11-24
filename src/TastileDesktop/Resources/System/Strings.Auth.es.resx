@@ -36,8 +36,8 @@
   <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>Continuar en el navegador</value></data>
   <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>Continuar en el navegador</value></data>
   <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>Continúe el inicio de sesión en su navegador…</value></data>
-  <data name="Auth_Description" xml:space="preserve"><value>Su navegador abre la página de inicio de sesión de Tastile. Elija un método de inicio de sesión y Tastile volverá automáticamente.</value></data>
-  <data name="Auth_Description.Text" xml:space="preserve"><value>Su navegador abre la página de inicio de sesión de Tastile. Elija un método de inicio de sesión y Tastile volverá automáticamente.</value></data>
+  <data name="Auth_Description" xml:space="preserve"><value>Inicie sesión con el correo y la contraseña de su cuenta de Tastile, o continúe en el navegador. ¿Nuevo aquí? Cree una cuenta en la web.</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>Inicie sesión con el correo y la contraseña de su cuenta de Tastile, o continúe en el navegador. ¿Nuevo aquí? Cree una cuenta en la web.</value></data>
   <data name="Auth_Heading" xml:space="preserve"><value>Iniciar sesión en Tastile</value></data>
   <data name="Auth_Heading.Text" xml:space="preserve"><value>Iniciar sesión en Tastile</value></data>
   <data name="Auth_SignInFailed" xml:space="preserve"><value>No se pudo iniciar la sesión: {0}</value></data>

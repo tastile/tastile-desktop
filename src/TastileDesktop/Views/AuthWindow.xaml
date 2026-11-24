@@ -41,6 +41,8 @@
 
                     <Button x:Name="SignInButton" x:Uid="Auth_SignIn" Content="Sign in" Click="OnSignInClick" HorizontalAlignment="Stretch" IsEnabled="False" Style="{ThemeResource AccentButtonStyle}" />
 
+                    <Button x:Name="BrowserSignInButton" x:Uid="Auth_ContinueInBrowser" Content="Continue in browser" Click="OnBrowserSignInClick" HorizontalAlignment="Stretch" IsEnabled="False" />
+
                     <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
                         <HyperlinkButton x:Name="CreateAccountLink" x:Uid="Auth_CreateAccount" Content="Create account" Click="OnCreateAccountClick" />
                     </StackPanel>

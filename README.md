@@ -123,7 +123,7 @@ The desktop client is intentionally thin. Scheduling, prompting, and execution d
 - surfacing prompts and interventions
 - handling desktop-only UX such as tray, overlays, and startup integration
 
-The desktop connects to a `tastile-core` API instance via `TASTILE_API_BASE_URL` (no default; `https://api.tastile.app` in production, `https://staging-api.tastile.app` in staging). In production the API is the EC2-hosted `tastile-core` daemon; in dev it can point at `http://localhost:3140`. Auth uses Better Auth (email+password through the web login surface; social sign-in is disabled) and a Core API token minted at `/api/mobile/api-token` — see `CLAUDE.md` for the connection model and env-var key list.
+The desktop connects to a `tastile-core` API instance via `TASTILE_API_BASE_URL` (no default; `https://api.tastile.app` in production, `https://staging-api.tastile.app` in staging). In production the API is the EC2-hosted `tastile-core` daemon; in dev it can point at `http://localhost:3140`. Auth uses Better Auth (email+password through the web login surface; social sign-in is disabled) or system-browser Authorization Code + PKCE (`client_id=tastile-desktop`, scoped Core API token via `/api/cli/token`) — see `CLAUDE.md` for the connection model and env-var key list.
 
 ## Contribution flow
 
