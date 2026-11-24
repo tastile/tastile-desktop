@@ -32,7 +32,7 @@ public sealed class CommandOutboxTests : IDisposable
     }
 
     private static OutboxEnqueueRequest Request(string key, string kind = "execution.start")
-        => new(kind, "POST", $"/v1/test/{key}", $$"""{"idempotency_key":"{{key}}","payload":{}}""", key, "2026-11-24T00:00:00Z");
+        => new(kind, "POST", $"/v1/test/{key}", "{\"idempotency_key\":\"" + key + "\",\"payload\":{}}", key, "2026-11-24T00:00:00Z");
 
     [Fact]
     public void Enqueue_PersistsInOrder_AndDedupsByIdempotencyKey()
