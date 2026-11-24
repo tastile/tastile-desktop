@@ -20,7 +20,7 @@ concurrency:
 jobs:
   verify-head:
     name: verify-head
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     if: github.event.pull_request.base.ref == 'main'
     steps:
       - name: Check head ref pattern
