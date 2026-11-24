@@ -46,6 +46,7 @@
     <Compile Include="..\..\src\TastileDesktop\Models\CreateTileModels.cs" Link="CreateTileModels.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\ApiModels.cs" Link="ApiModels.cs" />
     <Compile Include="..\..\src\TastileDesktop\Models\SyncModels.cs" Link="SyncModels.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Models\SseModels.cs" Link="SseModels.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\LocalReadModelStore.cs" Link="LocalReadModelStore.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\LocalSyncService.cs" Link="LocalSyncService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\LocalTimelineProjector.cs" Link="LocalTimelineProjector.cs" />

@@ -421,6 +421,30 @@ public class CoreApiClient
         return new CommandTransportResult((int)response.StatusCode, body, response.IsSuccessStatusCode);
     }
 
+    /// <summary>
+    /// Opens the SSE change-notification stream `GET /v1/sync/stream`
+    /// (v1/14 §6-6, core#559). Notification-only: `change` events carry
+    /// `{entityKind, entityId, changeKind}` plus the sync cursor as the
+    /// SSE `id` — never entity state. The caller pulls `GET /v1/sync`
+    /// for state. `lastEventId` resumes replay after that sync cursor.
+    /// The returned response must be disposed by the caller; the body is
+    /// a live `text/event-stream`.
+    /// </summary>
+    public async Task<HttpResponseMessage> OpenSyncStreamAsync(
+        string? lastEventId, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/v1/sync/stream");
+        request.Headers.Accept.ParseAdd("text/event-stream");
+        if (!string.IsNullOrEmpty(lastEventId))
+        {
+            // Last-Event-ID carries a sync cursor verbatim (v1/14 §6-6).
+            request.Headers.TryAddWithoutValidation("Last-Event-ID", lastEventId);
+        }
+
+        // The event client has an infinite timeout for long-lived streams.
+        return await SendWithAuthAsync(_eventClient ?? _httpClient, request, cancellationToken);
+    }
+
     public IAsyncEnumerable<string> StreamStateEventsAsync(CancellationToken cancellationToken = default)
     {
         // v1 has no equivalent SSE state stream; the previous /read/events/state

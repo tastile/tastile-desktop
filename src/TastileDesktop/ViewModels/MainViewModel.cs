@@ -454,6 +454,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public event Action<string>? TimelinePromptRequested;
 
     private readonly EventDrivenPoller _pollingService;
+    private Services.LocalSyncService? _localSync;
+    private Services.SyncStreamService? _syncStream;
     private List<TileListItem> _allTiles = new();
     private ObservableCollection<TileListItem> _tiles = new();
     private string _selectedFilter = "All";
@@ -894,6 +896,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         // its database lazily, so construction is side-effect free.
         var localStore = new Services.LocalReadModelStore(Services.LocalReadModelStore.DefaultDbPath());
         var localSync = new Services.LocalSyncService(_api, localStore);
+        _localSync = localSync;
         _pollingService = new EventDrivenPoller(_api, _dispatcher, localStore, localSync);
         _pollingService.SetTimelineViewport(_timelineViewport);
 
@@ -926,6 +929,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public async Task InitializeAsync()
     {
         await _pollingService.StartAsync();
+
+        // NF04-D03: SSE change-notification doorbell. Notifications only
+        // trigger delta pulls; the poller's throttled sync remains the
+        // fallback when the stream is unavailable.
+        if (_localSync is not null)
+        {
+            _syncStream = new Services.SyncStreamService(_api, _localSync);
+            _syncStream.Start();
+        }
     }
 
     private void OnExecutionViewChanged(object? sender, ExecutionView? view)
