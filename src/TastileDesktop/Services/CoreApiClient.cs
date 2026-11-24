@@ -376,6 +376,32 @@ public class CoreApiClient
             RangeEnd: projection.RangeEnd);
     }
 
+    // Sync API v2 (v1/14 §6, core#558/#559). Status-carrying variants so
+    // the caller can distinguish HTTP 410 CURSOR_EXPIRED (resnapshot) from
+    // transient failures. `cursor` is the opaque server token — never
+    // decoded or constructed client-side.
+    public Task<ApiResult<SyncSnapshotResponse>> GetSyncSnapshotPageWithStatusAsync(
+        string? cursor, int limit = 1000, CancellationToken cancellationToken = default)
+    {
+        var query = $"?limit={limit}";
+        if (!string.IsNullOrEmpty(cursor))
+        {
+            query += $"&cursor={Uri.EscapeDataString(cursor)}";
+        }
+        return GetJsonWithStatusAsync<SyncSnapshotResponse>($"/v1/sync/snapshot{query}", cancellationToken);
+    }
+
+    public Task<ApiResult<SyncResponse>> GetSyncDeltaWithStatusAsync(
+        string? cursor, int limit = 1000, CancellationToken cancellationToken = default)
+    {
+        var query = $"?limit={limit}";
+        if (!string.IsNullOrEmpty(cursor))
+        {
+            query += $"&cursor={Uri.EscapeDataString(cursor)}";
+        }
+        return GetJsonWithStatusAsync<SyncResponse>($"/v1/sync{query}", cancellationToken);
+    }
+
     public IAsyncEnumerable<string> StreamStateEventsAsync(CancellationToken cancellationToken = default)
     {
         // v1 has no equivalent SSE state stream; the previous /read/events/state
