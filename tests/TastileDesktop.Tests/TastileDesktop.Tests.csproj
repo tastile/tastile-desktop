@@ -49,6 +49,9 @@
     <Compile Include="..\..\src\TastileDesktop\Services\LocalReadModelStore.cs" Link="LocalReadModelStore.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\LocalSyncService.cs" Link="LocalSyncService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\LocalTimelineProjector.cs" Link="LocalTimelineProjector.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Models\CommandOutboxModels.cs" Link="CommandOutboxModels.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CommandOutboxStore.cs" Link="CommandOutboxStore.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\CommandOutbox.cs" Link="CommandOutbox.cs" />
   </ItemGroup>
 
   <ItemGroup>

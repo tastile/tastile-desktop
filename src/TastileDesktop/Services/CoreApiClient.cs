@@ -402,6 +402,25 @@ public class CoreApiClient
         return GetJsonWithStatusAsync<SyncResponse>($"/v1/sync{query}", cancellationToken);
     }
 
+    /// <summary>
+    /// Sends a raw command envelope to a v1 command endpoint and returns
+    /// the transport-level result (status + body) for the offline command
+    /// outbox (NF04-D06). The body is sent verbatim — callers build the
+    /// `CommandEnvelope` JSON themselves so the persisted outbox row and
+    /// the wire payload can never diverge.
+    /// </summary>
+    public async Task<CommandTransportResult> SendCommandAsync(
+        string httpMethod, string path, string envelopeJson, CancellationToken cancellationToken = default)
+    {
+        using var request = new HttpRequestMessage(new HttpMethod(httpMethod), path)
+        {
+            Content = new StringContent(envelopeJson, System.Text.Encoding.UTF8, "application/json"),
+        };
+        using var response = await SendWithAuthAsync(_httpClient, request, cancellationToken);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken);
+        return new CommandTransportResult((int)response.StatusCode, body, response.IsSuccessStatusCode);
+    }
+
     public IAsyncEnumerable<string> StreamStateEventsAsync(CancellationToken cancellationToken = default)
     {
         // v1 has no equivalent SSE state stream; the previous /read/events/state
