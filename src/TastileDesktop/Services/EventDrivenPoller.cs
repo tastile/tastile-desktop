@@ -14,6 +14,10 @@ public sealed class EventDrivenPoller : IDisposable
     private readonly CoreApiClient _api;
     private readonly DispatcherQueue _dispatcher;
     private readonly int _idleSeconds;
+    private readonly LocalReadModelStore? _localStore;
+    private readonly LocalSyncService? _localSync;
+    private DateTimeOffset _lastSyncAttemptUtc = DateTimeOffset.MinValue;
+    private static readonly TimeSpan SyncInterval = TimeSpan.FromSeconds(60);
     private readonly DispatcherTimer _uiUpdateTimer;
     private readonly SemaphoreSlim _pollGate = new(1, 1);
     private DispatcherQueueTimer? _idleTimer;
@@ -54,10 +58,22 @@ public sealed class EventDrivenPoller : IDisposable
     public TimelineTodayResponse? CurrentTimeline => _lastTimeline;
     public bool IsConnected => _lastConnectionState;
 
-    public EventDrivenPoller(CoreApiClient api, DispatcherQueue dispatcher)
+    /// <summary>True while the published timeline comes from the offline read model.</summary>
+    public bool IsShowingLocalTimeline => _lastTimeline?.LocalSnapshot == true;
+
+    /// <summary>UTC time the local read model was last synced; null when never synced.</summary>
+    public DateTimeOffset? LocalDataAsOf => _localStore?.LastSyncAt;
+
+    public EventDrivenPoller(
+        CoreApiClient api,
+        DispatcherQueue dispatcher,
+        LocalReadModelStore? localStore = null,
+        LocalSyncService? localSync = null)
     {
         _api = api ?? throw new ArgumentNullException(nameof(api));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _localStore = localStore;
+        _localSync = localSync;
         _idleSeconds = AppSettings.PollIdleSeconds;
         _uiUpdateTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(200) };
         _uiUpdateTimer.Tick += OnUIUpdateTick;
@@ -144,6 +160,37 @@ public sealed class EventDrivenPoller : IDisposable
                 connected = false;
             }
 
+            // NF04-D02/D03: keep the local read model fresh while online
+            // (throttled, fire-and-forget) and fall back to it for the
+            // timeline while offline so schedule/actuals stay visible.
+            if (connected && _localSync is not null
+                && DateTimeOffset.UtcNow - _lastSyncAttemptUtc >= SyncInterval)
+            {
+                _ = SyncLocalAsync();
+            }
+
+            if (!connected && _localStore is not null)
+            {
+                try
+                {
+                    var localTimeline = LocalTimelineProjector.Project(
+                        _localStore, _timelineViewport.AnchorLocal);
+                    if (localTimeline is not null
+                        && HasTimelineChanged(_lastTimeline, localTimeline))
+                    {
+                        lock (_pendingChangesLock)
+                        {
+                            _hasTimelineChange = true;
+                            _pendingTimeline = localTimeline;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[EventDrivenPoller] local timeline projection failed: {ex.Message}");
+                }
+            }
+
             if (connected)
             {
                 if (forcePublish || HasExecutionViewChanged(_lastExecutionView, executionView))
@@ -203,6 +250,23 @@ public sealed class EventDrivenPoller : IDisposable
         Stop();
         _idleTimer = null;
         _pollGate.Dispose();
+    }
+
+    private async Task SyncLocalAsync()
+    {
+        _lastSyncAttemptUtc = DateTimeOffset.UtcNow;
+        try
+        {
+            var result = await _localSync!.SyncOnceAsync();
+            if (!result.Success)
+            {
+                System.Diagnostics.Debug.WriteLine($"[EventDrivenPoller] local sync: {result.Outcome} {result.Detail}");
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"[EventDrivenPoller] local sync failed: {ex.Message}");
+        }
     }
 
     private void OnIdleTimerTick(DispatcherQueueTimer sender, object args)

@@ -890,7 +890,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         _api = new CoreApiClient(
             getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
             refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
-        _pollingService = new EventDrivenPoller(_api, _dispatcher);
+        // NF04-D02: local SQLite read model + sync driver. The store opens
+        // its database lazily, so construction is side-effect free.
+        var localStore = new Services.LocalReadModelStore(Services.LocalReadModelStore.DefaultDbPath());
+        var localSync = new Services.LocalSyncService(_api, localStore);
+        _pollingService = new EventDrivenPoller(_api, _dispatcher, localStore, localSync);
         _pollingService.SetTimelineViewport(_timelineViewport);
 
         // Notify initial visibility state

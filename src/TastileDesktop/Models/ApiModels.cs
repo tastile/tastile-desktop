@@ -159,7 +159,12 @@ public record PromptActionView(
 public record TimelineTodayResponse(
     [property: JsonPropertyName("items")] List<TimelineItemView> Items,
     [property: JsonPropertyName("range_start")] string? RangeStart = null,
-    [property: JsonPropertyName("range_end")] string? RangeEnd = null
+    [property: JsonPropertyName("range_end")] string? RangeEnd = null,
+    // Local-read-model markers (desktop NF04-D02). The server never emits
+    // these; they are only set when the timeline is projected from the
+    // offline SQLite read model so the UI can mark data as stale.
+    [property: JsonPropertyName("local_snapshot")] bool LocalSnapshot = false,
+    [property: JsonPropertyName("data_as_of")] string? DataAsOf = null
 );
 
 public record TimelineItemView(
