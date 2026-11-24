@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text.Json;
+using Microsoft.Data.Sqlite;
 using TastileDesktop.Models;
 using TastileDesktop.Services;
 
@@ -20,6 +21,7 @@ public sealed class LocalSyncServiceTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
+        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
         foreach (var suffix in new[] { "", "-wal", "-shm" })
         {
             var path = _dbPath + suffix;
