@@ -209,6 +209,96 @@ public sealed class BetterAuthHttpClient
         return new MobileApiTokenResult(token, parsed.TokenId, parsed.ExpiresAt);
     }
 
+    /// <summary>
+    /// <c>POST /api/cli/token</c> — the public-client token exchange shared
+    /// by <c>tastile-cli</c> and <c>tastile-desktop</c> (NF04-D01, contract:
+    /// tastile-web <c>docs/auth/desktop-auth-contract.md</c>). The body is
+    /// exactly the three wire keys; the endpoint reads no session cookie.
+    /// Success returns the minted Core API token (<c>tastile.read</c> +
+    /// <c>tastile.write</c> scopes), its expiry, and the owning subject.
+    /// </summary>
+    public async Task<CliTokenResult> ExchangeCliTokenAsync(
+        string code,
+        string codeVerifier,
+        string redirectUri,
+        CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrEmpty(code))
+        {
+            throw new ArgumentException("code is required", nameof(code));
+        }
+
+        if (string.IsNullOrEmpty(codeVerifier))
+        {
+            throw new ArgumentException("codeVerifier is required", nameof(codeVerifier));
+        }
+
+        if (string.IsNullOrEmpty(redirectUri))
+        {
+            throw new ArgumentException("redirectUri is required", nameof(redirectUri));
+        }
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/api/cli/token")
+        {
+            Content = JsonContent.Create(new
+            {
+                code,
+                code_verifier = codeVerifier,
+                redirect_uri = redirectUri,
+            }),
+        };
+        using var response = await _http.SendAsync(request, cancellationToken).ConfigureAwait(false);
+        var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+
+        if (!response.IsSuccessStatusCode)
+        {
+            var (error, detail) = TryParseCliError(body);
+            throw new BetterAuthHttpException(
+                response.StatusCode,
+                error ?? "token_exchange_failed",
+                detail ?? TryParseErrorMessage(body));
+        }
+
+        var parsed = JsonSerializer.Deserialize<CliTokenResponse>(body)
+            ?? throw new BetterAuthHttpException(response.StatusCode, "token_exchange_failed", "Empty response body");
+        if (string.IsNullOrEmpty(parsed.Token))
+        {
+            throw new BetterAuthHttpException(response.StatusCode, "token_exchange_failed", "Response missing token");
+        }
+
+        return new CliTokenResult(parsed.Token, parsed.ExpiresAt, parsed.Subject);
+    }
+
+    private static (string? Error, string? Detail) TryParseCliError(string body)
+    {
+        if (string.IsNullOrWhiteSpace(body))
+        {
+            return (null, null);
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            if (root.ValueKind != JsonValueKind.Object)
+            {
+                return (null, body);
+            }
+
+            var error = root.TryGetProperty("error", out var errorEl) && errorEl.ValueKind == JsonValueKind.String
+                ? errorEl.GetString()
+                : null;
+            var detail = root.TryGetProperty("detail", out var detailEl) && detailEl.ValueKind == JsonValueKind.String
+                ? detailEl.GetString()
+                : null;
+            return (error, detail);
+        }
+        catch (JsonException)
+        {
+            return (null, body);
+        }
+    }
+
     private static string ExtractSetCookie(HttpResponseMessage response)
     {
         if (!response.Headers.TryGetValues("Set-Cookie", out var values))
@@ -389,6 +479,21 @@ public sealed class BetterAuthHttpClient
 public sealed record SignInEmailResult(BetterAuthUser? User, string SetCookie);
 public sealed record SignUpEmailResult(BetterAuthUser? User, string SetCookie);
 public sealed record MobileApiTokenResult(string Token, string? TokenId, DateTimeOffset? ExpiresAt);
+
+/// <summary>Result of <c>POST /api/cli/token</c> (PKCE exchange).</summary>
+public sealed record CliTokenResult(string Token, DateTimeOffset? ExpiresAt, string? Subject);
+
+internal sealed class CliTokenResponse
+{
+    [JsonPropertyName("token")]
+    public string? Token { get; init; }
+
+    [JsonPropertyName("expires_at")]
+    public DateTimeOffset? ExpiresAt { get; init; }
+
+    [JsonPropertyName("subject")]
+    public string? Subject { get; init; }
+}
 
 public sealed record BetterAuthUser(string? Id, string? Email, string? Name, bool EmailVerified);
 

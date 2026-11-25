@@ -12,6 +12,8 @@
     <Compile Include="..\..\src\TastileDesktop\Services\AuthService.cs" Link="AuthService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\BetterAuthAuthService.cs" Link="BetterAuthAuthService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\BetterAuthHttpClient.cs" Link="BetterAuthHttpClient.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\Pkce.cs" Link="Pkce.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\LoopbackCallbackListener.cs" Link="LoopbackCallbackListener.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\SecureTokenStore.cs" Link="SecureTokenStore.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\ITokenStore.cs" Link="ITokenStore.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\AppSettings.cs" Link="AppSettings.cs" />

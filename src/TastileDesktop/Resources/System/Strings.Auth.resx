@@ -33,10 +33,13 @@
   <data name="Auth.Title" xml:space="preserve"><value>Sign in</value></data>
   <data name="Auth_Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Auth_Cancel.Content" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Auth_ContinueInBrowser" xml:space="preserve"><value>Continue in browser</value></data>
+  <data name="Auth_ContinueInBrowser.Content" xml:space="preserve"><value>Continue in browser</value></data>
+  <data name="Auth_ContinueInBrowserStatus" xml:space="preserve"><value>Complete sign-in in your browser…</value></data>
   <data name="Auth_CreateAccount" xml:space="preserve"><value>Create account</value></data>
   <data name="Auth_CreateAccount.Content" xml:space="preserve"><value>Create account</value></data>
-  <data name="Auth_Description" xml:space="preserve"><value>Enter the email and password for your Tastile account. New here? Create an account on the web.</value></data>
-  <data name="Auth_Description.Text" xml:space="preserve"><value>Enter the email and password for your Tastile account. New here? Create an account on the web.</value></data>
+  <data name="Auth_Description" xml:space="preserve"><value>Sign in with your Tastile account email and password, or continue in your browser. New here? Create an account on the web.</value></data>
+  <data name="Auth_Description.Text" xml:space="preserve"><value>Sign in with your Tastile account email and password, or continue in your browser. New here? Create an account on the web.</value></data>
   <data name="Auth_EmailInput" xml:space="preserve"><value>Email</value></data>
   <data name="Auth_EmailInput.PlaceholderText" xml:space="preserve"><value>you@example.com</value></data>
   <data name="Auth_EmailLabel" xml:space="preserve"><value>Email</value></data>
