@@ -286,7 +286,7 @@ public sealed class SyncNotificationServiceTests : IDisposable
         service.ProcessDeltaPage(page);
 
         var toast = Assert.Single(_toasts);
-        Assert.Contains("cancelled", toast.Body);
+        Assert.Contains("voided", toast.Body);
     }
 
     [Fact]
