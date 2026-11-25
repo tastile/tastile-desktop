@@ -2,8 +2,10 @@ using System.Runtime.InteropServices;
 using Microsoft.Toolkit.Uwp.Notifications;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
+using Microsoft.Windows.AppLifecycle;
 using TastileDesktop.Services;
 using TastileDesktop.Views;
+using Windows.ApplicationModel.Activation;
 
 namespace TastileDesktop;
 
@@ -125,6 +127,27 @@ public partial class App : Application
         // sign-in is native), but we still drain any legacy handoff that
         // another instance may have written so old shortcuts don't crash.
         var oauthCallback = cmdArgs.FirstOrDefault(a => a.StartsWith("tastile://", StringComparison.OrdinalIgnoreCase));
+
+        // Packaged (MSIX) builds receive tastile:// activations through
+        // ProtocolActivatedEventArgs instead of the command line. Fold the
+        // URI into the same legacy-callback drain path so old deep links keep
+        // working without a second activation handler.
+        try
+        {
+            var activatedArgs = AppInstance.GetActivatedEventArgs();
+            if (activatedArgs.Kind == ExtendedActivationKind.Protocol &&
+                activatedArgs.Data is ProtocolActivatedEventArgs { Uri: { } protocolUri } &&
+                protocolUri.AbsoluteUri.StartsWith("tastile://", StringComparison.OrdinalIgnoreCase))
+            {
+                oauthCallback ??= protocolUri.AbsoluteUri;
+                DebugLog("Packaged protocol activation received tastile:// URI");
+            }
+        }
+        catch
+        {
+            // Activation args are unavailable on some launch kinds; the
+            // command-line scan above still covers unpackaged launches.
+        }
 
         // シングルインスタンスチェック
         bool createdNew;

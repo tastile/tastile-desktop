@@ -1,0 +1,45 @@
+name: MSIX package
+
+# Manual-only scaffold for desktop#61 (NF04-D09). Produces an unsigned .msix
+# artifact for clean-machine verification. Signing, Store submission, and any
+# release publish are approval-gated and intentionally not part of this
+# workflow.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Package version (must match the csproj version; e.g. 0.7.0.0)"
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  build-msix:
+    runs-on: [self-hosted, windows, x64]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+
+      - name: Build unsigned MSIX
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          $args = @()
+          if (-not [string]::IsNullOrWhiteSpace($env:INPUT_VERSION)) {
+            $args += @("-Version", $env:INPUT_VERSION.Trim())
+          }
+          & .\scripts\package-msix.ps1 @args
+
+      - name: Upload MSIX artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: desktop-msix
+          path: artifacts/msix/*.msix
+          if-no-files-found: error
