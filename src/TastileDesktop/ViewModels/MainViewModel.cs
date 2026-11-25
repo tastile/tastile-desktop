@@ -1214,9 +1214,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
                 try
                 {
-                    if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId) && minutes.HasValue)
+                    if (!string.IsNullOrWhiteSpace(prompt.Prompt.TileId) && minutes.HasValue && _commands is not null)
                     {
-                        await _api.DeferTileAsync(prompt.Prompt.TileId, minutes: minutes.Value);
+                        // NF04-D04: defer-with-minutes via the outbox;
+                        // deferred_until = now + minutes (RFC 3339).
+                        await _commands.DeferTileAsync(prompt.Prompt.TileId, minutes.Value);
                     }
 
                     // アクション実行後、即座にポーリングして状態を更新
@@ -1252,7 +1254,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             prompt,
             actionId,
             stopAt,
-            defaultBreakMinutes: defaultBreakMinutes);
+            defaultBreakMinutes: defaultBreakMinutes,
+            commands: _commands);
         if (!dispatchResult.IsResolved)
         {
             System.Diagnostics.Debug.WriteLine($"[Toast] Skipped unknown action: {actionId}");
@@ -2033,34 +2036,22 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             var nextAction = string.IsNullOrWhiteSpace(NewTileNextAction) ? null : NewTileNextAction.Trim();
             var doneDef = string.IsNullOrWhiteSpace(NewTileDoneDefinition) ? null : NewTileDoneDefinition.Trim();
 
-            var result = await _api.CreateTileAsync(new CreateTileRequest(
-                Title: title,
-                NextAction: nextAction,
-                DoneDefinition: doneDef,
-                Temporal: null,
-                Objective: new CreateTileObjectiveRequest(
-                    ObjectiveMode: "finish_once",
-                    TargetWorkMin: 25,
-                    TargetRestMin: null,
-                    DoneRule: null,
-                    Recurrence: null),
-                Interruption: new CreateTileInterruptionRequest(
-                    InterruptPenalty: 3,
-                    ResumePenalty: 3,
-                    BreakSplitsWork: true,
-                    ExternalInterruptOnly: false),
-                Automation: null,
-                Annotation: null,
-                ConflictResolution: null));
-            if (result != null && !result.Ok)
-                StatusMessage = $"Error: {result.Error}";
-            else
+            // NF04-D04: routed through the offline command outbox.
+            // nextAction maps to description; doneDefinition maps to
+            // meta_min.notes (the v1 tile model has no separate fields
+            // for them — schedule/recurrence editing is a follow-up).
+            var result = await _commands!.CreateTileAsync(
+                title,
+                description: nextAction,
+                notes: doneDef);
+            ReportCommandResult(result, $"Created: {title}");
+            if (result.Accepted)
             {
-                StatusMessage = $"Created: {title}";
                 NewTileTitle = string.Empty;
                 NewTileNextAction = string.Empty;
                 NewTileDoneDefinition = string.Empty;
             }
+            RefreshSyncState();
             await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
@@ -2238,13 +2229,21 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private async Task CompleteTileAsync()
     {
+        // NF04-D04: complete the tile backing the live execution via the
+        // outbox (SetTileLifecycle state=completed). Without a synced
+        // live execution there is no unambiguous target.
+        var tileId = _commands?.ActiveTileId;
+        if (string.IsNullOrEmpty(tileId))
+        {
+            StatusMessage = "Error: no active tile to complete";
+            return;
+        }
+
         try
         {
-            var result = await _api.CompleteTileAsync();
-            if (result != null && !result.Ok)
-                StatusMessage = $"Error: {result.Error}";
-            else
-                StatusMessage = "Tile completed";
+            var result = await _commands!.CompleteTileAsync(tileId);
+            ReportCommandResult(result, "Tile completed");
+            RefreshSyncState();
             await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
@@ -2394,14 +2393,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _api.DeferTileAsync(tileId);
-            if (result != null && !result.Ok)
-                StatusMessage = $"Error: {result.Error}";
-            else
-            {
-                var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
-                StatusMessage = $"Deferred: {tile?.Title ?? tileId}";
-            }
+            // NF04-D04: defer goes through the offline command outbox
+            // (SetTileLifecycle state=deferred, no deferred_until).
+            var result = await _commands!.DeferTileAsync(tileId);
+            ReportCommandResult(result, $"Deferred: {tileId}");
+            RefreshSyncState();
             await _pollingService.RefreshAsync();
         }
         catch (Exception ex)
@@ -2418,11 +2414,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _api.DeleteTileAsync(tileId);
-            if (result != null && !result.Ok)
-                StatusMessage = $"Error: {result.Error}";
-            else
-                StatusMessage = "Tile deleted";
+            // NF04-D04: delete maps to archive (DELETE /v1/tiles/{id})
+            // through the offline command outbox.
+            var result = await _commands!.ArchiveTileAsync(tileId);
+            ReportCommandResult(result, "Tile deleted");
+            RefreshSyncState();
             await _pollingService.RefreshAsync();
         }
         catch (Exception ex)

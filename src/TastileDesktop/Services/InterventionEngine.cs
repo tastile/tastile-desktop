@@ -126,7 +126,13 @@ public class InterventionEngine : IDisposable
                     await _api.StartBreakAsync(5);
                     break;
                 case InterventionAction.Complete:
-                    await _api.CompleteTileAsync();
+                    // NF04-D04: complete the live tile via the outbox.
+                    var completeTileId = _interventionWindow?.SelectedTileId
+                        ?? OfflineCommandRuntime.Shared.Commands.ActiveTileId;
+                    if (!string.IsNullOrEmpty(completeTileId))
+                    {
+                        await OfflineCommandRuntime.Shared.Commands.CompleteTileAsync(completeTileId);
+                    }
                     break;
                 case InterventionAction.EndBreak:
                     await _api.EndBreakAsync();
@@ -135,7 +141,9 @@ public class InterventionEngine : IDisposable
                     var tileId = _interventionWindow?.SelectedTileId;
                     if (!string.IsNullOrEmpty(tileId))
                     {
-                        await _api.StartTileAsync(tileId);
+                        // NF04-D05: start via the outbox-backed
+                        // StartTile → StartExecution chain.
+                        await OfflineCommandRuntime.Shared.Commands.StartTileExecutionAsync(tileId);
                     }
                     break;
             }

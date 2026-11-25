@@ -427,7 +427,11 @@ public sealed partial class TimelineWindow : Window
 
         try
         {
-            var freshTile = await _api.GetEditableTileByIdAsync(tileId);
+            // NF04-D04: seed the edit form from the local read model —
+            // the legacy /v1/tiles/{id}/editable endpoint only returns a
+            // boolean on v1, and offline editing must not hit the network.
+            Services.OfflineCommandRuntime.Shared.EnsureSyncStream();
+            var freshTile = Services.OfflineCommandRuntime.Shared.GetEditableTile(tileId);
             if (freshTile == null)
             {
                 return;
@@ -467,7 +471,8 @@ public sealed partial class TimelineWindow : Window
                         actionId,
                         stopAt,
                         fallbackTileId: tileId,
-                        defaultBreakMinutes: _settings.Current.DefaultBreakMinutes);
+                        defaultBreakMinutes: _settings.Current.DefaultBreakMinutes,
+                        commands: Services.OfflineCommandRuntime.Shared.Commands);
                     if (!dispatch.IsResolved)
                     {
                         App.DebugLog($"[TimelineWindow] Unknown prompt action: {actionId}");

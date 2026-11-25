@@ -568,7 +568,12 @@ public class TrayIconService : IDisposable
                     }
                 }
 
-                await _api.CreateTileAsync(title);
+                // NF04-D04: quick create goes through the offline
+                // command outbox — queued when offline, never lost.
+                var result = await OfflineCommandRuntime.Shared.Commands.CreateTileAsync(title);
+                _viewModel.StatusMessage = result.Accepted
+                    ? $"Created: {title}"
+                    : $"Error: {result.Message}";
             }
         }
     }

@@ -15,7 +15,8 @@ public static class PromptActionDispatcher
         string? requestedActionId,
         DateTimeOffset? stopAt,
         string? fallbackTileId = null,
-        int defaultBreakMinutes = 5)
+        int defaultBreakMinutes = 5,
+        SyncCommandService? commands = null)
     {
         if (!PromptActionSelectionPolicy.TryResolveAction(prompt, requestedActionId, out var resolvedActionId))
         {
@@ -52,6 +53,18 @@ public static class PromptActionDispatcher
         if (RequiresTileId(id) && string.IsNullOrWhiteSpace(targetTileId))
         {
             return new PromptActionDispatchResult(true, id, $"prompt action requires tile id: {id}");
+        }
+
+        // NF04-D04: tile lifecycle / start actions route through the
+        // offline command outbox when a command service is supplied —
+        // queued offline, conflicts surfaced, never silently dropped.
+        if (commands is not null)
+        {
+            var routed = await TryRouteTileCommandAsync(commands, id, targetTileId);
+            if (routed is not null)
+            {
+                return routed;
+            }
         }
 
         var breakMinutes = Math.Max(1, defaultBreakMinutes);
@@ -97,6 +110,45 @@ public static class PromptActionDispatcher
         }
 
         return new PromptActionDispatchResult(true, id, null);
+    }
+
+    /// <summary>
+    /// Routes tile lifecycle / execution-start prompt actions through the
+    /// outbox-backed command service. Returns null for action ids that
+    /// have no v1 command mapping (break / extend / phase ops stay on
+    /// the legacy path and surface NotSupportedException as before).
+    /// </summary>
+    private static async Task<PromptActionDispatchResult?> TryRouteTileCommandAsync(
+        SyncCommandService commands, string actionId, string? targetTileId)
+    {
+        if (string.IsNullOrWhiteSpace(targetTileId))
+        {
+            return null;
+        }
+
+        CommandSubmitResult result;
+        switch (actionId)
+        {
+            case "COMPLETE":
+            case "COMPLETE_AND_START_NEXT":
+            case "COMPLETE_TILE":
+                result = await commands.CompleteTileAsync(targetTileId);
+                break;
+            case "DEFER":
+            case "DEFER_TILE":
+                result = await commands.DeferTileAsync(targetTileId);
+                break;
+            case "START":
+            case "START_TILE":
+                result = await commands.StartTileExecutionAsync(targetTileId);
+                break;
+            default:
+                return null;
+        }
+
+        return result.Accepted
+            ? new PromptActionDispatchResult(true, actionId, null)
+            : new PromptActionDispatchResult(true, actionId, result.Message ?? "command rejected");
     }
 
     private static bool IsStartupRecoveryPrompt(PromptView prompt)

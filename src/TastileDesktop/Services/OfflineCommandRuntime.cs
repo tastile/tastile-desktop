@@ -1,3 +1,5 @@
+using TastileDesktop.Models;
+
 namespace TastileDesktop.Services;
 
 /// <summary>
@@ -53,6 +55,33 @@ public sealed class OfflineCommandRuntime : IDisposable
             _stream ??= new SyncStreamService(Api, Sync);
             _stream.Start();
         }
+    }
+
+    /// <summary>
+    /// Builds the edit-form seed (`EditableTileView`) for `tileId` from
+    /// the local read model. The legacy `GET /v1/tiles/{id}/editable`
+    /// endpoint only returns `{editable: bool}` on v1 and the legacy
+    /// temporal/objective fields have no v1 counterpart, so only the
+    /// title is populated; the rest stays null and the form degrades to
+    /// title/description editing (NF04-D04).
+    /// </summary>
+    public EditableTileView? GetEditableTile(string tileId)
+    {
+        var tile = Executions.GetTile(tileId);
+        if (tile is null)
+        {
+            return null;
+        }
+        return new EditableTileView(
+            Id: tile.TileId,
+            Title: tile.Title ?? tile.TileId,
+            NextAction: null,
+            DoneDefinition: null,
+            Temporal: null,
+            Objective: null,
+            Interruption: null,
+            Automation: null,
+            Annotation: null);
     }
 
     public void Dispose()

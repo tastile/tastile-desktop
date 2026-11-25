@@ -216,17 +216,36 @@ public sealed class SyncCommandService
     // Tile editing (NF04-D04 slice: create / update / archive / lifecycle)
     // ---------------------------------------------------------------
 
-    /// <summary>Creates a placement tile (`POST /v1/tiles`, kind=PLACEMENT, plan_role=EXECUTABLE).</summary>
+    /// <summary>
+    /// Creates a placement tile (`POST /v1/tiles`, kind=PLACEMENT,
+    /// plan_role=EXECUTABLE). `tags`/`notes` map to `meta_min`; a
+    /// `projectId` must be a real subject UUID — display names are not
+    /// accepted. Recurring creation (`kind=0`) is rejected server-side
+    /// (410) and goes through `/v1/source-tiles` — out of scope here.
+    /// </summary>
     public async Task<CommandSubmitResult> CreateTileAsync(
         string title,
         string? description = null,
         string? color = null,
         string? icon = null,
+        string? externalId = null,
+        IReadOnlyList<string>? tags = null,
+        string? notes = null,
+        string? projectId = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(title))
         {
             return CommandSubmitResult.Rejected("title is required");
+        }
+
+        TileMetaMinWire? metaMin = null;
+        if (tags is { Count: > 0 } || !string.IsNullOrWhiteSpace(notes) || !string.IsNullOrWhiteSpace(projectId))
+        {
+            metaMin = new TileMetaMinWire(
+                Tags: tags?.ToList() ?? [],
+                Notes: string.IsNullOrWhiteSpace(notes) ? null : notes.Trim(),
+                ProjectId: string.IsNullOrWhiteSpace(projectId) ? null : projectId.Trim());
         }
 
         var payload = new CreateTileCommandPayload(
@@ -235,8 +254,9 @@ public sealed class SyncCommandService
             Description: description,
             Color: color,
             Icon: icon,
-            ExternalId: null,
-            PlanRole: PlanRoleValue.Executable);
+            ExternalId: externalId,
+            PlanRole: PlanRoleValue.Executable,
+            MetaMin: metaMin);
 
         return await SubmitSimpleAsync(
             SyncCommandKind.TileCreate, "POST", "/v1/tiles", payload, cancellationToken)
@@ -250,20 +270,21 @@ public sealed class SyncCommandService
         string? description = null,
         string? color = null,
         string? icon = null,
+        string? externalId = null,
         CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(tileId))
         {
             return CommandSubmitResult.Rejected("tile id is required");
         }
-        if (title is null && description is null && color is null && icon is null)
+        if (title is null && description is null && color is null && icon is null && externalId is null)
         {
             return CommandSubmitResult.Rejected("no fields to update");
         }
 
         // Option<Option<T>> semantics: omitting a key leaves the field
         // unchanged, so serialize with nulls dropped.
-        var dto = new UpdateTileCommandPayload(tileId, title, description, color, icon, null);
+        var dto = new UpdateTileCommandPayload(tileId, title, description, color, icon, externalId);
         var element = JsonSerializer.SerializeToElement(dto, UpdateTileCommandPayload.SerializeOptions);
         return await SubmitSimpleAsync(
             SyncCommandKind.TileUpdate, "POST", $"/v1/tiles/{tileId}/update", element, cancellationToken)
@@ -281,7 +302,8 @@ public sealed class SyncCommandService
 
     /// <summary>
     /// Sets tile lifecycle (`POST /v1/tiles/{id}/complete` state=2 or
-    /// `/defer` state=1). `deferredUntil` is only meaningful for defer.
+    /// `/defer` state=1). `deferredUntil` is an RFC 3339 instant only
+    /// meaningful for defer; `completedAt` is stamped server-side.
     /// </summary>
     public Task<CommandSubmitResult> SetTileLifecycleAsync(
         string tileId,
@@ -299,6 +321,31 @@ public sealed class SyncCommandService
         return SubmitSimpleAsync(
             SyncCommandKind.TileLifecycle, "POST", $"/v1/tiles/{tileId}/{action}", payload, cancellationToken);
     }
+
+    /// <summary>Marks a tile completed (`state=2`).</summary>
+    public Task<CommandSubmitResult> CompleteTileAsync(string tileId, CancellationToken cancellationToken = default)
+        => SetTileLifecycleAsync(tileId, TileLifecycleStateValue.Completed, cancellationToken: cancellationToken);
+
+    /// <summary>
+    /// Defers a tile (`state=1`). `deferredUntil` is an optional RFC 3339
+    /// instant; `deferMinutes` is a convenience that computes it from now.
+    /// </summary>
+    public Task<CommandSubmitResult> DeferTileAsync(
+        string tileId,
+        int? deferMinutes = null,
+        CancellationToken cancellationToken = default)
+    {
+        string? deferredUntil = deferMinutes is > 0
+            ? FormatInstant(_clock().AddMinutes(deferMinutes.Value))
+            : null;
+        return SetTileLifecycleAsync(tileId, TileLifecycleStateValue.Deferred, deferredUntil, cancellationToken);
+    }
+
+    /// <summary>
+    /// Tile id of the live execution, when the local read model knows
+    /// one — the target for "complete the current tile" actions.
+    /// </summary>
+    public string? ActiveTileId => _projector.GetLiveExecution()?.TileId;
 
     private async Task<CommandSubmitResult> SubmitSimpleAsync(
         string kind,
