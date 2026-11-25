@@ -124,7 +124,7 @@ public sealed class LocalExecutionProjector
     private static LocalExecutionInfo? ParseExecution(LocalSyncEntity entity)
     {
         var root = Parse(entity.StateJson);
-        if (root is null)
+        if (root.ValueKind == JsonValueKind.Undefined)
         {
             return null;
         }
@@ -143,14 +143,14 @@ public sealed class LocalExecutionProjector
     private static LocalTileInfo? ParseTile(LocalSyncEntity entity)
     {
         var root = Parse(entity.StateJson);
-        if (root is null)
+        if (root.ValueKind == JsonValueKind.Undefined)
         {
             return null;
         }
 
         // TileDetailView: { base: { id, plan_id, title, kind, revision, ... }, labels, recurring, resolved_at }
         var baser = TryGetProperty(root, "base");
-        var source = baser ?? root;
+        var source = baser.ValueKind == JsonValueKind.Undefined ? root : baser;
         return new LocalTileInfo(
             TileId: ReadString(source, "id") ?? entity.EntityId,
             PlanId: ReadString(source, "plan_id"),
@@ -162,7 +162,7 @@ public sealed class LocalExecutionProjector
     private static LocalPlacementInfo? ParsePlacement(LocalSyncEntity entity)
     {
         var root = Parse(entity.StateJson);
-        if (root is null)
+        if (root.ValueKind == JsonValueKind.Undefined)
         {
             return null;
         }
@@ -177,7 +177,8 @@ public sealed class LocalExecutionProjector
             Revision: ReadLong(root, "revision"));
     }
 
-    private static JsonElement? Parse(string json)
+    /// <summary>Parses state JSON; returns an Undefined element on failure.</summary>
+    private static JsonElement Parse(string json)
     {
         try
         {
@@ -186,16 +187,17 @@ public sealed class LocalExecutionProjector
         }
         catch (JsonException)
         {
-            return null;
+            return default;
         }
     }
 
-    private static JsonElement? TryGetProperty(JsonElement element, string name)
+    /// <summary>Child object property, or Undefined when absent/not an object.</summary>
+    private static JsonElement TryGetProperty(JsonElement element, string name)
         => element.ValueKind == JsonValueKind.Object
             && element.TryGetProperty(name, out var value)
             && value.ValueKind == JsonValueKind.Object
                 ? value
-                : null;
+                : default;
 
     private static string? ReadString(JsonElement element, string name)
         => element.ValueKind == JsonValueKind.Object
