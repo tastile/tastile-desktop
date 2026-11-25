@@ -90,11 +90,17 @@ public sealed class CreateTileWindowContractsTests
     [Fact]
     public void CreateTileWindowSource_CreateConflictPrompt_UsesConflictResolutionToastPath()
     {
+        // NF04-D04: the legacy daemon create_conflict prompt flow was
+        // removed — v1 commands go through the offline outbox and
+        // conflicts surface in the pending-operations list instead of a
+        // create-time toast. This test now pins the outbox contract.
         var source = ReadRepoFile("src", "TastileDesktop", "Views", "CreateTileWindow.xaml.cs");
 
-        Assert.Contains("TryCreateWithConflictResolutionAsync(request)", source);
-        Assert.Contains("if (result?.Prompt?.Kind != \"create_conflict\")", source);
-        Assert.Contains("ShowConflictResolutionToastAsync(result.Prompt)", source);
+        Assert.Contains("OfflineCommandRuntime.Shared.Commands", source);
+        Assert.Contains("commands.CreateTileAsync(", source);
+        Assert.Contains("commands.UpdateTileAsync(", source);
+        Assert.Contains("Commands.ArchiveTileAsync(", source);
+        Assert.DoesNotContain("TryCreateWithConflictResolutionAsync", source);
     }
 
     [Fact]
