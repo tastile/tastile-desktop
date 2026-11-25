@@ -171,6 +171,11 @@ public sealed class OutboxCommandItem
     public bool CanRetry { get; }
     public CommunityToolkit.Mvvm.Input.IAsyncRelayCommand? RetryCommand { get; }
 
+    // Visibility-typed (not bool + converter): x:Bind converters inside a
+    // DataTemplate make the XAML compiler pick the Window as converter
+    // lookup root, which fails to compile (Window is not FrameworkElement).
+    public Visibility RetryVisibility => CanRetry ? Visibility.Visible : Visibility.Collapsed;
+
     public string StateLabel => State switch
     {
         OutboxCommandState.Pending => "pending",

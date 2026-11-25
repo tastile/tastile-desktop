@@ -76,7 +76,7 @@
                             <DataTemplate x:DataType="vm:OutboxCommandItem">
                                 <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
                                     <TextBlock Text="{x:Bind Summary, Mode=OneTime}" Style="{StaticResource SectionBodyTextStyle}" TextWrapping="Wrap" />
-                                    <Button Content="Retry" Command="{x:Bind RetryCommand}" Visibility="{x:Bind CanRetry, Mode=OneTime, Converter={StaticResource BoolToVisibilityConverter}}" />
+                                    <Button Content="Retry" Command="{x:Bind RetryCommand}" Visibility="{x:Bind RetryVisibility, Mode=OneTime}" />
                                 </StackPanel>
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
