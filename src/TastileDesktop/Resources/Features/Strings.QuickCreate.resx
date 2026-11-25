@@ -84,6 +84,7 @@
   <data name="CreateTile_ErrorPrefix" xml:space="preserve"><value>Error: {0}</value></data>
   <data name="CreateTile_NoResponse" xml:space="preserve"><value>Daemon did not return a response.</value></data>
   <data name="CreateTile_ProjectCreateNew" xml:space="preserve"><value>Create "{0}"</value></data>
+  <data name="CreateTile_RecurringUnsupported" xml:space="preserve"><value>Recurring tiles are not supported yet on desktop. Create a one-time tile instead.</value></data>
   <data name="CreateTile_QuotaCheckException" xml:space="preserve"><value>Failed to validate tile limit: {0}</value></data>
   <data name="CreateTile_QuotaCheckFailed" xml:space="preserve"><value>Could not verify tile limit.</value></data>
   <data name="CreateTile_QuotaLimitReached" xml:space="preserve"><value>Free plan limit reached (100 tiles). Archive tiles or upgrade your plan.</value></data>

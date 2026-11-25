@@ -262,6 +262,151 @@ public sealed class SyncCommandServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateTile_SendsMetaMin_AndPlacementKind()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(CommandOkResponse("tile-new")),
+        });
+        var service = ServiceFor(ClientFor(handler));
+
+        var result = await service.CreateTileAsync(
+            "Write report",
+            description: "next: outline",
+            tags: new[] { "work", "urgent" },
+            notes: "done when shipped");
+
+        Assert.True(result.Accepted);
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal("POST", sent.Method);
+        Assert.Equal("/v1/tiles", sent.Path);
+
+        using var doc = JsonDocument.Parse(sent.Body);
+        var payload = doc.RootElement.GetProperty("payload");
+        Assert.Equal(1, payload.GetProperty("kind").GetInt32()); // PLACEMENT
+        Assert.Equal(0, payload.GetProperty("plan_role").GetInt32()); // EXECUTABLE
+        Assert.Equal("Write report", payload.GetProperty("title").GetString());
+        Assert.Equal("next: outline", payload.GetProperty("description").GetString());
+        var meta = payload.GetProperty("meta_min");
+        Assert.Equal("done when shipped", meta.GetProperty("notes").GetString());
+        Assert.Equal(2, meta.GetProperty("tags").GetArrayLength());
+        Assert.Equal(JsonValueKind.Null, meta.GetProperty("project_id").ValueKind);
+    }
+
+    [Fact]
+    public async Task CreateTile_WithoutMeta_SendsNullMetaMin()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(CommandOkResponse("tile-new")),
+        });
+        var service = ServiceFor(ClientFor(handler));
+
+        await service.CreateTileAsync("Plain task");
+
+        using var doc = JsonDocument.Parse(handler.Requests[0].Body);
+        Assert.Equal(JsonValueKind.Null,
+            doc.RootElement.GetProperty("payload").GetProperty("meta_min").ValueKind);
+    }
+
+    [Fact]
+    public async Task UpdateTile_OmitsNullFields_KeepsTileId()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(CommandOkResponse("tile-1")),
+        });
+        var service = ServiceFor(ClientFor(handler));
+
+        var result = await service.UpdateTileAsync("tile-1", title: "New title");
+
+        Assert.True(result.Accepted);
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal("/v1/tiles/tile-1/update", sent.Path);
+        using var doc = JsonDocument.Parse(sent.Body);
+        var payload = doc.RootElement.GetProperty("payload");
+        Assert.Equal("tile-1", payload.GetProperty("tile_id").GetString());
+        Assert.Equal("New title", payload.GetProperty("title").GetString());
+        // Option<Option<T>> semantics: absent keys leave fields unchanged.
+        Assert.False(payload.TryGetProperty("description", out _));
+        Assert.False(payload.TryGetProperty("color", out _));
+        Assert.False(payload.TryGetProperty("icon", out _));
+        Assert.False(payload.TryGetProperty("external_id", out _));
+    }
+
+    [Fact]
+    public async Task ArchiveTile_SendsDeleteWithEnvelope()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(CommandOkResponse("tile-1")),
+        });
+        var service = ServiceFor(ClientFor(handler));
+
+        var result = await service.ArchiveTileAsync("tile-1");
+
+        Assert.True(result.Accepted);
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal("DELETE", sent.Method);
+        Assert.Equal("/v1/tiles/tile-1", sent.Path);
+        using var doc = JsonDocument.Parse(sent.Body);
+        Assert.Equal("tile-1", doc.RootElement.GetProperty("payload").GetProperty("tile_id").GetString());
+        Assert.True(doc.RootElement.TryGetProperty("idempotency_key", out _));
+    }
+
+    [Fact]
+    public async Task DeferTile_SendsLifecyclePayload_WithDeferredUntil()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(CommandOkResponse("tile-1")),
+        });
+        var service = ServiceFor(ClientFor(handler));
+
+        var result = await service.DeferTileAsync("tile-1", deferMinutes: 30);
+
+        Assert.True(result.Accepted);
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal("/v1/tiles/tile-1/defer", sent.Path);
+        using var doc = JsonDocument.Parse(sent.Body);
+        var payload = doc.RootElement.GetProperty("payload");
+        Assert.Equal("tile-1", payload.GetProperty("tile_id").GetString());
+        Assert.Equal(1, payload.GetProperty("state").GetInt32()); // deferred
+        // FixedNow + 30min.
+        Assert.Equal("2026-11-24T12:30:00.0000000+00:00",
+            payload.GetProperty("deferred_until").GetString());
+    }
+
+    [Fact]
+    public async Task CompleteTile_SendsLifecyclePayload_StateCompleted()
+    {
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(CommandOkResponse("tile-1")),
+        });
+        var service = ServiceFor(ClientFor(handler));
+
+        var result = await service.CompleteTileAsync("tile-1");
+
+        Assert.True(result.Accepted);
+        var sent = Assert.Single(handler.Requests);
+        Assert.Equal("/v1/tiles/tile-1/complete", sent.Path);
+        using var doc = JsonDocument.Parse(sent.Body);
+        Assert.Equal(2, doc.RootElement.GetProperty("payload").GetProperty("state").GetInt32());
+    }
+
+    [Fact]
+    public async Task ActiveTileId_ComesFromLiveExecution()
+    {
+        SeedEntities(Entity(SyncEntityKind.Execution, "exec-1",
+            """{"id":"exec-1","tile_id":"tile-live","state":0}"""));
+        var handler = new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK));
+        var service = ServiceFor(ClientFor(handler));
+
+        Assert.Equal("tile-live", service.ActiveTileId);
+    }
+
+    [Fact]
     public void Envelope_UsesSnakeCaseWireFields()
     {
         var envelope = SyncCommandEnvelope.Create(

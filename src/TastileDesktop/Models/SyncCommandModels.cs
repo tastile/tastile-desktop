@@ -143,7 +143,19 @@ public static class TileLifecycleStateValue
     public const int Completed = 2;
 }
 
-/// <summary>`CreateTilePayload` (POST /v1/tiles).</summary>
+/// <summary>`TileMetaMin` wire shape (`{tags, notes, project_id}`, v1/14 §2.5).</summary>
+public sealed record TileMetaMinWire(
+    [property: JsonPropertyName("tags")] List<string> Tags,
+    [property: JsonPropertyName("notes")] string? Notes,
+    [property: JsonPropertyName("project_id")] string? ProjectId);
+
+/// <summary>
+/// `CreateTilePayload` (POST /v1/tiles). `kind = 0` (RECURRING) is
+/// rejected server-side with 410 — recurring creation goes through
+/// `/v1/source-tiles` and is out of scope for the desktop slice.
+/// `frame_rule` must be absent for every accepted kind, so it is not
+/// modeled here.
+/// </summary>
 public sealed record CreateTileCommandPayload(
     [property: JsonPropertyName("kind")] int Kind,
     [property: JsonPropertyName("title")] string Title,
@@ -151,7 +163,8 @@ public sealed record CreateTileCommandPayload(
     [property: JsonPropertyName("color")] string? Color,
     [property: JsonPropertyName("icon")] string? Icon,
     [property: JsonPropertyName("external_id")] string? ExternalId,
-    [property: JsonPropertyName("plan_role")] int PlanRole);
+    [property: JsonPropertyName("plan_role")] int PlanRole,
+    [property: JsonPropertyName("meta_min")] TileMetaMinWire? MetaMin);
 
 /// <summary>
 /// `UpdateTilePayload` (POST /v1/tiles/{id}/update). The Rust fields are

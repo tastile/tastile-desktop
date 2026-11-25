@@ -14,7 +14,6 @@ namespace TastileDesktop.Views;
 
 public sealed partial class CreateTileWindow : Window
 {
-    private const string CreateCanceledErrorCode = "__create_canceled__";
     private static readonly SolidColorBrush ManualAdjustHighlightBrush = new(Windows.UI.Color.FromArgb(255, 255, 193, 7));
     public static string DebugLogPath => Path.Combine(Path.GetTempPath(), "tastile-desktop.log");
 
@@ -32,7 +31,6 @@ public sealed partial class CreateTileWindow : Window
     private readonly CoreApiClient _api = new(
         getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
         refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
-    private readonly PromptToastDisplayService _promptToast = PromptToastDisplayService.Instance;
     private readonly string? _editTileId;
     private CreateTileCatalog _catalog = new([], [], []);
     private readonly CreateTileFormState _state = new();
@@ -353,8 +351,11 @@ public sealed partial class CreateTileWindow : Window
         }
         catch (Exception ex)
         {
-            ShowError(string.Format(Strings.Get("CreateTile_QuotaCheckException"), ex.Message));
-            return false;
+            // NF04-D04: quota is advisory — when the endpoint is
+            // unreachable (offline) the command is still queued and the
+            // server enforces the limit at acceptance time.
+            App.DebugLog($"[CreateTile] quota check failed (proceeding): {ex.Message}");
+            return true;
         }
     }
 
@@ -362,27 +363,56 @@ public sealed partial class CreateTileWindow : Window
     {
         if (!TryBuildRequest(out var request)) return;
         var isEdit = !string.IsNullOrEmpty(_editTileId);
+
+        // NF04-D04: recurring creation goes through /v1/source-tiles on
+        // the core side (kind=0 is rejected with 410 on POST /v1/tiles),
+        // so the desktop slice only supports one-shot placement tiles.
+        if (string.Equals(request.Objective?.ObjectiveMode, "recurring", StringComparison.OrdinalIgnoreCase))
+        {
+            ShowError(Strings.Get("CreateTile_RecurringUnsupported"));
+            return;
+        }
+
         if (!isEdit && !await EnsureTileQuotaAvailableAsync()) return;
         try
         {
-            var result = isEdit
-                ? await _api.UpdateTileAsync(_editTileId!, request)
-                : await TryCreateWithConflictResolutionAsync(request);
-            if (result == null)
+            // NF04-D04: all mutations go through the persistent command
+            // outbox — queued offline, conflicts surfaced in the
+            // Execute window's pending-operations list.
+            var commands = Services.OfflineCommandRuntime.Shared.Commands;
+            Services.CommandSubmitResult result;
+            if (isEdit)
             {
-                ShowError(Strings.Get("CreateTile_NoResponse"));
+                // UpdateTilePayload only carries tile fields; the legacy
+                // temporal/objective sections have no v1 counterpart yet
+                // (schedule editing is a follow-up slice).
+                result = await commands.UpdateTileAsync(
+                    _editTileId!,
+                    title: request.Title,
+                    description: request.NextAction);
+            }
+            else
+            {
+                var split = CreateTileParityResolver.SplitProjectAndTags(
+                    request.Annotation?.Labels ?? new List<string>());
+                result = await commands.CreateTileAsync(
+                    request.Title,
+                    description: request.NextAction,
+                    tags: split.Tags.Count > 0 ? split.Tags : null,
+                    notes: request.DoneDefinition);
+                // split.Project is a display name, not a subject UUID —
+                // meta_min.project_id cannot be populated from it.
+            }
+
+            if (!result.Accepted)
+            {
+                ShowError(result.Message ?? Strings.Get(isEdit ? "CreateTile_UpdateFailed" : "CreateTile_CreateFailed"));
                 return;
             }
-            if (!result.Ok && string.Equals(result.Error, CreateCanceledErrorCode, StringComparison.Ordinal))
-            {
-                return;
-            }
-            if (!result.Ok)
-            {
-                ShowError(result.Error ?? Strings.Get(isEdit ? "CreateTile_UpdateFailed" : "CreateTile_CreateFailed"));
-                return;
-            }
-            // Server-side recalculation handles the post-update state; no local tick needed.
+
+            var runtime = Services.OfflineCommandRuntime.Shared;
+            runtime.EnsureSyncStream();
+            _ = runtime.Commands.FlushAsync();
             Close();
         }
         catch (Exception ex)
@@ -394,77 +424,20 @@ public sealed partial class CreateTileWindow : Window
         }
     }
 
-    private async Task<CommandResponse?> TryCreateWithConflictResolutionAsync(CreateTileRequest request)
-    {
-        var result = await _api.CreateTileAsync(request);
-        if (result?.Prompt?.Kind != "create_conflict")
-        {
-            return result;
-        }
-
-        var choice = await ShowConflictResolutionToastAsync(result.Prompt);
-        if (string.IsNullOrWhiteSpace(choice) || string.Equals(choice, "cancel_create", StringComparison.OrdinalIgnoreCase))
-        {
-            _promptToast.Hide();
-            return new CommandResponse(false, [], null, result.Prompt, CreateCanceledErrorCode);
-        }
-        if (string.Equals(choice, "manual_adjust", StringComparison.OrdinalIgnoreCase))
-        {
-            var guidance = CreateTileParityResolver.GetManualAdjustGuidance(request, IsJapanese());
-            ApplyManualAdjustGuidance(guidance);
-            return new CommandResponse(false, [], null, result.Prompt, guidance.Message);
-        }
-        var retried = request with { ConflictResolution = choice };
-        return await _api.CreateTileAsync(retried);
-    }
-
-    private async Task<string?> ShowConflictResolutionToastAsync(CreateConflictPrompt prompt)
-    {
-        var toastPrompt = CreateTileParityResolver.BuildCreateConflictToastPrompt(prompt, IsJapanese());
-        var completion = new TaskCompletionSource<string?>();
-
-        _promptToast.ShowPrompt(
-            toastPrompt,
-            maxActions: Math.Clamp(toastPrompt.Actions.Count, 1, 5),
-            async (actionId, _) =>
-            {
-                _promptToast.Hide();
-                completion.TrySetResult(actionId);
-                await Task.CompletedTask;
-            });
-
-        return await completion.Task;
-    }
-
-    private void ApplyManualAdjustGuidance(CreateTileManualAdjustGuidance guidance)
-    {
-        if (_workflowKind != CreateTileWorkflowKind.Event && _workflowKind != CreateTileWorkflowKind.Task)
-        {
-            _workflowKind = CreateTileWorkflowKind.Task;
-            WorkflowTabs.ActiveKind = _workflowKind;
-            MountBody(_workflowKind);
-        }
-        if (_activeBody is not EventBody and not TaskBody) return;
-
-        _state.UseStartAt = guidance.FocusStart || _state.UseStartAt;
-        _state.UseEndAt = guidance.FocusEnd || _state.UseEndAt;
-        _activeBody.ApplyState(_state);
-        ShowError(guidance.Message);
-    }
-
     private async void OnDeleteClick(object sender, RoutedEventArgs e)
     {
         if (string.IsNullOrEmpty(_editTileId)) return;
         try
         {
-            var result = await _api.DeleteTileAsync(_editTileId);
-            if (result?.Ok == true)
+            // NF04-D04: delete maps to archive through the outbox.
+            var result = await Services.OfflineCommandRuntime.Shared.Commands.ArchiveTileAsync(_editTileId);
+            if (result.Accepted)
             {
                 Close();
             }
             else
             {
-                ShowError(Strings.Get("CreateTile_DeleteFailed"));
+                ShowError(result.Message ?? Strings.Get("CreateTile_DeleteFailed"));
             }
         }
         catch (Exception ex)

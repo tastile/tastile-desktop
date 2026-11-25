@@ -277,7 +277,8 @@ public sealed partial class TilesWindow : Window, INotifyPropertyChanged
                             actionId,
                             stopAt,
                             fallbackTileId: tileId,
-                            defaultBreakMinutes: _settings.Current.DefaultBreakMinutes);
+                            defaultBreakMinutes: _settings.Current.DefaultBreakMinutes,
+                            commands: OfflineCommandRuntime.Shared.Commands);
                         if (!dispatch.IsResolved)
                         {
                             App.DebugLog($"[TilesWindow] Unknown prompt action: {actionId}");
@@ -300,7 +301,10 @@ public sealed partial class TilesWindow : Window, INotifyPropertyChanged
     {
         if (sender is not Button button || button.CommandParameter is not string tileId) return;
 
-        var freshTile = await _api.GetEditableTileByIdAsync(tileId);
+        // NF04-D04: seed the edit form from the local read model — the
+        // legacy /v1/tiles/{id}/editable endpoint only returns a boolean
+        // on v1, and offline editing must not depend on the network.
+        var freshTile = OfflineCommandRuntime.Shared.GetEditableTile(tileId);
         if (freshTile == null) return;
 
         var editTileId = freshTile.Id;

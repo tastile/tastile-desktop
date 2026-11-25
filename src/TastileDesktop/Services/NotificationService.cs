@@ -68,7 +68,12 @@ public class NotificationService : IDisposable
                     await _api.StartBreakAsync(5);
                     break;
                 case "complete":
-                    await _api.CompleteTileAsync();
+                    // NF04-D04: complete the live tile via the outbox.
+                    var tileId = OfflineCommandRuntime.Shared.Commands.ActiveTileId;
+                    if (!string.IsNullOrEmpty(tileId))
+                    {
+                        await OfflineCommandRuntime.Shared.Commands.CompleteTileAsync(tileId);
+                    }
                     break;
                 case "endbreak":
                     await _api.EndBreakAsync();

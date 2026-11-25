@@ -84,6 +84,7 @@
   <data name="CreateTile_ErrorPrefix" xml:space="preserve"><value>エラー: {0}</value></data>
   <data name="CreateTile_NoResponse" xml:space="preserve"><value>Daemon から応答がありません。</value></data>
   <data name="CreateTile_ProjectCreateNew" xml:space="preserve"><value>新規作成: {0}</value></data>
+  <data name="CreateTile_RecurringUnsupported" xml:space="preserve"><value>繰り返しタイルはデスクトップではまだサポートされていません。単発タイルを作成してください。</value></data>
   <data name="CreateTile_QuotaCheckException" xml:space="preserve"><value>タイル上限の確認に失敗しました: {0}</value></data>
   <data name="CreateTile_QuotaCheckFailed" xml:space="preserve"><value>タイル上限を確認できませんでした。</value></data>
   <data name="CreateTile_QuotaLimitReached" xml:space="preserve"><value>無料プランの上限（100タイル）に達しました。不要なタイルを整理するか、プランをアップグレードしてください。</value></data>
