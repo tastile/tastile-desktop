@@ -19,7 +19,7 @@ public sealed class LocalReadModelStoreTests : IDisposable
     public void Dispose()
     {
         _store.Dispose();
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        SqliteTestPools.Clear(_dbPath);
         foreach (var suffix in new[] { "", "-wal", "-shm" })
         {
             var path = _dbPath + suffix;
