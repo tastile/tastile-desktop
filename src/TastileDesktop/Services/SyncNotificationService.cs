@@ -456,7 +456,7 @@ public sealed class SyncNotificationService : IDisposable
             {
                 // TileDetailView: { base: { title, ... }, ... }
                 var baser = TryGetObject(element, "base");
-                var source = baser ?? element;
+                var source = baser.ValueKind == JsonValueKind.Object ? baser : element;
                 if (ReadString(source, "title") is { Length: > 0 } title)
                 {
                     return title;
