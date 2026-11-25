@@ -14,6 +14,13 @@ public sealed class OfflineCommandRuntime : IDisposable
 
     public static OfflineCommandRuntime Shared => SharedInstance.Value;
 
+    /// <summary>
+    /// True once <see cref="Shared"/> has been materialized. Shutdown paths
+    /// check this so an early abort (auth failure, lock cancel) does not
+    /// create the SQLite-backed runtime just to dispose it.
+    /// </summary>
+    public static bool IsInitialized => SharedInstance.IsValueCreated;
+
     public CoreApiClient Api { get; }
     public LocalReadModelStore Store { get; }
     public LocalSyncService Sync { get; }

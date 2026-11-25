@@ -439,19 +439,42 @@ public partial class App : Application
 
     private void OnMainWindowClosed(object sender, WindowEventArgs args)
     {
-        // If we're not shutting down, hide the window instead of closing
+        // NF04-D08 close policy: closing the main (quick-panel) window
+        // hides it to the tray instead of terminating. Sync, the SSE
+        // stream, the poller, and the command outbox all live at process
+        // scope (OfflineCommandRuntime / MainViewModel) and keep running
+        // while resident — only the tray "Quit" path calls Shutdown().
         if (!_isShuttingDown && _mainWindow != null)
         {
             args.Handled = true;
-            _mainWindow.Hide();
+            if (_mainWindow is MainWindow panel)
+            {
+                // HidePanel also clears panel-visible state, hides the
+                // native panel, and stops the 200ms top-most guard timer
+                // so a pinned-but-hidden panel costs no UI-thread work.
+                panel.HidePanel();
+            }
+            else
+            {
+                _mainWindow.Hide();
+            }
         }
     }
 
     /// <summary>
     /// Call this when the user explicitly wants to quit from the tray menu.
+    /// Idempotent: repeat invocations (tray quit + settings sign-out paths)
+    /// collapse to the first teardown. Synchronous part does UI teardown;
+    /// the outbox flush + service disposal + Exit run on
+    /// <see cref="ShutdownBackgroundAsync"/> so quit does not block the UI
+    /// thread on network I/O.
     /// </summary>
     public void Shutdown()
     {
+        if (_isShuttingDown)
+        {
+            return;
+        }
         _isShuttingDown = true;
         _settingsService.Update(s => s.SecurityLockLastClosedAtUtc = DateTimeOffset.UtcNow.ToString("O"));
         _appearanceService.AppearanceChanged -= OnAppearanceChanged;
@@ -465,7 +488,58 @@ public partial class App : Application
         _singleInstanceMutex?.ReleaseMutex();
         _singleInstanceMutex?.Dispose();
         _mainWindow?.Close();
+        _ = ShutdownBackgroundAsync();
+    }
+
+    private void ExitOnUiThread()
+    {
+        var queue = _mainWindow?.DispatcherQueue;
+        if (queue is not null && !queue.HasThreadAccess && queue.TryEnqueue(Exit))
+        {
+            return;
+        }
         Exit();
+    }
+
+    private async Task ShutdownBackgroundAsync()
+    {
+        // Early-abort shutdowns (auth failure, lock cancel) never built
+        // the runtime — skip the flush/dispose and exit immediately.
+        if (!Services.OfflineCommandRuntime.IsInitialized)
+        {
+            ExitOnUiThread();
+            return;
+        }
+
+        var runtime = Services.OfflineCommandRuntime.Shared;
+        await GracefulShutdown.RunAsync(
+            flushAsync: ct => runtime.Commands.FlushAsync(ct),
+            disposeResources: () =>
+            {
+                // Stops the SSE change stream and releases the local
+                // read-model / outbox SQLite connections.
+                runtime.Dispose();
+
+                // Stop the UI poller timers before Exit; marshalled back
+                // to the UI thread because DispatcherTimer is
+                // apartment-bound.
+                var queue = _mainWindow?.DispatcherQueue;
+                if (queue is not null)
+                {
+                    queue.TryEnqueue(() =>
+                    {
+                        try
+                        {
+                            _mainWindow?.ViewModel.Dispose();
+                        }
+                        catch
+                        {
+                            // Best-effort during process exit.
+                        }
+                    });
+                }
+            },
+            exit: ExitOnUiThread).ConfigureAwait(false);
     }
 }
 

@@ -87,6 +87,13 @@ owns outside the API.
 
 ### OS-Level Intervention
 - **System Tray**: H.NotifyIcon で常駐、右クリックメニューで操作
+- **Resident lifecycle (NF04-D08)**: closing the main window hides to tray
+  (`App.OnMainWindowClosed` → `MainWindow.HidePanel`) and keeps sync / SSE /
+  outbox alive; only tray "Quit" → `App.Shutdown` flushes the outbox,
+  disposes `OfflineCommandRuntime`, and exits
+- **OS Notifications (NF04-D07)**: `SyncNotificationService` maps committed
+  sync deltas (placement / execution / session) to Windows toasts with
+  persisted dedupe and an `occurred_at` freshness window
 - **Toast Notifications**: 15分経過/休憩終了/Idle時に通知
 - **Unavoidable Dialog**: 25分経過で強制表示、Xボタン無効、アクションボタンのみで閉じる
 - **Focus Capture**: Topmost + Win32 SetForegroundWindow
