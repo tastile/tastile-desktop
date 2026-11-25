@@ -30,7 +30,7 @@ public sealed class SyncCommandServiceTests : IDisposable
     {
         _outboxStore.Dispose();
         _store.Dispose();
-        Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools();
+        SqliteTestPools.Clear(_dbPath, _outboxDbPath);
         foreach (var path in new[] { _dbPath, _outboxDbPath })
         {
             foreach (var suffix in new[] { "", "-wal", "-shm" })
