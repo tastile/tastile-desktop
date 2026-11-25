@@ -5,7 +5,6 @@ using Microsoft.UI.Xaml;
 using Microsoft.Windows.AppLifecycle;
 using TastileDesktop.Services;
 using TastileDesktop.Views;
-using Windows.ApplicationModel.Activation;
 
 namespace TastileDesktop;
 
@@ -136,7 +135,7 @@ public partial class App : Application
         {
             var activatedArgs = AppInstance.GetActivatedEventArgs();
             if (activatedArgs.Kind == ExtendedActivationKind.Protocol &&
-                activatedArgs.Data is ProtocolActivatedEventArgs { Uri: { } protocolUri } &&
+                activatedArgs.Data is Windows.ApplicationModel.Activation.ProtocolActivatedEventArgs { Uri: { } protocolUri } &&
                 protocolUri.AbsoluteUri.StartsWith("tastile://", StringComparison.OrdinalIgnoreCase))
             {
                 oauthCallback ??= protocolUri.AbsoluteUri;
