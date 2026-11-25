@@ -109,4 +109,43 @@ public sealed class InstallerConfigTests
         Assert.Contains("Verify GitHub Release asset", workflow);
         Assert.Contains("environment: production", workflow);
     }
+
+    [Fact]
+    public void ReleaseWorkflow_PublishesCanonicalManifestOnGitHubRelease()
+    {
+        var workflowPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\.github\workflows\release.yml"));
+        var workflow = File.ReadAllText(workflowPath);
+
+        // GitHub Releases is the canonical distribution channel (desktop#65):
+        // the update manifest must be uploaded as a release asset and verified.
+        Assert.Contains("\"dist/update/manifest.json\"", workflow);
+        Assert.Contains("Verify GitHub Release manifest asset", workflow);
+        Assert.Contains("--pattern \"manifest.json\"", workflow);
+        Assert.Contains("releases/download/v${VERSION}/tastile-desktop-${VERSION}-setup.exe", workflow);
+    }
+
+    [Fact]
+    public void AppUpdateService_DefaultsToGitHubReleasesManifest()
+    {
+        var servicePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Services\AppUpdateService.cs"));
+        var service = File.ReadAllText(servicePath);
+
+        Assert.Contains("https://github.com/tastile/tastile-desktop/releases/latest/download/manifest.json", service);
+        Assert.DoesNotContain("download.tastile.app", service);
+    }
+
+    [Fact]
+    public void ReleaseWorkflow_R2MirrorIsOptional()
+    {
+        var workflowPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\.github\workflows\release.yml"));
+        var workflow = File.ReadAllText(workflowPath);
+
+        // R2 remains an interim mirror for pre-cutover clients but must not be
+        // a required dependency: every R2 step is gated on the configuration
+        // probe output.
+        Assert.Contains("Check optional R2 mirror configuration", workflow);
+        Assert.Contains("id: r2check", workflow);
+        Assert.Contains("if: steps.r2check.outputs.enabled == 'true'", workflow);
+        Assert.Contains("dist/update/r2-manifest.json", workflow);
+    }
 }

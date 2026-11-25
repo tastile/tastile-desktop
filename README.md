@@ -94,26 +94,30 @@ Use the same version for the app build, installer filename, and hosted update ma
 ## Update publication
 
 Installer upload and update-manifest publication are handled by
-`.github/workflows/release.yml`. The workflow uploads the installer to
-Cloudflare R2 under an immutable versioned key, verifies the public URL and
-SHA-256, and only then updates `channels/stable/desktop.json`.
+`.github/workflows/release.yml`. Per ADR-0025 and desktop#65, **GitHub
+Releases is the canonical distribution channel**: the workflow uploads the
+installer and a `manifest.json` asset (whose `download_url` points at the
+immutable release asset) to the GitHub Release and verifies both.
 
-The public distribution layout is:
+The app polls the canonical feed:
 
 ```text
-releases/desktop/<version>/tastile-desktop-<version>-setup.exe
-channels/stable/desktop.json
-channels/beta/desktop.json
+https://github.com/tastile/tastile-desktop/releases/latest/download/manifest.json
 ```
 
-The GitHub Release remains the archival source. A rollback changes only the
-stable manifest pointer to a previously verified version; it never overwrites
-an installer object. The R2 custom domain `download.tastile.app` must be
-configured in Cloudflare before enabling the workflow.
+`releases/latest/download/` always resolves to the newest release, so no
+separate stable pointer has to be maintained. Override with
+`TASTILE_DESKTOP_UPDATE_BASE_URL` / `TASTILE_UPDATE_URL` when needed.
 
-The app checks `channels/stable/desktop.json` (and the legacy
-`updates/desktop/manifest.json` during migration) and opens the installer
-download URL when an update is available.
+For the migration window, the workflow also mirrors the installer and the
+legacy R2 stable manifests (`channels/stable/desktop.json`,
+`updates/desktop/manifest.json`) **only when the R2 credentials are present**
+in Infisical. R2 is an optional interim mirror for pre-cutover clients, not a
+required dependency — see `docs/r2-distribution.md`.
+
+The GitHub Release is the archival source. A rollback republishes or marks a
+previous release as latest, or uploads a corrected `manifest.json`; versioned
+installer assets are never deleted or overwritten.
 
 ## Architecture notes
 

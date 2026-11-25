@@ -56,10 +56,12 @@ Sibling support dirs under `src/TastileDesktop/`: `Controls/`, `Converters/`,
 `Helpers/`, `Styles/`, `Properties/`, `Assets/`. `ProtocolHandler.cs` lives at
 the project root and handles `tastile://` URL activation.
 
-`AppUpdateService` + `AppUpdateServiceTests` add the hosted Cloudflare R2
-manifest update pipeline (see `docs/r2-distribution.md` and
-`.github/workflows/release.yml`); this is the only piece of state the desktop
-owns outside the API.
+`AppUpdateService` + `AppUpdateServiceTests` implement the hosted update
+pipeline whose canonical feed is the `manifest.json` asset on the latest
+GitHub Release (see `docs/r2-distribution.md` and
+`.github/workflows/release.yml`); Cloudflare R2 remains only as an optional
+interim mirror for pre-cutover clients. This is the only piece of state the
+desktop owns outside the API.
 
 ## Connection Model
 

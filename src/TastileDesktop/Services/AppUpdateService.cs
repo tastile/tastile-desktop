@@ -24,6 +24,16 @@ public sealed class AppUpdateService
         "/RESTARTAPPLICATIONS",
     ];
 
+    // Canonical update feed: the `manifest.json` asset on the latest GitHub
+    // Release (ADR-0025: GitHub Releases is the distribution/update source of
+    // truth). `releases/latest/download/` always resolves to the newest
+    // release, so no separate "latest" pointer has to be maintained. The
+    // legacy Cloudflare R2 manifest remains published during the migration
+    // window for already-installed clients; override the feed with
+    // TASTILE_DESKTOP_UPDATE_BASE_URL or TASTILE_UPDATE_URL when needed.
+    private const string DefaultManifestUrl =
+        "https://github.com/tastile/tastile-desktop/releases/latest/download/manifest.json";
+
     // Resolve once at static init so missing env vars fail-fast on first access.
     private static readonly string DefaultUpdateEndpoint = ResolveDefaultUpdateEndpoint();
 
@@ -32,7 +42,7 @@ public sealed class AppUpdateService
         var raw = Environment.GetEnvironmentVariable(UpdateBaseUrlEnvVar)?.Trim();
         if (string.IsNullOrEmpty(raw))
         {
-            return "https://download.tastile.app/channels/stable/desktop.json";
+            return DefaultManifestUrl;
         }
 
         return ResolveConfiguredManifestUrl(raw);

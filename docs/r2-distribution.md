@@ -1,31 +1,40 @@
-# Desktop distribution on Cloudflare R2
+# Desktop distribution: GitHub Releases canonical, R2 interim mirror
 
-The desktop release workflow publishes directly to the R2 S3-compatible API.
-The old S3 transfer bucket, presigned URL, SSM, and nginx path are not part of
-the distribution path anymore.
+Per ADR-0025 and desktop#65, **GitHub Releases is the canonical distribution
+and update channel** for the Windows desktop app. Microsoft Store / MSIX is
+the general-audience distribution path (see `docs/msix-packaging.md` and
+`docs/store-submission.md`); GitHub Releases remains the archival and
+update-metadata source.
 
-Create an R2 bucket and a scoped API token that can read and write only that
-bucket. Attach the custom domain `download.tastile.app` to the bucket and
-verify that both the immutable artifact path and the stable manifest path are
-publicly readable:
+The release workflow (`.github/workflows/release.yml`) therefore:
+
+1. builds the Inno Setup installer on the Windows runner;
+2. materializes `manifest.json` whose `download_url` points at the immutable
+   GitHub Release asset
+   `https://github.com/tastile/tastile-desktop/releases/download/v<version>/tastile-desktop-<version>-setup.exe`;
+3. uploads the installer **and** `manifest.json` to the GitHub Release and
+   verifies both assets;
+4. optionally mirrors the installer and stable manifests to Cloudflare R2.
+
+## Canonical update feed
+
+The desktop app polls:
 
 ```text
-https://download.tastile.app/releases/desktop/<version>/tastile-desktop-<version>-setup.exe
-https://download.tastile.app/channels/stable/desktop.json
+https://github.com/tastile/tastile-desktop/releases/latest/download/manifest.json
 ```
 
-The legacy manifest URL `/updates/desktop/manifest.json` is published as the
-same stable manifest during the migration window so already-installed clients
-continue to receive updates.
+`releases/latest/download/` always resolves to the newest published release,
+so the "latest" pointer is the GitHub Release itself — no separate stable
+manifest has to be maintained or repointed. Override the feed with
+`TASTILE_DESKTOP_UPDATE_BASE_URL` (full manifest URL or base URL) or the
+runtime `TASTILE_UPDATE_URL` variable when needed.
 
-The release workflow reads the production values from Infisical at
-`/tastile/desktop` using the repository's GitHub OIDC identity. The one-time
-`migrate-production-secrets.yml` workflow compares the existing GitHub
-environment values with Infisical and imports only missing values. A differing
-existing Infisical value stops the import without overwriting it. After a
-successful OIDC fetch, the obsolete GitHub environment copies can be deleted.
+## Optional R2 interim mirror
 
-The previous production values were:
+Clients installed before the GitHub Releases cutover still poll the legacy
+R2 manifests. The workflow keeps publishing them **only while the R2
+credentials are present** in Infisical at `/tastile/desktop`:
 
 ```text
 CLOUDFLARE_ACCOUNT_ID
@@ -35,18 +44,34 @@ CLOUDFLARE_R2_SECRET_ACCESS_KEY
 DOWNLOAD_PUBLIC_BASE_URL=https://download.tastile.app
 ```
 
-The release workflow does not use `AWS_OIDC_ROLE_PRODUCTION`; it publishes to
-Cloudflare R2 with the scoped R2 credentials fetched from Infisical. It does
-not materialize a dotenv file.
+A `Check optional R2 mirror configuration` step probes for all of these
+values; when any is missing or `DOWNLOAD_PUBLIC_BASE_URL` is not HTTPS, every
+R2 step is skipped and the release still succeeds through GitHub Releases
+alone. R2 is therefore no longer a required dependency.
 
-Release order is deliberately one-way:
+When enabled, the mirror preserves the previous one-way order:
 
-1. conditionally upload the versioned installer, rejecting an existing key;
+1. conditionally upload the versioned installer with `--if-none-match '*'`;
 2. fetch the public installer and compare SHA-256;
-3. update `channels/stable/desktop.json` last;
-4. fetch the public manifest and verify its pointer and hash;
-5. attach the same installer to the GitHub Release.
+3. update `channels/stable/desktop.json` and `updates/desktop/manifest.json`
+   last, from `r2-manifest.json` (identical schema, R2 download URL);
+4. fetch the public manifests and verify pointer and hash.
 
-To roll back, upload or restore a previously verified stable manifest that
-points to an existing immutable artifact. Do not delete or overwrite the
-versioned installer.
+## Migration safety
+
+- **Old clients** (pre-cutover, polling `download.tastile.app`) keep receiving
+  updates as long as the R2 mirror stays enabled. Their next update moves them
+  to a build whose default feed is GitHub Releases.
+- **New clients** never touch R2; removing the R2 secrets from Infisical only
+  disables the mirror.
+- The R2 mirror can be retired once the installed base has moved past the
+  cutover release; until then keep the secrets in place.
+
+## Rollback
+
+- Canonical: mark or re-publish a previous GitHub Release as latest, or
+  upload a corrected `manifest.json` to the current release. Never delete the
+  versioned installer asset.
+- Mirror: restore a previously verified stable manifest that points to an
+  existing immutable R2 artifact. Do not delete or overwrite versioned
+  installer objects.
