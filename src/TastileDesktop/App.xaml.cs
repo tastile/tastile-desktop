@@ -133,7 +133,7 @@ public partial class App : Application
         // working without a second activation handler.
         try
         {
-            var activatedArgs = AppInstance.GetActivatedEventArgs();
+            var activatedArgs = AppInstance.GetCurrent().GetActivatedEventArgs();
             if (activatedArgs.Kind == ExtendedActivationKind.Protocol &&
                 activatedArgs.Data is Windows.ApplicationModel.Activation.ProtocolActivatedEventArgs { Uri: { } protocolUri } &&
                 protocolUri.AbsoluteUri.StartsWith("tastile://", StringComparison.OrdinalIgnoreCase))
