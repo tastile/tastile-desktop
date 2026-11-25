@@ -53,6 +53,36 @@
                         </StackPanel>
                 </StackPanel>
 
+                <!-- NF04-D05: synced execution control. State comes from the
+                     local read model; commands go through the offline outbox. -->
+                <StackPanel Spacing="10">
+                    <TextBlock x:Uid="Execute_SyncExecutionTitle" Text="Synced execution" Style="{StaticResource SectionTitleTextStyle}" />
+                    <TextBlock Text="{x:Bind ViewModel.ExecutionSyncStateText, Mode=OneWay}" Style="{StaticResource SectionBodyTextStyle}" />
+                    <StackPanel Orientation="Horizontal" Spacing="8" Visibility="{x:Bind ViewModel.FinishExecutionVisibility, Mode=OneWay}">
+                        <Button x:Uid="Execute_PauseButton" Content="Pause" Command="{x:Bind ViewModel.PauseExecutionCommand}" Visibility="{x:Bind ViewModel.PauseExecutionVisibility, Mode=OneWay}" />
+                        <Button x:Uid="Execute_ResumeButton" Content="Resume" Command="{x:Bind ViewModel.ResumeExecutionCommand}" Visibility="{x:Bind ViewModel.ResumeExecutionVisibility, Mode=OneWay}" />
+                        <Button x:Uid="Execute_FinishButton" Content="Finish" Command="{x:Bind ViewModel.FinishExecutionCommand}" />
+                        <Button x:Uid="Execute_FinishVoidButton" Content="Finish (void)" Command="{x:Bind ViewModel.FinishVoidExecutionCommand}" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- NF04-D06: offline command outbox — pending operations and
+                     conflicts are shown explicitly, never silently resolved. -->
+                <StackPanel Spacing="8" Visibility="{x:Bind ViewModel.PendingCommandsVisibility, Mode=OneWay}">
+                    <TextBlock x:Uid="Execute_OutboxTitle" Text="Pending operations" Style="{StaticResource SectionTitleTextStyle}" />
+                    <TextBlock Text="{x:Bind ViewModel.PendingCommandsSummary, Mode=OneWay}" Style="{StaticResource CaptionMutedTextStyle}" />
+                    <ItemsControl ItemsSource="{x:Bind ViewModel.OutboxCommands, Mode=OneWay}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate x:DataType="vm:OutboxCommandItem">
+                                <StackPanel Orientation="Horizontal" Spacing="8" Margin="0,2">
+                                    <TextBlock Text="{x:Bind Summary, Mode=OneTime}" Style="{StaticResource SectionBodyTextStyle}" TextWrapping="Wrap" />
+                                    <Button Content="Retry" Command="{x:Bind RetryCommand}" Visibility="{x:Bind RetryVisibility, Mode=OneTime}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
                 <StackPanel Spacing="10">
                     <TextBlock x:Uid="Execute_QuickMemo" Text="Quick memo" Style="{StaticResource SectionTitleTextStyle}" />
                     <TextBox Text="{x:Bind ViewModel.MemoText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" MinHeight="110" TextWrapping="Wrap" PlaceholderText="{x:Bind ViewModel.MemoPlaceholder, Mode=OneWay}" />
