@@ -23,6 +23,30 @@ public sealed record SyncResult(SyncOutcome Outcome, string? Detail = null)
 }
 
 /// <summary>
+/// One delta entry together with the entity's stored state JSON from
+/// immediately before the page was applied (<c>null</c> when the entity
+/// was absent locally). Lets consumers diff old vs new state without
+/// re-reading the store.
+/// </summary>
+public sealed record AppliedSyncChange(SyncChange Change, string? PreviousStateJson);
+
+/// <summary>
+/// Raised after each delta page commits (NF04-D07). Snapshot commits do
+/// NOT raise this event — a snapshot is a baseline, not a change, so
+/// notification consumers never replay history on first sync or after a
+/// cursor-expired resnapshot.
+/// </summary>
+public sealed class SyncDeltaAppliedEventArgs : EventArgs
+{
+    public SyncDeltaAppliedEventArgs(IReadOnlyList<AppliedSyncChange> changes)
+    {
+        Changes = changes;
+    }
+
+    public IReadOnlyList<AppliedSyncChange> Changes { get; }
+}
+
+/// <summary>
 /// Drives the Sync API v2 contract (tastile-core v1/14 §6) against
 /// <see cref="LocalReadModelStore"/> (desktop NF04-D02/D03 foundation).
 ///
@@ -50,6 +74,13 @@ public sealed class LocalSyncService
     }
 
     public LocalReadModelStore Store => _store;
+
+    /// <summary>
+    /// Raised on the sync worker thread after each committed delta page.
+    /// Handlers must be fast and non-blocking; exceptions are swallowed
+    /// so a misbehaving consumer cannot break sync.
+    /// </summary>
+    public event EventHandler<SyncDeltaAppliedEventArgs>? DeltaApplied;
 
     /// <summary>
     /// Runs one sync pass: snapshot when no cursor is persisted, then drain
@@ -147,7 +178,30 @@ public sealed class LocalSyncService
                 return new SyncResult(SyncOutcome.Failed, $"delta page failed: HTTP {(int?)page.StatusCode}");
             }
 
+            // Capture pre-apply state per entity so DeltaApplied consumers
+            // can diff old vs new (NF04-D07 notification mapping).
+            var previousStates = new List<(SyncChange Change, string? Previous)>();
+            foreach (var change in page.Data.Changes)
+            {
+                previousStates.Add((change, _store.GetEntityStateJson(change.EntityKind, change.EntityId)));
+            }
+
             _store.ApplyDeltaPage(page.Data.Changes, page.Data.NextCursor);
+
+            if (previousStates.Count > 0)
+            {
+                var applied = previousStates
+                    .Select(p => new AppliedSyncChange(p.Change, p.Previous))
+                    .ToList();
+                try
+                {
+                    DeltaApplied?.Invoke(this, new SyncDeltaAppliedEventArgs(applied));
+                }
+                catch
+                {
+                    // Notification/observability consumers must never break sync.
+                }
+            }
 
             // Empty next_cursor = tail of the change log reached. The last
             // non-empty cursor stays persisted; the tail events are

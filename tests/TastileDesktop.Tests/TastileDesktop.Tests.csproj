@@ -58,6 +58,7 @@
     <Compile Include="..\..\src\TastileDesktop\Services\CommandOutbox.cs" Link="CommandOutbox.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\SyncCommandService.cs" Link="SyncCommandService.cs" />
     <Compile Include="..\..\src\TastileDesktop\Services\LocalExecutionProjector.cs" Link="LocalExecutionProjector.cs" />
+    <Compile Include="..\..\src\TastileDesktop\Services\SyncNotificationService.cs" Link="SyncNotificationService.cs" />
   </ItemGroup>
 
   <ItemGroup>

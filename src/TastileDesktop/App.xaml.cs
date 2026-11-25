@@ -16,6 +16,14 @@ public partial class App : Application
     private static Mutex? _singleInstanceMutex;
     private static readonly string MutexName = "Global\\TastileDesktopSingleInstance";
 
+    // Unpackaged (WindowsPackageType=None) apps have no package identity, so
+    // Windows toast notifications (NF04-D07) need an explicit AUMID on the
+    // process or CreateToastNotifier has nothing to bind to.
+    private const string AppUserModelId = "TastileDesktop";
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SetCurrentProcessExplicitAppUserModelID(string AppID);
+
     public static void DebugLog(string msg)
     {
         try
@@ -27,6 +35,8 @@ public partial class App : Application
     }
     private MainWindow? _mainWindow;
     private TrayIconService? _trayIconService;
+    private NotificationService? _notificationService;
+    private SyncNotificationService? _syncNotifier;
     private readonly SettingsService _settingsService = new();
     private readonly SecurityLockService _securityLockService = new();
     private readonly AppUpdateService _appUpdateService = new();
@@ -136,6 +146,8 @@ public partial class App : Application
         {
             DebugLog("OnLaunched starting...");
 
+            SetCurrentProcessExplicitAppUserModelID(AppUserModelId);
+
             // Register custom URL protocol (tastile://) for backwards compat
             // with any installed shortcuts. Sign-in no longer relies on this
             // (BetterAuth is native); the handler is kept registered so the
@@ -224,6 +236,17 @@ public partial class App : Application
                 DebugLog($"[Auth] Token debug failed: {ex.Message}");
             }
 
+            // NF04-D07: OS notifications driven by committed sync deltas
+            // (schedule change / cancel / execution finish / session
+            // decisions). Subscribed before the first sync so no delta is
+            // missed; snapshots never produce toasts.
+            var syncRuntime = Services.OfflineCommandRuntime.Shared;
+            _notificationService = new NotificationService(apiClient);
+            _notificationService.PanelOpenRequested += OnPanelOpenRequested;
+            _syncNotifier = new SyncNotificationService(syncRuntime.Sync);
+            _syncNotifier.ToastRequested += OnSyncToastRequested;
+            _syncNotifier.Start();
+
             // Create main window
             _mainWindow = new MainWindow();
             DebugLog("MainWindow created");
@@ -274,6 +297,36 @@ public partial class App : Application
             DebugLog($"StackTrace: {ex.StackTrace}");
             throw;
         }
+    }
+
+    private void OnSyncToastRequested(object? sender, SyncToastMessage toast)
+    {
+        // Raised on the sync worker thread; marshal to the UI thread for
+        // safety even though toast display itself does not require it.
+        var queue = _mainWindow?.DispatcherQueue ?? DispatcherQueue.GetForCurrentThread();
+        queue?.TryEnqueue(() =>
+        {
+            try
+            {
+                _notificationService?.ShowInfoToast(toast.Title, toast.Body, toast.ActionId, toast.ActionLabel);
+            }
+            catch (Exception ex)
+            {
+                DebugLog($"Sync toast failed: {ex.Message}");
+            }
+        });
+    }
+
+    private void OnPanelOpenRequested(object? sender, EventArgs e)
+    {
+        var queue = _mainWindow?.DispatcherQueue ?? DispatcherQueue.GetForCurrentThread();
+        queue?.TryEnqueue(() =>
+        {
+            if (_mainWindow is MainWindow panel)
+            {
+                panel.ShowPanel();
+            }
+        });
     }
 
     private async Task HandleOAuthCallbackAsync(string callbackUrl)
@@ -403,6 +456,12 @@ public partial class App : Application
         _settingsService.Update(s => s.SecurityLockLastClosedAtUtc = DateTimeOffset.UtcNow.ToString("O"));
         _appearanceService.AppearanceChanged -= OnAppearanceChanged;
         _trayIconService?.Dispose();
+        _syncNotifier?.Dispose();
+        if (_notificationService is not null)
+        {
+            _notificationService.PanelOpenRequested -= OnPanelOpenRequested;
+            _notificationService.Dispose();
+        }
         _singleInstanceMutex?.ReleaseMutex();
         _singleInstanceMutex?.Dispose();
         _mainWindow?.Close();
