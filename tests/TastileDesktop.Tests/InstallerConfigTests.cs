@@ -36,6 +36,21 @@ public sealed class InstallerConfigTests
     }
 
     [Fact]
+    public void PackageManifest_DeclaresPackagedOsIntegrations()
+    {
+        var packageManifestPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\src\TastileDesktop\Package.appxmanifest"));
+        var manifest = File.ReadAllText(packageManifestPath);
+
+        // desktop#61: the packaged build must declare the OS integrations the
+        // app relies on — full trust, tastile:// protocol, and startup task.
+        Assert.Contains("runFullTrust", manifest);
+        Assert.Contains("windows.protocol", manifest);
+        Assert.Contains("<uap:Protocol Name=\"tastile\"", manifest);
+        Assert.Contains("windows.startupTask", manifest);
+        Assert.Contains("TaskId=\"TastileStartup\"", manifest);
+    }
+
+    [Fact]
     public void InstallerConfig_UsesStableProductIdentityAndCleanDisplayName()
     {
         var issPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, @"..\..\..\..\..\installer\TastileDesktop.iss"));

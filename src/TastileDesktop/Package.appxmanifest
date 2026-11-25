@@ -3,7 +3,10 @@
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
   xmlns:mp="http://schemas.microsoft.com/appx/2014/phone/manifest"
   xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
-  IgnorableNamespaces="uap mp">
+  xmlns:uap10="http://schemas.microsoft.com/appx/manifest/uap/windows10/10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restricted"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  IgnorableNamespaces="uap mp uap10 rescap desktop">
 
   <Identity
     Name="Tastile.ExecutionControl"
@@ -39,10 +42,32 @@
         <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <!-- tastile:// protocol activation for packaged builds. The unpackaged
+             build keeps using the HKCU registry registration in
+             ProtocolHandler; packaged builds receive the URI through
+             ProtocolActivatedEventArgs instead. -->
+        <uap:Extension Category="windows.protocol">
+          <uap:Protocol Name="tastile" />
+        </uap:Extension>
+        <!-- Launch-at-startup for packaged builds. StartupRegistrationService
+             uses Windows.ApplicationModel.StartupTask when packaged and falls
+             back to the HKCU Run key when unpackaged. -->
+        <uap10:Extension Category="windows.startupTask">
+          <uap10:StartupTask
+            TaskId="TastileStartup"
+            Enabled="false"
+            DisplayName="Tastile" />
+        </uap10:Extension>
+      </Extensions>
     </Application>
   </Applications>
 
   <Capabilities>
     <Capability Name="internetClient" />
+    <!-- Full-trust desktop app: required so the packaged WinUI process can
+         use registry, named pipes, and other full-trust APIs the same way the
+         unpackaged Inno Setup build does. -->
+    <rescap:Capability Name="runFullTrust" />
   </Capabilities>
 </Package>
