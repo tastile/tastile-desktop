@@ -79,11 +79,16 @@ public sealed class LocalExecutionProjector
     /// newest `updated_at`). v1/10 §6 allows at most one running
     /// execution per placement; multiple live executions across
     /// placements are still possible, so "the" live execution is the
-    /// most recently updated one — the same heuristic the UI needs for
-    /// "what is the user looking at".
+    /// most recently updated ACTIVE one — the same heuristic the UI
+    /// needs for "what is the user looking at". A paused execution is
+    /// only the target when nothing is actively running.
     /// </summary>
     public LocalExecutionInfo? GetLiveExecution()
-        => GetExecutions().FirstOrDefault(e => e.IsLive);
+        => GetExecutions()
+            .Where(e => e.IsLive)
+            .OrderByDescending(e => e.State == ExecutionStateValue.Active ? 1 : 0)
+            .ThenByDescending(e => e.UpdatedAt, StringComparer.Ordinal)
+            .FirstOrDefault();
 
     /// <summary>Live executions for one tile (any state segment).</summary>
     public IReadOnlyList<LocalExecutionInfo> GetExecutionsForTile(string tileId)
