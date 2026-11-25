@@ -343,7 +343,7 @@ public sealed class SyncNotificationServiceTests : IDisposable
     }
 
     [Fact]
-    public void DeltaAppliedEvent_IsRaisedByLocalSyncService()
+    public async Task DeltaAppliedEvent_IsRaisedByLocalSyncService()
     {
         // Integration: a real delta pull through LocalSyncService must
         // surface AppliedSyncChange entries with previous states.
@@ -386,7 +386,7 @@ public sealed class SyncNotificationServiceTests : IDisposable
         SyncDeltaAppliedEventArgs? seen = null;
         sync.DeltaApplied += (_, e) => seen = e;
 
-        var result = sync.SyncOnceAsync().GetAwaiter().GetResult();
+        var result = await sync.SyncOnceAsync();
 
         Assert.True(result.Success, result.Detail);
         Assert.NotNull(seen);
