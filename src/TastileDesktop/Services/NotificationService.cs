@@ -10,6 +10,12 @@ public class NotificationService : IDisposable
 {
     private readonly CoreApiClient _api;
 
+    /// <summary>
+    /// Raised when a toast action asks to surface the main panel
+    /// (NF04-D07 schedule-change toasts use <c>action=open</c>).
+    /// </summary>
+    public event EventHandler? PanelOpenRequested;
+
     public NotificationService(CoreApiClient api)
     {
         _api = api;
@@ -43,6 +49,24 @@ public class NotificationService : IDisposable
     }
 
     /// <summary>
+    /// Generic informational toast used by sync-driven notifications
+    /// (NF04-D07). When <paramref name="actionId"/>/<paramref name="actionLabel"/>
+    /// are provided a single action button is attached; <c>open</c> raises
+    /// <see cref="PanelOpenRequested"/>.
+    /// </summary>
+    public void ShowInfoToast(string title, string body, string? actionId = null, string? actionLabel = null)
+    {
+        var builder = new ToastContentBuilder()
+            .AddText(title)
+            .AddText(body);
+        if (!string.IsNullOrEmpty(actionId) && !string.IsNullOrEmpty(actionLabel))
+        {
+            builder.AddButton(new ToastButton(actionLabel, $"action={actionId}"));
+        }
+        builder.Show();
+    }
+
+    /// <summary>
     /// Show idle reminder when user has been idle.
     /// </summary>
     public void ShowIdleReminder()
@@ -63,6 +87,9 @@ public class NotificationService : IDisposable
             {
                 case "continue":
                     // User acknowledged, do nothing
+                    break;
+                case "open":
+                    PanelOpenRequested?.Invoke(this, EventArgs.Empty);
                     break;
                 case "break":
                     await _api.StartBreakAsync(5);

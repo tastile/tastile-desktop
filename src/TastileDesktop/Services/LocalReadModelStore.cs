@@ -188,6 +188,20 @@ public sealed class LocalReadModelStore : IDisposable
         }
     }
 
+    /// <summary>Raw stored state JSON for one entity, or null when absent/unparseable row.</summary>
+    public string? GetEntityStateJson(int entityKind, string entityId)
+    {
+        lock (_gate)
+        {
+            using var command = Connection.CreateCommand();
+            command.CommandText =
+                "SELECT state_json FROM sync_entities WHERE entity_kind = $kind AND entity_id = $id";
+            command.Parameters.AddWithValue("$kind", entityKind);
+            command.Parameters.AddWithValue("$id", entityId);
+            return command.ExecuteScalar() as string;
+        }
+    }
+
     /// <summary>Parsed state document for one entity, or null when absent.</summary>
     public JsonElement? GetEntityState(int entityKind, string entityId)
     {
