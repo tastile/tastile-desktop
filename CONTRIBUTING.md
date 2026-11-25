@@ -30,7 +30,7 @@ require a sibling `tastile-core` checkout.
 ## Release workflow
 
 - Installer packaging uses [installer/TastileDesktop.iss](installer/TastileDesktop.iss).
-- Manual update publication uses `.github/workflows/release.yml` and Cloudflare R2.
+- Manual update publication uses `.github/workflows/release.yml`; GitHub Releases is canonical and Cloudflare R2 is an optional interim mirror (see `docs/r2-distribution.md`).
 - Shipping changes should include:
   - passing unit tests
   - a successful desktop build

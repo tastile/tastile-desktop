@@ -91,7 +91,7 @@ public sealed class AppUpdateServiceTests
     {
         var service = new AppUpdateService(new HttpClient(new StubHandler(request =>
         {
-            if (request.RequestUri?.AbsoluteUri == "https://download.tastile.app/channels/stable/desktop.json")
+            if (request.RequestUri?.AbsoluteUri == "https://github.com/tastile/tastile-desktop/releases/latest/download/manifest.json")
             {
                 return new HttpResponseMessage(HttpStatusCode.OK)
                 {

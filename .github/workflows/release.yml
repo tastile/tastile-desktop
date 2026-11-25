@@ -108,20 +108,25 @@ jobs:
           name: desktop-installer
           path: dist/update
 
-      - name: Materialize immutable release metadata
+      # Canonical distribution channel (ADR-0025 / desktop#65): the GitHub
+      # Release is the source of truth for both the installer and the update
+      # manifest. The app polls
+      # https://github.com/<repo>/releases/latest/download/manifest.json,
+      # which always resolves to the newest release's manifest asset, so no
+      # separate "latest" pointer has to be maintained.
+      - name: Materialize release metadata
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
           NOTES: ${{ github.event.release.body }}
         run: |
           set -euo pipefail
-          test -n "$DOWNLOAD_PUBLIC_BASE_URL"
           INSTALLER_PATH="dist/update/tastile-desktop-${VERSION}-setup.exe"
           INSTALLER_SHA256=$(sha256sum "$INSTALLER_PATH" | awk '{print $1}')
           ARTIFACT_KEY="releases/desktop/${VERSION}/tastile-desktop-${VERSION}-setup.exe"
-          DOWNLOAD_URL="${DOWNLOAD_PUBLIC_BASE_URL%/}/${ARTIFACT_KEY}"
+          GITHUB_DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${VERSION}/tastile-desktop-${VERSION}-setup.exe"
           jq -n \
             --arg version "$VERSION" \
-            --arg download_url "$DOWNLOAD_URL" \
+            --arg download_url "$GITHUB_DOWNLOAD_URL" \
             --arg sha256 "$INSTALLER_SHA256" \
             --arg notes "${NOTES:-Manual deploy}" \
             '{
@@ -134,15 +139,119 @@ jobs:
           printf '%s\n' "$INSTALLER_SHA256" > dist/update/artifact-sha256
           cat dist/update/manifest.json
 
-      - name: Configure Cloudflare R2 endpoint
+      # The Cloudflare R2 channel is an optional interim mirror for clients
+      # installed before the GitHub Releases cutover. It is skipped entirely
+      # when the R2 credentials are absent from Infisical, so R2 is no longer
+      # a required dependency of the release path.
+      - name: Check optional R2 mirror configuration
+        id: r2check
         run: |
           set -euo pipefail
-          test -n "$CLOUDFLARE_ACCOUNT_ID"
+          enabled=false
+          if [ -n "${CLOUDFLARE_ACCOUNT_ID:-}" ] \
+            && [ -n "${CLOUDFLARE_R2_BUCKET:-}" ] \
+            && [ -n "${CLOUDFLARE_R2_ACCESS_KEY_ID:-}" ] \
+            && [ -n "${CLOUDFLARE_R2_SECRET_ACCESS_KEY:-}" ]; then
+            case "${DOWNLOAD_PUBLIC_BASE_URL:-}" in
+              https://*) enabled=true ;;
+              *) echo "DOWNLOAD_PUBLIC_BASE_URL is missing or not HTTPS; skipping R2 mirror" >&2 ;;
+            esac
+          else
+            echo "R2 credentials are not configured; skipping R2 mirror" >&2
+          fi
+          echo "enabled=$enabled" >> "$GITHUB_OUTPUT"
+
+      - name: Upload installer and manifest to GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-installer.outputs.version }}
+          TAG_NAME: v${{ needs.build-installer.outputs.version }}
+        run: |
+          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
+            gh release upload "$TAG_NAME" \
+              "dist/update/tastile-desktop-${VERSION}-setup.exe" \
+              "dist/update/manifest.json" \
+              --clobber
+          else
+            gh release create "$TAG_NAME" \
+              "dist/update/tastile-desktop-${VERSION}-setup.exe" \
+              "dist/update/manifest.json" \
+              --title "$TAG_NAME" --generate-notes --target "$GITHUB_SHA"
+          fi
+
+      - name: Verify GitHub Release asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-installer.outputs.version }}
+          TAG_NAME: v${{ needs.build-installer.outputs.version }}
+        run: |
+          set -euo pipefail
+          DOWNLOAD_DIR=$(mktemp -d)
+          gh release download "$TAG_NAME" \
+            --pattern "tastile-desktop-${VERSION}-setup.exe" \
+            --dir "$DOWNLOAD_DIR" \
+            --clobber
+          DOWNLOADED="$DOWNLOAD_DIR/tastile-desktop-${VERSION}-setup.exe"
+          test -s "$DOWNLOADED"
+          EXPECTED_SHA256=$(cat dist/update/artifact-sha256)
+          ACTUAL_SHA256=$(sha256sum "$DOWNLOADED" | awk '{print $1}')
+          test "${ACTUAL_SHA256,,}" = "${EXPECTED_SHA256,,}"
+
+      - name: Verify GitHub Release manifest asset
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-installer.outputs.version }}
+          TAG_NAME: v${{ needs.build-installer.outputs.version }}
+        run: |
+          set -euo pipefail
+          MANIFEST_DIR=$(mktemp -d)
+          gh release download "$TAG_NAME" \
+            --pattern "manifest.json" \
+            --dir "$MANIFEST_DIR" \
+            --clobber
+          RELEASED_MANIFEST="$MANIFEST_DIR/manifest.json"
+          test -s "$RELEASED_MANIFEST"
+          ACTUAL_VERSION=$(jq -r '.latest_version // empty' "$RELEASED_MANIFEST")
+          DOWNLOAD_URL=$(jq -r '.download_url // empty' "$RELEASED_MANIFEST")
+          EXPECTED_SHA256=$(jq -r '.sha256 // empty' "$RELEASED_MANIFEST")
+          test "$ACTUAL_VERSION" = "$VERSION"
+          test "$DOWNLOAD_URL" = "https://github.com/${{ github.repository }}/releases/download/v${VERSION}/tastile-desktop-${VERSION}-setup.exe"
+          test "${EXPECTED_SHA256,,}" = "$(cat dist/update/artifact-sha256)"
+
+      # Optional interim mirror for pre-cutover clients that still poll the
+      # R2 stable manifest. Skipped when R2 is not configured.
+      - name: Materialize R2 mirror manifest
+        if: steps.r2check.outputs.enabled == 'true'
+        env:
+          VERSION: ${{ needs.build-installer.outputs.version }}
+          NOTES: ${{ github.event.release.body }}
+        run: |
+          set -euo pipefail
+          ARTIFACT_KEY=$(cat dist/update/artifact-key)
+          DOWNLOAD_URL="${DOWNLOAD_PUBLIC_BASE_URL%/}/${ARTIFACT_KEY}"
+          jq -n \
+            --arg version "$VERSION" \
+            --arg download_url "$DOWNLOAD_URL" \
+            --arg sha256 "$(cat dist/update/artifact-sha256)" \
+            --arg notes "${NOTES:-Manual deploy}" \
+            '{
+              latest_version: $version,
+              download_url: $download_url,
+              sha256: $sha256,
+              notes: $notes
+            }' > dist/update/r2-manifest.json
+          cat dist/update/r2-manifest.json
+
+      - name: Configure Cloudflare R2 endpoint
+        if: steps.r2check.outputs.enabled == 'true'
+        run: |
+          set -euo pipefail
           echo "R2_ENDPOINT=https://${CLOUDFLARE_ACCOUNT_ID}.r2.cloudflarestorage.com" >> "$GITHUB_ENV"
           echo "AWS_DEFAULT_REGION=auto" >> "$GITHUB_ENV"
           echo "AWS_EC2_METADATA_DISABLED=true" >> "$GITHUB_ENV"
 
       - name: Upload immutable versioned artifact to R2
+        if: steps.r2check.outputs.enabled == 'true'
         run: |
           set -euo pipefail
           VERSION="${{ needs.build-installer.outputs.version }}"
@@ -151,7 +260,6 @@ jobs:
           INSTALLER_PATH="dist/update/tastile-desktop-${VERSION}-setup.exe"
           ARTIFACT_KEY=$(cat dist/update/artifact-key)
           CONTENT_DISPOSITION="attachment; filename=\"$(basename "$INSTALLER_PATH")\""
-          test -n "$CLOUDFLARE_R2_ACCESS_KEY_ID" -a -n "$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
           case "$DOWNLOAD_PUBLIC_BASE_URL" in https://*) : ;; *) echo "DOWNLOAD_PUBLIC_BASE_URL must use HTTPS" >&2; exit 2 ;; esac
           export AWS_ACCESS_KEY_ID="$CLOUDFLARE_R2_ACCESS_KEY_ID"
           export AWS_SECRET_ACCESS_KEY="$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
@@ -181,6 +289,7 @@ jobs:
           fi
 
       - name: Verify immutable artifact before changing stable pointer
+        if: steps.r2check.outputs.enabled == 'true'
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
         run: |
@@ -192,6 +301,7 @@ jobs:
           test "${ACTUAL_SHA256,,}" = "${EXPECTED_SHA256,,}"
 
       - name: Publish stable manifests last
+        if: steps.r2check.outputs.enabled == 'true'
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
         run: |
@@ -199,7 +309,7 @@ jobs:
           export AWS_ACCESS_KEY_ID="$CLOUDFLARE_R2_ACCESS_KEY_ID"
           export AWS_SECRET_ACCESS_KEY="$CLOUDFLARE_R2_SECRET_ACCESS_KEY"
           for MANIFEST_KEY in channels/stable/desktop.json updates/desktop/manifest.json; do
-            aws s3 cp dist/update/manifest.json "s3://${CLOUDFLARE_R2_BUCKET}/${MANIFEST_KEY}" \
+            aws s3 cp dist/update/r2-manifest.json "s3://${CLOUDFLARE_R2_BUCKET}/${MANIFEST_KEY}" \
               --endpoint-url "$R2_ENDPOINT" \
               --content-type application/json \
               --cache-control 'public,max-age=60,must-revalidate' \
@@ -207,6 +317,7 @@ jobs:
           done
 
       - name: Verify public stable manifest
+        if: steps.r2check.outputs.enabled == 'true'
         env:
           VERSION: ${{ needs.build-installer.outputs.version }}
         run: |
@@ -221,35 +332,3 @@ jobs:
             test "$DOWNLOAD_URL" = "${DOWNLOAD_PUBLIC_BASE_URL%/}/$(cat dist/update/artifact-key)"
             test "${EXPECTED_SHA256,,}" = "$(cat dist/update/artifact-sha256)"
           done
-
-      - name: Upload installer to GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.build-installer.outputs.version }}
-          TAG_NAME: v${{ needs.build-installer.outputs.version }}
-        run: |
-          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            gh release upload "$TAG_NAME" "dist/update/tastile-desktop-${VERSION}-setup.exe" --clobber
-          else
-            gh release create "$TAG_NAME" \
-              "dist/update/tastile-desktop-${VERSION}-setup.exe" \
-              --title "$TAG_NAME" --generate-notes --target "$GITHUB_SHA"
-          fi
-
-      - name: Verify GitHub Release asset
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.build-installer.outputs.version }}
-          TAG_NAME: v${{ needs.build-installer.outputs.version }}
-        run: |
-          set -euo pipefail
-          DOWNLOAD_DIR=$(mktemp -d)
-          gh release download "$TAG_NAME" \
-            --pattern "tastile-desktop-${VERSION}-setup.exe" \
-            --dir "$DOWNLOAD_DIR" \
-            --clobber
-          DOWNLOADED="$DOWNLOAD_DIR/tastile-desktop-${VERSION}-setup.exe"
-          test -s "$DOWNLOADED"
-          EXPECTED_SHA256=$(cat dist/update/artifact-sha256)
-          ACTUAL_SHA256=$(sha256sum "$DOWNLOADED" | awk '{print $1}')
-          test "${ACTUAL_SHA256,,}" = "${EXPECTED_SHA256,,}"
