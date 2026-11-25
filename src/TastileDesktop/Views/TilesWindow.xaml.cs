@@ -218,12 +218,44 @@ public sealed partial class TilesWindow : Window, INotifyPropertyChanged
         }
         else if (lifecycle == "done")
         {
-            var api = new CoreApiClient(
-                getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-                refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
-            await api.StartTileAsync(tileId);
-            await RefreshTilesAsync();
+            // NF04-D05: restart goes through the offline command outbox
+            // (StartTile → StartExecution chain), never a direct call.
+            await StartTileExecutionAsync(tileId);
         }
+    }
+
+    /// <summary>
+    /// NF04-D05: starts an execution for the tile via the shared
+    /// outbox-backed command service. Queued offline when unreachable;
+    /// conflicts surface in the Execute window's pending-operations list.
+    /// </summary>
+    private async Task StartTileExecutionAsync(string tileId)
+    {
+        try
+        {
+            var runtime = OfflineCommandRuntime.Shared;
+            runtime.EnsureSyncStream();
+            var result = await runtime.Commands.StartTileExecutionAsync(tileId);
+            if (!result.Accepted)
+            {
+                App.DebugLog($"[TilesWindow] Start rejected for {tileId}: {result.Message}");
+            }
+            else
+            {
+                App.DebugLog($"[TilesWindow] Start queued for {tileId} (seq={result.Seq})");
+            }
+        }
+        catch (Exception ex)
+        {
+            App.DebugLog($"[TilesWindow] Start failed for {tileId}: {ex.Message}");
+        }
+        await RefreshTilesAsync();
+    }
+
+    private async void OnTileStartClick(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button button || button.CommandParameter is not string tileId) return;
+        await StartTileExecutionAsync(tileId);
     }
 
     private async Task RequestPromptForTileAsync(string tileId)

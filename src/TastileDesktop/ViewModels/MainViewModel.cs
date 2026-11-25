@@ -141,6 +141,48 @@ public sealed class PromptActionButtonViewModel : ObservableObject
 }
 
 /// <summary>
+/// Bindable row for one unresolved outbox command (NF04-D05/D06):
+/// pending / conflict / failed states are shown with the server error
+/// and a manual retry affordance — conflicts are never auto-resolved.
+/// </summary>
+public sealed class OutboxCommandItem
+{
+    public OutboxCommandItem(PendingCommandRecord record, Func<long, Task> retry)
+    {
+        Seq = record.Seq;
+        Kind = record.Kind;
+        State = record.State;
+        Detail = record.LastError ?? record.Kind;
+        AttemptCount = record.AttemptCount;
+        CreatedAt = record.CreatedAt;
+        CanRetry = record.State is OutboxCommandState.Conflict or OutboxCommandState.Failed;
+        if (CanRetry)
+        {
+            RetryCommand = new CommunityToolkit.Mvvm.Input.AsyncRelayCommand(() => retry(Seq));
+        }
+    }
+
+    public long Seq { get; }
+    public string Kind { get; }
+    public string State { get; }
+    public string Detail { get; }
+    public int AttemptCount { get; }
+    public string CreatedAt { get; }
+    public bool CanRetry { get; }
+    public CommunityToolkit.Mvvm.Input.IAsyncRelayCommand? RetryCommand { get; }
+
+    public string StateLabel => State switch
+    {
+        OutboxCommandState.Pending => "pending",
+        OutboxCommandState.Conflict => "conflict",
+        OutboxCommandState.Failed => "failed",
+        _ => State,
+    };
+
+    public string Summary => $"#{Seq} {Kind} — {StateLabel} ({AttemptCount} attempt(s))";
+}
+
+/// <summary>
 /// Bindable item for tile list display.
 /// </summary>
 public sealed class TileListItem : ObservableObject
@@ -454,8 +496,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public event Action<string>? TimelinePromptRequested;
 
     private readonly EventDrivenPoller _pollingService;
-    private Services.LocalSyncService? _localSync;
-    private Services.SyncStreamService? _syncStream;
+    private Services.SyncCommandService? _commands;
+    private Services.LocalExecutionProjector? _executions;
+    private Services.LocalExecutionInfo? _liveExecution;
     private List<TileListItem> _allTiles = new();
     private ObservableCollection<TileListItem> _tiles = new();
     private string _selectedFilter = "All";
@@ -889,15 +932,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     public MainViewModel(DispatcherQueue dispatcher)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
-        _api = new CoreApiClient(
-            getAccessToken: Services.AuthService.Instance.GetAccessTokenAsync,
-            refreshTokens: Services.BetterAuthAuthService.Instance.RefreshAsync);
-        // NF04-D02: local SQLite read model + sync driver. The store opens
-        // its database lazily, so construction is side-effect free.
-        var localStore = new Services.LocalReadModelStore(Services.LocalReadModelStore.DefaultDbPath());
-        var localSync = new Services.LocalSyncService(_api, localStore);
-        _localSync = localSync;
-        _pollingService = new EventDrivenPoller(_api, _dispatcher, localStore, localSync);
+        // NF04-D02/D05/D06: shared offline sync runtime — local SQLite
+        // read model, sync driver, command outbox, and command service.
+        // The runtime is a process-wide singleton so every window submits
+        // through the same ordered outbox.
+        var runtime = Services.OfflineCommandRuntime.Shared;
+        _api = runtime.Api;
+        _commands = runtime.Commands;
+        _executions = runtime.Executions;
+        _pollingService = new EventDrivenPoller(_api, _dispatcher, runtime.Store, runtime.Sync);
         _pollingService.SetTimelineViewport(_timelineViewport);
 
         // Notify initial visibility state
@@ -930,14 +973,15 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         await _pollingService.StartAsync();
 
-        // NF04-D03: SSE change-notification doorbell. Notifications only
-        // trigger delta pulls; the poller's throttled sync remains the
-        // fallback when the stream is unavailable.
-        if (_localSync is not null)
-        {
-            _syncStream = new Services.SyncStreamService(_api, _localSync);
-            _syncStream.Start();
-        }
+        // NF04-D03: SSE change-notification doorbell (shared runtime —
+        // idempotent). Notifications only trigger delta pulls; the
+        // poller's throttled sync remains the fallback.
+        Services.OfflineCommandRuntime.Shared.EnsureSyncStream();
+
+        // NF04-D05/D06: replay any commands queued while offline, then
+        // refresh the local projections the new UI binds to.
+        await FlushOutboxAsync();
+        RefreshSyncState();
     }
 
     private void OnExecutionViewChanged(object? sender, ExecutionView? view)
@@ -1843,6 +1887,13 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(ConnectedIndicatorVisibility));
         OnPropertyChanged(nameof(DisconnectedIndicatorVisibility));
         StatusMessage = connected ? "Connected" : "Daemon offline";
+
+        // NF04-D06: replay the offline command outbox as soon as the
+        // connection is back; conflicts stay surfaced, never auto-fixed.
+        if (connected && _commands is not null)
+        {
+            _ = FlushOutboxAsync();
+        }
         OnPropertyChanged(nameof(QuickBarStatus));
         OnPropertyChanged(nameof(QuickBarTitle));
         OnPropertyChanged(nameof(QuickBarSubtitle));
@@ -2161,7 +2212,11 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
     }
 
-    public Task RefreshAsync(bool forcePublish = false) => _pollingService.RefreshAsync(forcePublish);
+    public async Task RefreshAsync(bool forcePublish = false)
+    {
+        await _pollingService.RefreshAsync(forcePublish);
+        RefreshSyncState();
+    }
 
     public void NotifyTimeAdvanced()
     {
@@ -2236,20 +2291,17 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
         try
         {
-            var result = await _api.StartTileAsync(tileId);
-            if (result != null && !result.Ok)
-                StatusMessage = $"Error: {result.Error}";
-            else
-            {
-                var tile = Tiles.FirstOrDefault(t => t.Id == tileId);
-                StatusMessage = $"Started: {tile?.Title ?? tileId}";
-            }
-            await _pollingService.RefreshAsync();
+            // NF04-D05: routed through the offline command outbox
+            // (StartTile → StartExecution chain), never a direct call.
+            var result = await _commands!.StartTileExecutionAsync(tileId);
+            ReportCommandResult(result, $"Start queued: {tileId}");
         }
         catch (Exception ex)
         {
             StatusMessage = $"Error: {ex.Message}";
         }
+        RefreshSyncState();
+        await _pollingService.RefreshAsync();
     }
 
     [RelayCommand]
@@ -2367,6 +2419,237 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             else
                 StatusMessage = "Tile deleted";
             await _pollingService.RefreshAsync();
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // NF04-D05/D06: execution control + offline command surface.
+    // State comes from the local read model (EXECUTION sync entities);
+    // mutations go through the persistent command outbox so they are
+    // never lost while offline and conflicts are surfaced, not hidden.
+    // ---------------------------------------------------------------
+
+    /// <summary>Commands still in flight locally (queued, awaiting server).</summary>
+    public ObservableCollection<OutboxCommandItem> OutboxCommands { get; } = new();
+
+    public int PendingCommandCount { get; private set; }
+    public int ConflictCommandCount { get; private set; }
+    public int FailedCommandCount { get; private set; }
+
+    public bool HasPendingCommands => PendingCommandCount > 0;
+    public bool HasUnresolvedCommands => OutboxCommands.Count > 0;
+    public Visibility PendingCommandsVisibility => HasUnresolvedCommands ? Visibility.Visible : Visibility.Collapsed;
+
+    public string PendingCommandsSummary =>
+        $"{PendingCommandCount} pending, {ConflictCommandCount} conflict(s), {FailedCommandCount} failed";
+
+    // Live execution state (from EXECUTION sync entities).
+    public Services.LocalExecutionInfo? LiveExecution => _liveExecution;
+    public bool HasLiveExecution => _liveExecution?.IsLive == true;
+    public bool CanPauseExecution => _liveExecution?.State == ExecutionStateValue.Active;
+    public bool CanResumeExecution => _liveExecution?.State == ExecutionStateValue.Paused;
+    public bool CanFinishExecution => _liveExecution?.IsLive == true;
+
+    public string ExecutionSyncStateText => _liveExecution is null
+        ? "No synced execution"
+        : $"Execution {_liveExecution.StateLabel} (tile {_liveExecution.TileId ?? "?"})";
+
+    public Visibility LiveExecutionVisibility => HasLiveExecution ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility PauseExecutionVisibility => CanPauseExecution ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility ResumeExecutionVisibility => CanResumeExecution ? Visibility.Visible : Visibility.Collapsed;
+    public Visibility FinishExecutionVisibility => CanFinishExecution ? Visibility.Visible : Visibility.Collapsed;
+
+    /// <summary>Re-reads the projector + outbox and notifies bound properties. UI-thread safe.</summary>
+    public void RefreshSyncState()
+    {
+        if (!_dispatcher.HasThreadAccess)
+        {
+            _dispatcher.TryEnqueue(RefreshSyncState);
+            return;
+        }
+
+        _liveExecution = _executions?.GetLiveExecution();
+
+        OnPropertyChanged(nameof(LiveExecution));
+        OnPropertyChanged(nameof(HasLiveExecution));
+        OnPropertyChanged(nameof(CanPauseExecution));
+        OnPropertyChanged(nameof(CanResumeExecution));
+        OnPropertyChanged(nameof(CanFinishExecution));
+        OnPropertyChanged(nameof(ExecutionSyncStateText));
+        OnPropertyChanged(nameof(LiveExecutionVisibility));
+        OnPropertyChanged(nameof(PauseExecutionVisibility));
+        OnPropertyChanged(nameof(ResumeExecutionVisibility));
+        OnPropertyChanged(nameof(FinishExecutionVisibility));
+
+        PendingCommandCount = _commands?.PendingCommands.Count ?? 0;
+        ConflictCommandCount = _commands?.ConflictCommands.Count ?? 0;
+        FailedCommandCount = _commands?.FailedCommands.Count ?? 0;
+        OnPropertyChanged(nameof(PendingCommandCount));
+        OnPropertyChanged(nameof(ConflictCommandCount));
+        OnPropertyChanged(nameof(FailedCommandCount));
+        OnPropertyChanged(nameof(HasPendingCommands));
+        OnPropertyChanged(nameof(HasUnresolvedCommands));
+        OnPropertyChanged(nameof(PendingCommandsVisibility));
+        OnPropertyChanged(nameof(PendingCommandsSummary));
+
+        OutboxCommands.Clear();
+        if (_commands is not null)
+        {
+            foreach (var record in _commands.UnresolvedCommands)
+            {
+                OutboxCommands.Add(new OutboxCommandItem(record, RetryOutboxCommandCoreAsync));
+            }
+        }
+    }
+
+    /// <summary>Flushes the outbox and refreshes the projected state afterwards.</summary>
+    public async Task FlushOutboxAsync()
+    {
+        if (_commands is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var result = await _commands.FlushAsync();
+            if (result.Confirmed > 0 || result.Conflicts > 0 || result.Failed > 0)
+            {
+                App.DebugLog(
+                    $"[Outbox] flush confirmed={result.Confirmed} conflicts={result.Conflicts} failed={result.Failed} remaining={result.Remaining} stop={result.StopReason}");
+            }
+        }
+        catch (Exception ex)
+        {
+            App.DebugLog($"[Outbox] flush failed: {ex.Message}");
+        }
+        finally
+        {
+            RefreshSyncState();
+        }
+    }
+
+    private void ReportCommandResult(Services.CommandSubmitResult result, string okMessage)
+    {
+        if (!result.Accepted)
+        {
+            StatusMessage = $"Error: {result.Message}";
+            return;
+        }
+
+        var flush = result.Flush;
+        if (flush is { Conflicts: > 0 })
+        {
+            StatusMessage = $"{okMessage} — {flush.Conflicts} command(s) need conflict resolution";
+        }
+        else if (flush is { Remaining: > 0 })
+        {
+            StatusMessage = $"{okMessage} — queued offline ({flush.Remaining} pending)";
+        }
+        else
+        {
+            StatusMessage = okMessage;
+        }
+    }
+
+    [RelayCommand]
+    private async Task PauseExecutionAsync()
+    {
+        try
+        {
+            var result = await _commands!.PauseExecutionAsync();
+            ReportCommandResult(result, "Execution paused");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+        RefreshSyncState();
+    }
+
+    [RelayCommand]
+    private async Task ResumeExecutionAsync()
+    {
+        try
+        {
+            var result = await _commands!.ResumeExecutionAsync();
+            ReportCommandResult(result, "Execution resumed");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+        RefreshSyncState();
+    }
+
+    [RelayCommand]
+    private async Task FinishExecutionAsync()
+    {
+        try
+        {
+            var result = await _commands!.FinishExecutionAsync(ExecutionFinishKindValue.Normal);
+            ReportCommandResult(result, "Execution finished");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+        RefreshSyncState();
+    }
+
+    [RelayCommand]
+    private async Task FinishVoidExecutionAsync()
+    {
+        try
+        {
+            var result = await _commands!.FinishExecutionAsync(ExecutionFinishKindValue.Void);
+            ReportCommandResult(result, "Execution voided");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+        RefreshSyncState();
+    }
+
+    /// <summary>
+    /// Starts an execution for a tile through the outbox-backed
+    /// StartTile → StartExecution chain (NF04-D05).
+    /// </summary>
+    [RelayCommand]
+    private async Task StartTileExecutionAsync(string? tileId)
+    {
+        if (string.IsNullOrEmpty(tileId)) return;
+
+        try
+        {
+            var result = await _commands!.StartTileExecutionAsync(tileId);
+            ReportCommandResult(result, $"Start queued for tile {tileId}");
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"Error: {ex.Message}";
+        }
+        RefreshSyncState();
+        await _pollingService.RefreshAsync();
+    }
+
+    /// <summary>Requeues a conflicted/failed outbox command for replay.</summary>
+    [RelayCommand]
+    private async Task RetryOutboxCommandAsync(long seq)
+        => await RetryOutboxCommandCoreAsync(seq);
+
+    private async Task RetryOutboxCommandCoreAsync(long seq)
+    {
+        try
+        {
+            _commands?.RequeueCommand(seq);
+            await FlushOutboxAsync();
+            StatusMessage = $"Command #{seq} requeued";
         }
         catch (Exception ex)
         {
