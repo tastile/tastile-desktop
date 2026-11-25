@@ -130,6 +130,9 @@ public sealed class SyncNotificationService : IDisposable
             return;
         }
 
+        // TILE / SOURCE_TILE deltas are supporting state only — they never
+        // produce their own toast (avoids double-notifying a schedule
+        // change that also bumps the tile revision).
         switch (change.EntityKind)
         {
             case SyncEntityKind.Placement:
@@ -141,9 +144,6 @@ public sealed class SyncNotificationService : IDisposable
             case SyncEntityKind.Session:
                 ProcessSession(applied);
                 break;
-            // TILE / SOURCE_TILE deltas are supporting state only — they
-            // never produce their own toast (avoids double-notifying a
-            // schedule change that also bumps the tile revision).
         }
     }
 
